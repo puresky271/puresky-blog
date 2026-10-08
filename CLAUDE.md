@@ -25,6 +25,10 @@ npm run icons     # 改了 scripts/gen-icons.mjs 的图标列表后重新生成 
 npm run deploy    # 构建 + 搜索索引 + 把 dist/ 直接上传到 Cloudflare Pages（需先在 worker/ 里 npx wrangler login）
 ```
 
+**dev server 开着的时候不要跑 `npm run build` / `npm run deploy`**：构建会改写和 dev 共用的依赖缓存，
+正在运行的 dev server 之后加载不了 sharp，所有经 astro:assets 的图片都会 500（日志里是 MissingSharp）。
+真遇到了重启 dev server 就好。
+
 本地文章编辑器：`npm run dev` 后打开 http://localhost:4321/__editor/（导航栏的笔形按钮、文章页底部的「在编辑器中打开」也能进）。
 它由 `site/editor/integration.mjs` 只在 `astro dev` 时注入，构建产物里没有页面也没有接口。
 
