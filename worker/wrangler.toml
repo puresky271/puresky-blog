@@ -16,7 +16,7 @@ MODERATION_ENABLED = "true"
 # GitHub 概览只代理这个账号，避免被当成任意用户的查询代理。
 GITHUB_USERNAME = "puresky271"
 # 允许代理的网易云歌单，逗号分隔。和 site/src/config.ts 的 MUSIC.playlistId 保持一致。
-MUSIC_PLAYLISTS = "19723756"
+MUSIC_PLAYLISTS = "8385925605"
 
 [[d1_databases]]
 binding = "DB"

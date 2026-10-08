@@ -49,7 +49,7 @@ export const GITHUB = {
  * 默认值是网易云官方的「飙升榜」，换成自己的歌单即可。
  */
 export const MUSIC = {
-  playlistId: '19723756',
+  playlistId: '8385925605',
   /** 播放器默认音量，0 到 1。 */
   defaultVolume: 0.6,
 } as const;
