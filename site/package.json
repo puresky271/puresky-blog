@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist",
-    "deploy": "npm run build && node scripts/deploy-pages.mjs",
+    "deploy": "npm run build && node scripts/deploy.mjs",
     "preview": "astro preview",
     "check": "astro check && svelte-check --tsconfig ./tsconfig.json --threshold error",
     "icons": "node scripts/gen-icons.mjs",

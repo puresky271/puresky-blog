@@ -22,7 +22,7 @@ npm run dev       # astro dev，本地 :4321。.env.development 让 API 指向�
 npm run build     # astro build && pagefind（生成搜索索引；开发模式下没有搜索）
 npm run check     # astro check + svelte-check，两者都应 0 错误 0 警告
 npm run icons     # 改了 scripts/gen-icons.mjs 的图标列表后重新生成 src/lib/icons.generated.ts
-npm run deploy    # 构建 + 搜索索引 + 把 dist/ 直接上传到 Cloudflare Pages（需先在 worker/ 里 npx wrangler login）
+npm run deploy    # 构建 + 搜索索引 + 把 dist/ 上传到 Cloudflare（需先 npx wrangler login；先停掉 dev server）
 ```
 
 **dev server 开着的时候不要跑 `npm run build` / `npm run deploy`**：构建会改写和 dev 共用的依赖缓存，
@@ -133,7 +133,11 @@ worker 挂了页面上仍是上次构建的数据，不会是一片骨架屏。�
 
 ### 部署
 
-正式站点：https://pureskyblog.dpdns.org （Cloudflare Pages 项目 `puresky-blog`，从本机 `npm run deploy` 直接上传 dist）。
+正式站点：https://pureskyblog.dpdns.org （备用 https://pureskyblog.1601992191.workers.dev ）。
+它是一个只有静态资源的 Cloudflare Worker `pureskyblog`（Pages 已并入 Workers），配置在 `site/wrangler.jsonc`，
+自定义域名写在配置的 routes 里，wrangler 部署时自动建 DNS 记录和证书。从本机 `npm run deploy` 上传 dist。
+wrangler 在没有配置文件的 Astro 目录里会「自动配置」（往 package.json 装 @astrojs/cloudflare），
+所以 `scripts/deploy.mjs` 总是显式传 `--config` 并从临时目录调用它，别直接在 site/ 里跑裸的 wrangler 命令。
 首页和关于页的插画放在 `site/src/assets/local/home.*`、`about.*`（已 gitignore，仓库是公开的，图不进仓库）：
 本机构建会带上它们，没有这两张图的构建（CI、别人 clone）自动回退到仓库里的插画。所以要上线插画必须从本机部署。
 同一份 site 也能部署到 GitHub Pages（`/puresky-blog/` 子路径），`astro.config.mjs` 从环境变量推导 base。

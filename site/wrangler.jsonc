@@ -1,0 +1,17 @@
+// 站点的部署配置：一个只有静态资源的 Cloudflare Worker（Pages 已并入 Workers）。
+// 由 scripts/deploy.mjs 在本机构建后调用 `wrangler deploy` 上传 dist/，见 CLAUDE.md「部署」。
+// 自定义域名由 wrangler 自动创建 DNS 记录和证书（域名的 zone 需要在同一个 Cloudflare 账号下）。
+{
+  "$schema": "../worker/node_modules/wrangler/config-schema.json",
+  "name": "pureskyblog",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // 找不到的路径返回 dist/404.html，状态码 404。
+    "not_found_handling": "404-page",
+    // 站点所有链接都带结尾斜杠（astro.config.mjs 的 trailingSlash: 'always'）。
+    "html_handling": "auto-trailing-slash",
+  },
+  "routes": [{ "pattern": "pureskyblog.dpdns.org", "custom_domain": true }],
+  "workers_dev": true,
+}
