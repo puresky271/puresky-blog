@@ -1,31 +1,87 @@
 ---
+/**
+ * 单个标签页。地址用词表里的英文 slug，头部放标签的说明、所属分组和常一起出现的标签。
+ * 只为写过文章的标签生成页面。
+ */
 import PostListing from '@/components/post/PostListing.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
+import { TAG_GROUPS } from '@/config';
 import Base from '@/layouts/Base.astro';
-import { getPosts, getTags, type Post } from '@/lib/content';
-import { withBase } from '@/lib/format';
+import { getPosts, getRelatedTags, getTagStats, type Post, type TagStat } from '@/lib/content';
+import { tagPath, withBase } from '@/lib/format';
 
 export async function getStaticPaths() {
-  const [posts, tags] = await Promise.all([getPosts(), getTags()]);
-  return tags.map(({ tag }) => ({
-    params: { tag },
-    props: { tag, posts: posts.filter((p) => p.data.tags.includes(tag)) },
-  }));
+  const [posts, stats] = await Promise.all([getPosts(), getTagStats()]);
+  return stats
+    .filter((t) => t.count > 0)
+    .map((tag) => ({
+      params: { tag: tag.slug },
+      props: { tag, posts: posts.filter((p) => (p.data.tags as string[]).includes(tag.name)) },
+    }));
 }
 
 interface Props {
-  tag: string;
+  tag: TagStat;
   posts: Post[];
 }
 
 const { tag, posts } = Astro.props;
+const group = TAG_GROUPS.find((g) => g.id === tag.group)!;
+const related = await getRelatedTags(tag.name);
 ---
 
-<Base title={`#${tag}`} description={`标签「${tag}」下的 ${posts.length} 篇文章。`}>
-  <PageHeader title={`#${tag}`} count={posts.length}>
-    <p class="mt-3 text-sm text-fg-muted">
-      <a href={withBase('/tags/')} class="link">全部标签</a>
-    </p>
+<Base title={`#${tag.name}`} description={`${tag.blurb}「${tag.name}」标签下的 ${posts.length} 篇文章。`}>
+  <PageHeader title={`#${tag.name}`} count={posts.length} description={tag.blurb}>
+    <div class="tag-meta">
+      <a href={withBase('/tags/')} class="crumb">分类与标签</a>
+      <span aria-hidden="true">/</span>
+      <span>{group.label}</span>
+    </div>
+    {
+      related.length > 0 && (
+        <div class="related">
+          <span class="related-label">常一起出现</span>
+          <ul class="flex flex-wrap gap-1.5">
+            {related.map((t) => (
+              <li>
+                <a href={tagPath(t.name)} class="chip">
+                  #{t.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
   </PageHeader>
   <PostListing posts={posts} />
 </Base>
+
+<style>
+  .tag-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .crumb {
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .crumb:hover {
+    color: var(--accent);
+  }
+  .related {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+  .related-label {
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+</style>

@@ -4,7 +4,7 @@
  * 服务端和客户端都会 import，所以这里不能碰 astro:content 之类的构建期模块。
  */
 
-import { CJK_CHARS_PER_MINUTE, LATIN_WORDS_PER_MINUTE, SITE } from '@/config';
+import { CJK_CHARS_PER_MINUTE, LATIN_WORDS_PER_MINUTE, SITE, TAGS } from '@/config';
 
 const DATE_FULL = new Intl.DateTimeFormat('zh-CN', {
   year: 'numeric',
@@ -71,18 +71,30 @@ export function formatDuration(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
-/**
- * 阅读时长。中文按字、西文按词分别估算再相加。
- * 代码块按西文算，比按字数估得准。
- */
-export function readingMinutes(markdown: string): number {
+/** 正文的汉字数和西文词数。去掉 frontmatter、标签和 Markdown 符号后再数。 */
+function countText(markdown: string): { cjk: number; latin: number } {
   const text = markdown
     .replace(/^---[\s\S]*?---/, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/[#>*_`~[\]()!|-]/g, ' ');
   const cjk = text.match(/[㐀-鿿豈-﫿]/g)?.length ?? 0;
   const latin = text.replace(/[㐀-鿿豈-﫿]/g, ' ').match(/[A-Za-z0-9]+/g)?.length ?? 0;
+  return { cjk, latin };
+}
+
+/**
+ * 阅读时长。中文按字、西文按词分别估算再相加。
+ * 代码块按西文算，比按字数估得准。
+ */
+export function readingMinutes(markdown: string): number {
+  const { cjk, latin } = countText(markdown);
   return Math.max(1, Math.round(cjk / CJK_CHARS_PER_MINUTE + latin / LATIN_WORDS_PER_MINUTE));
+}
+
+/** 字数：汉字按字、西文按词，和常见的中文字数统计口径一致。 */
+export function wordCount(markdown: string): number {
+  const { cjk, latin } = countText(markdown);
+  return cjk + latin;
 }
 
 /** 拼接 base path。站点可能部署在子路径下，站内链接一律经过这里。 */
@@ -94,7 +106,9 @@ export function withBase(path: string): string {
 }
 
 export const postPath = (id: string) => withBase(`posts/${id}/`);
-export const tagPath = (tag: string) => withBase(`tags/${encodeURIComponent(tag)}/`);
+/** 标签页用词表里的英文 slug，地址干净、不用转义。 */
+const TAG_SLUGS = new Map<string, string>(TAGS.map((t) => [t.name, t.slug]));
+export const tagPath = (tag: string) => withBase(`tags/${TAG_SLUGS.get(tag) ?? encodeURIComponent(tag)}/`);
 export const categoryPath = (id: string) => withBase(`categories/${id}/`);
 
 /** 去掉 base 前缀后的路径，用于导航高亮比较。 */

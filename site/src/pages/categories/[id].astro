@@ -1,9 +1,11 @@
 ---
+/** 分类页：说明、篇数、这个分类里最常用的标签，然后是文章列表。 */
 import PostListing from '@/components/post/PostListing.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { CATEGORIES } from '@/config';
 import Base from '@/layouts/Base.astro';
-import { getPosts, type Post } from '@/lib/content';
+import { getCategoryTags, getPosts, type Post } from '@/lib/content';
+import { tagPath } from '@/lib/format';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
@@ -19,9 +21,25 @@ interface Props {
 }
 
 const { category, posts } = Astro.props;
+const tags = await getCategoryTags(category.id);
 ---
 
 <Base title={category.label} description={category.blurb}>
-  <PageHeader title={category.label} count={posts.length} description={category.blurb} />
+  <PageHeader title={category.label} count={posts.length} description={category.blurb}>
+    {
+      tags.length > 0 && (
+        <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="常用标签">
+          {tags.map((t) => (
+            <li>
+              <a href={tagPath(t.name)} class="chip">
+                #{t.name}
+                <span class="tabular opacity-60">{t.count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </PageHeader>
   <PostListing posts={posts} active={category.id} />
 </Base>

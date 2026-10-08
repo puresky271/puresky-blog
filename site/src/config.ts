@@ -9,7 +9,7 @@ export const SITE = {
   /** 站点名。出现在导航、标题后缀和 RSS 里。 */
   title: 'puresky',
   description:
-    '一个人的工程日志。写记忆系统、角色一致性、地理模拟，以及把这些东西真的跑起来之间发生的事。',
+    '青空的个人博客。',
   lang: 'zh-CN',
   locale: 'zh_CN',
   /** 作者所在时区。日期格式化和时钟的「作者本地时间」都用它。 */
@@ -21,11 +21,11 @@ export const SITE = {
 export const AUTHOR = {
   name: 'puresky',
   /** 名片和关于页用的一句话身份。 */
-  role: '开发者',
+  role: '大二在读，个人开发者',
   /** 首页 hero 的一句话自我介绍。控制在 20 字左右。 */
-  intro: '写记忆系统和角色模拟，也写把它们跑起来时踩过的坑。',
+  intro: '“即使迷茫，也要继续前进”',
   /** 名片背面和关于页的关注方向。 */
-  focus: ['记忆系统', '角色模拟', '地理与时空', '前端工程'],
+  focus: ['记忆系统', '角色模拟', '地理与时空', 'Agent开发'],
   /** 公开联系邮箱。留空则名片和关于页不显示邮箱。 */
   email: '',
   location: '',
@@ -67,7 +67,7 @@ export const WEATHER = {
 } as const;
 
 /** 后端 API 根地址。评论、浏览数、GitHub 刷新、歌词都走这里。 */
-export const API_BASE: string = import.meta.env.PUBLIC_API_BASE ?? 'https://api.puresky.dev';
+export const API_BASE: string = import.meta.env.PUBLIC_API_BASE ?? 'https://api.pureskyblog.dpdns.org';
 
 export const NAV_LINKS = [
   { href: '/posts/', label: '文章', match: ['/posts/', '/tags/', '/categories/'] },
@@ -85,15 +85,67 @@ export const SOCIAL_LINKS: readonly { label: string; href: string; icon: string 
 
 /** 文章分类。id 进 URL，改了会断链，只增不改。 */
 export const CATEGORIES = [
-  { id: 'engineering', label: '工程日志', blurb: '具体问题的排查和修复过程。' },
-  { id: 'systems', label: '系统设计', blurb: '架构取舍，以及为什么这样拆。' },
-  { id: 'cognition', label: '认知与模型', blurb: '记忆、检索、角色一致性。' },
-  { id: 'essays', label: '随笔', blurb: '不那么技术的东西。' },
-  { id: 'field-notes', label: '田野笔记', blurb: '现场记录和调研。' },
+  { id: 'memory', label: '记忆', blurb: '角色记得什么、知道什么，信息怎么在她们之间流动。' },
+  { id: 'world', label: '时空', blurb: '地理、时间与环境：让角色真的身处某个地方、某个时刻。' },
+  { id: 'persona', label: '人格', blurb: '人格、语气与内心：同一个角色怎么在每一轮都还是她。' },
+  { id: 'engineering', label: '工程', blurb: '延迟、并发、提示词装配，把系统跑稳的那些事。' },
+  { id: 'essays', label: '随想', blurb: 'AI 时代里的一些想法，不那么技术。' },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id) as [CategoryId, ...CategoryId[]];
+
+/*
+ * 标签：受控词表。
+ *
+ * 分类回答「这篇属于哪个大方向」（一篇只有一个），标签回答「这篇涉及哪些具体的东西」（一篇三到五个）。
+ * 文章只能用这里声明过的标签，写了未声明的标签构建直接失败（见 content.config.ts）：
+ * 自由标签迟早会长出「prompt / 提示词 / Prompt」三个并存的版本，词表能把这件事挡在构建期。
+ * 新增标签：在对应分组里加一条，slug 进 URL，只增不改。
+ */
+export const TAG_GROUPS = [
+  { id: 'topic', label: '主题', blurb: '文章在讨论的对象。' },
+  { id: 'tech', label: '技术', blurb: '用到的方法、模型和工具。' },
+  { id: 'kind', label: '体裁', blurb: '文章是怎么写的：复盘、实验、踏查还是随想。' },
+] as const;
+
+export type TagGroupId = (typeof TAG_GROUPS)[number]['id'];
+
+export const TAGS = [
+  // 主题
+  { name: '角色扮演', slug: 'roleplay', group: 'topic', blurb: 'AI RP：让角色成为能延续下去的个体，而不是一问一答的聊天框。' },
+  { name: '记忆系统', slug: 'memory-system', group: 'topic', blurb: '长期记忆的写入、召回、整理与遗忘。' },
+  { name: '多智能体', slug: 'multi-agent', group: 'topic', blurb: '多个角色之间的信息流动、传话与协作。' },
+  { name: '世界模拟', slug: 'world-sim', group: 'topic', blurb: '世界状态、日程与时间推进，角色活在一个会自己转的世界里。' },
+  { name: '地理', slug: 'geography', group: 'topic', blurb: '位置、路线与空间关系。' },
+  { name: '时间', slug: 'time', group: 'topic', blurb: '时段、日程与角色对时间的感知。' },
+  { name: '环境感知', slug: 'perception', group: 'topic', blurb: '角色怎么知道自己周围是什么：天气、室内外、声音与光。' },
+  { name: '人格一致性', slug: 'persona', group: 'topic', blurb: '同一个角色在长对话、多轮重建之后还是她自己。' },
+  { name: 'AI 与人', slug: 'ai-and-people', group: 'topic', blurb: 'AI 时代里人的位置：工作、学习、陪伴与责任。' },
+  { name: '学习', slug: 'learning', group: 'topic', blurb: '作为学生，在答案触手可及的时代怎么学。' },
+  // 技术
+  { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
+  { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
+  { name: '上下文工程', slug: 'context-engineering', group: 'tech', blurb: '有限的上下文窗口里放什么、怎么放。' },
+  { name: '检索', slug: 'retrieval', group: 'tech', blurb: '召回、排序、分词与向量检索。' },
+  { name: '推理模型', slug: 'reasoning', group: 'tech', blurb: '带显式推理通道的模型，以及怎么用好它。' },
+  { name: '评测', slug: 'evaluation', group: 'tech', blurb: '怎么量化「好了没有」：指标、对照实验与回归测试。' },
+  { name: '可观测性', slug: 'observability', group: 'tech', blurb: '日志、追踪与审计：看见系统实际在做什么。' },
+  { name: '性能', slug: 'performance', group: 'tech', blurb: '延迟、吞吐与成本。' },
+  { name: '并发', slug: 'concurrency', group: 'tech', blurb: '多个写入者、锁与数据一致性。' },
+  { name: '缓存', slug: 'cache', group: 'tech', blurb: '缓存什么、何时失效、谁是权威数据源。' },
+  { name: 'Python', slug: 'python', group: 'tech', blurb: 'Python 生态与运行环境。' },
+  { name: '前端', slug: 'frontend', group: 'tech', blurb: '界面、交互与浏览器。' },
+  // 体裁
+  { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
+  { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
+  { name: '踏查', slug: 'fieldwork', group: 'kind', blurb: '去现场看、记、再写进系统。' },
+  { name: '方法论', slug: 'methodology', group: 'kind', blurb: '从多次踩坑里沉淀下来的做法。' },
+  { name: '反思', slug: 'reflection', group: 'kind', blurb: '不那么技术的想法。' },
+] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
+
+export type TagName = (typeof TAGS)[number]['name'];
+export const TAG_NAMES = TAGS.map((t) => t.name) as [TagName, ...TagName[]];
 
 /** 每页文章数。 */
 export const POSTS_PER_PAGE = 12;

@@ -1,67 +1,234 @@
 ---
+/**
+ * 分类与标签总览。
+ *
+ * 上半部分是五个分类（一篇文章只属于一个）：说明、篇数、这个分类里最常用的几个标签。
+ * 下半部分是完整的标签词表，按「主题 / 技术 / 体裁」分组；还没写过的标签也列出来但淡显，
+ * 读者能一眼看出这个博客关心哪些东西、哪些还没来得及写。
+ */
 import Icon from '@/components/ui/Icon.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import Base from '@/layouts/Base.astro';
-import { getTags } from '@/lib/content';
-import { tagPath } from '@/lib/format';
+import { getCategories, getCategoryTags, getTagGroups } from '@/lib/content';
+import { categoryPath, tagPath } from '@/lib/format';
 
-const tags = await getTags();
-const max = Math.max(1, ...tags.map((t) => t.count));
+const [categories, groups] = await Promise.all([getCategories(), getTagGroups()]);
+const withTags = await Promise.all(categories.map(async (c) => ({ ...c, tags: await getCategoryTags(c.id, 4) })));
+const used = groups.reduce((sum, g) => sum + g.tags.filter((t) => t.count > 0).length, 0);
+const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
 ---
 
-<Base title="标签" description="全部标签。字号越大，写得越多。">
-  <PageHeader title="标签" count={tags.length} description="字号越大，这个话题写得越多。" />
+<Base title="分类与标签" description="五个分类和完整的标签词表。">
+  <PageHeader title="分类与标签" count={used} description="分类回答「属于哪个方向」，一篇只有一个；标签回答「涉及哪些具体的东西」，一篇三到五个。" />
+
   <div class="container-page">
-    {
-      tags.length ? (
-        <ul class="flex flex-wrap items-baseline gap-x-2 gap-y-3">
-          {tags.map(({ tag, count }, i) => (
-            <li data-reveal style={`--reveal-i: ${Math.min(i, 8)}`}>
-              <a
-                href={tagPath(tag)}
-                class="tag"
-                style={`font-size: ${(0.9 + (count / max) * 0.65).toFixed(3)}rem`}
-              >
-                <span class="text-fg-subtle">#</span>
-                {tag}
-                <span class="count tabular">{count}</span>
+    <section aria-labelledby="cat-title">
+      <h2 id="cat-title" class="section-title">分类</h2>
+      <ul class="cats">
+        {
+          withTags.map((c, i) => (
+            <li data-reveal style={`--reveal-i: ${i}`}>
+              <a href={categoryPath(c.id)} class="card card-link cat-card" aria-disabled={c.count === 0 ? 'true' : undefined}>
+                <span class="cat-head">
+                  <span class="cat-name">{c.label}</span>
+                  <span class="cat-count tabular">{c.count} 篇</span>
+                </span>
+                <span class="cat-blurb">{c.blurb}</span>
+                {c.tags.length > 0 && (
+                  <span class="cat-tags">
+                    {c.tags.map((t) => (
+                      <span>#{t.name}</span>
+                    ))}
+                  </span>
+                )}
               </a>
             </li>
-          ))}
-        </ul>
-      ) : (
-        <p class="grid place-items-center gap-3 py-20 text-fg-muted">
-          <Icon name="tag" size={28} class="text-fg-subtle" />
-          还没有标签。
-        </p>
-      )
-    }
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-16" aria-labelledby="tag-title">
+      <h2 id="tag-title" class="section-title">标签</h2>
+      <div class="groups">
+        {
+          groups.map((g) => (
+            <section class="group" aria-label={g.label}>
+              <header class="group-head">
+                <h3>{g.label}</h3>
+                <p>{g.blurb}</p>
+              </header>
+              <ul class="tags">
+                {g.tags.map((t) =>
+                  t.count > 0 ? (
+                    <li>
+                      <a href={tagPath(t.name)} class="tag" title={t.blurb} style={`--weight: ${(t.count / max).toFixed(3)}`}>
+                        <span class="hash">#</span>
+                        {t.name}
+                        <span class="count tabular">{t.count}</span>
+                      </a>
+                    </li>
+                  ) : (
+                    <li>
+                      <span class="tag is-empty" title={`${t.blurb}（还没有文章）`}>
+                        <span class="hash">#</span>
+                        {t.name}
+                      </span>
+                    </li>
+                  )
+                )}
+              </ul>
+            </section>
+          ))
+        }
+      </div>
+      <p class="hint">
+        <Icon name="info" size={14} />
+        淡色的标签还没有文章。标签只能从固定的词表里选，所以不会出现两个意思相同的标签。
+      </p>
+    </section>
   </div>
 </Base>
 
 <style>
+  .section-title {
+    margin-bottom: 1.1rem;
+  }
+  .cats {
+    display: grid;
+    gap: 0.9rem;
+  }
+  @media (width >= 40rem) {
+    .cats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (width >= 64rem) {
+    .cats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .cat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.15rem 1.25rem 1.2rem;
+  }
+  .cat-card[aria-disabled='true'] {
+    opacity: 0.55;
+  }
+  .cat-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .cat-name {
+    font-size: 1.125rem;
+    font-weight: 650;
+    color: var(--fg);
+    transition: color 160ms ease;
+  }
+  .cat-card:hover .cat-name {
+    color: var(--accent);
+  }
+  .cat-count {
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .cat-blurb {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--fg-muted);
+  }
+  .cat-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.7rem;
+    margin-top: auto;
+    padding-top: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  .groups {
+    display: grid;
+    gap: 1rem;
+  }
+  .group {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  @media (width >= 48rem) {
+    .group {
+      grid-template-columns: 9rem minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+  }
+  .group-head h3 {
+    font-size: 1rem;
+    font-weight: 650;
+    color: var(--fg);
+  }
+  .group-head p {
+    margin-top: 0.3rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--fg-subtle);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0.5rem;
+  }
+  /* 写得越多，底色越深一点，而不是字号越大：一组里的标签保持同一个高度，读起来整齐。 */
   .tag {
     display: inline-flex;
     align-items: baseline;
-    gap: 0.2em;
-    padding: 0.35em 0.8em;
+    gap: 0.15em;
+    height: 2rem;
+    align-items: center;
+    padding-inline: 0.8rem;
     border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
+    border: 1px solid color-mix(in oklab, var(--accent) calc(12% + var(--weight, 0) * 30%), var(--line));
+    background: color-mix(in oklab, var(--accent) calc(var(--weight, 0) * 14%), var(--surface));
+    font-size: 0.875rem;
     color: var(--fg);
     transition:
       border-color 160ms ease,
       color 160ms ease,
       transform 200ms var(--ease-out-expo);
   }
-  .tag:hover {
+  a.tag:hover {
     color: var(--accent);
-    border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+    border-color: color-mix(in oklab, var(--accent) 50%, var(--line));
     transform: translateY(-1px);
   }
+  .hash {
+    color: var(--fg-subtle);
+  }
   .count {
-    margin-left: 0.3em;
-    font-size: 0.75rem;
+    margin-left: 0.35em;
+    font-size: 0.72rem;
+    color: var(--fg-subtle);
+  }
+  .tag.is-empty {
+    border-style: dashed;
+    border-color: var(--line);
+    background: transparent;
+    color: var(--fg-subtle);
+  }
+  .hint {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    font-size: 0.8125rem;
     color: var(--fg-subtle);
   }
 </style>

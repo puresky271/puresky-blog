@@ -7,8 +7,8 @@
 
 import { getCollection, type CollectionEntry } from 'astro:content';
 
-import { CATEGORIES, type CategoryId } from '@/config';
-import { formatDateISO, readingMinutes } from '@/lib/format';
+import { CATEGORIES, TAG_GROUPS, TAGS, type CategoryId } from '@/config';
+import { formatDateISO, readingMinutes, wordCount } from '@/lib/format';
 
 export type Post = CollectionEntry<'posts'>;
 export type Illustration = CollectionEntry<'illustrations'>;
@@ -35,6 +35,10 @@ export function postMinutes(post: Post): number {
   return readingMinutes(post.body ?? '');
 }
 
+export function postWords(post: Post): number {
+  return wordCount(post.body ?? '');
+}
+
 export function categoryOf(id: CategoryId) {
   return CATEGORIES.find((c) => c.id === id)!;
 }
@@ -47,7 +51,7 @@ export async function getCategories() {
   }));
 }
 
-/** 标签及其文章数，按数量降序、同数量按字典序。 */
+/** 标签及其文章数，只含用到过的，按数量降序、同数量按字典序。 */
 export async function getTags(): Promise<{ tag: string; count: number }[]> {
   const counts = new Map<string, number>();
   for (const post of await getPosts()) {
@@ -56,6 +60,55 @@ export async function getTags(): Promise<{ tag: string; count: number }[]> {
   return [...counts.entries()]
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-CN'));
+}
+
+export type TagEntry = (typeof TAGS)[number];
+export type TagStat = TagEntry & { count: number };
+
+/** 按名字查词表里的标签。 */
+export function tagOf(name: string): TagEntry | undefined {
+  return TAGS.find((t) => t.name === name);
+}
+
+/** 词表里的每个标签和它的文章数（没用到的为 0），保持词表里的顺序。 */
+export async function getTagStats(): Promise<TagStat[]> {
+  const counts = new Map((await getTags()).map(({ tag, count }) => [tag, count]));
+  return TAGS.map((t) => ({ ...t, count: counts.get(t.name) ?? 0 }));
+}
+
+/** 按分组列出词表。标签页展示完整的词表，没写过的标签淡显。 */
+export async function getTagGroups() {
+  const stats = await getTagStats();
+  return TAG_GROUPS.map((group) => ({ ...group, tags: stats.filter((t) => t.group === group.id) }));
+}
+
+/** 和某个标签一起出现得最多的标签（共现次数降序）。 */
+export async function getRelatedTags(name: string, limit = 6): Promise<TagStat[]> {
+  const together = new Map<string, number>();
+  for (const post of await getPosts()) {
+    if (!post.data.tags.includes(name as never)) continue;
+    for (const tag of post.data.tags) if (tag !== name) together.set(tag, (together.get(tag) ?? 0) + 1);
+  }
+  const stats = await getTagStats();
+  return stats
+    .filter((t) => together.has(t.name))
+    .sort((a, b) => together.get(b.name)! - together.get(a.name)! || b.count - a.count)
+    .slice(0, limit);
+}
+
+/** 某个分类下最常用的标签。 */
+export async function getCategoryTags(id: CategoryId, limit = 8): Promise<TagStat[]> {
+  const counts = new Map<string, number>();
+  for (const post of await getPosts()) {
+    if (post.data.category !== id) continue;
+    for (const tag of post.data.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+  const stats = await getTagStats();
+  return stats
+    .filter((t) => counts.has(t.name))
+    .sort((a, b) => counts.get(b.name)! - counts.get(a.name)!)
+    .slice(0, limit)
+    .map((t) => ({ ...t, count: counts.get(t.name)! }));
 }
 
 /** 时间上相邻的两篇。newer 是更新的那篇。 */

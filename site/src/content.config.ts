@@ -1,15 +1,15 @@
 /**
  * content.config.ts — 内容集合 schema。
  *
- * category 约束到 config.ts 里声明的分类，写了未声明的值构建直接失败，
- * 而不是渲染出一个没有名字的分类页。
+ * category 和 tags 都约束到 config.ts 里声明的分类和标签词表，写了未声明的值构建直接失败，
+ * 而不是渲染出一个没有名字的分类页，或者长出第二个意思相同的标签。
  */
 
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
-import { CATEGORY_IDS } from './config';
+import { CATEGORY_IDS, TAG_NAMES } from './config';
 
 const posts = defineCollection({
   loader: glob({ base: './src/content/posts', pattern: '**/*.{md,mdx}' }),
@@ -21,7 +21,8 @@ const posts = defineCollection({
       pubDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
       category: z.enum(CATEGORY_IDS),
-      tags: z.array(z.string().min(1).max(24)).default([]),
+      /** 三到五个，只能从 config.ts 的 TAGS 里选。 */
+      tags: z.array(z.enum(TAG_NAMES)).max(6).default([]),
 
       /** 系列名。同系列文章在文末互相串联。 */
       series: z.string().optional(),
