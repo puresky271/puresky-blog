@@ -3,6 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
 
+# 自定义域名：wrangler deploy 时自动建 DNS 记录和证书（zone 在同一账号下）。
+routes = [{ pattern = "api.pureskyblog.dpdns.org", custom_domain = true }]
+# 同时保留 workers.dev 地址，自定义域名出问题时可以直接用它排查。
+workers_dev = true
+
 # 允许的前端来源。CORS 白名单，不用 * ——
 # 评论接口带 credentials，通配来源会被浏览器直接拒掉，
 # 而且那样任何站点都能拿着用户的 cookie 调这个 API。
@@ -21,23 +26,23 @@ MUSIC_PLAYLISTS = "8385925605"
 [[d1_databases]]
 binding = "DB"
 database_name = "puresky"
-# 用 `wrangler d1 create puresky` 建库后把返回的 id 填进来。
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "817f0f31-cb70-4c5a-b30a-11f61d0b4e34"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-# 用 `wrangler kv namespace create SESSIONS` 建后填 id。
-id = "REPLACE_WITH_SESSIONS_KV_ID"
+id = "5091a87310174ac9a4809c15a4e3c308"
 
 [[kv_namespaces]]
 binding = "CACHE"
-# 第三方接口（GitHub、网易云）的响应缓存。`wrangler kv namespace create CACHE`。
-id = "REPLACE_WITH_CACHE_KV_ID"
+# 第三方接口（GitHub、网易云）的响应缓存。
+id = "f490380f94e84f07bf4d2c5cce01e412"
 
-# R2：文章图片，以及放不进 Pages 的本地曲库（音频、视频）。
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "puresky-media"
+# R2：放不进静态站点的本地曲库（音频、视频，单文件超过 25MB 的）。可选：
+# 账号还没开通 R2，暂时不绑定，/media/* 返回 404。开通后（Dashboard → R2）
+# 运行 `wrangler r2 bucket create puresky-media`，再取消下面三行的注释并重新部署。
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "puresky-media"
 
 # 评论审核用 Workers AI。
 [ai]

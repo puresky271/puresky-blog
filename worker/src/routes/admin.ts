@@ -145,6 +145,8 @@ admin.put('/media/:key{.+}', async (c) => {
     return c.json({ error: 'key 格式不合法' }, 400);
   }
 
+  if (!c.env.MEDIA) return c.json({ error: '还没有绑定 R2，见 wrangler.toml' }, 503);
+
   const contentType = c.req.header('content-type') ?? 'application/octet-stream';
   if (!contentType.startsWith('image/')) {
     return c.json({ error: '只接受图片' }, 415);
@@ -175,6 +177,7 @@ admin.put('/media/:key{.+}', async (c) => {
 });
 
 admin.delete('/media/:key{.+}', async (c) => {
+  if (!c.env.MEDIA) return c.json({ error: '还没有绑定 R2，见 wrangler.toml' }, 503);
   const key = c.req.param('key');
   await c.env.MEDIA.delete(key);
   await c.env.DB.prepare('DELETE FROM media WHERE key = ?').bind(key).run();

@@ -10,7 +10,8 @@ export interface Env {
   DB: D1Database;
   SESSIONS: KVNamespace;
   CACHE: KVNamespace;
-  MEDIA: R2Bucket;
+  /** 可选：账号开通 R2 并绑定后才有。没有时 /media/* 返回 404。 */
+  MEDIA?: R2Bucket;
   AI: Ai;
 
   COMMENT_LIMITER: RateLimiter;

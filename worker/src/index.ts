@@ -71,6 +71,7 @@ app.get('/api/health', (c) => c.json({ ok: true }));
  * 带强缓存头，因为上传后的文件不会原地修改（改了就换文件名）。
  */
 app.on(['GET', 'HEAD'], '/media/:key{.+}', async (c) => {
+  if (!c.env.MEDIA) return c.notFound();
   const key = decodeURIComponent(c.req.param('key'));
   if (key.includes('..')) return c.notFound();
 
