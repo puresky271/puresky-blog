@@ -22,7 +22,11 @@ npm run dev       # astro dev，本地 :4321。.env.development 让 API 指向�
 npm run build     # astro build && pagefind（生成搜索索引；开发模式下没有搜索）
 npm run check     # astro check + svelte-check，两者都应 0 错误 0 警告
 npm run icons     # 改了 scripts/gen-icons.mjs 的图标列表后重新生成 src/lib/icons.generated.ts
+npm run deploy    # 构建 + 搜索索引 + 把 dist/ 直接上传到 Cloudflare Pages（需先在 worker/ 里 npx wrangler login）
 ```
+
+本地文章编辑器：`npm run dev` 后打开 http://localhost:4321/__editor/（导航栏的笔形按钮、文章页底部的「在编辑器中打开」也能进）。
+它由 `site/editor/integration.mjs` 只在 `astro dev` 时注入，构建产物里没有页面也没有接口。
 
 构建时可设 `GITHUB_TOKEN`：有它 GitHub 快照走 GraphQL（精确贡献日历、个人状态），没有就走公开接口。
 开发模式下 GitHub / 网易云快照缓存在 `node_modules/.cache/puresky/`（30 分钟），要强制刷新就删掉这个目录。
@@ -55,7 +59,9 @@ npm run deploy
 
 ### 内容
 
-`site/src/content/` 四个集合：`posts`（mdx）、`illustrations`（md + `src/assets/illustrations` 里的图）、`projects`、`friends`（json）。
+`site/src/content/` 四个集合：`posts`（md，新文章一律 .md；MDX 会把正文里的 { } < 当语法）、`illustrations`（md + `src/assets/illustrations` 里的图）、`projects`、`friends`（json）。
+分类（一篇一个）和标签（一篇三到五个）都是 `config.ts` 里的受控词表：`CATEGORIES`、`TAG_GROUPS`、`TAGS`。
+写了词表外的分类或标签，整个 posts 集合会加载失败（dev 下所有文章 404），新增标签先在 `TAGS` 里登记，slug 只增不改。
 页面一律通过 `src/lib/content.ts` 查内容（草稿过滤、排序、统计只在这一处），不直接调 `getCollection`。
 Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点旁的加粗）、`remark-cjk-lines`（去掉汉字间软换行）、
 `remark-callout`（`> [!NOTE]`）、`rehype-heading-anchors`（保留中文的锚点）、`rehype-external-links`。
@@ -112,8 +118,20 @@ worker 挂了页面上仍是上次构建的数据，不会是一片骨架屏。�
 - **代理不做开放代理**：GitHub 只代理配置的账号，网易云歌单只代理白名单；第三方响应缓存在 KV（`lib/cache.ts`），只在缓存未命中时过 `PROXY_LIMITER`，上游失败时用过期值兜底（MV 除外）。
 - **`/media/*` 支持 Range**，本地曲库放 R2 时音视频才能拖进度。
 
+### 本地文章编辑器
+
+`site/editor/api.mjs`（Node 中间件）+ `site/src/editor/`（Svelte + CodeMirror 6）。改动时保持：
+- 接口只认回环地址 + localhost 的 Host + 本机 Origin + 自定义头 `x-puresky-editor`，缺一不可（它能写文件、能跑 git）。
+- slug 只允许 `[a-z0-9-]`，所有路径解析后必须落在 posts 目录里。
+- 预览用 astro.config.mjs 里同一份 remark/rehype/shiki 配置，别另起一套。
+- 「提交并推送」只提交 posts 目录（`git commit -- site/src/content/posts`），不带走工作区别的改动。
+- `api.mjs` 在 dev server 启动时加载一次，改了它要重启 dev server 才生效。
+
 ### 部署
 
-同一份 site 部署到 Cloudflare Pages（根路径）和 GitHub Pages（`/puresky-blog/` 子路径），`astro.config.mjs` 从环境变量推导 base。
+正式站点：https://pureskyblog.dpdns.org （Cloudflare Pages 项目 `puresky-blog`，从本机 `npm run deploy` 直接上传 dist）。
+首页和关于页的插画放在 `site/src/assets/local/home.*`、`about.*`（已 gitignore，仓库是公开的，图不进仓库）：
+本机构建会带上它们，没有这两张图的构建（CI、别人 clone）自动回退到仓库里的插画。所以要上线插画必须从本机部署。
+同一份 site 也能部署到 GitHub Pages（`/puresky-blog/` 子路径），`astro.config.mjs` 从环境变量推导 base。
 站内链接和 fetch 路径一律经 `src/lib/format.ts` 的 `withBase`，不手写绝对路径。
 Cloudflare Pages 单文件上限 25MB：无损音频和视频不要放进 `public/`，放 R2。
