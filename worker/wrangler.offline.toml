@@ -16,11 +16,11 @@ compatibility_flags = ["nodejs_compat"]
 ALLOWED_ORIGINS = "https://puresky.dev,https://puresky.github.io,http://localhost:4321,http://127.0.0.1:4321"
 SITE_ORIGIN = "https://puresky.dev"
 # 站长的 GitHub 登录名。用于给作者本人的评论加标记、放行管理接口。
-OWNER_LOGIN = "puresky"
+OWNER_LOGIN = "puresky271"
 # 评论是否需要审核后才显示。
 MODERATION_ENABLED = "true"
 # GitHub 概览只代理这个账号，避免被当成任意用户的查询代理。
-GITHUB_USERNAME = "puresky"
+GITHUB_USERNAME = "puresky271"
 # 允许代理的网易云歌单，逗号分隔。和 site/src/config.ts 的 MUSIC.playlistId 保持一致。
 MUSIC_PLAYLISTS = "19723756"
 

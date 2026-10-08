@@ -36,8 +36,8 @@ export const AUTHOR = {
  * repo 用于在文章底部生成「查看源文件 / 修改历史」链接。
  */
 export const GITHUB = {
-  username: 'puresky',
-  repo: 'puresky/puresky-blog',
+  username: 'puresky271',
+  repo: 'puresky271/puresky-blog',
   branch: 'main',
   /** 文章源文件相对仓库根的目录。 */
   contentPath: 'site/src/content/posts',
