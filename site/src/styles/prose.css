@@ -2,15 +2,21 @@
  * prose.css — 文章正文排版。
  *
  * 只作用于 .prose 容器。中文正文 17px / 1.85 行高，段间距略大于行间距，
- * 让段落边界一眼可辨；行宽控制在约 38 个汉字。
+ * 让段落边界一眼可辨；版心 58rem，一行约 54 个汉字。
+ *
+ * 配色原则：正文比标题略淡一档，标题和加粗才用最深的前景色，层次靠明度而不是字号堆出来；
+ * 引用、列表标记、行内代码这些「结构性」的地方统一染一点主色蓝，和全站的蓝色呼应，但都压得很淡，不抢正文。
  */
+
+@import '@fontsource/noto-serif-sc/600.css';
 
 .prose {
   --prose-size: 1.0625rem;
+  --prose-text: color-mix(in oklab, var(--fg) 86%, var(--fg-muted));
   font-size: var(--prose-size);
   line-height: 1.85;
-  color: var(--fg);
-  max-width: 42rem;
+  color: var(--prose-text);
+  max-width: 58rem;
   overflow-wrap: break-word;
 }
 
@@ -30,27 +36,41 @@
 .prose h4 {
   position: relative;
   color: var(--fg);
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.4;
 }
+/* 二级标题带一条通栏细线，像文档的章节分隔。 */
 .prose h2 {
   font-size: 1.5rem;
-  margin-top: 2.4em;
-  padding-top: 0.2em;
+  margin-top: 2.2em;
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid var(--line);
 }
+/* 三级标题左侧一小截主色竖条。 */
 .prose h3 {
-  font-size: 1.225rem;
-  margin-top: 2em;
+  font-size: 1.2rem;
+  margin-top: 1.9em;
+  padding-left: 0.75em;
+}
+.prose h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.32em;
+  bottom: 0.32em;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
 }
 .prose h4 {
   font-size: 1.0625rem;
-  margin-top: 1.8em;
+  margin-top: 1.7em;
 }
 .prose h2 + *,
 .prose h3 + *,
 .prose h4 + * {
-  margin-top: 0.75em;
+  margin-top: 0.8em;
 }
 
 /* 锚点挂在标题左侧页边，悬停标题时出现。窄屏放回行内。 */
@@ -62,6 +82,9 @@
   font-weight: 400;
   opacity: 0;
   transition: opacity 160ms ease, color 160ms ease;
+}
+.prose h3 .heading-anchor {
+  left: -1.25em;
 }
 .prose :is(h2, h3, h4):hover .heading-anchor,
 .prose .heading-anchor:focus-visible {
@@ -97,14 +120,16 @@
   color: var(--fg);
 }
 
+/* 行内代码：一枚很淡的蓝色胶囊，字用深一档的主色。 */
 .prose :not(pre) > code {
   font-family: var(--font-mono);
-  font-size: 0.875em;
-  padding: 0.12em 0.4em;
+  font-size: 0.86em;
+  padding: 0.14em 0.42em;
   border-radius: 6px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  color: var(--fg);
+  color: var(--accent-strong);
+  background: color-mix(in oklab, var(--accent) 7%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--accent) 16%, var(--line));
+  overflow-wrap: anywhere;
 }
 
 .prose kbd {
@@ -115,6 +140,14 @@
   border: 1px solid var(--line-strong);
   border-bottom-width: 2px;
   background: var(--surface);
+  color: var(--fg);
+}
+
+.prose mark {
+  padding: 0.05em 0.25em;
+  border-radius: 4px;
+  color: var(--fg);
+  background: color-mix(in oklab, var(--warning) 26%, transparent);
 }
 
 .prose sub,
@@ -126,54 +159,122 @@
 
 .prose ul,
 .prose ol {
-  padding-left: 1.4em;
+  padding-left: 1.5em;
 }
-.prose ul {
-  list-style: disc;
-}
-.prose ol {
-  list-style: decimal;
-}
-.prose li + li {
-  margin-top: 0.4em;
+.prose li + li,
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.45em;
 }
 .prose li::marker {
   color: var(--fg-subtle);
 }
+
+/* 无序列表：主色小圆点，二级是空心圆环，三级是短横。圆点对齐第一行的中线。 */
+.prose ul {
+  list-style: none;
+}
+.prose ul > li {
+  position: relative;
+}
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: -1.05em;
+  top: calc(0.925em - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) 80%, transparent);
+}
+.prose ul ul > li::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 70%, transparent);
+}
+.prose ul ul ul > li::before {
+  top: calc(0.925em - 1px);
+  height: 2px;
+  border-radius: 2px;
+  box-shadow: none;
+  background: color-mix(in oklab, var(--accent) 60%, transparent);
+}
+
+/* 有序列表：主色等宽数字。 */
+.prose ol {
+  list-style: decimal;
+}
+.prose ol > li {
+  padding-left: 0.2em;
+}
 .prose ol > li::marker {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* 任务列表：不要圆点，复选框用主色。 */
+.prose ul.contains-task-list {
+  padding-left: 0.25em;
+}
+.prose li.task-list-item::before {
+  display: none;
+}
+.prose li.task-list-item input[type='checkbox'] {
+  margin-right: 0.55em;
+  accent-color: var(--accent);
+  translate: 0 0.1em;
 }
 
 /* ── 引用与提示块 ── */
 
+/*
+ * 引用：左边一道主色竖线，底是极淡的蓝，右侧圆角，字比正文再淡一点。
+ * 和提示块（callout）的区别是没有边框和标题，是「别人说的话」，不是「我提醒你」。
+ */
 .prose blockquote {
-  padding: 0.1em 0 0.1em 1.1em;
-  border-left: 3px solid var(--line-strong);
-  color: var(--fg-muted);
+  padding: 0.8em 1.15em 0.8em 1.2em;
+  border-left: 3px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  border-radius: 4px 14px 14px 4px;
+  background: color-mix(in oklab, var(--accent) 5%, var(--surface));
+  color: color-mix(in oklab, var(--fg) 72%, var(--fg-muted));
+}
+[data-theme='dark'] .prose blockquote {
+  background: color-mix(in oklab, var(--accent) 7%, var(--surface));
+}
+.prose blockquote > * + * {
+  margin-top: 0.6em;
+}
+.prose blockquote strong {
+  color: var(--fg);
 }
 
 .prose .callout {
   --callout: var(--accent);
-  padding: 0.95em 1.15em;
-  border-radius: var(--radius-control);
-  border: 1px solid color-mix(in oklab, var(--callout) 28%, var(--line));
-  background: color-mix(in oklab, var(--callout) 7%, var(--surface));
+  padding: 0.9em 1.15em 0.95em 1.2em;
+  border: 1px solid color-mix(in oklab, var(--callout) 22%, var(--line));
+  border-left: 3px solid var(--callout);
+  border-radius: 4px 14px 14px 4px;
+  background: color-mix(in oklab, var(--callout) 6%, var(--surface));
   font-size: 0.96em;
 }
 .prose .callout > * + * {
-  margin-top: 0.6em;
+  margin-top: 0.55em;
 }
 .prose .callout-title {
-  font-size: 0.85em;
-  font-weight: 650;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--callout);
 }
 .prose .callout-tip {
   --callout: var(--success);
 }
 .prose .callout-important {
-  --callout: var(--accent-strong);
+  --callout: oklch(0.58 0.17 295);
+}
+[data-theme='dark'] .prose .callout-important {
+  --callout: oklch(0.75 0.13 295);
 }
 .prose .callout-warning {
   --callout: var(--warning);
@@ -184,18 +285,24 @@
 
 /* ── 代码块 ── */
 
+/*
+ * 代码块是一扇「窗」：顶部一条标题栏（语言 + 复制，由 PostEnhance.astro 包裹注入），下面是代码。
+ * 没有 JS 时只有 <pre>，同样有边框和圆角，照常可读。
+ * 亮色下是比纸面略灰的浅底，暗色下比页面再沉一档，代码区和正文一眼分开。
+ */
 .prose pre {
   position: relative;
   margin-inline: -0.25rem;
-  padding: 1.05em 1.15em;
-  border-radius: var(--radius-control);
-  border: 1px solid var(--line);
+  padding: 1em 1.15em;
+  border-radius: 14px;
+  border: 1px solid var(--code-line);
   background: var(--code-bg) !important;
   font-family: var(--font-mono);
   font-size: 0.84rem;
   line-height: 1.7;
   overflow-x: auto;
   tab-size: 2;
+  font-variant-ligatures: none;
 }
 .prose pre code {
   font-family: inherit;
@@ -204,6 +311,74 @@
   .prose pre {
     margin-inline: -1rem;
   }
+}
+
+.prose .code-block {
+  margin-inline: -0.25rem;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--code-line);
+  background: var(--code-bg);
+}
+@media (width >= 48rem) {
+  .prose .code-block {
+    margin-inline: -1rem;
+  }
+}
+.prose .code-block pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.code-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.35rem;
+  padding: 0 0.4rem 0 0.95rem;
+  border-bottom: 1px solid var(--code-line);
+  background: var(--code-head);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--fg-subtle);
+  user-select: none;
+}
+.code-dots {
+  display: flex;
+  gap: 5px;
+}
+.code-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+.code-dots i:first-child {
+  background: color-mix(in oklab, var(--accent) 65%, var(--line-strong));
+}
+.code-lang {
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 1.7rem;
+  margin-left: auto;
+  padding-inline: 0.55rem;
+  border-radius: 7px;
+  color: var(--fg-muted);
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+.code-copy:hover {
+  color: var(--fg);
+  background: var(--surface-2);
+}
+.code-copy[data-copied] {
+  color: var(--success);
 }
 
 /* Shiki 双主题：默认输出亮色，暗色模式切到 --shiki-dark。背景统一由 --code-bg 控制。 */
@@ -215,51 +390,6 @@
   text-decoration: var(--shiki-dark-text-decoration) !important;
 }
 
-/* 代码块工具条：语言标签 + 复制按钮，由 Post.astro 的脚本注入。 */
-.code-tools {
-  position: absolute;
-  top: 0.45rem;
-  right: 0.45rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  opacity: 0;
-  transition: opacity 160ms ease;
-}
-.prose pre:hover .code-tools,
-.prose pre:focus-within .code-tools {
-  opacity: 1;
-}
-@media (hover: none) {
-  .code-tools {
-    opacity: 1;
-  }
-}
-.code-tools .code-lang {
-  font-size: 0.7rem;
-  color: var(--fg-subtle);
-  padding-inline: 0.4rem;
-  text-transform: lowercase;
-}
-.code-tools button {
-  display: inline-grid;
-  place-items: center;
-  width: 1.85rem;
-  height: 1.85rem;
-  border-radius: 8px;
-  color: var(--fg-muted);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  transition: color 160ms ease, border-color 160ms ease;
-}
-.code-tools button:hover {
-  color: var(--fg);
-  border-color: var(--line-strong);
-}
-.code-tools button[data-copied] {
-  color: var(--success);
-}
-
 /* ── 表格 ── */
 
 .prose table {
@@ -267,24 +397,72 @@
   width: max-content;
   max-width: 100%;
   overflow-x: auto;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   font-size: 0.92em;
   font-variant-numeric: tabular-nums;
 }
 .prose th,
 .prose td {
-  padding: 0.55em 0.9em;
+  padding: 0.55em 1em;
   text-align: left;
   border-bottom: 1px solid var(--line);
 }
 .prose th {
   font-weight: 600;
-  color: var(--fg-muted);
   font-size: 0.92em;
-  border-bottom-color: var(--line-strong);
+  color: var(--fg);
+  background: var(--surface-2);
+}
+.prose tbody tr:nth-child(even) td {
+  background: color-mix(in oklab, var(--surface-2) 45%, transparent);
 }
 .prose tr:last-child td {
   border-bottom: 0;
+}
+
+/* ── 折叠块 ── */
+
+.prose details {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.prose summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7em 1em;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 160ms ease;
+}
+.prose summary::-webkit-details-marker {
+  display: none;
+}
+.prose summary::before {
+  content: '';
+  width: 0.4em;
+  height: 0.4em;
+  border-right: 1.5px solid var(--fg-subtle);
+  border-bottom: 1.5px solid var(--fg-subtle);
+  rotate: -45deg;
+  transition: rotate 200ms var(--ease-out-expo);
+}
+.prose details[open] > summary::before {
+  rotate: 45deg;
+}
+.prose summary:hover {
+  background: var(--surface-2);
+}
+.prose details > :not(summary) {
+  margin: 0;
+  padding: 0 1em 0.9em 2em;
 }
 
 /* ── 图片与分隔 ── */
@@ -307,7 +485,7 @@
   margin-block: 2.5em;
   border: 0;
   height: 1px;
-  background: var(--line);
+  background: linear-gradient(90deg, transparent, var(--line-strong) 20%, var(--line-strong) 80%, transparent);
 }
 
 /* ── 脚注 ── */
@@ -322,6 +500,8 @@
 .prose .footnotes h2 {
   font-size: 0.95rem;
   margin-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 .prose [data-footnote-ref] {
   font-family: var(--font-mono);

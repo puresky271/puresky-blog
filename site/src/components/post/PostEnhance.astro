@@ -1,6 +1,6 @@
 ---
 /**
- * PostEnhance.astro — 正文的渐进增强：代码块的语言标签和复制按钮、分享按钮。
+ * PostEnhance.astro — 正文的渐进增强：代码块的标题栏（语言标签、复制按钮）、分享按钮。
  * 没有 JS 时正文照常可读，这些都是锦上添花。
  */
 import { iCheck, iCopy } from '@/lib/icons.generated';
@@ -12,44 +12,51 @@ const svg = (icon: { size: number; body: string }) =>
 <template id="code-icons" data-copy={svg(iCopy)} data-check={svg(iCheck)}></template>
 
 <script>
+  /**
+   * 代码块包成一扇「窗」：标题栏（三点 + 语言 + 复制按钮）在上，<pre> 在下。
+   * 样式见 prose.css 的 .code-block / .code-head。
+   */
   function enhanceCode() {
     const icons = document.getElementById('code-icons') as HTMLTemplateElement | null;
     if (!icons) return;
     document.querySelectorAll<HTMLPreElement>('.prose pre:not([data-enhanced])').forEach((pre) => {
       pre.dataset.enhanced = '';
-      const tools = document.createElement('div');
-      tools.className = 'code-tools';
+
+      const block = document.createElement('div');
+      block.className = 'code-block';
+      const head = document.createElement('div');
+      head.className = 'code-head';
+      head.innerHTML = '<span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span>';
 
       const lang = pre.dataset.language;
-      if (lang && lang !== 'plaintext') {
-        const label = document.createElement('span');
-        label.className = 'code-lang';
-        label.textContent = lang;
-        tools.append(label);
-      }
+      const label = document.createElement('span');
+      label.className = 'code-lang';
+      label.textContent = lang && lang !== 'plaintext' ? lang : 'text';
+      head.append(label);
 
       const button = document.createElement('button');
       button.type = 'button';
-      button.setAttribute('aria-label', '复制代码');
-      button.innerHTML = icons.dataset.copy!;
+      button.className = 'code-copy';
+      const idle = `${icons.dataset.copy!}<span>复制</span>`;
+      button.innerHTML = idle;
       button.addEventListener('click', async () => {
         const code = pre.querySelector('code')?.innerText ?? pre.innerText;
         try {
           await navigator.clipboard.writeText(code.replace(/\n$/, ''));
-          button.innerHTML = icons.dataset.check!;
+          button.innerHTML = `${icons.dataset.check!}<span>已复制</span>`;
           button.dataset.copied = '';
-          button.setAttribute('aria-label', '已复制');
           setTimeout(() => {
-            button.innerHTML = icons.dataset.copy!;
+            button.innerHTML = idle;
             delete button.dataset.copied;
-            button.setAttribute('aria-label', '复制代码');
           }, 1600);
         } catch {
-          button.setAttribute('aria-label', '复制失败，请手动选择');
+          button.innerHTML = `${icons.dataset.copy!}<span>复制失败</span>`;
         }
       });
-      tools.append(button);
-      pre.append(tools);
+      head.append(button);
+
+      pre.replaceWith(block);
+      block.append(head, pre);
     });
   }
 

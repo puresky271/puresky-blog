@@ -1,0 +1,176 @@
+---
+/**
+ * PageScrollbar.astro — 页面级的悬浮滚动条，替代浏览器原生滚动条。
+ *
+ * 不占版心宽度：贴着视口右缘悬浮，滚动时出现，停下来一会儿淡出；
+ * 指针靠近右缘时变粗，可以拖动滑块，点轨道空白处翻一屏。
+ * 挂在 transition:persist 上，换页时是同一个节点，只需要重新量一下页面高度。
+ *
+ * 键盘、触控板、触屏滚动都不经过它，它只是一个指示器加一个拖拽手柄，
+ * 所以对读屏器隐藏（页面本身仍然是可滚动的文档）。
+ */
+---
+
+<div class="page-scrollbar" data-page-scrollbar aria-hidden="true" transition:persist="page-scrollbar">
+  <div class="thumb" data-thumb></div>
+</div>
+
+<style>
+  .page-scrollbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-dock);
+    width: 14px;
+    opacity: 0;
+    transition: opacity 360ms ease;
+    touch-action: none;
+  }
+  /* 页面不够长时整条不出现。 */
+  .page-scrollbar[data-hidden] {
+    display: none;
+  }
+  .page-scrollbar.is-active,
+  .page-scrollbar:hover,
+  .page-scrollbar.is-dragging {
+    opacity: 1;
+    transition-duration: 120ms;
+  }
+  .thumb {
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 5px;
+    min-height: 40px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--fg) 30%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--bg) 50%, transparent);
+    will-change: transform;
+    transition:
+      width 200ms var(--ease-out-expo),
+      right 200ms var(--ease-out-expo),
+      background-color 200ms ease;
+  }
+  .page-scrollbar:hover .thumb,
+  .page-scrollbar.is-dragging .thumb {
+    right: 2px;
+    width: 9px;
+    background: color-mix(in oklab, var(--accent) 78%, transparent);
+  }
+  /* 有弹窗时（原生 dialog 锁滚动）隐藏，免得浮在遮罩上面。 */
+  :global(html:has(dialog[open])) .page-scrollbar {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .page-scrollbar {
+      pointer-events: none;
+    }
+  }
+</style>
+
+<script>
+  const PAD = 6;
+  const IDLE = 1100;
+
+  let bar: HTMLElement | null = null;
+  let thumb: HTMLElement | null = null;
+  let frame = 0;
+  let idleTimer = 0;
+  let thumbSize = 0;
+  let travel = 0;
+  let drag: { startY: number; startScroll: number } | null = null;
+
+  const root = document.documentElement;
+  const maxScroll = () => Math.max(0, root.scrollHeight - innerHeight);
+
+  function measure() {
+    if (!bar || !thumb) return;
+    const max = maxScroll();
+    if (max < 2) {
+      bar.dataset.hidden = '';
+      return;
+    }
+    delete bar.dataset.hidden;
+    const track = innerHeight - PAD * 2;
+    thumbSize = Math.max(40, Math.round((innerHeight / root.scrollHeight) * track));
+    travel = track - thumbSize;
+    thumb.style.height = `${thumbSize}px`;
+    position();
+  }
+
+  function position() {
+    if (!thumb) return;
+    const max = maxScroll();
+    const y = PAD + (max ? (scrollY / max) * travel : 0);
+    thumb.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+  }
+
+  function wake() {
+    if (!bar) return;
+    bar.classList.add('is-active');
+    clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => bar?.classList.remove('is-active'), IDLE);
+  }
+
+  function onScroll() {
+    wake();
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      position();
+    });
+  }
+
+  // 内容高度会在图片加载、评论展开、折叠块打开时变化。换页时 ClientRouter 会替换整个 <body>，要重新观察。
+  const resizes = new ResizeObserver(() => measure());
+
+  function bind() {
+    resizes.disconnect();
+    resizes.observe(document.body);
+    const next = document.querySelector<HTMLElement>('[data-page-scrollbar]');
+    if (!next || next === bar) {
+      measure();
+      return;
+    }
+    bar = next;
+    thumb = bar.querySelector<HTMLElement>('[data-thumb]');
+
+    bar.addEventListener('pointerdown', (event) => {
+      if (!bar || !thumb || event.button !== 0) return;
+      event.preventDefault();
+      if (event.target === thumb) {
+        drag = { startY: event.clientY, startScroll: scrollY };
+        bar.classList.add('is-dragging');
+        bar.setPointerCapture(event.pointerId);
+      } else {
+        // 点轨道：朝点击的方向翻一屏。
+        const rect = thumb.getBoundingClientRect();
+        const dir = event.clientY < rect.top ? -1 : 1;
+        window.scrollBy({ top: dir * innerHeight * 0.85, behavior: 'smooth' });
+      }
+    });
+    bar.addEventListener('pointermove', (event) => {
+      if (!drag || !travel) return;
+      const ratio = maxScroll() / travel;
+      window.scrollTo({ top: drag.startScroll + (event.clientY - drag.startY) * ratio, behavior: 'instant' });
+    });
+    const end = (event: PointerEvent) => {
+      if (!drag || !bar) return;
+      drag = null;
+      bar.classList.remove('is-dragging');
+      if (bar.hasPointerCapture(event.pointerId)) bar.releasePointerCapture(event.pointerId);
+      wake();
+    };
+    bar.addEventListener('pointerup', end);
+    bar.addEventListener('pointercancel', end);
+
+    measure();
+  }
+
+  bind();
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', measure, { passive: true });
+  document.addEventListener('astro:page-load', bind);
+  document.addEventListener('astro:after-swap', measure);
+</script>

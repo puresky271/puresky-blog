@@ -7,8 +7,8 @@ compatibility_flags = ["nodejs_compat"]
 # 评论接口带 credentials，通配来源会被浏览器直接拒掉，
 # 而且那样任何站点都能拿着用户的 cookie 调这个 API。
 [vars]
-ALLOWED_ORIGINS = "https://puresky.dev,https://puresky.github.io,http://localhost:4321,http://127.0.0.1:4321"
-SITE_ORIGIN = "https://puresky.dev"
+ALLOWED_ORIGINS = "https://pureskyblog.dpdns.org,https://puresky-blog.pages.dev,http://localhost:4321,http://127.0.0.1:4321"
+SITE_ORIGIN = "https://pureskyblog.dpdns.org"
 # 站长的 GitHub 登录名。用于给作者本人的评论加标记、放行管理接口。
 OWNER_LOGIN = "puresky271"
 # 评论是否需要审核后才显示。

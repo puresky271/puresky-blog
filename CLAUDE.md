@@ -67,6 +67,12 @@ Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点�
 混色一律 `color-mix(in oklab, …)`，不要用 `in oklch`（和近乎无彩色混时会按色相插值，红色混出来偏蓝）。
 圆角：卡片 18px、控件 10px、按钮/胶囊全圆角。z-index 只用文件头列出的几档。
 主题三态（系统/亮/暗）在 `lib/theme.ts`；首屏主题由 Base.astro 的内联脚本在绘制前设定。
+切主题的圆形揭示靠 `<html class="theme-vt">` 期间冻结过渡、去掉 view-transition-name 和毛玻璃（global.css），新增带 transition:name 的元素不需要额外处理。
+
+- 组件里的自定义类名不能和 Tailwind 工具类重名（`outline`、`ring`、`container`、`shadow`…），否则会平白多出线框和阴影。
+- 原生滚动条全部隐藏：页面级由 `layout/PageScrollbar.astro` 画，滚动容器用 global.css 的 `::-webkit-scrollbar`。
+  组件里不要写 `scrollbar-width: thin`，Chromium 见到它就会忽略全局的滚动条样式，变回原生外观。
+- 页脚：首页是幕布式的 `layout/CurtainFooter.astro`（`<Base footer="curtain">`，sticky 在 `.page-sheet` 后面），其他页面是普通的 `Footer.astro`。
 
 ### 天色（时间 + 天气）
 

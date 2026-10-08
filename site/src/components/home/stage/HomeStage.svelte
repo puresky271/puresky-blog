@@ -251,14 +251,11 @@
       aspect-ratio: 4 / 3;
     }
   }
-  /* 天空模式：舞台是一扇透明的窗，背后的天空和粒子透出来。 */
   .stage.sized {
     aspect-ratio: auto;
   }
   .stage[data-mode='sky'] {
-    background: transparent;
-    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--surface) 40%, transparent);
-    backdrop-filter: none;
+    border-color: transparent;
   }
   .stage[data-mode='music'] {
     border-color: transparent;

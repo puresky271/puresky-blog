@@ -1,0 +1,621 @@
+---
+/**
+ * CurtainFooter.astro — 首页的幕布式页脚（参照 Hermes Agent 官网的页脚）。其他页面用 Footer.astro。
+ *
+ * 页面内容是一张不透明的「幕布」（Base.astro 的 .page-sheet），页脚 sticky 在它后面。
+ * 往下滚，幕布被卷走，页脚从底下露出来：
+ *   左   头像，外面两圈轨道（各有一颗小星沿着转）、几颗闪烁的四角星和一团柔光；
+ *        展开时轨道从小到大张开、头像弹出来。窄屏时在上方居中。
+ *   右   站点地图和「此刻」（沈阳的时间和天气、构建信息）。
+ * 桌面端左右排布，整块压在 ~480px 高，常见笔记本的视口里也放得下，幕布效果才成立。
+ *   下   社交链接、版权、主题开关、回到顶部。
+ * 装饰动画只在页脚露出来以后才转，平时不占资源。
+ *
+ * 页脚高过视口时（矮屏、手机横屏）退回普通的文档流页脚，否则顶部会永远看不到。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { AUTHOR, GITHUB, SITE, WEATHER } from '@/config';
+import { formatDate, withBase } from '@/lib/format';
+import { getGitHubSnapshot } from '@/lib/snapshots';
+
+import ThemeSwitch from './ThemeSwitch.astro';
+
+const github = await getGitHubSnapshot();
+const avatarBase = github?.user?.avatarUrl ?? `https://github.com/${GITHUB.username}.png`;
+const avatar = `${avatarBase}${avatarBase.includes('?') ? '&' : '?'}s=240`;
+
+const sha = process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || '';
+const builtAt = new Date();
+const year = builtAt.getFullYear();
+
+const columns = [
+  {
+    label: '01 / Read',
+    title: '阅读',
+    links: [
+      { href: withBase('/posts/'), label: '文章' },
+      { href: withBase('/archive/'), label: '归档' },
+      { href: withBase('/tags/'), label: '标签' },
+      { href: withBase('/rss.xml'), label: 'RSS 订阅' },
+    ],
+  },
+  {
+    label: '02 / Works',
+    title: '作品',
+    links: [
+      { href: withBase('/projects/'), label: '项目' },
+      { href: withBase('/gallery/'), label: '画廊' },
+      { href: withBase('/activity/'), label: '动态' },
+    ],
+  },
+  {
+    label: '03 / About',
+    title: '关于',
+    links: [
+      { href: withBase('/about/'), label: '关于我' },
+      { href: withBase('/card/'), label: '名片' },
+      { href: withBase('/friends/'), label: '友链' },
+      { href: `https://github.com/${GITHUB.username}`, label: 'GitHub', external: true },
+    ],
+  },
+];
+
+// 四角星的位置（相对头像装饰区的百分比）、大小和闪烁错开的时间。
+const sparks = [
+  { x: 6, y: 22, s: 14, d: 0 },
+  { x: 90, y: 14, s: 10, d: 1.2 },
+  { x: 97, y: 66, s: 16, d: 2.1 },
+  { x: 14, y: 84, s: 9, d: 0.6 },
+  { x: 72, y: 96, s: 8, d: 1.7 },
+  { x: 30, y: 2, s: 7, d: 2.6 },
+];
+---
+
+<footer class="site-footer" data-footer>
+  <div class="stars" aria-hidden="true"></div>
+
+  <div class="container-page inner">
+    <div class="main">
+    <div class="hero">
+      <div class="orbit" aria-hidden="true">
+        <span class="halo"></span>
+        <span class="orbit-ring ring-outer"><i class="satellite"></i></span>
+        <span class="orbit-ring ring-inner"><i class="satellite"></i></span>
+        {
+          sparks.map((spark) => (
+            <svg
+              class="spark"
+              viewBox="0 0 24 24"
+              style={`left: ${spark.x}%; top: ${spark.y}%; width: ${spark.s}px; height: ${spark.s}px; animation-delay: ${spark.d}s`}
+            >
+              <path d="M12 0C12.8 7.6 16.4 11.2 24 12 16.4 12.8 12.8 16.4 12 24 11.2 16.4 7.6 12.8 0 12 7.6 11.2 11.2 7.6 12 0Z" />
+            </svg>
+          ))
+        }
+        <img class="avatar" src={avatar} alt="" width="120" height="120" loading="lazy" decoding="async" />
+      </div>
+      <p class="hello-name">{AUTHOR.name}</p>
+      <p class="hello-role">{AUTHOR.role}</p>
+      <p class="hello-quote">{AUTHOR.intro}</p>
+    </div>
+
+    <nav class="columns" aria-label="站点地图">
+      {
+        columns.map((col) => (
+          <div class="col">
+            <p class="col-label">{col.label}</p>
+            <p class="col-title">{col.title}</p>
+            <ul>
+              {col.links.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    class="col-link"
+                    target={'external' in link ? '_blank' : undefined}
+                    rel={'external' in link ? 'noopener noreferrer' : undefined}
+                  >
+                    <span>{link.label}</span>
+                    <Icon name={'external' in link ? 'arrow-up-right' : 'arrow-right'} size={13} class="arrow" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+
+      <div class="col">
+        <p class="col-label">04 / Now</p>
+        <p class="col-title">此刻</p>
+        <ul class="now">
+          <li><span class="now-key">{WEATHER.name}</span><time class="tabular" data-now-time>--:--</time></li>
+          <li><span class="now-key">天气</span><span data-now-weather>…</span></li>
+          <li>
+            <span class="now-key">构建</span>
+            {
+              sha ? (
+                <a href={`https://github.com/${GITHUB.repo}/commit/${sha}`} class="font-mono" target="_blank" rel="noopener noreferrer">
+                  {sha.slice(0, 7)}
+                </a>
+              ) : (
+                <time datetime={builtAt.toISOString()}>{formatDate(builtAt)}</time>
+              )
+            }
+          </li>
+        </ul>
+      </div>
+    </nav>
+    </div>
+
+    <div class="bottom">
+      <div class="social">
+        <a href={`https://github.com/${GITHUB.username}`} class="icon-btn" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+          <Icon name="github-logo" size={18} />
+        </a>
+        <a href={withBase('/rss.xml')} class="icon-btn" aria-label="RSS 订阅">
+          <Icon name="rss" size={18} />
+        </a>
+        <a href={withBase('/card/')} class="icon-btn" aria-label="名片">
+          <Icon name="identification-card" size={18} />
+        </a>
+      </div>
+      <p>© {SITE.since === year ? year : `${SITE.since}-${year}`} {AUTHOR.name}</p>
+      <p>文章采用 CC BY-NC-SA 4.0</p>
+      <div class="bottom-end">
+        <ThemeSwitch />
+        <button type="button" class="to-top" data-to-top>
+          回到顶部
+          <Icon name="arrow-up" size={14} />
+        </button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /*
+   * 页脚是一块固定的深蓝底，不随亮暗主题反转，只是暗色主题下更深。
+   * 在这里重定义语义令牌，里面的组件（主题开关、图标按钮）自然就换成了深底配色。
+   */
+  .site-footer {
+    --footer-bg: oklch(0.46 0.2 264);
+    --fg: oklch(0.985 0.01 250);
+    --fg-muted: oklch(0.93 0.03 252 / 0.74);
+    --fg-subtle: oklch(0.9 0.04 252 / 0.56);
+    --line: oklch(1 0 0 / 0.16);
+    --line-strong: oklch(1 0 0 / 0.28);
+    --surface: oklch(1 0 0 / 0.08);
+    --surface-2: oklch(1 0 0 / 0.14);
+    --surface-3: oklch(1 0 0 / 0.22);
+    --accent: oklch(0.985 0.01 250);
+    --accent-fg: var(--footer-bg);
+    --orbit: 12.5rem;
+    --avatar: 5.25rem;
+    color-scheme: dark;
+
+    position: relative;
+    overflow: hidden;
+    background: var(--footer-bg);
+    color: var(--fg);
+    --p: 0;
+  }
+  :global([data-theme='dark']) .site-footer {
+    --footer-bg: oklch(0.235 0.065 264);
+  }
+
+  /* 幕布模式：钉在视口底部，垫在纸面（.page-sheet，z-index 1）后面。 */
+  .site-footer[data-curtain] {
+    position: sticky;
+    bottom: 0;
+    z-index: 0;
+  }
+
+  /* 上半部稀疏的几点星，静止，只给底色一点层次。 */
+  .stars {
+    position: absolute;
+    inset: 0 0 45% 0;
+    pointer-events: none;
+    opacity: 0.55;
+    background:
+      radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent),
+      radial-gradient(1px 1px at 24% 64%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 38% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 63% 30%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 78% 58%, #fff, transparent),
+      radial-gradient(1px 1px at 88% 18%, #fff, transparent),
+      radial-gradient(1px 1px at 54% 78%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 6% 70%, #fff, transparent);
+    mask-image: linear-gradient(180deg, black, transparent);
+  }
+
+  .inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-top: clamp(2.25rem, 4vw, 3.25rem);
+    padding-bottom: 1.25rem;
+  }
+  .main {
+    display: grid;
+    gap: 2.5rem;
+  }
+  @media (width >= 64rem) {
+    .main {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      align-items: center;
+      gap: 3.5rem;
+    }
+  }
+
+  /* ── 头像与装饰 ── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .orbit {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--orbit);
+    height: var(--orbit);
+  }
+  .halo {
+    position: absolute;
+    inset: 12%;
+    border-radius: 999px;
+    background: radial-gradient(closest-side, oklch(0.82 0.11 240 / 0.45), transparent);
+    filter: blur(6px);
+    opacity: calc(0.3 + 0.7 * var(--p));
+  }
+  .orbit-ring {
+    position: absolute;
+    border-radius: 999px;
+    transform: scale(calc(0.55 + 0.45 * var(--p))) rotate(calc(var(--p) * 90deg));
+    opacity: var(--p);
+  }
+  .ring-outer {
+    inset: 0;
+    border: 1px dashed oklch(1 0 0 / 0.22);
+  }
+  .ring-inner {
+    inset: 17%;
+    border: 1px solid oklch(1 0 0 / 0.2);
+  }
+  /* 轨道上的小星：挂在旋转的轨道上，转起来就是在绕圈。 */
+  .satellite {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 10px 2px oklch(0.85 0.1 240 / 0.8);
+  }
+  .ring-inner .satellite {
+    top: auto;
+    bottom: -3px;
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    background: oklch(0.88 0.08 220);
+  }
+  .is-open .ring-outer {
+    animation: orbit 38s linear infinite;
+  }
+  .is-open .ring-inner {
+    animation: orbit 22s linear infinite reverse;
+  }
+  .avatar {
+    position: relative;
+    width: var(--avatar);
+    height: var(--avatar);
+    border-radius: 999px;
+    object-fit: cover;
+    background: oklch(1 0 0 / 0.12);
+    box-shadow:
+      0 0 0 3px oklch(1 0 0 / 0.85),
+      0 0 0 9px oklch(1 0 0 / 0.08),
+      0 18px 40px -12px oklch(0.15 0.08 264 / 0.8);
+    transform: scale(calc(0.7 + 0.3 * var(--p)));
+    transition: transform 500ms var(--ease-spring);
+  }
+  .avatar:hover {
+    transform: scale(1.06) rotate(-4deg);
+  }
+  .spark {
+    position: absolute;
+    fill: #fff;
+    filter: drop-shadow(0 0 4px oklch(0.85 0.1 240 / 0.9));
+    opacity: var(--p);
+    translate: -50% -50%;
+  }
+  .is-open .spark {
+    animation: twinkle 3.2s ease-in-out infinite;
+  }
+
+  .hello-name {
+    margin-top: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .hello-role {
+    margin-top: 0.2rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .hello-quote {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    color: var(--fg-muted);
+  }
+
+  /* ── 站点地图 ── */
+  .columns,
+  .bottom {
+    opacity: calc(0.25 + 0.75 * var(--p));
+    transform: translateY(calc((1 - var(--p)) * 40px));
+    will-change: transform, opacity;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem 1.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+  @media (width >= 48rem) {
+    .columns {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  /* 桌面端站点地图在头像右边，分隔线改成竖的。 */
+  @media (width >= 64rem) {
+    .columns {
+      padding: 0.25rem 0 0.25rem 3.5rem;
+      border-top: 0;
+      border-left: 1px solid var(--line);
+    }
+  }
+  .col-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+  .col-title {
+    margin-top: 0.55rem;
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+  }
+  .col ul {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.15rem;
+  }
+  .col-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-block: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .col-link :global(.arrow) {
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 160ms ease,
+      transform 260ms var(--ease-out-expo);
+  }
+  /* 悬停：字变亮，下面一道细线从左到右拉出来，箭头滑入。 */
+  .col-link > span {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    padding-bottom: 1px;
+    transition: background-size 280ms var(--ease-out-expo);
+  }
+  .col-link:hover {
+    color: var(--fg);
+  }
+  .col-link:hover > span,
+  .col-link:focus-visible > span {
+    background-size: 100% 1px;
+  }
+  .col-link:hover :global(.arrow) {
+    opacity: 1;
+    transform: none;
+  }
+  .now li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding-block: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--fg);
+  }
+  .now-key {
+    flex-shrink: 0;
+    width: 2.5rem;
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .now a:hover {
+    text-decoration: underline;
+  }
+
+  /* ── 底栏 ── */
+  .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.75rem;
+    margin-top: clamp(2rem, 4vw, 2.75rem);
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+  .social {
+    display: flex;
+    margin-left: -0.5rem;
+  }
+  .social .icon-btn {
+    color: var(--fg-muted);
+  }
+  .bottom-end {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+  }
+  .to-top {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 2rem;
+    padding-inline: 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    color: var(--fg);
+    letter-spacing: 0.08em;
+    transition:
+      background-color 160ms ease,
+      transform 160ms var(--ease-out-expo);
+  }
+  .to-top:hover {
+    background: var(--surface-2);
+  }
+  .to-top:active {
+    transform: scale(0.96);
+  }
+
+  @keyframes orbit {
+    from {
+      rotate: 0deg;
+    }
+    to {
+      rotate: 360deg;
+    }
+  }
+  @keyframes twinkle {
+    0%,
+    100% {
+      scale: 0.6;
+      opacity: 0.35;
+    }
+    50% {
+      scale: 1.1;
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer {
+      --p: 1 !important;
+    }
+    .is-open .ring-outer,
+    .is-open .ring-inner,
+    .is-open .spark {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { getAmbient, PHASE_LABEL, startAmbient } from '@/lib/sky/ambient';
+  import { WEATHER } from '@/config';
+
+  let footer: HTMLElement | null = null;
+  let sheet: HTMLElement | null = null;
+  let clock = 0;
+  let frame = 0;
+
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function layout() {
+    if (!footer) return;
+    // 页脚比视口矮才做幕布，否则顶部永远露不出来。
+    footer.toggleAttribute('data-curtain', footer.offsetHeight <= innerHeight - 24);
+    update();
+  }
+
+  /** 展开进度：幕布模式按「幕布底边离开视口底部多远」算，普通模式按页脚进入视口多少算。 */
+  function update() {
+    frame = 0;
+    if (!footer) return;
+    const height = footer.offsetHeight;
+    let p: number;
+    if (footer.hasAttribute('data-curtain') && sheet) {
+      p = (innerHeight - sheet.getBoundingClientRect().bottom) / height;
+    } else {
+      p = (innerHeight - footer.getBoundingClientRect().top) / Math.min(height, innerHeight);
+    }
+    p = Math.min(1, Math.max(0, p));
+    // 前 70% 的滚动就把装饰展开到位，最后一段留给阅读。
+    const eased = Math.min(1, p / 0.7);
+    footer.style.setProperty('--p', eased.toFixed(3));
+    footer.classList.toggle('is-open', p > 0.02 && !document.hidden);
+    // 页脚露出大半时，右下角的音乐胶囊让位（见 PlayerDock.svelte）。
+    document.documentElement.toggleAttribute('data-footer-open', p > 0.3);
+  }
+
+  function schedule() {
+    if (!frame) frame = requestAnimationFrame(update);
+  }
+
+  function tick() {
+    if (!footer) return;
+    const time = footer.querySelector('[data-now-time]');
+    const weather = footer.querySelector('[data-now-weather]');
+    if (time) {
+      time.textContent = new Intl.DateTimeFormat('zh-CN', {
+        timeZone: WEATHER.timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).format(new Date());
+    }
+    if (weather) {
+      const ambient = getAmbient();
+      const report = ambient.preview ? null : ambient.report;
+      const temp = report?.temperature != null ? ` ${report.temperature}°` : '';
+      weather.textContent = `${report ? report.label + temp + ' · ' : ''}${PHASE_LABEL[ambient.phase]}`;
+    }
+  }
+
+  function setup() {
+    footer = document.querySelector<HTMLElement>('[data-footer]');
+    sheet = document.querySelector<HTMLElement>('[data-sheet]');
+    if (!footer) return;
+
+    footer.querySelector('[data-to-top]')?.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
+    });
+
+    startAmbient();
+    tick();
+    clearInterval(clock);
+    clock = window.setInterval(tick, 20_000);
+    layout();
+  }
+
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', layout, { passive: true });
+  addEventListener('ambient:change', tick);
+  document.addEventListener('visibilitychange', schedule);
+  document.addEventListener('astro:page-load', setup);
+  document.addEventListener('astro:before-swap', (event) => {
+    clearInterval(clock);
+    event.newDocument.documentElement.removeAttribute('data-footer-open');
+  });
+</script>

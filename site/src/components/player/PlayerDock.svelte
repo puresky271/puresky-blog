@@ -127,6 +127,8 @@
       transform 360ms var(--ease-out-expo),
       opacity 240ms ease;
   }
+  /* 页脚展开后让位，不挡页脚底栏的按钮；展开着的面板不受影响。 */
+  :global(html[data-footer-open]) .dock-root:not(:has(.panel-wrap)),
   .dock-root.hidden {
     transform: translateY(calc(100% + 24px));
     opacity: 0;

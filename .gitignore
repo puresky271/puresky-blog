@@ -11,7 +11,9 @@ dist/
 
 # pagefind
 site/public/pagefind/
-site/public/home-illustration.local.png
+
+# 本机专用插画：不进仓库，本地构建和直接上传部署时才带上（见 CLAUDE.md）
+site/src/assets/local/
 
 # cloudflare
 .wrangler/
@@ -39,4 +41,5 @@ npm-debug.log*
 
 # local scratch
 _scratch/
+.serena/
 *.local.*

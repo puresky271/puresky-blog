@@ -71,7 +71,7 @@
     <div class="rail">
       <div class="fill" style="transform: scaleX({ratio})"></div>
     </div>
-    <div class="thumb" style="left: {ratio * 100}%"></div>
+    <div class="thumb" style="left: {ratio * 100}%; --at: {ratio * 100}%"></div>
   </div>
   {#if !compact && !edge}
     <div class="times tabular">
@@ -150,10 +150,18 @@
   .edge .track:focus-visible .rail {
     height: 5px;
   }
+  /*
+   * 贴边时容器（舞台）是 overflow: hidden 的圆角卡片，滑块要整颗留在里面：
+   * 底部和卡片下沿对齐，不再以轨道中线为中心；两端收进圆角以内，开头结尾也看得全。
+   */
   .edge .thumb {
     top: auto;
-    bottom: -3px;
+    bottom: 0;
+    width: 11px;
+    height: 11px;
     margin-top: 0;
+    margin-left: -5.5px;
+    left: clamp(14px, var(--at), calc(100% - 14px)) !important;
   }
   .times {
     display: flex;

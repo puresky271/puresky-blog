@@ -279,7 +279,7 @@
 
   .body {
     position: absolute;
-    inset: 3.25rem clamp(1.25rem, 4vw, 3rem) 4.25rem;
+    inset: 3.25rem clamp(1.25rem, 4vw, 3rem) 4.95rem;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
@@ -404,7 +404,8 @@
     position: absolute;
     left: clamp(1.25rem, 4vw, 3rem);
     right: 1.25rem;
-    bottom: 0.9rem;
+    /* 离贴边进度条留出一段距离，控件不压在进度条上。 */
+    bottom: 1.6rem;
     display: flex;
     align-items: center;
     gap: 1rem;

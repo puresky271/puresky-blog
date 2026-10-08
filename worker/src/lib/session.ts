@@ -28,7 +28,7 @@ export async function createSession(c: Ctx, data: SessionData): Promise<string> 
     path: '/',
     httpOnly: true,
     secure: true,
-    // API 和前端不同源（api.puresky.dev 对 puresky.dev），
+    // API 和前端不同源（api.pureskyblog.dpdns.org 对 pureskyblog.dpdns.org），
     // 所以必须 SameSite=None，否则跨站请求带不上 cookie。
     // 代价是必须配合严格的 CORS 来源白名单，见 index.ts。
     sameSite: 'None',

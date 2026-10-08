@@ -47,7 +47,7 @@ const avatar = github?.user?.avatarUrl
   : `https://github.com/${GITHUB.username}.png?size=96`;
 ---
 
-<Base flush>
+<Base flush footer="curtain">
   <HomeTop avatar={avatar} status={github?.status} illustrations={illustrations} latest={latest} />
 
   <section class="container-page mt-14" aria-labelledby="now-title">

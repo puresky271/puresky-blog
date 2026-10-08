@@ -2,8 +2,8 @@
 /**
  * Toc.astro — 文章目录。
  *
- * 桌面端是右侧粘性边栏，当前阅读到的章节高亮；移动端是正文上方的折叠块。
- * 只收 h2 / h3，再深的层级在目录里只会制造噪音。
+ * 桌面端是左侧粘性的目录卡片，自动编号（1 / 1.1），当前阅读到的章节底色和左侧竖条一起亮起；
+ * 移动端是正文上方的折叠块。只收 h2 / h3，再深的层级在目录里只会制造噪音。
  */
 import type { MarkdownHeading } from 'astro';
 
@@ -23,27 +23,34 @@ const items = headings
   items.length >= 2 &&
     (variant === 'sidebar' ? (
       <nav class="toc-sidebar" aria-label="文章目录" data-toc>
-        <p class="mb-3 text-[0.8125rem] font-medium text-fg">目录</p>
+        <p class="toc-head">
+          <span>本页目录</span>
+          <span class="toc-count">{items.filter((h) => h.depth === 2).length} 节</span>
+        </p>
         <ol class="toc-list">
           {items.map((h) => (
             <li class:list={[`depth-${h.depth}`]}>
               <a href={`#${h.slug}`} data-toc-link={h.slug}>
-                {h.text}
+                <span class="num" aria-hidden="true" />
+                <span>{h.text}</span>
               </a>
             </li>
           ))}
         </ol>
         <a href="#main" class="to-top">
-          回到顶部
+          回到顶部 ↑
         </a>
       </nav>
     ) : (
       <details class="toc-inline">
         <summary>目录 · {items.length} 节</summary>
-        <ol>
+        <ol class="toc-list">
           {items.map((h) => (
             <li class:list={[`depth-${h.depth}`]}>
-              <a href={`#${h.slug}`}>{h.text}</a>
+              <a href={`#${h.slug}`}>
+                <span class="num" aria-hidden="true" />
+                <span>{h.text}</span>
+              </a>
             </li>
           ))}
         </ol>
@@ -52,71 +59,138 @@ const items = headings
 }
 
 <style>
+  /* ── 桌面：左侧目录卡片 ── */
   .toc-sidebar {
     position: sticky;
-    top: calc(var(--nav-h) + 2rem);
-    max-height: calc(100dvh - var(--nav-h) - 4rem);
+    top: calc(var(--nav-h) + 1.25rem);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - var(--nav-h) - 2.5rem);
+    padding: 0.9rem 0.5rem 0.75rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: color-mix(in oklab, var(--surface) 70%, transparent);
+  }
+  .toc-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 0.6rem 0.65rem 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 650;
+    color: var(--fg);
+  }
+  .toc-count {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--fg-subtle);
+  }
+  .toc-sidebar .toc-list {
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    scrollbar-width: none;
+    overscroll-behavior: contain;
+    padding-right: 0.25rem;
   }
+
+  /* 自动编号：二级 1 2 3，三级 1.1 1.2。列表是扁平的，计数器靠兄弟元素作用域传下去。 */
   .toc-list {
-    position: relative;
-    border-left: 1px solid var(--line);
+    counter-reset: h2;
   }
+  .toc-list .depth-2 {
+    counter-increment: h2;
+    counter-reset: h3;
+  }
+  .toc-list .depth-3 {
+    counter-increment: h3;
+  }
+  .toc-list .depth-2 .num::before {
+    content: counter(h2) '.';
+  }
+  .toc-list .depth-3 .num::before {
+    content: counter(h2) '.' counter(h3);
+  }
+  .num {
+    flex-shrink: 0;
+    min-width: 1.4em;
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--fg-subtle);
+    transition: color 160ms ease;
+  }
+  .depth-3 .num {
+    min-width: 2.1em;
+  }
+
   .toc-list a {
     position: relative;
-    display: block;
-    padding: 0.3rem 0 0.3rem 0.9rem;
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.36rem 0.5rem 0.36rem 0.6rem;
+    border-radius: 8px;
     font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--fg-muted);
-    transition: color 160ms ease;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease;
   }
   .toc-list .depth-3 a {
-    padding-left: 1.7rem;
+    padding-left: 1.35rem;
     font-size: 0.78rem;
   }
   .toc-list a:hover {
     color: var(--fg);
+    background: var(--surface-2);
   }
-  /* 当前章节：左侧亮起一段强调色，盖住灰色的竖线。 */
+  /* 当前章节：浅主色底 + 左侧一截竖条。 */
   .toc-list a::before {
     content: '';
     position: absolute;
-    left: -1px;
-    top: 0.35rem;
-    bottom: 0.35rem;
-    width: 2px;
+    left: 0;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    width: 2.5px;
     border-radius: 2px;
     background: var(--accent);
     transform: scaleY(0);
     transition: transform 240ms var(--ease-out-expo);
   }
   .toc-list a[aria-current='true'] {
+    color: var(--accent-strong);
+    background: color-mix(in oklab, var(--accent) 9%, transparent);
+  }
+  .toc-list a[aria-current='true'] .num {
     color: var(--accent);
   }
   .toc-list a[aria-current='true']::before {
     transform: scaleY(1);
   }
   .to-top {
-    display: inline-block;
-    margin-top: 1rem;
+    align-self: flex-start;
+    margin: 0.6rem 0 0 0.35rem;
     font-size: 0.75rem;
     color: var(--fg-subtle);
+    transition: color 160ms ease;
   }
   .to-top:hover {
-    color: var(--fg);
+    color: var(--accent);
   }
 
+  /* ── 移动：正文上方的折叠块 ── */
   .toc-inline {
     border: 1px solid var(--line);
-    border-radius: var(--radius-control);
+    border-radius: 14px;
     background: var(--surface);
     font-size: 0.875rem;
   }
   .toc-inline summary {
-    padding: 0.7rem 1rem;
-    color: var(--fg-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--fg);
     cursor: pointer;
     list-style: none;
   }
@@ -124,23 +198,21 @@ const items = headings
     display: none;
   }
   .toc-inline summary::after {
-    content: '+';
-    float: right;
-    color: var(--fg-subtle);
+    content: '';
+    width: 0.45em;
+    height: 0.45em;
+    border-right: 1.5px solid var(--fg-subtle);
+    border-bottom: 1.5px solid var(--fg-subtle);
+    rotate: 45deg;
+    translate: 0 -0.15em;
+    transition: rotate 200ms var(--ease-out-expo);
   }
   .toc-inline[open] summary::after {
-    content: '−';
+    rotate: 225deg;
+    translate: 0 0.1em;
   }
-  .toc-inline ol {
-    padding: 0 1rem 0.8rem;
-  }
-  .toc-inline a {
-    display: block;
-    padding: 0.3rem 0;
-    color: var(--fg-muted);
-  }
-  .toc-inline .depth-3 a {
-    padding-left: 1rem;
+  .toc-inline .toc-list {
+    padding: 0 0.5rem 0.6rem;
   }
 </style>
 

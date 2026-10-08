@@ -387,7 +387,6 @@
     margin-top: 0.5rem;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
   }
   .lyrics {
     mask-image: linear-gradient(to bottom, transparent, black 18%, black 82%, transparent);

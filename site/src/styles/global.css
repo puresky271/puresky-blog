@@ -60,7 +60,10 @@
   --shadow-md: 0 1px 2px oklch(0.35 0.05 255 / 0.05), 0 10px 30px -12px oklch(0.35 0.08 255 / 0.18);
   --shadow-lg: 0 2px 6px oklch(0.35 0.05 255 / 0.06), 0 24px 60px -20px oklch(0.35 0.09 255 / 0.28);
 
-  --code-bg: oklch(0.968 0.008 250);
+  /* 代码块：比纸面略灰的浅底，标题栏再深一点。 */
+  --code-bg: oklch(0.974 0.006 250);
+  --code-head: oklch(0.955 0.01 250);
+  --code-line: oklch(0.905 0.014 252);
   --selection: oklch(0.86 0.07 250);
 
   --z-raised: 10;
@@ -108,7 +111,10 @@
   --shadow-md: 0 1px 2px oklch(0.05 0.02 262 / 0.4), 0 12px 32px -12px oklch(0.05 0.02 262 / 0.7);
   --shadow-lg: 0 2px 6px oklch(0.05 0.02 262 / 0.4), 0 28px 70px -20px oklch(0.02 0.02 262 / 0.85);
 
-  --code-bg: oklch(0.2 0.024 262);
+  /* 代码块：比页面再沉一档，和正文一眼分开。 */
+  --code-bg: oklch(0.155 0.022 262);
+  --code-head: oklch(0.19 0.026 262);
+  --code-line: oklch(0.28 0.026 262);
   --selection: oklch(0.42 0.1 252);
 }
 
@@ -143,6 +149,9 @@
     'Geist Variable', 'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Hiragino Sans GB',
     'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', system-ui,
     sans-serif;
+  /* 衬线只用在文章导语和引用上，字体在 prose.css 里按需加载（只取 600 一档，按 unicode-range 分片）。 */
+  --font-serif:
+    'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, serif;
   --font-mono:
     'Geist Mono Variable', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, 'PingFang SC',
     'Microsoft YaHei', monospace;
@@ -274,8 +283,45 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-padding-top: calc(var(--nav-h) + 16px);
-    /* 滚动条出现与否不应该让版心左右跳。 */
-    scrollbar-gutter: stable;
+    /* 页面级滚动条由 PageScrollbar.astro 画（悬浮、不占宽度），原生的藏起来。 */
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * 页面里的滚动容器（播放列表、目录、代码块、表格）统一成细胶囊滚动条。
+   * Chromium 121+ 一旦设置了 scrollbar-color 就会忽略 ::-webkit-scrollbar，
+   * 所以标准属性只给不认 ::-webkit-scrollbar 的浏览器（Firefox）。
+   */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--fg) 20%, transparent) padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in oklab, var(--fg) 22%, transparent) transparent;
+    }
+    html {
+      scrollbar-width: none;
+    }
   }
 
   body {
@@ -525,13 +571,43 @@
 /* ── 主题切换 ────────────────────────────────────────────────────────────── */
 
 /*
- * 切主题时用 View Transition 从按钮位置画一个圆展开新主题。
- * 关掉默认的整页交叉淡入，否则圆形揭示会被淡入盖住。
+ * 切主题时用 View Transition 从按钮位置画一个圆展开新主题（逻辑见 lib/theme.ts 的 setPref）。
+ * theme-vt 期间：整页只做一张快照（去掉所有 view-transition-name），所有过渡冻结，毛玻璃关掉。
  */
-html.is-theme-switching::view-transition-old(root),
-html.is-theme-switching::view-transition-new(root) {
+html.theme-vt *,
+html.theme-vt *::before,
+html.theme-vt *::after {
+  view-transition-name: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/*
+ * <html> 自己只冻结过渡（天色变量），不能一起写 view-transition-name: none：
+ * 根元素一旦没有名字，就不会生成 ::view-transition-new(root)，圆圈动画无处可挂，页面会瞬间切换。
+ */
+html.theme-vt {
+  transition: none !important;
+}
+html.theme-vt::view-transition-old(root),
+html.theme-vt::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+html.theme-vt::view-transition-old(root) {
+  z-index: 1;
+}
+html.theme-vt::view-transition-new(root) {
+  z-index: 2147483646;
+  animation: theme-reveal 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0px at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--reveal-r, 150%) at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  }
 }
 
 /* 页面切换（ClientRouter）的默认动画调得更轻更快。 */

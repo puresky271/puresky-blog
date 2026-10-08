@@ -9,8 +9,10 @@ import '@/styles/global.css';
 
 import { ClientRouter } from 'astro:transitions';
 
+import CurtainFooter from '@/components/layout/CurtainFooter.astro';
 import Footer from '@/components/layout/Footer.astro';
 import Nav from '@/components/layout/Nav.astro';
+import PageScrollbar from '@/components/layout/PageScrollbar.astro';
 import PlayerDock from '@/components/player/PlayerDock.svelte';
 import SearchDialog from '@/components/search/SearchDialog.svelte';
 import { SITE, WEATHER } from '@/config';
@@ -26,6 +28,8 @@ interface Props {
   noindex?: boolean;
   /** 首页这类 hero 要顶到导航下面的页面，把 main 的上边距去掉。 */
   flush?: boolean;
+  /** 页脚：首页用 curtain（幕布式，往下滚时从内容后面露出来），其他页面是普通页脚。 */
+  footer?: 'curtain' | 'plain';
 }
 
 const {
@@ -36,6 +40,7 @@ const {
   publishedTime,
   noindex = false,
   flush = false,
+  footer = 'plain',
 } = Astro.props;
 
 const fullTitle = title ? `${title} - ${SITE.title}` : `${SITE.title} 的博客`;
@@ -143,12 +148,16 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 
   <body class="flex min-h-dvh flex-col">
     <a href="#main" class="skip-link">跳到正文</a>
-    <Nav />
-    <main id="main" class:list={['flex-1', { 'pt-6 md:pt-10': !flush }]}>
-      <slot />
-    </main>
-    <Footer />
+    <!-- 幕布：导航和正文在一张不透明的纸上；首页的页脚垫在它后面，往下滚时被揭开（见 CurtainFooter.astro）。 -->
+    <div class:list={['page-sheet', { 'is-curtain': footer === 'curtain' }]} data-sheet>
+      <Nav />
+      <main id="main" class:list={['flex-1', { 'pt-6 md:pt-10': !flush }]}>
+        <slot />
+      </main>
+    </div>
+    {footer === 'curtain' ? <CurtainFooter /> : <Footer />}
 
+    <PageScrollbar />
     <PlayerDock client:idle transition:persist="player" />
     <SearchDialog client:idle transition:persist="search" />
 
@@ -181,6 +190,25 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 </html>
 
 <style>
+  .page-sheet {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  /*
+   * 幕布模式：纸面是一个层叠上下文（z-index 1），页脚在它下面（z-index 0）。
+   * 不能把页脚设成 z-index -1：那样它会落到 <body> 下面，露出来以后所有点击都被 body 接走。
+   */
+  .page-sheet.is-curtain {
+    position: relative;
+    z-index: 1;
+    padding-bottom: clamp(4rem, 8vw, 7rem);
+    border-radius: 0 0 clamp(22px, 3vw, 40px) clamp(22px, 3vw, 40px);
+    box-shadow:
+      0 1px 0 var(--line),
+      0 30px 60px -24px oklch(0.2 0.08 264 / 0.45);
+  }
   .skip-link {
     position: fixed;
     top: 0.75rem;

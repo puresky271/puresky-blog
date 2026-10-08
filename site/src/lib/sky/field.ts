@@ -12,6 +12,9 @@
  *   雪                         雪片：缓慢下落、左右摇摆
  *   多云 / 阴 / 雾 / 降水      在上面任一形态之下叠一层缓慢漂移的柔云，云量随天气变化
  *
+ * 亮色主题不是把暗色的粒子换个深色：浅底上的深色细线和小点看起来像划痕和灰尘。
+ * 亮色下改用「亮的东西」：白芯蓝晕的光点、四角星芒、白芯蓝边的雪片，靠一圈淡蓝光晕从浅底上浮出来。
+ *
  * 指针靠近会把粒子推开并带起一点涡旋，点击空白处迸出一小簇，都是对操作的反馈。
  *
  * 性能：粒子数按面积算并有上限；DPR 最多到 2；所有柔光（星点、雪片、云）都用预渲染贴图；
@@ -82,12 +85,13 @@ interface Meteor {
  */
 const INK: Record<Theme, { line: string[]; star: string[]; rain: string; snow: string; cloud: string; flash: string }> = {
   light: {
-    line: ['18, 109, 218', '74, 150, 236', '128, 182, 242'],
-    star: ['18, 109, 218', '74, 150, 236', '110, 130, 170'],
-    rain: '52, 104, 178',
-    // 浅色天空上纯白的雪和云都看不见，用偏蓝的灰白。
-    snow: '132, 164, 210',
-    cloud: '214, 226, 242',
+    // 亮色下风只剩很淡的几缕，主体是光点（见 drawGlints）。
+    line: ['96, 150, 230', '128, 176, 240', '150, 170, 220'],
+    // 星芒：长春花蓝、天蓝、淡紫。
+    star: ['86, 110, 200', '70, 140, 230', '128, 112, 200'],
+    rain: '70, 120, 190',
+    snow: '120, 150, 205',
+    cloud: '255, 255, 255',
     flash: '255, 255, 255',
   },
   dark: {
@@ -505,8 +509,13 @@ export class SkyField {
     ctx.clearRect(0, 0, this.width, this.height);
     if (this.clouds.length) this.drawClouds();
 
-    if (this.mode === 'wind') this.drawWind();
-    else if (this.mode === 'stars') this.drawStars(now);
+    if (this.mode === 'wind') {
+      if (this.theme === 'light') this.drawGlints(now);
+      else this.drawWind();
+    } else if (this.mode === 'stars') {
+      if (this.theme === 'light') this.drawSparkles(now);
+      else this.drawStars(now);
+    }
     else if (this.mode === 'rain') this.drawRain();
     else this.drawSnow();
 
@@ -597,14 +606,137 @@ export class SkyField {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  /**
+   * 亮色主题的风：大部分粒子是白芯蓝晕的光点（像阳光里的浮尘），
+   * 每四个里有一个画成很淡的一缕风丝，保留流动的方向感。
+   */
+  private drawGlints(now: number): void {
+    const { ctx } = this;
+    const sprite = this.glintSprite();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (let i = 0; i < this.particles.length; i += 1) {
+      const p = this.particles[i]!;
+      const env = this.envelope(p);
+      if (env < 0.02) continue;
+      if (i % 4 === 0 && p.trail && !p.burst) {
+        ctx.strokeStyle = `rgba(${INK.light.line[p.tone]}, ${env * (0.08 + p.depth * 0.14)})`;
+        ctx.lineWidth = 0.6 + p.depth * 0.6;
+        ctx.beginPath();
+        for (let k = 1; k <= TRAIL; k += 1) {
+          const idx = (((p.trailHead ?? 0) + k) % TRAIL) * 2;
+          if (k === 1) ctx.moveTo(p.trail[idx]!, p.trail[idx + 1]!);
+          else ctx.lineTo(p.trail[idx]!, p.trail[idx + 1]!);
+        }
+        ctx.stroke();
+        continue;
+      }
+      const twinkle = p.burst ? 1 : 0.7 + 0.3 * Math.sin(now * 0.0016 * p.freq + p.phase);
+      const size = (p.burst ? 7 : 4 + p.depth * 7) * (0.85 + 0.15 * twinkle);
+      ctx.globalAlpha = env * twinkle * (p.burst ? 0.95 : 0.45 + p.depth * 0.5);
+      ctx.drawImage(sprite, p.x - size / 2, p.y - size / 2, size, size);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /** 亮色主题的夜：四角星芒，带一圈淡光，闪烁时整颗缩放。流星是一道蓝紫色的细线。 */
+  private drawSparkles(now: number): void {
+    const { ctx } = this;
+    for (const p of this.particles) {
+      const twinkle = p.burst ? 1 : 0.5 + 0.5 * Math.sin(now * 0.0011 * p.freq + p.phase);
+      const alpha = this.envelope(p) * (p.burst ? 0.9 : 0.3 + p.depth * 0.55) * (0.55 + 0.45 * twinkle);
+      if (alpha < 0.02) continue;
+      const big = p.depth > 0.82;
+      const size = (big ? 14 : 8) * (0.6 + p.depth * 0.6) * (0.75 + 0.25 * twinkle);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(this.sparkleSprite(p.tone), p.x - size / 2, p.y - size / 2, size, size);
+    }
+    ctx.globalAlpha = 1;
+
+    for (const m of this.meteors) {
+      const t = m.life / m.maxLife;
+      const fade = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
+      const tail = 12;
+      const head = INK.light.star[0];
+      const gradient = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * tail, m.y - m.vy * tail);
+      gradient.addColorStop(0, `rgba(${head}, ${0.7 * fade})`);
+      gradient.addColorStop(1, `rgba(${head}, 0)`);
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 1.2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y);
+      ctx.lineTo(m.x - m.vx * tail, m.y - m.vy * tail);
+      ctx.stroke();
+    }
+  }
+
+  /** 白芯、外圈淡蓝光晕的光点贴图。 */
+  private glintSprite(): HTMLCanvasElement {
+    const cached = this.sprites.get('glint');
+    if (cached) return cached;
+    const size = 32;
+    const sprite = document.createElement('canvas');
+    sprite.width = size;
+    sprite.height = size;
+    const g = sprite.getContext('2d')!;
+    const gradient = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.28, 'rgba(255, 255, 255, 0.95)');
+    gradient.addColorStop(0.42, 'rgba(150, 190, 245, 0.55)');
+    gradient.addColorStop(0.7, 'rgba(110, 160, 235, 0.16)');
+    gradient.addColorStop(1, 'rgba(110, 160, 235, 0)');
+    g.fillStyle = gradient;
+    g.fillRect(0, 0, size, size);
+    this.sprites.set('glint', sprite);
+    return sprite;
+  }
+
+  /** 四角星芒贴图：中心一点白，四条弧边的芒，外面一圈同色淡光。 */
+  private sparkleSprite(tone: number): HTMLCanvasElement {
+    const key = `sparkle-${tone}`;
+    const cached = this.sprites.get(key);
+    if (cached) return cached;
+    const size = 48;
+    const c = size / 2;
+    const rgb = INK.light.star[tone] ?? INK.light.star[0]!;
+    const sprite = document.createElement('canvas');
+    sprite.width = size;
+    sprite.height = size;
+    const g = sprite.getContext('2d')!;
+    const halo = g.createRadialGradient(c, c, 0, c, c, c * 0.7);
+    halo.addColorStop(0, `rgba(${rgb}, 0.35)`);
+    halo.addColorStop(1, `rgba(${rgb}, 0)`);
+    g.fillStyle = halo;
+    g.fillRect(0, 0, size, size);
+    const r = c * 0.92;
+    const pinch = c * 0.12;
+    g.beginPath();
+    g.moveTo(c, c - r);
+    g.quadraticCurveTo(c + pinch, c - pinch, c + r, c);
+    g.quadraticCurveTo(c + pinch, c + pinch, c, c + r);
+    g.quadraticCurveTo(c - pinch, c + pinch, c - r, c);
+    g.quadraticCurveTo(c - pinch, c - pinch, c, c - r);
+    g.closePath();
+    g.fillStyle = `rgb(${rgb})`;
+    g.fill();
+    const core = g.createRadialGradient(c, c, 0, c, c, c * 0.22);
+    core.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+    core.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    g.fillStyle = core;
+    g.fillRect(0, 0, size, size);
+    this.sprites.set(key, sprite);
+    return sprite;
+  }
+
   private drawRain(): void {
     const { ctx } = this;
     const color = INK[this.theme].rain;
     ctx.lineCap = 'round';
     for (const p of this.particles) {
-      const alpha = p.burst ? 0.6 * this.envelope(p) : 0.1 + p.depth * 0.32;
+      const alpha = (p.burst ? 0.6 * this.envelope(p) : 0.1 + p.depth * 0.32) * (this.theme === 'light' ? 0.75 : 1);
       ctx.strokeStyle = `rgba(${color}, ${alpha})`;
-      ctx.lineWidth = p.burst ? p.size : 0.6 + p.depth * 0.7;
+      ctx.lineWidth = (p.burst ? p.size : 0.6 + p.depth * 0.7) * (this.theme === 'light' ? 0.8 : 1);
       const len = p.burst ? 3 : 1.6 + p.depth * 1.2;
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
@@ -615,14 +747,14 @@ export class SkyField {
 
   private drawSnow(): void {
     const { ctx } = this;
-    const sprite = this.sprite('snow', INK[this.theme].snow, [
+    const sprite = this.theme === 'light' ? this.glintSprite() : this.sprite('snow', INK[this.theme].snow, [
       [0, 1],
       [0.45, 0.85],
       [1, 0],
     ]);
     for (const p of this.particles) {
       const alpha = (p.burst ? 0.8 * this.envelope(p) : 0.35 + p.depth * 0.55) * (this.theme === 'dark' ? 1 : 0.95);
-      const size = p.size * 2.2;
+      const size = p.size * (this.theme === 'light' ? 3.2 : 2.2);
       ctx.globalAlpha = alpha;
       ctx.drawImage(sprite, p.x - size / 2, p.y - size / 2, size, size);
     }

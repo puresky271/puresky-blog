@@ -2,13 +2,15 @@
 /**
  * PostCard.astro — 文章卡片。
  *
- * 有封面时上图下文；没有封面时用分类名做一个大号的字面标识，
- * 而不是塞一张无关的图。size="lg" 用于首页「最近的文章」的主卡。
+ * 有封面时上图下文。没有封面、又是首页「最近的文章」的主卡（size="lg"）时，
+ * 不塞假封面，改成一张「导读」卡：大标题、导语、按二级标题列出的本文提纲、字数与阅读时长，
+ * 读者点进去之前就知道这篇讲了哪几件事。右上角一团淡淡的主色光和点阵，给卡片一点质感。
  */
 import { Image } from 'astro:assets';
+import { render } from 'astro:content';
 
 import Icon from '@/components/ui/Icon.astro';
-import { categoryOf, postMinutes, type Post } from '@/lib/content';
+import { categoryOf, postMinutes, postWords, type Post } from '@/lib/content';
 import { formatDate, postPath } from '@/lib/format';
 
 interface Props {
@@ -21,39 +23,83 @@ interface Props {
 const { post, size = 'md', index = 0 } = Astro.props;
 const { title, description, pubDate, category, cover, coverAlt, featured } = post.data;
 const cat = categoryOf(category);
+
+const feature = size === 'lg' && !cover;
+// 导读卡的提纲：最多四个二级标题。标题里的锚点符号 # 会被收进文本，去掉。
+const outline = feature
+  ? (await render(post)).headings
+      .filter((h) => h.depth === 2)
+      .slice(0, 4)
+      .map((h) => h.text.replace(/^#\s*/, '').trim())
+  : [];
 ---
 
-<article class:list={['card card-link post-card group', size]} data-reveal style={`--reveal-i: ${index}`}>
-  <a href={postPath(post.id)} class="flex h-full flex-col">
-    {
-      cover ? (
-        <div class="cover">
-          <Image src={cover} alt={coverAlt ?? ''} width={size === 'lg' ? 960 : 640} class="h-full w-full object-cover" />
+{
+  feature ? (
+    <article class="card card-link post-card feature group" data-reveal style={`--reveal-i: ${index}`}>
+      <a href={postPath(post.id)} class="feature-link">
+        <span class="deco" aria-hidden="true" />
+        <p class="feature-meta">
+          <span class="cat-chip">{cat.label}</span>
+          <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+          {featured && (
+            <span class="pick">
+              <Icon name="star-fill" size={12} />
+              精选
+            </span>
+          )}
+        </p>
+        <h3 class="title">{title}</h3>
+        <p class="desc">{description}</p>
+        {outline.length > 0 && (
+          <ol class="brief" aria-label="本文提纲">
+            {outline.map((text, i) => (
+              <li>
+                <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                <span class="t">{text}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+        <div class="feature-foot">
+          <span class="stats">
+            <Icon name="clock" size={14} />约 {postMinutes(post)} 分钟
+            <span aria-hidden="true">·</span>
+            <span class="tabular">{postWords(post).toLocaleString('zh-CN')} 字</span>
+          </span>
+          <span class="cta">
+            阅读全文
+            <Icon name="arrow-right" size={15} class="cta-arrow" />
+          </span>
         </div>
-      ) : (
-        size === 'lg' && (
-          <div class="cover cover-type" aria-hidden="true">
-            <span>{cat.label}</span>
+      </a>
+    </article>
+  ) : (
+    <article class:list={['card card-link post-card group', size]} data-reveal style={`--reveal-i: ${index}`}>
+      <a href={postPath(post.id)} class="flex h-full flex-col">
+        {cover && (
+          <div class="cover">
+            <Image src={cover} alt={coverAlt ?? ''} width={size === 'lg' ? 960 : 640} class="h-full w-full object-cover" />
           </div>
-        )
-      )
-    }
-    <div class="body">
-      <p class="flex items-center gap-2 text-[0.8125rem] text-fg-muted">
-        <span class="text-accent">{cat.label}</span>
-        <span aria-hidden="true">·</span>
-        <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
-        {featured && <Icon name="star-fill" size={13} class="text-accent" label="精选" />}
-      </p>
-      <h3 class="title">{title}</h3>
-      <p class="desc">{description}</p>
-      <p class="mt-auto flex items-center gap-1.5 pt-4 text-[0.8125rem] text-fg-subtle">
-        <Icon name="clock" size={14} />
-        约 {postMinutes(post)} 分钟
-      </p>
-    </div>
-  </a>
-</article>
+        )}
+        <div class="body">
+          <p class="flex items-center gap-2 text-[0.8125rem] text-fg-muted">
+            <span class="text-accent">{cat.label}</span>
+            <span aria-hidden="true">·</span>
+            <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+            {featured && <Icon name="star-fill" size={13} class="text-accent" label="精选" />}
+          </p>
+          <h3 class="title">{title}</h3>
+          <p class="desc">{description}</p>
+          <p class="mt-auto flex items-center gap-1.5 pt-4 text-[0.8125rem] text-fg-subtle">
+            <Icon name="clock" size={14} />
+            约 {postMinutes(post)} 分钟
+          </p>
+        </div>
+      </a>
+    </article>
+  )
+}
 
 <style>
   .post-card {
@@ -70,24 +116,6 @@ const cat = categoryOf(category);
   }
   .post-card:hover .cover :global(img) {
     transform: scale(1.03);
-  }
-  /* 无封面时的字面标识：分类名放大压在一块带天色的底上。 */
-  .cover-type {
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    padding: 1.5rem;
-    aspect-ratio: 21 / 9;
-    background:
-      radial-gradient(90% 120% at 100% 0%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 60%),
-      linear-gradient(180deg, var(--accent-soft), var(--surface-2));
-  }
-  .cover-type span {
-    font-size: clamp(2.5rem, 2rem + 2vw, 3.75rem);
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    color: color-mix(in oklab, var(--accent) 55%, var(--surface));
   }
   .body {
     display: flex;
@@ -121,5 +149,135 @@ const cat = categoryOf(category);
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* ── 导读卡 ── */
+  .feature {
+    position: relative;
+    isolation: isolate;
+  }
+  .feature-link {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: clamp(1.4rem, 2.6vw, 2rem);
+  }
+  .deco {
+    position: absolute;
+    inset: 0 0 auto auto;
+    z-index: -1;
+    width: 70%;
+    height: 75%;
+    pointer-events: none;
+    background:
+      radial-gradient(closest-side at 80% 20%, color-mix(in oklab, var(--accent) 16%, transparent), transparent),
+      radial-gradient(circle, color-mix(in oklab, var(--accent) 30%, transparent) 1px, transparent 1.5px) 0 0 / 14px 14px;
+    mask-image: radial-gradient(75% 75% at 100% 0%, black, transparent 75%);
+    transition: opacity 400ms ease;
+    opacity: 0.85;
+  }
+  .feature:hover .deco {
+    opacity: 1;
+  }
+  .feature-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+  }
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 1.5rem;
+    padding-inline: 0.6rem;
+    border-radius: 999px;
+    font-weight: 500;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+  }
+  .pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--accent);
+  }
+  .feature .title {
+    margin-top: 1rem;
+    font-size: clamp(1.45rem, 1.1rem + 1.2vw, 1.95rem);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+  .feature .desc {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.75;
+    -webkit-line-clamp: 2;
+  }
+  /* 提纲。类名不能叫 outline：会撞上 Tailwind 的 outline 工具类，平白多出一圈线框。 */
+  .brief {
+    display: grid;
+    gap: 0.1rem;
+    margin-top: 1.25rem;
+  }
+  .brief li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.32rem 0;
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+  }
+  .brief .n {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+  .brief .t {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .feature-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+  }
+  .stats {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 2.25rem;
+    padding-inline: 1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--accent-fg);
+    background: var(--accent);
+    transition: background-color 160ms ease;
+  }
+  .feature:hover .cta {
+    background: var(--accent-strong);
+  }
+  .cta :global(.cta-arrow) {
+    transition: transform 300ms var(--ease-out-expo);
+  }
+  .feature:hover .cta :global(.cta-arrow) {
+    transform: translateX(3px);
   }
 </style>

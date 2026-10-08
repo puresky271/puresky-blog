@@ -44,18 +44,24 @@ const builtImages: StageImage[] = await Promise.all(
     };
   })
 );
-// 本地开发可用被 gitignore 的图片覆盖首页舞台，缺少时自动回退到仓库内插画。
-const localHomeImage = import.meta.env.PUBLIC_HOME_ILLUSTRATION?.trim();
-const images: StageImage[] = localHomeImage
+/*
+ * 本机专用的首页插画：放在 src/assets/local/home.*（已 gitignore，不进公开仓库）。
+ * 本地构建和从本机直接上传的部署会带上它；仓库里没有这张图的构建（CI、别人 clone）自动回退到上面的插画。
+ */
+const localHome = Object.values(
+  import.meta.glob<{ default: ImageMetadata }>('/src/assets/local/home.{png,jpg,jpeg,webp,avif}', { eager: true })
+)[0]?.default;
+const localImage = localHome ? await getImage({ src: localHome, width: 1600 }) : null;
+const images: StageImage[] = localImage
   ? [
       {
         id: 'local-home',
         title: '本地首页插画',
-        alt: '蓝色天空下伸展双臂的粉发少女插画',
-        src: localHomeImage,
+        alt: 'anon，飞！',
+        src: localImage.src,
         srcNight: null,
-        width: 1750,
-        height: 1080,
+        width: Number(localImage.attributes.width ?? localHome!.width),
+        height: Number(localImage.attributes.height ?? localHome!.height),
       },
     ]
   : builtImages;
@@ -87,7 +93,7 @@ const images: StageImage[] = localHomeImage
         </div>
 
         <h1 class="headline" data-reveal style="--reveal-i: 1">
-          <span class="phrase">你好，</span><span class="phrase">我是 {AUTHOR.name}。</span>
+          <span class="phrase">Hi, here is puresky</span>
         </h1>
         <p class="intro" data-reveal style="--reveal-i: 2">{AUTHOR.intro}</p>
 
@@ -160,7 +166,7 @@ const images: StageImage[] = localHomeImage
     letter-spacing: -0.035em;
     color: var(--fg);
   }
-  /* 只在短语之间断行，避免「你好，我 / 是 puresky」这种断法。 */
+  /* 保留整句作为一个短语，避免标题被拆成不自然的片段。 */
   .phrase {
     display: inline-block;
   }
