@@ -65,15 +65,21 @@ export async function fetchPlaylist(id: string, options: NeteaseFetchOptions = {
   }
 
   const { playlist, privileges = [] } = payload;
+  const initialTracks = playlist.tracks ?? [];
+  const trackIds = (playlist.trackIds ?? []).map((track) => track.id);
+  const hasCompleteTrackList = trackIds.length > initialTracks.length;
+  const rawTracks = hasCompleteTrackList
+    ? await fetchTrackDetails(trackIds, options.timeoutMs).catch(() => initialTracks)
+    : initialTracks;
   const privilegeById = new Map(privileges.map((p) => [p.id, p]));
 
   const tracks: Track[] = [];
   let hidden = 0;
 
-  for (const raw of playlist.tracks ?? []) {
+  for (const raw of rawTracks) {
     // pl 是匿名用户可播放的最高码率，0 表示不能播（会员曲或下架），外链会 302 到 /404。
     const privilege = privilegeById.get(raw.id);
-    if (privilege && (privilege.pl <= 0 || privilege.st < 0)) {
+    if (!hasCompleteTrackList && privilege && (privilege.pl <= 0 || privilege.st < 0)) {
       hidden += 1;
       continue;
     }
@@ -97,9 +103,48 @@ export async function fetchPlaylist(id: string, options: NeteaseFetchOptions = {
     creator: playlist.creator?.nickname ?? null,
     description: playlist.description ?? null,
     tracks: tracks.slice(0, limit),
-    hidden: hidden + Math.max(0, tracks.length - limit),
+    hidden: hasCompleteTrackList ? 0 : hidden + Math.max(0, tracks.length - limit),
     fetchedAt: new Date().toISOString(),
   };
+}
+
+async function fetchTrackDetails(ids: number[], timeoutMs?: number): Promise<RawTrack[]> {
+  const chunks: number[][] = [];
+  for (let index = 0; index < ids.length; index += 100) chunks.push(ids.slice(index, index + 100));
+
+  const songs = (
+    await Promise.all(
+      chunks.map(async (chunk) => {
+        const response = await request(
+          `https://music.163.com/api/song/detail?ids=${encodeURIComponent(JSON.stringify(chunk))}`,
+          timeoutMs
+        );
+        const payload = (await response.json()) as RawSongDetailResponse;
+        if (payload.code !== 200) throw new Error(`网易云歌曲详情返回 code=${payload.code}`);
+        return payload.songs ?? [];
+      })
+    )
+  ).flat();
+
+  const byId = new Map(
+    songs.map((song) => [
+      song.id,
+      {
+        id: song.id,
+        name: song.name,
+        ar: song.artists,
+        al: song.album,
+        dt: song.duration,
+        mv: song.mvid,
+      } satisfies RawTrack,
+    ])
+  );
+  const ordered: RawTrack[] = [];
+  for (const id of ids) {
+    const track = byId.get(id);
+    if (track) ordered.push(track);
+  }
+  return ordered;
 }
 
 export async function fetchLyric(trackId: number | string, options: NeteaseFetchOptions = {}): Promise<Lyric> {
@@ -169,14 +214,30 @@ interface RawPlaylistResponse {
     coverImgUrl?: string;
     description?: string | null;
     creator?: { nickname?: string };
-    tracks?: {
-      id: number;
-      name: string;
-      ar?: { name: string }[];
-      al?: { name?: string; picUrl?: string };
-      dt?: number;
-      mv?: number;
-    }[];
+    tracks?: RawTrack[];
+    trackIds?: { id: number }[];
+    trackCount?: number;
   };
   privileges?: { id: number; pl: number; st: number }[];
+}
+
+interface RawTrack {
+  id: number;
+  name: string;
+  ar?: { name: string }[];
+  al?: { name?: string; picUrl?: string };
+  dt?: number;
+  mv?: number;
+}
+
+interface RawSongDetailResponse {
+  code: number;
+  songs?: {
+    id: number;
+    name: string;
+    artists?: { name: string }[];
+    album?: { name?: string; picUrl?: string };
+    duration?: number;
+    mvid?: number;
+  }[];
 }
