@@ -1,0 +1,26 @@
+---
+name: puresky blog
+tagline: 这个博客本身。静态 Astro 站点加一个 Cloudflare Worker，首页实时接 GitHub 和网易云。
+weight: 95
+status: active
+since: '2026'
+stack: ['Astro 7', 'Svelte 5', 'Tailwind v4', 'Cloudflare Workers', 'D1', 'KV']
+repo: puresky/puresky-blog
+featured: true
+---
+
+第二版。第一版 Hydrogen 把整套视觉从氢原子物理推导出来，好玩，但读者要先理解那套隐喻才能找到文章。
+这一版反过来：界面不讲概念，只把内容、动态和状态摆清楚。
+
+### 结构
+
+站点是纯静态的 Astro，交互部分用 Svelte 岛屿按需水合。
+页面切换走 View Transitions，播放器挂在跨页面持久的节点上，换页时音乐不断。
+
+GitHub 和网易云的数据在构建期抓一份快照直接渲染进页面，
+运行时再由 Worker 刷新。Worker 挂了，页面上依然是上次构建时的数据，而不是一片空白。
+
+### 后端
+
+Worker 负责 GitHub OAuth、评论、浏览数和点赞，以及 GitHub 与网易云接口的代理和缓存。
+评论审核先跑确定性规则，再问 Workers AI，模型输出解析不了就送人工审，不放行。

@@ -1,0 +1,123 @@
+---
+import { SITE, SOCIAL_LINKS } from '../consts.ts';
+import { allPosts, tagStats } from '../lib/content.ts';
+import { SHELLS } from '../lib/shells.ts';
+import { withBase } from '../lib/format.ts';
+
+import Page from '../layouts/Page.astro';
+
+const posts = await allPosts();
+const tags = await tagStats();
+const capacity = SHELLS.reduce((sum, s) => sum + s.capacity, 0);
+const firstPost = posts.at(-1);
+---
+
+<Page
+  title="关于"
+  lede={`${SITE.author}，写代码，做记忆系统和角色模拟。`}
+  width="default"
+>
+  <div class="prose prose-hydrogen about-body">
+    <p>
+      写工程日志：做东西时遇到的问题，怎么想的，最后怎么解决的。
+      不写教程，不总结方法论。记录一个具体问题从卡住到通的过程。
+    </p>
+
+    <p>
+      当前主要在做的项目是 <a href={withBase('projects/#mygo-chat')}>mygo_chat</a>，
+      五个角色住在一座模拟的东京里，有四层记忆和认知管线。
+      这篇文章旁边的东西 —— 主题分类、文章分层、标签排列、友链分档 ——
+      是同一套物理量的不同投影，细节在仓库的 <a href="https://github.com/puresky/puresky-blog">README</a>。
+    </p>
+
+    <h2>联系</h2>
+
+    <ul>
+      {
+        SOCIAL_LINKS.map((link) => (
+          <li>
+            <a href={link.href} rel="me noopener" target="_blank">
+              {link.label}
+            </a>
+            {' '}
+            {link.handle}
+          </li>
+        ))
+      }
+      <li>
+        订阅 <a href={withBase('rss.xml')}>RSS</a>
+      </li>
+    </ul>
+  </div>
+
+  <aside class="about-stats">
+    <p class="about-stats-title">当前</p>
+    <dl>
+      <div>
+        <dt>文章</dt>
+        <dd>{posts.length}</dd>
+      </div>
+      {
+        firstPost && (
+          <div>
+            <dt>第一篇</dt>
+            <dd>{firstPost.data.pubDate.toISOString().slice(0, 10)}</dd>
+          </div>
+        )
+      }
+    </dl>
+  </aside>
+</Page>
+
+<style>
+  .about-body {
+    max-width: var(--container-reading);
+  }
+
+  .about-body :global(h2) {
+    margin-top: 2.5em;
+  }
+
+  .about-stats {
+    max-width: 22rem;
+    margin-top: 3rem;
+    padding: 1.125rem 1.25rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .about-stats-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .about-stats dl {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .about-stats div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .about-stats dt {
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+  }
+
+  .about-stats dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-dim);
+  }
+</style>

@@ -1,0 +1,27 @@
+---
+/**
+ * SectionHeader.astro — 区块标题，右侧可带一个「更多」链接。
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  href?: string;
+  linkLabel?: string;
+  id?: string;
+}
+
+const { title, href, linkLabel = '全部', id } = Astro.props;
+---
+
+<div class="mb-5 flex items-end justify-between gap-4">
+  <h2 class="section-title" id={id}>{title}</h2>
+  {
+    href && (
+      <a href={href} class="group inline-flex items-center gap-1 text-sm text-fg-muted transition-colors hover:text-accent">
+        {linkLabel}
+        <Icon name="arrow-right" size={14} class="transition-transform duration-300 group-hover:translate-x-0.5" />
+      </a>
+    )
+  }
+</div>

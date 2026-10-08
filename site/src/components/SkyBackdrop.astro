@@ -1,0 +1,46 @@
+---
+/**
+ * SkyBackdrop.astro — 天空背景：随时段和天气变化的底色 + 粒子场。
+ *
+ * 底色来自 global.css 里的 --sky-* 变量（由 <html data-phase data-weather> 驱动），
+ * 粒子场的形态也跟着同一份天色走，两者永远一致。
+ * 放在 position: relative 的宿主里；宿主加 data-sky-host 才接收指针交互。
+ */
+import SkyField from './SkyField.astro';
+
+interface Props {
+  density?: number;
+  interactive?: boolean;
+  class?: string;
+}
+
+const { density = 1.3, interactive = true, class: className } = Astro.props;
+---
+
+<div class:list={['sky-backdrop', className]} aria-hidden="true">
+  <div class="sky-veil"></div>
+  <SkyField density={density} interactive={interactive} />
+</div>
+
+<style>
+  /* 整层底部淡出到透明，露出页面底色，和下面的内容没有接缝。 */
+  .sky-backdrop {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mask-image: linear-gradient(to bottom, black 62%, transparent);
+    background:
+      radial-gradient(70% 70% at var(--glow-x) var(--glow-y), var(--sky-glow), transparent 70%),
+      linear-gradient(
+        180deg,
+        var(--sky-top) 0%,
+        color-mix(in oklab, var(--sky-top) 45%, var(--bg)) 55%,
+        var(--bg) 100%
+      );
+  }
+  .sky-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, var(--sky-veil), transparent 88%);
+  }
+</style>

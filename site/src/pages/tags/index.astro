@@ -1,0 +1,67 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Base from '@/layouts/Base.astro';
+import { getTags } from '@/lib/content';
+import { tagPath } from '@/lib/format';
+
+const tags = await getTags();
+const max = Math.max(1, ...tags.map((t) => t.count));
+---
+
+<Base title="标签" description="全部标签。字号越大，写得越多。">
+  <PageHeader title="标签" count={tags.length} description="字号越大，这个话题写得越多。" />
+  <div class="container-page">
+    {
+      tags.length ? (
+        <ul class="flex flex-wrap items-baseline gap-x-2 gap-y-3">
+          {tags.map(({ tag, count }, i) => (
+            <li data-reveal style={`--reveal-i: ${Math.min(i, 8)}`}>
+              <a
+                href={tagPath(tag)}
+                class="tag"
+                style={`font-size: ${(0.9 + (count / max) * 0.65).toFixed(3)}rem`}
+              >
+                <span class="text-fg-subtle">#</span>
+                {tag}
+                <span class="count tabular">{count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="grid place-items-center gap-3 py-20 text-fg-muted">
+          <Icon name="tag" size={28} class="text-fg-subtle" />
+          还没有标签。
+        </p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2em;
+    padding: 0.35em 0.8em;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--fg);
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      transform 200ms var(--ease-out-expo);
+  }
+  .tag:hover {
+    color: var(--accent);
+    border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+    transform: translateY(-1px);
+  }
+  .count {
+    margin-left: 0.3em;
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+</style>

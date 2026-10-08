@@ -1,0 +1,376 @@
+---
+/**
+ * BohrIndex — 文章分层界面，画成玻尔模型。
+ *
+ * 每个能级是一圈轨道，轨道上的实心点是已发表的文章，空心点是这一层
+ * 剩下的空位。空位数不是设计参数，是 2n² 减去已用数：
+ *
+ *   K 壳 2 个位置 · L 壳 8 · M 壳 18 · N 壳 32
+ *
+ * 这条约束在构建时强制执行（见 lib/content.ts 的 assertShellCapacity）。
+ * K 壳只有两个位置意味着整站只能有两篇「基态」文章，想加第三篇必须
+ * 先把一篇降到外层。界面把空位画出来，是为了让这个约束一直可见。
+ */
+import type { Post } from '../../lib/content.ts';
+import type { Shell } from '../../lib/shells.ts';
+import { formatBindingEnergy } from '../../lib/shells.ts';
+import { shellPath } from '../../lib/format.ts';
+import PostCard from '../molecules/PostCard.astro';
+
+interface Props {
+  groups: Array<{ shell: Shell; posts: Post[]; occupied: number }>;
+  /** 详情页高亮某一层。 */
+  activeN?: number;
+  /** 展开文章列表。总览页收起，能级页展开。 */
+  expanded?: boolean;
+  class?: string;
+}
+
+const { groups, activeN, expanded = false, class: className = '' } = Astro.props;
+
+const VIEW = 240;
+const maxN = Math.max(...groups.map((g) => g.shell.n));
+const radiusFor = (n: number) => ((n * n) / (maxN * maxN)) * (VIEW - 22);
+
+/** 在轨道上按容量均分角度排点，实心的排在前面。 */
+function slotsFor(shell: Shell, occupied: number) {
+  const radius = radiusFor(shell.n);
+  return Array.from({ length: shell.capacity }, (_, index) => {
+    // 从正上方开始顺时针排，读起来像钟面。
+    const angle = (index / shell.capacity) * Math.PI * 2 - Math.PI / 2;
+    return {
+      filled: index < occupied,
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+    };
+  });
+}
+---
+
+<div class:list={['bohr', className]}>
+  <div class="bohr-layout">
+    <!-- 玻尔图。轨道半径 ∝ n²，轨道上的点是真实的文章占用情况。 -->
+    <figure class="bohr-figure">
+      <svg
+        viewBox={`${-VIEW} ${-VIEW} ${VIEW * 2} ${VIEW * 2}`}
+        role="img"
+        aria-label={`文章分层图。${groups
+          .map((g) => `${g.shell.letter} 壳 ${g.occupied} 篇，容量 ${g.shell.capacity}`)
+          .join('；')}`}
+      >
+        {
+          groups.map(({ shell }) => (
+            <circle
+              class:list={['bohr-ring', { 'is-active': activeN === shell.n }]}
+              cx="0"
+              cy="0"
+              r={radiusFor(shell.n)}
+            />
+          ))
+        }
+
+        {
+          groups.map(({ shell, occupied }) =>
+            slotsFor(shell, occupied).map((slot) => (
+              <circle
+                class:list={[
+                  'bohr-slot',
+                  slot.filled ? 'is-filled' : 'is-vacant',
+                  { 'is-active': activeN === shell.n },
+                ]}
+                cx={slot.x}
+                cy={slot.y}
+                r={slot.filled ? 3.6 : 2}
+              />
+            ))
+          )
+        }
+
+        <circle cx="0" cy="0" r="7" class="bohr-nucleus" />
+      </svg>
+    </figure>
+
+    <!-- 能级清单。 -->
+    <ol class="bohr-levels">
+      {
+        groups.map(({ shell, posts, occupied }) => {
+          const remaining = shell.capacity - occupied;
+          const full = remaining === 0;
+          return (
+            <li class:list={['bohr-level', { 'is-active': activeN === shell.n }]}>
+              <div class="bohr-level-head">
+                <a class="bohr-level-title" href={shellPath(shell.n)} data-astro-prefetch="hover">
+                  <span class="bohr-level-letter">{shell.letter}</span>
+                  <span>
+                    <span class="bohr-level-name">{shell.title}</span>
+                    <span class="bohr-level-n">n={shell.n}</span>
+                  </span>
+                </a>
+
+                <span class="bohr-level-occupancy">
+                  <span class="bohr-level-count">
+                    {occupied}
+                    <span class="bohr-level-slash">/</span>
+                    {shell.capacity}
+                  </span>
+                  {full && <span class="bohr-level-full">已满</span>}
+                </span>
+              </div>
+
+              <p class="bohr-level-blurb">{shell.blurb}</p>
+
+              <div class="bohr-level-data">
+                <span>束缚能 {formatBindingEnergy(shell.bindingEnergyEv)}</span>
+                {
+                  shell.emissionToInnerEv !== null && (
+                    <span>
+                      降到 n={shell.n - 1} 放出 {shell.emissionToInnerEv.toFixed(2)} eV
+                    </span>
+                  )
+                }
+                {!full && <span>剩 {remaining} 个位置</span>}
+              </div>
+
+              {
+                posts.length > 0 && expanded && (
+                  <div class="bohr-level-posts">
+                    {posts.map((post) => (
+                      <PostCard post={post} variant="compact" />
+                    ))}
+                  </div>
+                )
+              }
+
+              {
+                posts.length > 0 && !expanded && (
+                  <details class="excite bohr-level-excite">
+                    <summary>
+                      <span class="excite-marker" aria-hidden="true" />
+                      <span class="bohr-excite-label">这一层的 {posts.length} 篇</span>
+                    </summary>
+                    <div class="excite-body">
+                      {posts.map((post) => (
+                        <PostCard post={post} variant="compact" />
+                      ))}
+                    </div>
+                  </details>
+                )
+              }
+
+              {
+                posts.length === 0 && (
+                  <p class="bohr-level-empty">这一层还空着。</p>
+                )
+              }
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+</div>
+
+<style>
+  /* 图在左、清单在右。不是等宽两栏，图占的份额小一些。 */
+  .bohr-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .bohr-figure {
+    position: sticky;
+    top: 5.5rem;
+    margin: 0;
+  }
+
+  .bohr-figure svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .bohr-ring {
+    fill: none;
+    stroke: var(--hairline);
+    stroke-width: 1;
+  }
+
+  .bohr-ring.is-active {
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    opacity: 0.7;
+  }
+
+  .bohr-slot.is-filled {
+    fill: var(--ink-dim);
+  }
+
+  .bohr-slot.is-vacant {
+    fill: none;
+    stroke: var(--hairline-strong);
+    stroke-width: 1;
+  }
+
+  .bohr-slot.is-filled.is-active {
+    fill: var(--accent);
+  }
+
+  .bohr-nucleus {
+    fill: var(--accent);
+    opacity: 0.9;
+  }
+
+  .bohr-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bohr-level {
+    padding: 1.375rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .bohr-level:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .bohr-level.is-active {
+    /* 高亮不用背景色块，用左侧一条线，和文章卡片的语言保持一致。 */
+    padding-left: 1rem;
+    border-left: 2px solid var(--accent);
+  }
+
+  .bohr-level-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .bohr-level-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+  }
+
+  .bohr-level-letter {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .bohr-level-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .bohr-level-title:hover .bohr-level-name {
+    color: var(--accent-ink);
+  }
+
+  .bohr-level-n {
+    margin-left: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .bohr-level-occupancy {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: none;
+  }
+
+  .bohr-level-count {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-dim);
+  }
+
+  .bohr-level-slash {
+    margin-inline: 0.0625rem;
+    color: var(--ink-faint);
+  }
+
+  .bohr-level-full {
+    padding: 0.0625rem 0.375rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-orbit);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+  }
+
+  .bohr-level-blurb {
+    margin: 0.5rem 0 0;
+    max-width: 52ch;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+  }
+
+  .bohr-level-data {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1rem;
+    margin-top: 0.625rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .bohr-level-excite {
+    margin-top: 0.875rem;
+  }
+
+  .bohr-excite-label {
+    flex: 1;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .bohr-level-posts {
+    margin-top: 0.5rem;
+  }
+
+  .bohr-level-empty {
+    margin: 0.75rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 900px) {
+    .bohr-layout {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .bohr-figure {
+      position: static;
+      max-width: 22rem;
+      margin-inline: auto;
+    }
+  }
+</style>

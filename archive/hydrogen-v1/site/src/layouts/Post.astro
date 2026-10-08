@@ -1,0 +1,528 @@
+---
+/**
+ * Post.astro — 文章页布局。
+ *
+ * 三栏结构：左侧留白 / 正文 / 右侧目录。目录 sticky，1200px 以下移到正文上方
+ * 折叠起来，不做双栏挤压。
+ */
+import type { MarkdownHeading } from 'astro';
+
+import type { Post } from '../lib/content.ts';
+import { requireCategory, formatTransition, formatWavelength } from '../lib/spectrum.ts';
+import { requireShell, formatBindingEnergy } from '../lib/shells.ts';
+import { formatDate, formatDateISO, toDatetimeAttr, postPath } from '../lib/format.ts';
+import { SITE } from '../consts.ts';
+
+import Base from './Base.astro';
+import SpecMark from '../components/atoms/SpecMark.astro';
+import ShellBadge from '../components/atoms/ShellBadge.astro';
+import PostCard from '../components/molecules/PostCard.astro';
+import TableOfContents from '../components/organisms/TableOfContents.astro';
+import Comments from '../components/organisms/Comments.astro';
+
+interface Props {
+  post: Post;
+  headings: MarkdownHeading[];
+  readingMinutes: number;
+  words: number;
+  related: Post[];
+  seriesPosts: Post[];
+  adjacent: { newer: Post | null; older: Post | null };
+}
+
+const { post, headings, readingMinutes, words, related, seriesPosts, adjacent } = Astro.props;
+
+const category = requireCategory(post.data.category);
+const shell = requireShell(post.data.shell);
+
+/** JSON-LD。让搜索结果里能显示作者和日期。 */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.pubDate.toISOString(),
+  dateModified: (post.data.updatedDate ?? post.data.pubDate).toISOString(),
+  author: { '@type': 'Person', name: SITE.author },
+  inLanguage: SITE.lang,
+  articleSection: category.title,
+  keywords: post.data.tags.join(', '),
+};
+---
+
+<Base
+  title={post.data.title}
+  description={post.data.description}
+  ogType="article"
+  publishedTime={post.data.pubDate}
+  modifiedTime={post.data.updatedDate}
+>
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify(jsonLd)}
+  />
+
+  <!-- 阅读进度。用 CSS scroll-driven animation，没有 JS 参与。 -->
+  <div class="progress" aria-hidden="true"><span class="progress-bar"></span></div>
+
+  <article class="post" data-pagefind-body>
+    <header class="post-header shell">
+      <div class="post-header-inner">
+        <div class="post-meta-top">
+          <SpecMark category={category} />
+          <ShellBadge shell={shell} showTitle />
+        </div>
+
+        <h1 class="t-display post-title">{post.data.title}</h1>
+        <p class="post-description">{post.data.description}</p>
+
+        <div class="post-meta-bottom">
+          <time datetime={toDatetimeAttr(post.data.pubDate)}>
+            {formatDate(post.data.pubDate)}
+          </time>
+          <span>{words} 字</span>
+          <span>约 {readingMinutes} 分钟</span>
+          {
+            post.data.updatedDate && (
+              <span>
+                {formatDateISO(post.data.updatedDate)} 更新
+              </span>
+            )
+          }
+        </div>
+
+        {
+          post.data.mayBeStale && (
+            <aside class="post-stale" role="note">
+              <p>
+                这篇写于 {formatDateISO(post.data.pubDate)}，里面的结论可能已经过期。
+                技术细节请以当前版本的文档为准。
+              </p>
+            </aside>
+          )
+        }
+      </div>
+    </header>
+
+    <div class="shell post-layout">
+      <div class="post-body">
+        {
+          post.data.cover && (
+            <figure class="post-cover">
+              <img
+                src={post.data.cover.src}
+                width={post.data.cover.width}
+                height={post.data.cover.height}
+                alt={post.data.coverAlt ?? ''}
+                loading="eager"
+                decoding="async"
+              />
+              {post.data.coverAlt && <figcaption>{post.data.coverAlt}</figcaption>}
+            </figure>
+          )
+        }
+
+        <!-- 移动端目录：折叠在正文上方。 -->
+        <details class="excite post-toc-mobile">
+          <summary>
+            <span class="excite-marker" aria-hidden="true"></span>
+            <span class="post-toc-mobile-label">目录</span>
+          </summary>
+          <div class="excite-body">
+            <TableOfContents headings={headings} />
+          </div>
+        </details>
+
+        <div class="prose prose-hydrogen">
+          <slot />
+        </div>
+
+        <!-- 标签 -->
+        {
+          post.data.tags.length > 0 && (
+            <div class="post-tags">
+              {post.data.tags.map((tag) => (
+                <a class="pill pill-link" href={`/cloud/${encodeURIComponent(tag.toLowerCase())}/`}>
+                  {tag}
+                </a>
+              ))}
+            </div>
+          )
+        }
+
+        <!-- 系列导航 -->
+        {
+          post.data.series && seriesPosts.length > 1 && (
+            <nav class="post-series" aria-label="系列文章">
+              <p class="post-series-title">
+                系列：{post.data.series}
+                <span class="post-series-count">{seriesPosts.length} 篇</span>
+              </p>
+              <ol class="post-series-list">
+                {seriesPosts.map((entry, index) => (
+                  <li class:list={{ 'is-current': entry.id === post.id }}>
+                    <span class="post-series-index">{String(index + 1).padStart(2, '0')}</span>
+                    {entry.id === post.id ? (
+                      <span class="post-series-current">{entry.data.title}</span>
+                    ) : (
+                      <a href={postPath(entry.id)}>{entry.data.title}</a>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+
+        <!-- 上一篇 / 下一篇 -->
+        {
+          (adjacent.newer || adjacent.older) && (
+            <nav class="post-adjacent" aria-label="相邻文章">
+              {adjacent.older ? (
+                <a class="post-adjacent-link" href={postPath(adjacent.older.id)}>
+                  <span class="post-adjacent-dir">更早</span>
+                  <span class="post-adjacent-title">{adjacent.older.data.title}</span>
+                </a>
+              ) : (
+                <span />
+              )}
+              {adjacent.newer && (
+                <a class="post-adjacent-link post-adjacent-next" href={postPath(adjacent.newer.id)}>
+                  <span class="post-adjacent-dir">更新</span>
+                  <span class="post-adjacent-title">{adjacent.newer.data.title}</span>
+                </a>
+              )}
+            </nav>
+          )
+        }
+
+        <!-- 相关文章 -->
+        {
+          related.length > 0 && (
+            <section class="post-related">
+              <h2 class="t-heading">相关</h2>
+              <div>
+                {related.map((entry) => (
+                  <PostCard post={entry} variant="compact" />
+                ))}
+              </div>
+            </section>
+          )
+        }
+
+        {!post.data.commentsOff && <Comments slug={post.id} class="post-comments" />}
+      </div>
+
+      <aside class="post-aside">
+        <TableOfContents headings={headings} class="post-toc-desktop" />
+      </aside>
+    </div>
+  </article>
+</Base>
+
+<style>
+  /*
+   * 阅读进度条。CSS scroll-driven animation，进度由 animation-timeline: scroll()
+   * 直接驱动，不需要 JS 也不需要监听 scroll 事件。
+   * 不支持的浏览器里 scaleX 保持 0，条不显示，不影响阅读。
+   */
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: 2px;
+    pointer-events: none;
+  }
+
+  .progress-bar {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+  }
+
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .progress-bar {
+        animation: progress-grow linear;
+        animation-timeline: scroll(root block);
+      }
+    }
+  }
+
+  @keyframes progress-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* ── 头部 ───────────────────────────────────────────────────────────────── */
+
+  .post-header {
+    padding-block: clamp(2.5rem, 2rem + 3vw, 4rem) 2rem;
+  }
+
+  .post-header-inner {
+    max-width: 46rem;
+  }
+
+  .post-meta-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .post-title {
+    margin: 0;
+    /* 长中文标题在 display 尺寸下需要更松的行高，否则会撞在一起。 */
+    line-height: 1.14;
+  }
+
+  .post-description {
+    margin: 1rem 0 0;
+    max-width: 42ch;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--ink-dim);
+  }
+
+  .post-meta-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1.125rem;
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .post-stale {
+    margin-top: 1.75rem;
+    padding: 0.875rem 1.125rem;
+    border: 1px solid var(--hairline-strong);
+    border-left: 2px solid var(--spec-field-notes);
+    border-radius: var(--radius-atom);
+    background: var(--wash);
+  }
+
+  .post-stale p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+  }
+
+  /* ── 布局 ───────────────────────────────────────────────────────────────── */
+
+  .post-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    gap: 3.5rem;
+    align-items: start;
+    padding-bottom: 4rem;
+  }
+
+  .post-body {
+    min-width: 0;
+    max-width: 44rem;
+  }
+
+  .post-aside {
+    position: sticky;
+    top: 5.5rem;
+  }
+
+  .post-cover {
+    margin: 0 0 2.5rem;
+  }
+
+  .post-cover img {
+    width: 100%;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+  }
+
+  .post-cover figcaption {
+    margin-top: 0.625rem;
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+  }
+
+  .post-toc-mobile {
+    display: none;
+    margin-bottom: 2rem;
+  }
+
+  .post-toc-mobile-label {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--ink-dim);
+  }
+
+  /* ── 文末各区块 ─────────────────────────────────────────────────────────── */
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 3rem;
+  }
+
+  .post-series {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.375rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .post-series-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .post-series-count {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 400;
+    color: var(--ink-faint);
+  }
+
+  .post-series-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-series-list li {
+    display: flex;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+  }
+
+  .post-series-index {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    padding-top: 0.125rem;
+  }
+
+  .post-series-list a {
+    color: var(--ink-dim);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .post-series-list a:hover {
+    color: var(--accent-ink);
+  }
+
+  .post-series-current {
+    color: var(--ink);
+  }
+
+  .post-adjacent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 2.5rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--hairline);
+    overflow: hidden;
+  }
+
+  .post-adjacent-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 1rem 1.125rem;
+    background: var(--surface);
+    transition: background-color 180ms var(--ease-relax);
+  }
+
+  .post-adjacent-next {
+    text-align: right;
+  }
+
+  .post-adjacent-link:hover {
+    background: var(--raised);
+  }
+
+  .post-adjacent-dir {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+
+  .post-adjacent-title {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ink-dim);
+  }
+
+  .post-adjacent-link:hover .post-adjacent-title {
+    color: var(--ink);
+  }
+
+  .post-related {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .post-related h2 {
+    margin: 0 0 0.75rem;
+  }
+
+  .post-comments {
+    margin-top: 3rem;
+  }
+
+  /* ── 响应式 ─────────────────────────────────────────────────────────────── */
+
+  @media (max-width: 1200px) {
+    .post-layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .post-aside {
+      display: none;
+    }
+
+    .post-toc-mobile {
+      display: block;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .post-adjacent {
+      grid-template-columns: 1fr;
+    }
+
+    .post-adjacent-next {
+      text-align: left;
+    }
+  }
+</style>

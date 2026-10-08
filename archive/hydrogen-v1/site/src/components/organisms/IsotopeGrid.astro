@@ -1,0 +1,419 @@
+---
+/**
+ * IsotopeGrid — 友链界面，按氢的同位素分档。
+ *
+ * 三档对应三种真实同位素：
+ *   ¹H 氕 protium    0 中子  稳定
+ *   ²H 氘 deuterium  1 中子  稳定
+ *   ³H 氚 tritium    2 中子  β⁻ 衰变，半衰期 12.32 年
+ *
+ * 氚会衰变这件事是当真用的，不是文字游戏：氚档的每条友链会按
+ * N(t) = N₀·2^(−t/t½) 算出当前剩余活度，掉到 85% 以下（约 2.4 年没动过）
+ * 就标出来提醒我复查是不是已经变成死链。这是一个真的会到期的维护提醒。
+ */
+import { activityFor, formatActivity, ISOTOPES, ISOTOPE_IDS } from '../../lib/isotopes.ts';
+import type { FriendLink, IsotopeId } from '../../lib/isotopes.ts';
+import { formatDateISO } from '../../lib/format.ts';
+
+interface Props {
+  links: FriendLink[];
+  class?: string;
+}
+
+const { links, class: className = '' } = Astro.props;
+
+const groups = ISOTOPE_IDS.map((id: IsotopeId) => ({
+  isotope: ISOTOPES[id],
+  links: links.filter((link) => link.isotope === id),
+})).filter((group) => group.links.length > 0);
+
+/** 核素图上的位置：氢的 Z 恒为 1，所以三个同位素是一条水平线。 */
+const chart = ISOTOPE_IDS.map((id) => ({
+  isotope: ISOTOPES[id],
+  count: links.filter((l) => l.isotope === id).length,
+}));
+---
+
+<div class:list={['isotopes', className]}>
+  <!--
+    核素图。横轴中子数，纵轴质子数。氢只有一行（Z=1），
+    所以这张图退化成一条线上的三个格子 —— 这就是氢的全部同位素。
+  -->
+  <div class="nuclide-chart">
+    <span class="nuclide-axis-z" aria-hidden="true">Z=1</span>
+    <ol class="nuclide-row">
+      {
+        chart.map(({ isotope, count }) => (
+          <li>
+            <a
+              class:list={['nuclide-cell', { 'is-unstable': !isotope.stable, 'is-empty': count === 0 }]}
+              href={`#isotope-${isotope.id}`}
+            >
+              <span class="nuclide-symbol">{isotope.symbol}</span>
+              <span class="nuclide-name">{isotope.name}</span>
+              <span class="nuclide-meta">
+                N={isotope.neutrons} · {count} 位
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+    <span class="nuclide-axis-n" aria-hidden="true">中子数 N →</span>
+  </div>
+
+  {
+    groups.length === 0 && (
+      <div class="state-block">
+        <p>还没有友链。</p>
+        <p class="t-data">想交换链接的话，邮件或者 GitHub issue 都行。</p>
+      </div>
+    )
+  }
+
+  {
+    groups.map(({ isotope, links: groupLinks }) => (
+      <section class="isotope-group" id={`isotope-${isotope.id}`}>
+        <header class="isotope-header">
+          <div class="isotope-identity">
+            <span class="isotope-symbol">{isotope.symbol}</span>
+            <div>
+              <h2 class="isotope-title">
+                {isotope.name}
+                <span class="isotope-latin">{isotope.latinName}</span>
+              </h2>
+              <p class="isotope-meaning">{isotope.meaning}</p>
+            </div>
+          </div>
+
+          <dl class="isotope-facts">
+            <div>
+              <dt>质量数</dt>
+              <dd>{isotope.massNumber}</dd>
+            </div>
+            <div>
+              <dt>中子</dt>
+              <dd>{isotope.neutrons}</dd>
+            </div>
+            <div>
+              <dt>{isotope.stable ? '天然丰度' : '半衰期'}</dt>
+              <dd>
+                {isotope.stable
+                  ? isotope.abundancePercent !== null
+                    ? `${isotope.abundancePercent}%`
+                    : '痕量'
+                  : `${isotope.halfLifeYears} 年`}
+              </dd>
+            </div>
+          </dl>
+        </header>
+
+        <ul class="isotope-links">
+          {groupLinks.map((link) => {
+            const decay = activityFor(link);
+            return (
+              <li>
+                <a class="friend" href={link.url} rel="noopener" target="_blank">
+                  <span class="friend-head">
+                    {link.avatar ? (
+                      <img
+                        class="friend-avatar"
+                        src={link.avatar}
+                        alt=""
+                        width="32"
+                        height="32"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span class="friend-avatar friend-avatar-fallback" aria-hidden="true">
+                        {[...link.name][0]}
+                      </span>
+                    )}
+                    <span class="friend-name">{link.name}</span>
+                  </span>
+
+                  <span class="friend-blurb">{link.blurb}</span>
+
+                  <span class="friend-data">
+                    <span>自 {formatDateISO(new Date(link.since))}</span>
+                    {decay && (
+                      <span class:list={['friend-activity', { 'needs-review': decay.needsReview }]}>
+                        活度 {formatActivity(decay)}
+                      </span>
+                    )}
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  /* ── 核素图 ─────────────────────────────────────────────────────────────── */
+
+  .nuclide-chart {
+    position: relative;
+    padding: 1.75rem 0 2rem;
+  }
+
+  .nuclide-row {
+    display: flex;
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: fit-content;
+    border: 1px solid var(--hairline);
+    background: var(--hairline);
+  }
+
+  .nuclide-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    width: 6.5rem;
+    padding: 0.75rem 0.75rem 0.625rem;
+    background: var(--surface);
+    transition: background-color 180ms var(--ease-relax);
+  }
+
+  .nuclide-cell:hover {
+    background: var(--raised);
+  }
+
+  /* 不稳定核素在核素图上通常用不同底色标出。这里用一条上边框表示。 */
+  .nuclide-cell.is-unstable {
+    border-top: 2px solid var(--spec-field-notes);
+    padding-top: calc(0.75rem - 2px);
+  }
+
+  .nuclide-cell.is-empty {
+    opacity: 0.45;
+  }
+
+  .nuclide-symbol {
+    font-size: 1.125rem;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  .nuclide-name {
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .nuclide-meta {
+    margin-top: 0.125rem;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .nuclide-axis-z,
+  .nuclide-axis-n {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    color: var(--ink-faint);
+  }
+
+  .nuclide-axis-z {
+    top: 0;
+    left: 0;
+  }
+
+  .nuclide-axis-n {
+    bottom: 0.5rem;
+    left: 0;
+  }
+
+  /* ── 同位素分组 ─────────────────────────────────────────────────────────── */
+
+  .isotope-group {
+    padding-block: 2.5rem;
+    border-top: 1px solid var(--hairline);
+    scroll-margin-top: 6rem;
+  }
+
+  .isotope-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .isotope-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .isotope-symbol {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-atom);
+    background: var(--surface);
+    font-size: 1.25rem;
+    color: var(--accent-ink);
+  }
+
+  .isotope-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .isotope-latin {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+  }
+
+  .isotope-meaning {
+    margin: 0.375rem 0 0;
+    max-width: 46ch;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+  }
+
+  .isotope-facts {
+    display: flex;
+    gap: 1.5rem;
+    margin: 0;
+    flex: none;
+  }
+
+  .isotope-facts div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+  }
+
+  .isotope-facts dt {
+    font-size: 0.6875rem;
+    color: var(--ink-faint);
+  }
+
+  .isotope-facts dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-dim);
+  }
+
+  /* ── 友链条目 ───────────────────────────────────────────────────────────── */
+
+  .isotope-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--hairline);
+    overflow: hidden;
+  }
+
+  .friend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1rem 1.125rem;
+    background: var(--surface);
+    transition: background-color 180ms var(--ease-relax);
+  }
+
+  .friend:hover {
+    background: var(--raised);
+  }
+
+  .friend-head {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .friend-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-orbit);
+    border: 1px solid var(--hairline);
+    object-fit: cover;
+  }
+
+  .friend-avatar-fallback {
+    display: grid;
+    place-items: center;
+    background: var(--raised);
+    font-size: 0.875rem;
+    color: var(--ink-dim);
+  }
+
+  .friend-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .friend:hover .friend-name {
+    color: var(--accent-ink);
+  }
+
+  .friend-blurb {
+    flex: 1;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--ink-dim);
+  }
+
+  .friend-data {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  /* 活度掉到阈值以下时着色。这是维护提醒，所以用一个真的会引起注意的颜色。 */
+  .friend-activity.needs-review {
+    color: var(--spec-field-notes-ink);
+  }
+
+  @media (max-width: 720px) {
+    .isotope-header {
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .isotope-facts {
+      gap: 1.75rem;
+    }
+  }
+</style>

@@ -1,0 +1,33 @@
+---
+/**
+ * 文章列表第 2 页起。第 1 页是 /posts/。
+ */
+import PostListing from '@/components/post/PostListing.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { POSTS_PER_PAGE } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getPosts, type Post } from '@/lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const ordered = [...posts.filter((p) => p.data.featured), ...posts.filter((p) => !p.data.featured)];
+  const total = Math.ceil(ordered.length / POSTS_PER_PAGE);
+  return Array.from({ length: Math.max(0, total - 1) }, (_, i) => ({
+    params: { page: String(i + 2) },
+    props: { posts: ordered.slice((i + 1) * POSTS_PER_PAGE, (i + 2) * POSTS_PER_PAGE), current: i + 2, total },
+  }));
+}
+
+interface Props {
+  posts: Post[];
+  current: number;
+  total: number;
+}
+
+const { posts, current, total } = Astro.props;
+---
+
+<Base title={`文章 · 第 ${current} 页`} noindex>
+  <PageHeader title="文章" description={`第 ${current} 页，共 ${total} 页。`} />
+  <PostListing posts={posts} active="all" page={{ current, total, base: '/posts/' }} />
+</Base>

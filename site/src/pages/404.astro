@@ -1,0 +1,74 @@
+---
+import SkyBackdrop from '@/components/SkyBackdrop.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Base from '@/layouts/Base.astro';
+import { getPosts } from '@/lib/content';
+import { postPath, withBase } from '@/lib/format';
+
+const latest = (await getPosts()).slice(0, 3);
+---
+
+<Base title="页面不存在" noindex flush>
+  <section class="lost" data-sky-host>
+    <SkyBackdrop density={1.1} />
+    <div class="container-page relative grid place-items-center py-24 text-center md:py-32">
+      <p class="code tabular">404</p>
+      <h1 class="mt-4 text-2xl font-semibold text-fg">这个页面不在这片天空下</h1>
+      <p class="mt-3 max-w-md text-fg-muted">链接可能写错了，或者文章已经改了地址。可以搜一下，或者从下面这些开始。</p>
+      <div class="mt-8 flex flex-wrap justify-center gap-2.5">
+        <a href={withBase('/')} class="btn btn-primary">
+          <Icon name="house" size={16} />
+          回首页
+        </a>
+        <button type="button" class="btn btn-ghost" data-search-open>
+          <Icon name="magnifying-glass" size={16} />
+          搜索
+        </button>
+      </div>
+      {
+        latest.length > 0 && (
+          <ul class="mt-12 w-full max-w-md space-y-1 text-left">
+            {latest.map((post) => (
+              <li>
+                <a href={postPath(post.id)} class="recent">
+                  <Icon name="article" size={15} class="text-fg-subtle" />
+                  <span class="truncate">{post.data.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    position: relative;
+    margin-top: calc(var(--header-h) * -1);
+    padding-top: var(--header-h);
+    isolation: isolate;
+  }
+  .code {
+    font-size: clamp(5rem, 3rem + 10vw, 9rem);
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    color: color-mix(in oklab, var(--accent) 70%, var(--fg));
+  }
+  .recent {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-control);
+    font-size: 0.9375rem;
+    color: var(--fg);
+    transition: background-color 160ms ease;
+  }
+  .recent:hover {
+    background: color-mix(in oklab, var(--surface) 70%, transparent);
+    color: var(--accent);
+  }
+</style>

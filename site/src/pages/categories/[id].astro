@@ -1,0 +1,27 @@
+---
+import PostListing from '@/components/post/PostListing.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { CATEGORIES } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getPosts, type Post } from '@/lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return CATEGORIES.map((category) => ({
+    params: { id: category.id },
+    props: { category, posts: posts.filter((p) => p.data.category === category.id) },
+  }));
+}
+
+interface Props {
+  category: (typeof CATEGORIES)[number];
+  posts: Post[];
+}
+
+const { category, posts } = Astro.props;
+---
+
+<Base title={category.label} description={category.blurb}>
+  <PageHeader title={category.label} count={posts.length} description={category.blurb} />
+  <PostListing posts={posts} active={category.id} />
+</Base>

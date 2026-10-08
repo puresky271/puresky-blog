@@ -1,0 +1,76 @@
+---
+/**
+ * 404.astro — 页面不存在。
+ *
+ * 文案用氢原子的电离来解释「你要的东西不在这里」：
+ * 电子被打到 n=∞ 就脱离了原子，需要 13.6 eV。这个类比刚好，
+ * 而且不需要读者懂物理也能看懂后面那句人话。
+ */
+import { withBase } from '../lib/format.ts';
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="页面不存在" noindex>
+  <section class="notfound">
+    <div class="shell notfound-inner">
+      <p class="notfound-code">404</p>
+      <h1 class="t-title notfound-title">电子跑到了 n=∞</h1>
+      <p class="notfound-body">
+        这个地址上没有东西。要么链接错了，要么这一页已经被删掉或者改名了。
+      </p>
+      <div class="notfound-actions">
+        <a class="btn btn-primary" href={withBase('')}>回首页</a>
+        <a class="btn btn-ghost" href={withBase('posts/')}>全部文章</a>
+        <a class="btn btn-ghost" href={withBase('search/')}>搜索</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .notfound {
+    display: grid;
+    place-items: center;
+    min-height: min(70dvh, 40rem);
+    padding-block: 3rem;
+  }
+
+  .notfound-inner {
+    max-width: 36rem;
+  }
+
+  .notfound-code {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+  }
+
+  .notfound-title {
+    margin: 0;
+  }
+
+  .notfound-body {
+    margin: 1rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.72;
+    color: var(--ink-dim);
+  }
+
+  .notfound-data {
+    margin: 0.875rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.7;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .notfound-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 2rem;
+  }
+</style>

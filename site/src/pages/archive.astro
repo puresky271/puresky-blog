@@ -1,0 +1,105 @@
+---
+/**
+ * 归档：按年、按月分组。月份带锚点（#2026-07），首页日历点到多篇文章的日子时跳到这里。
+ */
+import PostRow from '@/components/post/PostRow.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Base from '@/layouts/Base.astro';
+import { getPosts, type Post } from '@/lib/content';
+import { formatDateISO } from '@/lib/format';
+
+const posts = await getPosts();
+const years = new Map<string, Map<string, Post[]>>();
+for (const post of posts) {
+  const [year, month] = formatDateISO(post.data.pubDate).split('-');
+  const byMonth = years.get(year) ?? new Map<string, Post[]>();
+  byMonth.set(month, [...(byMonth.get(month) ?? []), post]);
+  years.set(year, byMonth);
+}
+const first = posts.at(-1);
+---
+
+<Base title="归档" description="全部文章，按时间排列。">
+  <PageHeader
+    title="归档"
+    count={posts.length}
+    description={first ? `从 ${formatDateISO(first.data.pubDate)} 写到现在。` : '还没有文章。'}
+  />
+  <div class="container-page">
+    {
+      [...years.entries()].map(([year, months]) => (
+        <section class="year" aria-labelledby={`y-${year}`}>
+          <h2 id={`y-${year}`} class="year-title">
+            {year}
+            <span class="tabular text-sm font-normal text-fg-subtle">
+              {[...months.values()].reduce((n, list) => n + list.length, 0)} 篇
+            </span>
+          </h2>
+          <div class="months">
+            {[...months.entries()].map(([month, list]) => (
+              <div class="month" id={`${year}-${month}`}>
+                <h3 class="month-title tabular">{Number(month)} 月</h3>
+                <ol class="min-w-0">
+                  {list.map((post, i) => (
+                    <PostRow post={post} index={i} />
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .year + .year {
+    margin-top: 3.5rem;
+  }
+  /* 年份标题吸附在顶部栏下面，长列表里也知道自己在哪一年。 */
+  .year-title {
+    position: sticky;
+    top: var(--nav-h);
+    z-index: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-block: 0.75rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    background: linear-gradient(var(--bg) 75%, transparent);
+  }
+  .months {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    margin-top: 0.5rem;
+  }
+  .month {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 1rem;
+    scroll-margin-top: calc(var(--nav-h) + 4rem);
+  }
+  .month-title {
+    padding-top: 0.9rem;
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+  }
+  .month:target .month-title {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  @media (width < 40rem) {
+    .month {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+    .month-title {
+      padding-top: 0;
+    }
+  }
+</style>

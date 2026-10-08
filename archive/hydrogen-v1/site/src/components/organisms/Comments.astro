@@ -1,0 +1,557 @@
+---
+/**
+ * Comments — 评论区。数据来自 Cloudflare Worker（见 worker/）。
+ *
+ * 三个状态都实现了，不只有「加载成功」这一种：
+ *   加载中  骨架占位，形状和真实评论一致
+ *   空      说明怎么参与，而不是一句「暂无评论」
+ *   出错    说明发生了什么并给重试按钮，不静默失败
+ *
+ * 未登录时输入框可见但提交被拦下，并明确提示需要先用 GitHub 登录，
+ * 而不是把输入框藏起来让人不知道能不能评论。
+ */
+import { API_BASE } from '../../consts.ts';
+
+interface Props {
+  /** 文章 slug，作为评论的归属键。 */
+  slug: string;
+  class?: string;
+}
+
+const { slug, class: className = '' } = Astro.props;
+---
+
+<section class:list={['comments', className]} data-comments data-slug={slug} data-api={API_BASE}>
+  <header class="comments-head">
+    <h2 class="t-heading">评论</h2>
+    <span class="comments-count" data-comments-count></span>
+  </header>
+
+  <!-- 登录状态条 -->
+  <div class="comments-auth" data-auth-bar>
+    <div class="skeleton comments-auth-skeleton" aria-hidden="true"></div>
+  </div>
+
+  <!-- 发表表单 -->
+  <form class="comments-form" data-comment-form hidden>
+    <div class="field">
+      <label class="field-label" for="comment-body">写下你的看法</label>
+      <textarea
+        class="field-textarea"
+        id="comment-body"
+        name="body"
+        required
+        maxlength="2000"
+        placeholder="支持 Markdown 的基础语法。"
+        data-comment-input
+      ></textarea>
+      <div class="comments-form-foot">
+        <span class="field-help" data-comment-counter>0 / 2000</span>
+        <button class="btn btn-primary" type="submit" data-comment-submit>发表</button>
+      </div>
+      <p class="field-error" data-comment-error hidden></p>
+    </div>
+  </form>
+
+  <!-- 列表。初始是骨架，形状照着真实评论排。 -->
+  <ol class="comments-list" data-comments-list>
+    {
+      [0, 1].map(() => (
+        <li class="comment comment-skeleton" aria-hidden="true">
+          <div class="skeleton comment-skeleton-avatar"></div>
+          <div class="comment-skeleton-body">
+            <div class="skeleton comment-skeleton-line comment-skeleton-line-short"></div>
+            <div class="skeleton comment-skeleton-line"></div>
+            <div class="skeleton comment-skeleton-line comment-skeleton-line-mid"></div>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="comments-status" data-comments-status hidden></div>
+</section>
+
+<script>
+  interface Comment {
+    id: string;
+    author: string;
+    avatar: string | null;
+    profile: string | null;
+    body: string;
+    createdAt: string;
+    /** 站长本人的评论加标记。 */
+    isOwner: boolean;
+  }
+
+  interface Viewer {
+    login: string;
+    avatar: string | null;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-comments]');
+
+  if (root) {
+    const slug = root.dataset.slug ?? '';
+    const api = root.dataset.api ?? '';
+
+    const list = root.querySelector<HTMLOListElement>('[data-comments-list]')!;
+    const countLabel = root.querySelector<HTMLElement>('[data-comments-count]')!;
+    const authBar = root.querySelector<HTMLElement>('[data-auth-bar]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-comment-form]')!;
+    const input = root.querySelector<HTMLTextAreaElement>('[data-comment-input]')!;
+    const counter = root.querySelector<HTMLElement>('[data-comment-counter]')!;
+    const errorBox = root.querySelector<HTMLElement>('[data-comment-error]')!;
+    const submit = root.querySelector<HTMLButtonElement>('[data-comment-submit]')!;
+    const status = root.querySelector<HTMLElement>('[data-comments-status]')!;
+
+    let viewer: Viewer | null = null;
+
+    const dateFormat = new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    /** 文本转义。评论内容一律当纯文本渲染，不解析 HTML。 */
+    function escapeHtml(text: string): string {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showStatus(message: string, kind: 'empty' | 'error', retry = false) {
+      list.innerHTML = '';
+      status.hidden = false;
+      status.className = `comments-status comments-status-${kind}`;
+      status.innerHTML = `<p>${escapeHtml(message)}</p>`;
+      if (retry) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-ghost comments-retry';
+        button.textContent = '重试';
+        button.addEventListener('click', () => void loadComments());
+        status.append(button);
+      }
+    }
+
+    function renderComments(comments: Comment[]) {
+      status.hidden = true;
+      list.innerHTML = '';
+
+      countLabel.textContent = comments.length > 0 ? String(comments.length) : '';
+
+      if (comments.length === 0) {
+        showStatus('还没有人说话。有想法的话，登录后就能写。', 'empty');
+        return;
+      }
+
+      for (const comment of comments) {
+        const item = document.createElement('li');
+        item.className = 'comment';
+
+        const avatar = comment.avatar
+          ? `<img class="comment-avatar" src="${escapeHtml(comment.avatar)}" alt="" width="32" height="32" loading="lazy" decoding="async" />`
+          : `<span class="comment-avatar comment-avatar-fallback" aria-hidden="true">${escapeHtml(
+              [...comment.author][0] ?? '?'
+            )}</span>`;
+
+        const authorInner = `${escapeHtml(comment.author)}${
+          comment.isOwner ? '<span class="comment-owner">作者</span>' : ''
+        }`;
+        const author = comment.profile
+          ? `<a class="comment-author" href="${escapeHtml(
+              comment.profile
+            )}" rel="noopener nofollow" target="_blank">${authorInner}</a>`
+          : `<span class="comment-author">${authorInner}</span>`;
+
+        const created = new Date(comment.createdAt);
+
+        item.innerHTML = `
+          ${avatar}
+          <div class="comment-main">
+            <div class="comment-head">
+              ${author}
+              <time class="comment-time" datetime="${created.toISOString()}">${dateFormat.format(
+                created
+              )}</time>
+            </div>
+            <div class="comment-body">${escapeHtml(comment.body)}</div>
+          </div>
+        `;
+
+        list.append(item);
+      }
+    }
+
+    async function loadComments() {
+      list.innerHTML = '';
+      status.hidden = false;
+      status.className = 'comments-status';
+      status.innerHTML = '<p class="t-data">正在加载评论</p>';
+
+      try {
+        const response = await fetch(`${api}/api/comments/${encodeURIComponent(slug)}`, {
+          credentials: 'include',
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = (await response.json()) as { comments: Comment[] };
+        renderComments(payload.comments ?? []);
+      } catch {
+        // 不区分网络错误和服务端错误：对读者来说处理方式一样，就是重试。
+        showStatus('评论加载失败。可能是网络问题，也可能是评论服务暂时不可用。', 'error', true);
+      }
+    }
+
+    function renderAuthBar() {
+      authBar.innerHTML = '';
+
+      if (viewer) {
+        authBar.innerHTML = `
+          <div class="comments-viewer">
+            ${
+              viewer.avatar
+                ? `<img class="comment-avatar" src="${escapeHtml(
+                    viewer.avatar
+                  )}" alt="" width="24" height="24" />`
+                : ''
+            }
+            <span>已登录为 <strong>${escapeHtml(viewer.login)}</strong></span>
+          </div>
+        `;
+        const logout = document.createElement('button');
+        logout.type = 'button';
+        logout.className = 'comments-auth-action';
+        logout.textContent = '退出';
+        logout.addEventListener('click', async () => {
+          await fetch(`${api}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+          viewer = null;
+          renderAuthBar();
+        });
+        authBar.append(logout);
+        form.hidden = false;
+      } else {
+        authBar.innerHTML = '<span class="comments-auth-note">评论需要先用 GitHub 登录。</span>';
+        const login = document.createElement('a');
+        login.className = 'btn btn-ghost comments-login';
+        login.href = `${api}/api/auth/github/start?redirect=${encodeURIComponent(
+          window.location.href
+        )}`;
+        login.textContent = '用 GitHub 登录';
+        authBar.append(login);
+        form.hidden = true;
+      }
+    }
+
+    async function loadViewer() {
+      try {
+        const response = await fetch(`${api}/api/auth/me`, { credentials: 'include' });
+        if (response.ok) {
+          const payload = (await response.json()) as { viewer: Viewer | null };
+          viewer = payload.viewer ?? null;
+        }
+      } catch {
+        viewer = null;
+      }
+      renderAuthBar();
+    }
+
+    input.addEventListener('input', () => {
+      counter.textContent = `${input.value.length} / 2000`;
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorBox.hidden = true;
+
+      const body = input.value.trim();
+      if (body.length < 2) {
+        errorBox.textContent = '内容太短了。';
+        errorBox.hidden = false;
+        return;
+      }
+
+      submit.disabled = true;
+      submit.textContent = '提交中';
+
+      try {
+        const response = await fetch(`${api}/api/comments/${encodeURIComponent(slug)}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ body }),
+        });
+
+        if (response.status === 401) {
+          errorBox.textContent = '登录状态已过期，请重新登录。';
+          errorBox.hidden = false;
+          viewer = null;
+          renderAuthBar();
+          return;
+        }
+
+        if (response.status === 429) {
+          errorBox.textContent = '发得太快了，等一会儿再试。';
+          errorBox.hidden = false;
+          return;
+        }
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const payload = (await response.json()) as { pending?: boolean };
+        input.value = '';
+        counter.textContent = '0 / 2000';
+
+        if (payload.pending) {
+          // 送审的评论不会立刻出现，必须说清楚，否则用户会以为提交失败了。
+          errorBox.textContent = '';
+          errorBox.hidden = true;
+          status.hidden = false;
+          status.className = 'comments-status comments-status-empty';
+          status.innerHTML = '<p>已提交，等待审核后显示。</p>';
+        } else {
+          await loadComments();
+        }
+      } catch {
+        errorBox.textContent = '提交失败，请稍后重试。';
+        errorBox.hidden = false;
+      } finally {
+        submit.disabled = false;
+        submit.textContent = '发表';
+      }
+    });
+
+    void loadViewer();
+    void loadComments();
+  }
+</script>
+
+<style>
+  .comments {
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .comments-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .comments-head h2 {
+    margin: 0;
+  }
+
+  .comments-count {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .comments-auth {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1.125rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .comments-auth-skeleton {
+    width: 12rem;
+    height: 1rem;
+  }
+
+  .comments-auth-note {
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .comments-viewer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .comments-viewer strong {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .comments-auth-action {
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .comments-auth-action:hover {
+    color: var(--ink-dim);
+  }
+
+  .comments-login {
+    flex: none;
+  }
+
+  .comments-form {
+    margin-bottom: 1.75rem;
+  }
+
+  .comments-form-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .comment {
+    display: flex;
+    gap: 0.875rem;
+    padding: 1.125rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .comment:first-child {
+    border-top: none;
+  }
+
+  .comment-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-orbit);
+    border: 1px solid var(--hairline);
+    object-fit: cover;
+  }
+
+  .comment-avatar-fallback {
+    display: grid;
+    place-items: center;
+    background: var(--raised);
+    font-size: 0.875rem;
+    color: var(--ink-dim);
+  }
+
+  .comment-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .comment-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.625rem;
+    margin-bottom: 0.3125rem;
+  }
+
+  .comment-author {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .comment-owner {
+    padding: 0.0625rem 0.3125rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-orbit);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-weight: 400;
+    color: var(--accent-ink);
+  }
+
+  .comment-time {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .comment-body {
+    font-size: 0.875rem;
+    line-height: 1.68;
+    color: var(--ink-dim);
+    white-space: pre-wrap;
+  }
+
+  /* 骨架的形状要和真实评论一致，否则加载完成时会跳一下。 */
+  .comment-skeleton-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-orbit);
+  }
+
+  .comment-skeleton-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .comment-skeleton-line {
+    height: 0.6875rem;
+    border-radius: 3px;
+  }
+
+  .comment-skeleton-line-short {
+    width: 32%;
+  }
+
+  .comment-skeleton-line-mid {
+    width: 72%;
+  }
+
+  .comments-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .comments-status p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--ink-dim);
+  }
+
+  .comments-status-empty,
+  .comments-status-error {
+    border: 1px dashed var(--hairline-strong);
+    border-radius: var(--radius-shell);
+  }
+
+  .comments-status-error p {
+    color: var(--spec-engineering-ink);
+  }
+
+  @media (max-width: 560px) {
+    .comments-auth {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

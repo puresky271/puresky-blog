@@ -1,0 +1,94 @@
+---
+/**
+ * PostListing.astro — 文章列表的主体：分类筛选条 + 条目 + 分页。
+ * 全部文章、分类页、标签页共用。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { getCategories, type Post } from '@/lib/content';
+import { categoryPath, withBase } from '@/lib/format';
+
+import PostListItem from './PostListItem.astro';
+
+interface Props {
+  posts: Post[];
+  /** 当前高亮的分类；全部文章页传 'all'，标签页不传。 */
+  active?: string;
+  page?: { current: number; total: number; base: string };
+}
+
+const { posts, active, page } = Astro.props;
+const categories = (await getCategories()).filter((c) => c.count > 0);
+
+const pageHref = (n: number) => (n === 1 ? withBase(page!.base) : withBase(`${page!.base}page/${n}/`));
+---
+
+{
+  active !== undefined && (
+    <nav class="container-page mb-6" aria-label="按分类筛选">
+      <ul class="flex flex-wrap gap-2">
+        <li>
+          <a href={withBase('/posts/')} class="chip" aria-current={active === 'all' ? 'page' : undefined}>
+            全部
+          </a>
+        </li>
+        {categories.map((c) => (
+          <li>
+            <a href={categoryPath(c.id)} class="chip" aria-current={active === c.id ? 'page' : undefined}>
+              {c.label}
+              <span class="tabular opacity-60">{c.count}</span>
+            </a>
+          </li>
+        ))}
+        <li>
+          <a href={withBase('/tags/')} class="chip">
+            <Icon name="hash" size={13} />
+            标签
+          </a>
+        </li>
+      </ul>
+    </nav>
+  )
+}
+
+<div class="container-page">
+  {
+    posts.length > 0 ? (
+      <ol class="flex flex-col gap-1">
+        {posts.map((post, i) => (
+          <PostListItem post={post} index={i} />
+        ))}
+      </ol>
+    ) : (
+      <div class="grid place-items-center gap-3 py-20 text-center text-fg-muted">
+        <Icon name="article" size={28} class="text-fg-subtle" />
+        <p>这里还没有文章。</p>
+      </div>
+    )
+  }
+
+  {
+    page && page.total > 1 && (
+      <nav class="mt-12 flex items-center justify-between gap-4" aria-label="分页">
+        {page.current > 1 ? (
+          <a href={pageHref(page.current - 1)} class="btn btn-ghost">
+            <Icon name="arrow-left" size={16} />
+            上一页
+          </a>
+        ) : (
+          <span />
+        )}
+        <span class="tabular text-sm text-fg-muted">
+          {page.current} / {page.total}
+        </span>
+        {page.current < page.total ? (
+          <a href={pageHref(page.current + 1)} class="btn btn-ghost">
+            下一页
+            <Icon name="arrow-right" size={16} />
+          </a>
+        ) : (
+          <span />
+        )}
+      </nav>
+    )
+  }
+</div>

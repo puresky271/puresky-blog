@@ -1,0 +1,67 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Base from '@/layouts/Base.astro';
+import { getFriends } from '@/lib/content';
+import { formatDate } from '@/lib/format';
+
+const friends = await getFriends();
+---
+
+<Base title="友链" description="朋友们的站点。">
+  <PageHeader title="友链" count={friends.length} description="朋友们的站点。想交换友链，可以在任意一篇文章下留言。" />
+  <div class="container-page">
+    {
+      friends.length ? (
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {friends.map((friend, i) => (
+            <li data-reveal style={`--reveal-i: ${i}`}>
+              <a href={friend.data.url} target="_blank" rel="noopener noreferrer" class="card card-link friend">
+                {friend.data.avatar ? (
+                  <img src={friend.data.avatar} alt="" width="44" height="44" class="avatar" loading="lazy" />
+                ) : (
+                  <span class="avatar initial" aria-hidden="true">
+                    {friend.data.name.slice(0, 1)}
+                  </span>
+                )}
+                <span class="min-w-0">
+                  <span class="flex items-center gap-1 font-medium text-fg">
+                    <span class="truncate">{friend.data.name}</span>
+                    <Icon name="arrow-up-right" size={13} class="text-fg-subtle" />
+                  </span>
+                  <span class="mt-0.5 block text-sm leading-relaxed text-fg-muted">{friend.data.blurb}</span>
+                  <span class="meta mt-1.5 block">始于 {formatDate(friend.data.since)}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="py-20 text-center text-fg-muted">还没有友链。</p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .friend {
+    display: flex;
+    gap: 0.9rem;
+    height: 100%;
+    padding: 1.1rem;
+  }
+  .avatar {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+  .initial {
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+  }
+</style>

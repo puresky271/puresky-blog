@@ -1,0 +1,188 @@
+---
+import { Image } from 'astro:assets';
+
+import ClockCard from '@/components/home/ClockCard.svelte';
+import GitHubWidgets from '@/components/home/GitHubWidgets.svelte';
+import HomeTop from '@/components/home/HomeTop.astro';
+import PostCard from '@/components/post/PostCard.astro';
+import PostRow from '@/components/post/PostRow.astro';
+import ProjectCard from '@/components/project/ProjectCard.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import { GITHUB } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getIllustrations, getPostCalendar, getPosts, getProjects } from '@/lib/content';
+import { withBase } from '@/lib/format';
+import type { GitHubSlice } from '@/lib/github-live.svelte';
+import { getGitHubSnapshot } from '@/lib/snapshots';
+
+const [posts, calendar, projects, illustrations, github] = await Promise.all([
+  getPosts(),
+  getPostCalendar(),
+  getProjects(),
+  getIllustrations(),
+  getGitHubSnapshot(),
+]);
+
+const [latest, ...rest] = posts;
+const featuredProjects = projects.filter((p) => p.data.featured).slice(0, 2);
+const repoByName = new Map((github?.repos ?? []).map((r) => [r.fullName.toLowerCase(), r]));
+
+// 首页只序列化用得到的字段，仓库列表等大字段不进页面。
+const githubSlice: GitHubSlice | null = github
+  ? {
+      username: github.username,
+      fetchedAt: github.fetchedAt,
+      user: github.user,
+      status: github.status,
+      calendar: github.calendar,
+      events: github.events.slice(0, 6),
+      totals: github.totals,
+      languages: github.languages,
+      repoCount: github.user?.publicRepos ?? github.repos.length,
+    }
+  : null;
+
+const avatar = github?.user?.avatarUrl
+  ? `${github.user.avatarUrl}${github.user.avatarUrl.includes('?') ? '&' : '?'}s=96`
+  : `https://github.com/${GITHUB.username}.png?size=96`;
+---
+
+<Base flush>
+  <HomeTop avatar={avatar} status={github?.status} illustrations={illustrations} latest={latest} />
+
+  <section class="container-page mt-14" aria-labelledby="now-title">
+    <SectionHeader title="此刻" id="now-title" href={withBase('/activity/')} linkLabel="GitHub 动态" />
+    <div class="bento">
+      <div class="area-clock">
+        <ClockCard client:load posts={calendar} />
+      </div>
+      <GitHubWidgets client:load snapshot={githubSlice} username={GITHUB.username} />
+    </div>
+  </section>
+
+  {
+    latest && (
+      <section class="container-page mt-20" aria-labelledby="posts-title">
+        <SectionHeader title="最近的文章" id="posts-title" href={withBase('/posts/')} linkLabel="全部文章" />
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
+          <PostCard post={latest} size="lg" />
+          {rest.length > 0 && (
+            <ol class="flex flex-col justify-center">
+              {rest.slice(0, 6).map((post, i) => (
+                <PostRow post={post} index={i + 1} />
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    featuredProjects.length > 0 && (
+      <section class="container-page mt-20" aria-labelledby="projects-title">
+        <SectionHeader title="在做的项目" id="projects-title" href={withBase('/projects/')} linkLabel="全部项目" />
+        <div class="grid gap-5 md:grid-cols-2">
+          {featuredProjects.map((project, i) => (
+            <ProjectCard
+              project={project}
+              repo={project.data.repo ? repoByName.get(project.data.repo.toLowerCase()) : undefined}
+              index={i}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    illustrations.length > 1 && (
+      <section class="mt-20" aria-labelledby="gallery-title">
+        <div class="container-page">
+          <SectionHeader title="画廊" id="gallery-title" href={withBase('/gallery/')} linkLabel="全部插画" />
+        </div>
+        <ul class="strip container-page">
+          {illustrations.map((item, i) => (
+            <li data-reveal style={`--reveal-i: ${i}`}>
+              <a href={withBase(`/gallery/#${item.id}`)} class="strip-item" aria-label={item.data.title}>
+                <Image src={item.data.image} alt={item.data.alt} height={440} class="h-full w-auto object-cover" />
+              </a>
+              <p class="mt-2 text-[0.8125rem] text-fg-muted">{item.data.title}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  /*
+   * 此刻：三张卡片的不对称排布。
+   *   桌面：时钟日历占左侧一列两行；右侧上面是 GitHub 贡献，下面是最近动态。
+   *   平板：GitHub 横跨顶部，下面并排时钟和动态。
+   *   手机：单列。
+   */
+  .bento {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'clock' 'github' 'activity';
+  }
+  @media (width >= 48rem) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'github github'
+        'clock activity';
+    }
+  }
+  @media (width >= 64rem) {
+    .bento {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      grid-template-areas:
+        'clock github'
+        'clock activity';
+    }
+  }
+  /* 岛屿外包了一层 astro-island（display: contents），用 grid 让卡片直接撑满这一格。 */
+  .bento > .area-clock {
+    grid-area: clock;
+    display: grid;
+  }
+  .bento :global(.area-github) {
+    grid-area: github;
+  }
+  .bento :global(.area-activity) {
+    grid-area: activity;
+  }
+
+  /* 画廊横条：按高度对齐、横向滚动吸附，宽度随插画比例变化。 */
+  .strip {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 0.5rem;
+  }
+  .strip::-webkit-scrollbar {
+    display: none;
+  }
+  .strip > li {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .strip-item {
+    display: block;
+    height: 220px;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    transition: transform 500ms var(--ease-out-expo);
+  }
+  .strip-item:hover {
+    transform: translateY(-3px);
+  }
+</style>

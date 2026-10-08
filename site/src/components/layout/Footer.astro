@@ -1,0 +1,71 @@
+---
+/**
+ * Footer.astro — 页脚。
+ *
+ * 构建信息链接到对应 commit：这是一个和 GitHub 绑定的站点，
+ * 读者能顺着这条链接看到当前页面是从哪次提交构建出来的。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { AUTHOR, GITHUB, SITE } from '@/config';
+import { formatDate, withBase } from '@/lib/format';
+
+import ThemeSwitch from './ThemeSwitch.astro';
+
+const sha = process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || '';
+const builtAt = new Date();
+const year = builtAt.getFullYear();
+
+const links = [
+  { href: withBase('/friends/'), label: '友链' },
+  { href: withBase('/card/'), label: '名片' },
+  { href: withBase('/tags/'), label: '标签' },
+  { href: withBase('/rss.xml'), label: 'RSS' },
+];
+---
+
+<footer class="mt-24 border-t border-line">
+  <div class="container-page grid gap-8 py-10 md:grid-cols-[1fr_auto] md:items-end">
+    <div class="space-y-3">
+      <p class="text-sm text-fg-muted">
+        © {SITE.since === year ? year : `${SITE.since}-${year}`}
+        {AUTHOR.name}. 文章采用 CC BY-NC-SA 4.0 许可。
+      </p>
+      <p class="flex flex-wrap items-center gap-x-1.5 text-[0.8125rem] text-fg-subtle">
+        <span>构建于 <time datetime={builtAt.toISOString()}>{formatDate(builtAt)}</time></span>
+        {
+          sha && (
+            <>
+              <span aria-hidden="true">·</span>
+              <a
+                href={`https://github.com/${GITHUB.repo}/commit/${sha}`}
+                class="inline-flex items-center gap-1 font-mono hover:text-fg"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="git-commit" size={14} />
+                {sha.slice(0, 7)}
+              </a>
+            </>
+          )
+        }
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-4 md:justify-end">
+      <nav aria-label="页脚链接">
+        <ul class="flex items-center gap-4 text-sm text-fg-muted">
+          {
+            links.map((link) => (
+              <li>
+                <a href={link.href} class="transition-colors hover:text-fg">
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <ThemeSwitch />
+    </div>
+  </div>
+</footer>

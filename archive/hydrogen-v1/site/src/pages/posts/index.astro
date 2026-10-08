@@ -1,0 +1,317 @@
+---
+/**
+ * posts/index.astro — 全部文章。
+ *
+ * 带客户端筛选（分类 / 能级）。筛选纯前端，因为文章总量在几十到几百之间，
+ * 一次性发过去比分页跳转体验好；到千篇量级再考虑分页。
+ */
+import { allPosts, categoryStats, shellStats } from '../../lib/content.ts';
+import { requireCategory } from '../../lib/spectrum.ts';
+import { requireShell } from '../../lib/shells.ts';
+import { formatDateISO, postPath, toDatetimeAttr } from '../../lib/format.ts';
+
+import Page from '../../layouts/Page.astro';
+import SpecMark from '../../components/atoms/SpecMark.astro';
+import ShellBadge from '../../components/atoms/ShellBadge.astro';
+
+const posts = await allPosts();
+const categories = await categoryStats();
+const shells = await shellStats();
+
+const summary = `${posts.length} 篇 · ${categories.filter((c) => c.count > 0).length} 个分类`;
+---
+
+<Page
+  title="全部文章"
+  lede="按发表时间倒序。可以按主题分类或者能级筛选。"
+  summary={summary}
+  width="default"
+>
+  <div class="filters" data-filters>
+    <div class="filter-group" role="group" aria-label="按分类筛选">
+      <button class="filter is-on" type="button" data-filter-kind="category" data-filter-value="all">
+        全部主题
+      </button>
+      {
+        categories
+          .filter((c) => c.count > 0)
+          .map(({ category, count }) => (
+            <button
+              class="filter"
+              type="button"
+              data-filter-kind="category"
+              data-filter-value={category.id}
+              style={`--line-colour: ${category.lineHex};`}
+            >
+              <span class="spec-dot" aria-hidden="true" />
+              {category.title}
+              <span class="filter-count">{count}</span>
+            </button>
+          ))
+      }
+    </div>
+
+    <div class="filter-group" role="group" aria-label="按能级筛选">
+      <button class="filter is-on" type="button" data-filter-kind="shell" data-filter-value="all">
+        全部能级
+      </button>
+      {
+        shells
+          .filter((s) => s.occupied > 0)
+          .map(({ shell, occupied }) => (
+            <button
+              class="filter"
+              type="button"
+              data-filter-kind="shell"
+              data-filter-value={String(shell.n)}
+            >
+              <span class="filter-shell">{shell.letter}</span>
+              {shell.title}
+              <span class="filter-count">{occupied}</span>
+            </button>
+          ))
+      }
+    </div>
+  </div>
+
+  <ol class="post-list" data-post-list>
+    {
+      posts.map((post) => {
+        const category = requireCategory(post.data.category);
+        const shell = requireShell(post.data.shell);
+        return (
+          <li
+            class="post-row"
+            data-category={post.data.category}
+            data-shell={String(post.data.shell)}
+            style={`--line-colour: ${category.lineHex};`}
+          >
+            <a class="post-row-link" href={postPath(post.id)} data-astro-prefetch="hover">
+              <time class="post-row-date" datetime={toDatetimeAttr(post.data.pubDate)}>
+                {formatDateISO(post.data.pubDate)}
+              </time>
+              <span class="post-row-main">
+                <span class="post-row-title">{post.data.title}</span>
+                <span class="post-row-desc">{post.data.description}</span>
+              </span>
+            </a>
+            <span class="post-row-meta">
+              <SpecMark category={category} />
+              <ShellBadge shell={shell} />
+            </span>
+          </li>
+        );
+      })
+    }
+  </ol>
+
+  <p class="post-list-empty" data-empty hidden>
+    这个组合下没有文章。换个筛选条件试试。
+  </p>
+</Page>
+
+<script>
+  // 筛选。两个维度独立，都是「全部」时显示所有文章。
+  const filters = document.querySelector<HTMLElement>('[data-filters]');
+  const list = document.querySelector<HTMLElement>('[data-post-list]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+
+  if (filters && list && empty) {
+    const state = { category: 'all', shell: 'all' };
+
+    function apply() {
+      let visible = 0;
+      for (const row of list!.querySelectorAll<HTMLElement>('.post-row')) {
+        const matchCategory = state.category === 'all' || row.dataset.category === state.category;
+        const matchShell = state.shell === 'all' || row.dataset.shell === state.shell;
+        const show = matchCategory && matchShell;
+        row.hidden = !show;
+        if (show) visible += 1;
+      }
+      empty!.hidden = visible > 0;
+    }
+
+    filters.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-filter-kind]');
+      if (!button) return;
+
+      const kind = button.dataset.filterKind as 'category' | 'shell';
+      const value = button.dataset.filterValue ?? 'all';
+      state[kind] = value;
+
+      // 同组内互斥高亮。
+      for (const sibling of filters.querySelectorAll<HTMLButtonElement>(
+        `[data-filter-kind="${kind}"]`
+      )) {
+        sibling.classList.toggle('is-on', sibling === button);
+      }
+
+      apply();
+    });
+  }
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-orbit);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    transition:
+      border-color 160ms var(--ease-relax),
+      background-color 160ms var(--ease-relax),
+      color 160ms var(--ease-relax);
+  }
+
+  .filter:hover {
+    border-color: var(--hairline-strong);
+    background: var(--wash);
+  }
+
+  .filter.is-on {
+    border-color: var(--ink-faint);
+    background: var(--wash-strong);
+    color: var(--ink);
+  }
+
+  .filter-count {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .filter-shell {
+    display: grid;
+    place-items: center;
+    width: 0.9375rem;
+    height: 0.9375rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    color: var(--ink-faint);
+  }
+
+  .post-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.0625rem 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .post-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 0;
+    background: var(--line-colour);
+    transition: height 240ms var(--ease-atom);
+  }
+
+  .post-row:hover::before {
+    height: 100%;
+  }
+
+  .post-row-link {
+    display: flex;
+    gap: 1.25rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .post-row-date {
+    flex: none;
+    padding-top: 0.1875rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .post-row-main {
+    min-width: 0;
+  }
+
+  .post-row-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .post-row-link:hover .post-row-title {
+    color: var(--accent-ink);
+  }
+
+  .post-row-desc {
+    display: block;
+    margin-top: 0.3125rem;
+    max-width: 56ch;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+  }
+
+  .post-row-meta {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding-top: 0.125rem;
+  }
+
+  .post-list-empty {
+    padding: 2.5rem 0;
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 720px) {
+    .post-row {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .post-row-link {
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .post-row-date {
+      padding-top: 0;
+    }
+  }
+</style>

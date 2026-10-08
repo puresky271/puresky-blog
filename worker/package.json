@@ -1,0 +1,23 @@
+{
+  "name": "puresky-worker",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "dev:offline": "wrangler dev --config wrangler.offline.toml --port 8787",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "db:local": "wrangler d1 execute puresky --local --file=./schema.sql",
+    "db:remote": "wrangler d1 execute puresky --remote --file=./schema.sql",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.13.13"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261008.1",
+    "typescript": "^6.0.0",
+    "wrangler": "^4.148.0"
+  }
+}

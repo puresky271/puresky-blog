@@ -1,0 +1,102 @@
+---
+/**
+ * 画廊：全部插画，瀑布流。点图片放大（灯箱）。每张有锚点，首页舞台和画廊横条会链接过来。
+ */
+import { Image } from 'astro:assets';
+
+import Lightbox from '@/components/Lightbox.astro';
+import Icon from '@/components/ui/Icon.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Base from '@/layouts/Base.astro';
+import { getIllustrations } from '@/lib/content';
+import { formatDate } from '@/lib/format';
+
+const items = await getIllustrations();
+---
+
+<Base title="画廊" description="放在这里的插画。">
+  <PageHeader title="画廊" count={items.length} description="放在这里的插画。点图片可以放大看。" />
+  <div class="container-page">
+    {
+      items.length ? (
+        <ul class="masonry">
+          {items.map((item, i) => (
+            <li id={item.id} class="piece" data-reveal style={`--reveal-i: ${Math.min(i, 6)}`}>
+              <figure>
+                <div class="frame" data-zoom>
+                  <Image src={item.data.image} alt={item.data.alt} width={900} class="h-auto w-full" />
+                </div>
+                <figcaption class="mt-3">
+                  <p class="flex items-baseline justify-between gap-3">
+                    <span class="font-medium text-fg">{item.data.title}</span>
+                    <time class="meta shrink-0" datetime={item.data.date.toISOString()}>
+                      {formatDate(item.data.date)}
+                    </time>
+                  </p>
+                  {item.data.description && <p class="mt-1 text-sm leading-relaxed text-fg-muted">{item.data.description}</p>}
+                  {item.data.credit && (
+                    <p class="mt-1 text-[0.8125rem] text-fg-subtle">
+                      {item.data.creditUrl ? (
+                        <a href={item.data.creditUrl} class="link" target="_blank" rel="noopener noreferrer">
+                          {item.data.credit}
+                        </a>
+                      ) : (
+                        item.data.credit
+                      )}
+                    </p>
+                  )}
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div class="grid place-items-center gap-3 py-24 text-center text-fg-muted">
+          <Icon name="images" size={30} class="text-fg-subtle" />
+          <p>还没有插画。</p>
+          <p class="text-sm">在 src/content/illustrations 下加一个 .md 文件，图片放进 src/assets/illustrations。</p>
+        </div>
+      )
+    }
+  </div>
+  <Lightbox />
+</Base>
+
+<style>
+  .masonry {
+    columns: 1;
+    column-gap: 1.25rem;
+  }
+  @media (width >= 40rem) {
+    .masonry {
+      columns: 2;
+    }
+  }
+  @media (width >= 64rem) {
+    .masonry {
+      columns: 3;
+    }
+  }
+  .piece {
+    break-inside: avoid;
+    margin-bottom: 2rem;
+    scroll-margin-top: calc(var(--nav-h) + 1rem);
+  }
+  .frame {
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    cursor: zoom-in;
+    transition:
+      transform 500ms var(--ease-out-expo),
+      box-shadow 500ms var(--ease-out-expo);
+  }
+  .frame:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  .piece:target .frame {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+</style>

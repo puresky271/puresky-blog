@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" width="1200" height="1500">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#2f7fe6"/>
+<stop offset="0.55" stop-color="#7cb8f5"/>
+<stop offset="1" stop-color="#dbeeff"/>
+</linearGradient>
+<radialGradient id="sun" cx="0.78" cy="0.2" r="0.45">
+<stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+<stop offset="0.12" stop-color="#ffffff" stop-opacity="0.55"/>
+<stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+</radialGradient>
+<filter id="soft" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="38"/></filter>
+<filter id="grain" x="0" y="0" width="100%" height="100%">
+<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.55  0 0 0 0 0.65  0 0 0 0.09 0"/>
+<feComposite in2="SourceGraphic" operator="in"/>
+</filter>
+</defs>
+<rect width="1200" height="1500" fill="url(#sky)"/>
+<rect width="1200" height="1500" fill="url(#sun)"/>
+<g filter="url(#soft)"><ellipse cx="14.0" cy="763.7" rx="473.9" ry="144.0" fill="#ffffff" opacity="0.69"/><ellipse cx="486.6" cy="1048.7" rx="279.3" ry="80.0" fill="#ffffff" opacity="0.76"/><ellipse cx="309.4" cy="829.9" rx="417.7" ry="117.9" fill="#ffffff" opacity="0.58"/><ellipse cx="441.6" cy="926.7" rx="357.2" ry="91.3" fill="#ffffff" opacity="0.84"/><ellipse cx="297.0" cy="1338.8" rx="266.4" ry="63.2" fill="#ffffff" opacity="0.56"/><ellipse cx="349.1" cy="1106.3" rx="417.1" ry="95.5" fill="#ffffff" opacity="0.82"/><ellipse cx="664.5" cy="1158.2" rx="395.5" ry="132.9" fill="#ffffff" opacity="0.72"/><ellipse cx="1105.4" cy="1303.5" rx="226.6" ry="54.6" fill="#ffffff" opacity="0.63"/><ellipse cx="510.4" cy="734.2" rx="239.3" ry="74.7" fill="#ffffff" opacity="0.64"/></g>
+<g filter="url(#soft)"><ellipse cx="512.1" cy="515.6" rx="465.8" ry="141.8" fill="#ffffff" opacity="0.44"/><ellipse cx="396.8" cy="481.9" rx="252.6" ry="59.6" fill="#ffffff" opacity="0.48"/><ellipse cx="386.9" cy="432.1" rx="382.9" ry="99.7" fill="#ffffff" opacity="0.31"/><ellipse cx="821.1" cy="651.4" rx="360.6" ry="115.1" fill="#ffffff" opacity="0.43"/></g>
+<rect width="1200" height="1500" filter="url(#grain)"/>
+</svg>

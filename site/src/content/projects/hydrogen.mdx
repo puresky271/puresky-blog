@@ -1,0 +1,43 @@
+---
+name: Hydrogen
+tagline: 上一版博客主题。设计系统的每个数值都从氢原子的物理量推导，构建时校验。已归档。
+weight: 90
+status: archived
+since: '2026'
+stack: ['Astro 5', 'Tailwind v4', 'TypeScript', 'Cloudflare Workers', 'D1', 'R2']
+featured: false
+relatedPosts:
+  - hydrogen-design-system
+  - shell-capacity-as-editorial-constraint
+  - false-colour-honesty
+---
+
+主题定为氢，第一性原理是组件原子化加分层展开。
+但它不只是拿原子做视觉隐喻 —— 界面上出现的每个物理量都是真的，
+而且读者能拿去和 CODATA 或者光谱表核对。
+
+### 五个映射
+
+主题分类是氢的发射谱线，颜色由里德伯公式算出波长再转 sRGB。
+文章分层是玻尔能级，每层容量 2n² 来自泡利不相容原理，构建时强制校验。
+标签是电子云，散点从径向概率密度拒绝采样得到。
+友链是同位素，氚档按 12.32 年半衰期算剩余活度、到期提醒复查死链。
+欢迎页是经典的单电子原子结构图，动画演示的正是「跃迁 → 波长 → 颜色」这条链。
+
+分类和分层不是两套并行的标签：电子从 n=3 落到 n=2 放出 656nm 光子，
+这既是一次能级跃迁也正好是 Hα 那条谱线。两者共享同一批能级。
+
+### 架构
+
+前端 Astro 5 静态输出，Tailwind v4 走 CSS-first 配置，
+交互部分是原生 Web API，没有引框架。
+
+配色 token 由脚本从 `physics.ts` 生成，生成物入库，
+CI 重算比对，不一致就失败。这样 Tailwind 需要静态值和「颜色是算出来的」
+这两件事可以共存，而不会退化成两个真源。
+
+后端是独立的 Cloudflare Worker：GitHub OAuth、评论（D1）、
+图片（R2）、浏览数（KV）。前后端分开部署，前端挂了评论还在，
+评论挂了文章还能读。
+
+搜索用 Pagefind，索引在构建后生成，查询全在浏览器里跑，不需要后端。

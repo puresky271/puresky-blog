@@ -1,0 +1,144 @@
+---
+/**
+ * archive.astro — 归档。按年份分组的紧凑时间线。
+ */
+import { allPosts, groupByYear } from '../lib/content.ts';
+import { requireCategory } from '../lib/spectrum.ts';
+import { formatMonthDay, postPath, toDatetimeAttr } from '../lib/format.ts';
+
+import Page from '../layouts/Page.astro';
+
+const posts = await allPosts();
+const years = groupByYear(posts);
+---
+
+<Page
+  title="归档"
+  lede="全部文章按年份排。"
+  summary={`${posts.length} 篇 · ${years.length} 年`}
+>
+  {
+    years.length === 0 ? (
+      <div class="state-block">
+        <p>还没有文章。</p>
+      </div>
+    ) : (
+      years.map(({ year, posts: yearPosts }) => (
+        <section class="year">
+          <header class="year-head">
+            <h2 class="year-label">{year}</h2>
+            <span class="year-count">{yearPosts.length} 篇</span>
+          </header>
+
+          <ol class="year-list">
+            {yearPosts.map((post) => {
+              const category = requireCategory(post.data.category);
+              return (
+                <li style={`--line-colour: ${category.lineHex};`}>
+                  <a href={postPath(post.id)} data-astro-prefetch="hover">
+                    <time datetime={toDatetimeAttr(post.data.pubDate)}>
+                      {formatMonthDay(post.data.pubDate)}
+                    </time>
+                    <span class="spec-dot" aria-hidden="true" />
+                    <span class="year-title">{post.data.title}</span>
+                    <span class="year-shell">n={post.data.shell}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ))
+    )
+  }
+</Page>
+
+<style>
+  .year {
+    margin-bottom: 2.75rem;
+  }
+
+  .year-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-bottom: 0.625rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid var(--hairline-strong);
+  }
+
+  .year-label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .year-count {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .year-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .year-list li {
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .year-list a {
+    display: grid;
+    grid-template-columns: 3.25rem auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5625rem 0;
+  }
+
+  .year-list time {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .year-title {
+    font-size: 0.9375rem;
+    color: var(--ink-dim);
+    transition: color 160ms var(--ease-relax);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .year-list a:hover .year-title {
+    color: var(--accent-ink);
+  }
+
+  .year-shell {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 560px) {
+    .year-list a {
+      grid-template-columns: 3rem auto minmax(0, 1fr);
+    }
+
+    .year-shell {
+      display: none;
+    }
+
+    .year-title {
+      white-space: normal;
+    }
+  }
+</style>

@@ -1,0 +1,8 @@
+{
+  "name": "puresky",
+  "short_name": "puresky",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }],
+  "theme_color": "#126dda",
+  "background_color": "#f6f9fc",
+  "display": "standalone"
+}

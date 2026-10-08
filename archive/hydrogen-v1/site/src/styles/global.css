@@ -1,0 +1,938 @@
+/*
+ * global.css — Hydrogen 设计系统。
+ *
+ * 分段顺序固定，新增样式请放进对应段落，不要在文件末尾堆：
+ *   01 引入与字体
+ *   02 基础 token
+ *   03 主题变体
+ *   04 重置与文档基线
+ *   05 排版比例
+ *   06 原子层（atoms）
+ *   07 分层展开（激发态）
+ *   08 谱线与原子图形
+ *   09 长文排版（prose）
+ *   10 动效与降级
+ */
+
+/* ── 01 引入与字体 ───────────────────────────────────────────────────────── */
+
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+/* 谱线 token 由 scripts/generate-tokens.mjs 从物理量生成，不要手改。 */
+@import './spectrum.generated.css';
+
+@plugin '@tailwindcss/typography';
+
+/* 亮色主题下的显式变体。默认暗色，所以只需要一个 light: 变体。 */
+@custom-variant light (&:where([data-theme='light'] *, [data-theme='light']));
+
+/* ── 02 基础 token ───────────────────────────────────────────────────────── */
+
+@theme {
+  /*
+   * 颜色全部指向运行时变量，这样切主题只换 :root 上的值，
+   * Tailwind 生成的 bg-surface / text-ink 这些工具类自动跟着变。
+   */
+  --color-void: var(--void);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+
+  /* Latin 用 Geist，CJK 交给系统字体。中文 webfont 动辄 5MB 以上，不值得。 */
+  --font-sans:
+    'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font-mono:
+    'Geist Mono Variable', ui-monospace, 'SFMono-Regular', 'Cascadia Mono', 'Liberation Mono',
+    'PingFang SC', 'Microsoft YaHei', monospace;
+
+  /* 统一的缓动。expo-out，收尾干脆，适合展开动作。 */
+  --ease-atom: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-relax: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 圆角只有一套刻度：交互元件用 pill，容器用 12px，输入用 8px。 */
+  --radius-atom: 8px;
+  --radius-shell: 12px;
+  --radius-orbit: 999px;
+
+  /* 版心 */
+  --container-reading: 68ch;
+  --container-page: 1240px;
+}
+
+/* ── 03 主题变体 ─────────────────────────────────────────────────────────── */
+
+/*
+ * 暗色是默认。理由不是审美偏好：发射光谱只有在暗背景上才是物理上正确的
+ * （谱线是发射线，不是吸收线），亮色主题里同一条线只能靠加深来表示，
+ * 所以亮色是次要形态，但必须同样可用。
+ */
+:root {
+  color-scheme: dark;
+
+  --void: #08090d;
+  --surface: #0e1015;
+  --raised: #14171e;
+  --hairline: #1e222c;
+  --hairline-strong: #2b313e;
+  --ink: #e8eaf0;
+  --ink-dim: #9aa1b1;
+  --ink-faint: #626a7b;
+
+  /*
+   * 全站唯一的强调色是 Hβ（486nm 青）。其余四条谱线只作为数据标记出现
+   * （谱线本身、分类色点、电子云散点），不承担交互语义。
+   * 这样「一个页面一个强调色」的约束和光谱概念可以共存。
+   */
+  --accent: var(--spec-systems);
+  --accent-ink: var(--spec-systems-ink);
+
+  --grid-line: rgb(255 255 255 / 0.04);
+  --wash: rgb(255 255 255 / 0.03);
+  --wash-strong: rgb(255 255 255 / 0.06);
+  --shadow-tint: 220 40% 4%;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --void: #fbfbfd;
+  --surface: #ffffff;
+  --raised: #f4f5f8;
+  --hairline: #e4e6ed;
+  --hairline-strong: #cfd3de;
+  --ink: #14161c;
+  --ink-dim: #5a6172;
+  --ink-faint: #8c93a3;
+
+  --grid-line: rgb(20 22 28 / 0.05);
+  --wash: rgb(20 22 28 / 0.025);
+  --wash-strong: rgb(20 22 28 / 0.05);
+  --shadow-tint: 220 20% 40%;
+}
+
+/* ── 04 重置与文档基线 ───────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+}
+
+body {
+  margin: 0;
+  background-color: var(--void);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  font-feature-settings: 'cv11', 'ss01';
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
+}
+
+/* 主题切换时整页过渡一次，避免闪白。只过渡颜色，不碰布局属性。 */
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  body * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 180ms;
+    transition-timing-function: var(--ease-relax);
+  }
+}
+
+/* 主题切换瞬间临时关掉过渡，防止大面积重绘造成拖影。 */
+html[data-theme-switching] body,
+html[data-theme-switching] body * {
+  transition: none !important;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* 键盘用户的跳转链接。视觉上隐藏，聚焦时出现。 */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 0.875rem;
+  background: var(--raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-atom);
+  font-size: 0.8125rem;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 28%, transparent);
+  color: var(--ink);
+}
+
+/* 滚动条按主题着色，默认的亮色滚动条在暗主题上很跳。 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+}
+
+/* ── 05 排版比例 ─────────────────────────────────────────────────────────── */
+
+.t-display {
+  font-size: clamp(2rem, 1.3rem + 3.2vw, 3.5rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+
+.t-title {
+  font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.125rem);
+  line-height: 1.18;
+  letter-spacing: -0.022em;
+  font-weight: 500;
+}
+
+.t-heading {
+  font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);
+  line-height: 1.32;
+  letter-spacing: -0.014em;
+  font-weight: 500;
+}
+
+.t-body {
+  font-size: 0.9375rem;
+  line-height: 1.72;
+  color: var(--ink-dim);
+}
+
+/*
+ * 数据字体。波长、能量、容量、日期这类可核对的量一律用等宽 + tabular-nums，
+ * 让它们在视觉上和散文区分开：散文是我的判断，等宽的是可以拿去查的事实。
+ */
+.t-data {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+.t-data-sm {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+/* ── 06 原子层 ───────────────────────────────────────────────────────────── */
+
+/*
+ * 「原子化」在这里的落地方式：分隔、标记、容器都只有一种实现，
+ * 页面靠组合这些原子搭起来，而不是每个 section 自己写一套边框和内边距。
+ */
+
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  margin: 0;
+}
+
+.hairline-strong {
+  border: 0;
+  border-top: 1px solid var(--hairline-strong);
+  margin: 0;
+}
+
+/* 版心容器 */
+.shell {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* 阅读版心，用于长文正文 */
+.shell-reading {
+  width: 100%;
+  max-width: var(--container-reading);
+  margin-inline: auto;
+}
+
+/* 区块纵向节奏 */
+.band {
+  padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+}
+
+.band-tight {
+  padding-block: clamp(3rem, 2rem + 3vw, 4.5rem);
+}
+
+/* 标签胶囊。唯一一种小标记形态。 */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.1875rem 0.5rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-orbit);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-dim);
+  background: var(--wash);
+  white-space: nowrap;
+}
+
+.pill-link {
+  transition:
+    border-color 160ms var(--ease-relax),
+    color 160ms var(--ease-relax),
+    background-color 160ms var(--ease-relax);
+}
+
+.pill-link:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+  background: var(--wash-strong);
+}
+
+/* 按钮。主按钮实心，次按钮描边，两者都保证文字对比达标。 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-orbit);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    transform 140ms var(--ease-relax),
+    background-color 160ms var(--ease-relax),
+    border-color 160ms var(--ease-relax),
+    color 160ms var(--ease-relax);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/*
+ * 主按钮用青色实心底 + 近黑文字。不用白底白字，也不用青字配青底：
+ * 青色 #00f0ff 的亮度很高，配深色文字对比度约 14:1，配白字只有 1.5:1。
+ */
+.btn-primary {
+  background: var(--accent);
+  color: #05171a;
+  border: 1px solid var(--accent);
+}
+
+.btn-primary:hover {
+  background: color-mix(in oklab, var(--accent) 88%, white);
+  border-color: color-mix(in oklab, var(--accent) 88%, white);
+}
+
+.btn-ghost {
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink);
+  background: transparent;
+}
+
+.btn-ghost:hover {
+  border-color: var(--ink-faint);
+  background: var(--wash);
+}
+
+/* 表单。标签在上，帮助文字在下，错误在最下，全站一套。 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.field-input,
+.field-textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-atom);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+  transition:
+    border-color 160ms var(--ease-relax),
+    background-color 160ms var(--ease-relax);
+}
+
+.field-textarea {
+  min-height: 7rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* 占位符必须够亮才合规。ink-faint 在两个主题下对 surface 都过 AA。 */
+.field-input::placeholder,
+.field-textarea::placeholder {
+  color: var(--ink-faint);
+  opacity: 1;
+}
+
+.field-input:focus,
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--accent-ink);
+  background: var(--raised);
+}
+
+.field-help {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--spec-engineering-ink);
+}
+
+/* 骨架占位。形状要和最终内容一致，不用转圈菊花。 */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--wash) 0%,
+    var(--wash-strong) 50%,
+    var(--wash) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-atom);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: skeleton-sweep 1.4s linear infinite;
+  }
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* 空状态与错误状态 */
+.state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--radius-shell);
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+/* ── 07 分层展开（激发态） ───────────────────────────────────────────────── */
+
+/*
+ * 全站唯一的渐进披露交互：基态收起，激发态展开。
+ * 用原生 <details> 承载，键盘和读屏天然可用，不需要额外 ARIA 布线。
+ * 语义统一带来的好处是用户学一次就够，不用在每个区块猜怎么展开。
+ */
+
+.excite {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-shell);
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-color 200ms var(--ease-relax);
+}
+
+.excite[open] {
+  border-color: var(--hairline-strong);
+}
+
+.excite > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.excite > summary::-webkit-details-marker {
+  display: none;
+}
+
+.excite > summary:hover {
+  background: var(--wash);
+}
+
+/*
+ * 激发指示器：一个空心圆环（基态）在展开时被填充（激发态）。
+ * 这不是随手挑的图标，它对应电子从内层跃迁到外层后内层留下的空位。
+ */
+.excite-marker {
+  position: relative;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--ink-faint);
+  border-radius: var(--radius-orbit);
+  transition:
+    border-color 200ms var(--ease-atom),
+    box-shadow 200ms var(--ease-atom);
+}
+
+.excite-marker::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: var(--radius-orbit);
+  background: var(--accent);
+  transform: scale(0);
+  transition: transform 220ms var(--ease-atom);
+}
+
+.excite[open] > summary .excite-marker {
+  border-color: var(--accent-ink);
+}
+
+.excite[open] > summary .excite-marker::after {
+  transform: scale(1);
+}
+
+.excite-body {
+  padding: 0 1.125rem 1.125rem;
+  border-top: 1px solid var(--hairline);
+  padding-top: 1rem;
+}
+
+/* 展开动画。details 无法直接过渡 height，用 grid-template-rows 的 0fr→1fr 技巧。 */
+@media (prefers-reduced-motion: no-preference) {
+  .excite::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 280ms var(--ease-atom),
+      content-visibility 280ms allow-discrete;
+  }
+
+  .excite[open]::details-content {
+    block-size: auto;
+  }
+}
+
+/* ── 08 谱线与原子图形 ───────────────────────────────────────────────────── */
+
+/*
+ * 一条发射谱线。真色只用在这里这类小面积发光元素上，
+ * 因为纯 #ff0000 这种饱和色作为 1px 亮线是准确的，铺成大面积就会刺眼。
+ */
+.emission-line {
+  position: relative;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line-colour, var(--accent));
+}
+
+/* 谱线的辉光。真实谱线在感光元件上就是会晕开的，这里用 box-shadow 模拟。 */
+.emission-line::after {
+  content: '';
+  position: absolute;
+  inset: -1px -3px;
+  border-radius: 3px;
+  background: var(--line-colour, var(--accent));
+  filter: blur(4px);
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+[data-theme='light'] .emission-line::after {
+  opacity: 0.24;
+}
+
+/* 分类色点。数据标记，不是装饰性状态点。 */
+.spec-dot {
+  flex: none;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: var(--radius-orbit);
+  background: var(--line-colour, var(--accent));
+  box-shadow: 0 0 6px 0 var(--line-colour, var(--accent));
+}
+
+[data-theme='light'] .spec-dot {
+  box-shadow: none;
+}
+
+/* 壳层同心圆的公共样式 */
+.orbit-ring {
+  position: absolute;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-orbit);
+  inset: 0;
+  margin: auto;
+}
+
+/* 原子核 */
+.nucleus {
+  border-radius: var(--radius-orbit);
+  background: var(--accent);
+  box-shadow:
+    0 0 12px 1px color-mix(in oklab, var(--accent) 60%, transparent),
+    0 0 32px 6px color-mix(in oklab, var(--accent) 24%, transparent);
+}
+
+/* 背景网格。用作坐标纸质感，不是纯装饰线，所以很淡且不参与布局。 */
+.graph-paper {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── 09 长文排版 ─────────────────────────────────────────────────────────── */
+
+.prose-hydrogen {
+  --tw-prose-body: var(--ink-dim);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-lead: var(--ink-dim);
+  --tw-prose-links: var(--accent-ink);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-counters: var(--ink-faint);
+  --tw-prose-bullets: var(--hairline-strong);
+  --tw-prose-hr: var(--hairline);
+  --tw-prose-quotes: var(--ink);
+  --tw-prose-quote-borders: var(--accent);
+  --tw-prose-captions: var(--ink-faint);
+  --tw-prose-code: var(--ink);
+  --tw-prose-pre-code: var(--ink-dim);
+  --tw-prose-pre-bg: var(--surface);
+  --tw-prose-th-borders: var(--hairline-strong);
+  --tw-prose-td-borders: var(--hairline);
+
+  font-size: 1rem;
+  line-height: 1.78;
+  max-width: none;
+}
+
+.prose-hydrogen :where(h2) {
+  margin-top: 2.75em;
+  margin-bottom: 0.85em;
+  font-size: 1.375rem;
+  letter-spacing: -0.018em;
+  font-weight: 500;
+  scroll-margin-top: 6rem;
+}
+
+.prose-hydrogen :where(h3) {
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  scroll-margin-top: 6rem;
+}
+
+/* 标题锚点。悬停时在左侧留白里出现，不占正文宽度。 */
+.heading-anchor {
+  position: absolute;
+  left: -1.35rem;
+  opacity: 0;
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  transition: opacity 140ms var(--ease-relax);
+}
+
+.prose-hydrogen :where(h2, h3, h4) {
+  position: relative;
+}
+
+.prose-hydrogen :where(h2, h3, h4):hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+@media (max-width: 1024px) {
+  .heading-anchor {
+    display: none;
+  }
+}
+
+.prose-hydrogen :where(a) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, var(--accent-ink) 45%, transparent);
+  transition: text-decoration-color 160ms var(--ease-relax);
+}
+
+.prose-hydrogen :where(a):hover {
+  text-decoration-color: var(--accent-ink);
+}
+
+.prose-hydrogen :where(code):not(:where(pre code)) {
+  padding: 0.15em 0.36em;
+  background: var(--raised);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  font-size: 0.86em;
+  font-weight: 400;
+}
+
+.prose-hydrogen :where(code):not(:where(pre code))::before,
+.prose-hydrogen :where(code):not(:where(pre code))::after {
+  content: none;
+}
+
+.prose-hydrogen :where(pre) {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-shell);
+  padding: 1rem 1.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.62;
+}
+
+/* Shiki 双主题：亮色主题下切到 light 那一套变量。 */
+[data-theme='light'] .astro-code,
+[data-theme='light'] .astro-code span {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg) !important;
+  font-style: var(--shiki-light-font-style) !important;
+  font-weight: var(--shiki-light-font-weight) !important;
+  text-decoration: var(--shiki-light-text-decoration) !important;
+}
+
+.prose-hydrogen :where(blockquote) {
+  border-left-width: 2px;
+  padding-left: 1.125rem;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.prose-hydrogen :where(blockquote p:first-of-type)::before,
+.prose-hydrogen :where(blockquote p:last-of-type)::after {
+  content: none;
+}
+
+.prose-hydrogen :where(table) {
+  font-size: 0.875rem;
+}
+
+.prose-hydrogen :where(thead th) {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.prose-hydrogen :where(img) {
+  border-radius: var(--radius-shell);
+  border: 1px solid var(--hairline);
+}
+
+.prose-hydrogen :where(figcaption) {
+  margin-top: 0.6rem;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+
+/* Markdown 提示块。由 remark-callout 插件产出。 */
+.callout {
+  margin-block: 1.5em;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--hairline-strong);
+  border-left-width: 2px;
+  border-radius: var(--radius-atom);
+  background: var(--wash);
+}
+
+.callout > :first-child {
+  margin-top: 0;
+}
+
+.callout > :last-child {
+  margin-bottom: 0;
+}
+
+.callout-title {
+  margin-bottom: 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.callout-note {
+  border-left-color: var(--spec-systems);
+}
+.callout-tip {
+  border-left-color: var(--spec-field-notes);
+}
+.callout-important {
+  border-left-color: var(--spec-essays);
+}
+.callout-warning {
+  border-left-color: var(--spec-field-notes);
+}
+.callout-caution {
+  border-left-color: var(--spec-engineering);
+}
+
+/* ── 10 动效与降级 ───────────────────────────────────────────────────────── */
+
+/*
+ * 进场揭示。由 IntersectionObserver 加 data-revealed 触发，
+ * 不监听 scroll 事件。JS 不可用时元素保持可见，不会白屏。
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 520ms var(--ease-atom),
+      transform 520ms var(--ease-atom);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  [data-reveal][data-revealed] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 电子沿轨道运行。只有欢迎页和首页各一处，不是满页动效。 */
+@keyframes orbit-travel {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nucleus-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* 透明度降级：关掉毛玻璃，换成实底，保证可读。 */
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--surface) !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* 打印：去掉装饰，只留内容。 */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .no-print,
+  nav,
+  footer {
+    display: none !important;
+  }
+}

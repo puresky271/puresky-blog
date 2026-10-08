@@ -1,0 +1,164 @@
+---
+/**
+ * HomeTop.astro — 首页首屏。
+ *
+ * 上：横版舞台（插画 / 天空 / 音乐过载，见 stage/HomeStage.svelte）。
+ * 下：左边是人和一句话介绍，右边是打字机终端，轮流打出站点此刻的真实状态。
+ * 整块背景是随沈阳此刻天色变化的天空和粒子，并延伸到导航栏下方。
+ */
+import { getImage } from 'astro:assets';
+
+import SkyBackdrop from '@/components/SkyBackdrop.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { AUTHOR, GITHUB } from '@/config';
+import type { Illustration, Post } from '@/lib/content';
+import { withBase } from '@/lib/format';
+
+import HomeStage from './stage/HomeStage.svelte';
+import type { StageImage } from './stage/types';
+import TerminalCard from './TerminalCard.svelte';
+
+interface Props {
+  avatar: string;
+  status?: { emoji: string | null; message: string | null } | null;
+  illustrations: Illustration[];
+  latest?: Post;
+}
+
+const { avatar, status, illustrations, latest } = Astro.props;
+
+// 舞台图片在构建期优化成 1600 宽，featured 的排第一张。
+const ordered = [...illustrations.filter((i) => i.data.featured), ...illustrations.filter((i) => !i.data.featured)];
+const images: StageImage[] = await Promise.all(
+  ordered.map(async (item) => {
+    const main = await getImage({ src: item.data.image, width: 1600 });
+    const night = item.data.imageDark ? await getImage({ src: item.data.imageDark, width: 1600 }) : null;
+    return {
+      id: item.id,
+      title: item.data.title,
+      alt: item.data.alt,
+      src: main.src,
+      srcNight: night?.src ?? null,
+      width: Number(main.attributes.width ?? item.data.image.width),
+      height: Number(main.attributes.height ?? item.data.image.height),
+    };
+  })
+);
+---
+
+<section class="home-top" data-sky-host>
+  <SkyBackdrop density={1.2} />
+
+  <div class="container-page relative pb-6 pt-2 md:pt-4">
+    <HomeStage client:load images={images} />
+
+    <div class="mt-10 grid items-center gap-10 md:mt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-16">
+      <div>
+        <div class="flex items-center gap-3" data-reveal style="--reveal-i: 0">
+          <img src={avatar} alt="" width="40" height="40" class="avatar" />
+          <div class="min-w-0">
+            <p class="text-[0.9375rem] font-medium text-fg">{AUTHOR.name}</p>
+            {
+              status?.message ? (
+                <p class="truncate text-[0.8125rem] text-fg-muted">
+                  {status.emoji && <span aria-hidden="true">{status.emoji} </span>}
+                  {status.message}
+                </p>
+              ) : (
+                <p class="text-[0.8125rem] text-fg-muted">{AUTHOR.role}</p>
+              )
+            }
+          </div>
+        </div>
+
+        <h1 class="headline" data-reveal style="--reveal-i: 1">
+          <span class="phrase">你好，</span><span class="phrase">我是 {AUTHOR.name}。</span>
+        </h1>
+        <p class="intro" data-reveal style="--reveal-i: 2">{AUTHOR.intro}</p>
+
+        <ul class="mt-5 flex flex-wrap gap-2" data-reveal style="--reveal-i: 3" aria-label="关注方向">
+          {
+            AUTHOR.focus.map((item) => (
+              <li class="chip focus-chip">{item}</li>
+            ))
+          }
+        </ul>
+
+        <div class="mt-7 flex flex-wrap items-center gap-2.5" data-reveal style="--reveal-i: 4">
+          <a href={withBase('/posts/')} class="btn btn-primary group">
+            读文章
+            <Icon name="arrow-right" size={16} class="transition-transform duration-300 group-hover:translate-x-0.5" />
+          </a>
+          <a href={withBase('/card/')} class="btn btn-ghost">
+            <Icon name="identification-card" size={17} />
+            名片
+          </a>
+          <a
+            href={`https://github.com/${GITHUB.username}`}
+            class="btn btn-ghost !w-10 !px-0"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            title="GitHub"
+          >
+            <Icon name="github-logo" size={17} />
+          </a>
+          <a href={withBase('/rss.xml')} class="btn btn-ghost !w-10 !px-0" aria-label="RSS 订阅" title="RSS 订阅">
+            <Icon name="rss" size={17} />
+          </a>
+        </div>
+      </div>
+
+      <div data-reveal style="--reveal-i: 2">
+        <TerminalCard
+          client:load
+          latest={latest ? { id: latest.id, title: latest.data.title } : null}
+          user={GITHUB.username}
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* 往上顶到顶部栏（胶囊 + 条目带）下面，让天空从页面最顶端开始。 */
+  .home-top {
+    position: relative;
+    margin-top: calc(var(--header-h) * -1);
+    padding-top: var(--header-h);
+    isolation: isolate;
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    box-shadow:
+      0 0 0 2px var(--bg),
+      0 0 0 3px var(--line);
+  }
+  .headline {
+    margin-top: 1.5rem;
+    font-size: clamp(2.125rem, 1.4rem + 2.6vw, 3.25rem);
+    line-height: 1.12;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    color: var(--fg);
+  }
+  /* 只在短语之间断行，避免「你好，我 / 是 puresky」这种断法。 */
+  .phrase {
+    display: inline-block;
+  }
+  .intro {
+    margin-top: 1rem;
+    max-width: 32rem;
+    font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+    line-height: 1.7;
+    color: var(--fg-muted);
+    text-wrap: pretty;
+  }
+  .focus-chip {
+    background: color-mix(in oklab, var(--surface) 80%, transparent);
+    border-color: var(--line);
+  }
+</style>

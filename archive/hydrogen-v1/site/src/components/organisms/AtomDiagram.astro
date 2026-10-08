@@ -1,0 +1,331 @@
+---
+/**
+ * AtomDiagram — 氢原子结构图。欢迎页和首页的主视觉。
+ *
+ * 三个不肯妥协的地方：
+ *
+ * 1. 只有一个电子。氢的原子序数是 1。市面上的「原子」图标通常画三条轨道
+ *    各带一个电子，那画的不是氢。这里就一个。
+ *
+ * 2. 轨道半径按 r_n = n²a₀ 真实比例排，所以 n=1 挤在核附近、n=4 在最外圈。
+ *    看起来内层很拥挤 —— 因为它本来就是。
+ *
+ * 3. 电子跃迁时发出的光子颜色，就是那次跃迁在 spectrum.ts 里对应的分类颜色。
+ *    动画不是装饰，它是在演示整站配色的来源：跃迁 → 波长 → 颜色。
+ */
+import { CATEGORIES, formatTransition, formatWavelength } from '../../lib/spectrum.ts';
+import { SHELLS } from '../../lib/shells.ts';
+
+interface Props {
+  /** hero 用于欢迎页（大、含说明）；mark 用于首页角落（小、安静）。 */
+  variant?: 'hero' | 'mark';
+  class?: string;
+}
+
+const { variant = 'hero', class: className = '' } = Astro.props;
+
+/** 画布半径。轨道按 n² 缩放到这个范围内。 */
+const VIEW = 330;
+const maxN = Math.max(...SHELLS.map((s) => s.n));
+const radiusFor = (n: number) => (n * n / (maxN * maxN)) * (VIEW - 30);
+
+/**
+ * 只把巴尔末系的跃迁交给动画。帕申系落在红外，用伪彩色演示
+ * 「这是它的真实颜色」会是假话。
+ */
+const animatable = CATEGORIES.filter((c) => c.visible).map((c) => ({
+  id: c.id,
+  line: c.line,
+  nHigh: c.nHigh,
+  nLow: c.seriesMeta.nLow,
+  colour: c.lineHex,
+  title: c.title,
+  transition: formatTransition(c),
+  wavelength: formatWavelength(c.airWavelengthNm),
+  rHigh: radiusFor(c.nHigh),
+  rLow: radiusFor(c.seriesMeta.nLow),
+}));
+---
+
+<figure class:list={['atom', `atom-${variant}`, className]}>
+  <svg
+    viewBox={`${-VIEW} ${-VIEW} ${VIEW * 2} ${VIEW * 2}`}
+    role="img"
+    aria-label="氢原子结构图：一个电子在能级之间跃迁，跃迁时发出的光子颜色对应本站的主题分类"
+    data-atom-svg
+  >
+    <defs>
+      <radialGradient id="nucleus-glow">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.55" />
+        <stop offset="55%" stop-color="var(--accent)" stop-opacity="0.12" />
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+      </radialGradient>
+    </defs>
+
+    <!-- 能级轨道。半径 ∝ n²。 -->
+    {
+      SHELLS.map((shell) => (
+        <circle
+          class="atom-ring"
+          cx="0"
+          cy="0"
+          r={radiusFor(shell.n)}
+          data-ring={shell.n}
+        />
+      ))
+    }
+
+    <!-- 轨道标记。放在圆的正上方，标出 n 和该层容量。 -->
+    {
+      SHELLS.map((shell) => (
+        <text
+          class="atom-ring-label"
+          x="6"
+          y={-radiusFor(shell.n) - 7}
+          data-ring-label={shell.n}
+        >
+          {`n=${shell.n}`}
+        </text>
+      ))
+    }
+
+    <!-- 核外辉光 -->
+    <circle cx="0" cy="0" r="28" fill="url(#nucleus-glow)" class="atom-glow" />
+
+    <!-- 原子核：一个质子。 -->
+    <circle cx="0" cy="0" r="8.5" class="atom-nucleus" data-nucleus />
+
+    <!-- 光子。发射时由脚本沿径向送出去。 -->
+    <circle cx="0" cy="0" r="4" class="atom-photon" data-photon opacity="0" />
+
+    <!-- 电子。外层 g 负责公转。 -->
+    <g data-electron-orbit class="atom-electron-orbit">
+      <circle cx="0" cy="0" r="3.5" class="atom-electron" data-electron />
+    </g>
+  </svg>
+</figure>
+
+<script define:vars={{ animatable, variant }}>
+  // ── 氢原子动画 ────────────────────────────────────────────────────────────
+  //
+  // 一个循环讲完一件事：电子吸收能量跃迁到外层，停留一会儿，落回内层，
+  // 落回的瞬间放出一个光子，光子颜色就是这次跃迁对应分类的颜色。
+  //
+  // 用 Web Animations API 而不是 CSS class 切换，因为需要精确的时序编排
+  // 和随时可取消的清理路径。
+
+  const figures = document.querySelectorAll('[data-atom-svg]');
+
+  for (const svg of figures) {
+    const orbit = svg.querySelector('[data-electron-orbit]');
+    const electron = svg.querySelector('[data-electron]');
+    const photon = svg.querySelector('[data-photon]');
+    const nucleus = svg.querySelector('[data-nucleus]');
+
+    if (!orbit || !electron || !photon) continue;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const groundRadius = animatable.length > 0
+      ? Math.min(...animatable.map((t) => t.rLow))
+      : 20;
+
+    function placeElectron(radius) {
+      electron.setAttribute('cx', String(radius));
+    }
+
+    placeElectron(groundRadius);
+
+    if (reduceMotion.matches) continue;
+
+    const running = [];
+    let cancelled = false;
+
+    // 公转。周期随半径变大而变长，粗略对应角速度随 n 下降。
+    const spin = orbit.animate(
+      [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+      { duration: 7200, iterations: Infinity, easing: 'linear' }
+    );
+    running.push(spin);
+
+    // 核的呼吸。幅度很小，只是让静止的图不至于完全死掉。
+    if (nucleus) {
+      const breathe = nucleus.animate(
+        [
+          { transform: 'scale(1)', opacity: 0.9 },
+          { transform: 'scale(1.08)', opacity: 1 },
+          { transform: 'scale(1)', opacity: 0.9 },
+        ],
+        { duration: 3400, iterations: Infinity, easing: 'ease-in-out' }
+      );
+      running.push(breathe);
+    }
+
+    const wait = (ms) =>
+      new Promise((resolve) => {
+        const id = window.setTimeout(resolve, ms);
+        running.push({ cancel: () => window.clearTimeout(id) });
+      });
+
+    /** 电子在两个半径之间移动。 */
+    async function moveElectron(from, to, duration) {
+      const animation = electron.animate([{ cx: from }, { cx: to }], {
+        duration,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'forwards',
+      });
+      running.push(animation);
+      try {
+        await animation.finished;
+      } catch {
+        return; // 被取消，静默退出。
+      }
+      placeElectron(to);
+    }
+
+    /** 从某个半径向外送出一个光子。 */
+    function emitPhoton(fromRadius, colour) {
+      photon.setAttribute('fill', colour);
+      photon.style.filter = `drop-shadow(0 0 6px ${colour})`;
+
+      // 光子沿电子当前的角度飞出去，所以要读一下 orbit 的实时旋转角。
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(orbit).transform);
+      const angle = Math.atan2(matrix.b, matrix.a);
+      const travel = 330;
+
+      const animation = photon.animate(
+        [
+          {
+            cx: fromRadius * Math.cos(angle),
+            cy: fromRadius * Math.sin(angle),
+            opacity: 1,
+          },
+          {
+            cx: (fromRadius + travel) * Math.cos(angle),
+            cy: (fromRadius + travel) * Math.sin(angle),
+            opacity: 0,
+          },
+        ],
+        { duration: 1100, easing: 'cubic-bezier(0.3, 0, 0.8, 0.2)' }
+      );
+      running.push(animation);
+    }
+
+    async function cycle() {
+      let index = 0;
+
+      if (variant === 'mark') await wait(4000);
+
+      while (!cancelled && animatable.length > 0) {
+        const transition = animatable[index % animatable.length];
+        index += 1;
+
+        await moveElectron(groundRadius, transition.rHigh, 620);
+        if (cancelled) return;
+
+        await wait(1500);
+        if (cancelled) return;
+
+        emitPhoton(transition.rHigh, transition.colour);
+        await moveElectron(transition.rHigh, groundRadius, 520);
+        if (cancelled) return;
+
+        await wait(2400);
+      }
+    }
+
+    cycle();
+
+    // 页面隐藏时暂停，回来再继续。省电，也避免后台标签页白跑动画。
+    document.addEventListener('visibilitychange', () => {
+      for (const animation of running) {
+        if (typeof animation.pause !== 'function') continue;
+        if (document.hidden) animation.pause();
+        else animation.play();
+      }
+    });
+
+    reduceMotion.addEventListener('change', (event) => {
+      if (!event.matches) return;
+      cancelled = true;
+      for (const animation of running) animation.cancel();
+      placeElectron(groundRadius);
+      photon.setAttribute('opacity', '0');
+    });
+  }
+</script>
+
+<style>
+  .atom {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0;
+  }
+
+  .atom svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .atom-hero svg {
+    max-width: min(30rem, 82vw);
+  }
+
+  .atom-mark svg {
+    max-width: 15rem;
+  }
+
+  .atom-ring {
+    fill: none;
+    stroke: var(--hairline-strong);
+    stroke-width: 1;
+    opacity: 0.7;
+  }
+
+  /* 基态所在的那圈画实一点，它是电子的默认位置。 */
+  .atom-ring[data-ring='2'] {
+    stroke: var(--ink-faint);
+    opacity: 0.55;
+  }
+
+  .atom-ring-label {
+    fill: var(--ink-faint);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  .atom-mark .atom-ring-label {
+    display: none;
+  }
+
+  .atom-nucleus {
+    fill: var(--accent);
+    transform-origin: center;
+  }
+
+  .atom-electron {
+    fill: var(--ink);
+    stroke: var(--void);
+    stroke-width: 2;
+  }
+
+  .atom-electron-orbit {
+    transform-origin: center;
+  }
+
+  .atom-photon {
+    pointer-events: none;
+  }
+
+  .atom-glow {
+    opacity: 0.85;
+  }
+
+  [data-theme='light'] .atom-glow {
+    opacity: 0.4;
+  }
+</style>

@@ -1,0 +1,107 @@
+---
+/**
+ * SectionHead — 区块标题。
+ *
+ * 刻意不提供 eyebrow（小号大写标签）参数。区块在页面上的位置本身就说明了
+ * 它是什么，每个区块顶上再挂一个 SELECTED WORK 之类的标签只会让整页
+ * 变成同一个模板重复五遍。需要说明的时候，标题下面直接跟一句正文。
+ *
+ * 也不做「左边大标题 + 右边小段解释」的分栏抬头：一个区块只讲一件事，
+ * 说明文字纵向跟在标题下面，读起来是一条线而不是两团。
+ */
+
+interface Props {
+  title: string;
+  /** 标题下的说明。一句话，不超过 30 字。 */
+  blurb?: string;
+  /** 标题级别。页面主标题用 h1，区块用 h2。 */
+  as?: 'h1' | 'h2' | 'h3';
+  /** 右侧的操作链接，例如「查看全部」。 */
+  actionHref?: string;
+  actionLabel?: string;
+  class?: string;
+}
+
+const {
+  title,
+  blurb,
+  as: Tag = 'h2',
+  actionHref,
+  actionLabel,
+  class: className = '',
+} = Astro.props;
+---
+
+<header class:list={['section-head', className]}>
+  <div class="section-head-main">
+    <Tag class={Tag === 'h1' ? 't-title' : 't-heading'}>{title}</Tag>
+    {blurb && <p class="section-head-blurb">{blurb}</p>}
+  </div>
+  {
+    actionHref && actionLabel && (
+      <a class="section-head-action" href={actionHref}>
+        {actionLabel}
+        <span aria-hidden="true">→</span>
+      </a>
+    )
+  }
+</header>
+
+<style>
+  .section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .section-head-main {
+    min-width: 0;
+  }
+
+  .section-head-main :global(h1),
+  .section-head-main :global(h2),
+  .section-head-main :global(h3) {
+    margin: 0;
+  }
+
+  .section-head-blurb {
+    margin: 0.5rem 0 0;
+    max-width: 46ch;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+  }
+
+  .section-head-action {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding-bottom: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .section-head-action:hover {
+    color: var(--accent-ink);
+  }
+
+  .section-head-action span {
+    transition: transform 200ms var(--ease-atom);
+  }
+
+  .section-head-action:hover span {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 640px) {
+    .section-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+  }
+</style>

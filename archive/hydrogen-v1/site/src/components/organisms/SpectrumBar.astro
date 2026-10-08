@@ -1,0 +1,361 @@
+---
+/**
+ * SpectrumBar — 主题分类导航，画成一条氢原子发射光谱。
+ *
+ * 读法和真实分光计一致：横轴是波长，左短波右长波，每条亮线是一个分类。
+ * 线的高度和亮度反映该分类的文章数，对应真实光谱里谱线强度反映跃迁概率。
+ *
+ * 背景那条连续渐变是可见光谱本身（380 到 780nm 逐点算色），
+ * 它的作用是给谱线提供波长参照，所以刻意压得很暗、不抢主体。
+ */
+import { CATEGORIES, formatTransition, formatWavelength } from '../../lib/spectrum.ts';
+import { wavelengthToRgb, rgbToHex, VISIBLE_RANGE_NM } from '../../lib/physics.ts';
+import { categoryPath } from '../../lib/format.ts';
+import type { Category } from '../../lib/spectrum.ts';
+
+interface Props {
+  /** 每个分类的文章数，决定谱线强度。 */
+  counts: Map<string, number>;
+  /** 高亮某个分类，用于分类详情页。 */
+  activeId?: string;
+  /** 显示分类清单。列表页用，首页只要光谱条本身。 */
+  showList?: boolean;
+  class?: string;
+}
+
+const { counts, activeId, showList = true, class: className = '' } = Astro.props;
+
+const maxCount = Math.max(1, ...CATEGORIES.map((c) => counts.get(c.id) ?? 0));
+
+/**
+ * 连续光谱背景。每 5nm 取一个色标，交给 CSS linear-gradient。
+ * 用真实的波长转色函数，所以这条带子上任意位置的颜色都是那个波长的真色。
+ */
+const spectrumStops: string[] = [];
+for (let nm = VISIBLE_RANGE_NM.min; nm <= VISIBLE_RANGE_NM.max; nm += 5) {
+  const percent = ((nm - VISIBLE_RANGE_NM.min) / (VISIBLE_RANGE_NM.max - VISIBLE_RANGE_NM.min)) * 100;
+  spectrumStops.push(`${rgbToHex(wavelengthToRgb(nm))} ${percent.toFixed(2)}%`);
+}
+const continuumGradient = `linear-gradient(90deg, ${spectrumStops.join(', ')})`;
+
+/**
+ * 谱线在光谱条上的横向位置。
+ * 可见谱线按真实波长定位；红外谱线用它的伪彩色波长定位，
+ * 并在图上标出来这是借位显示，不假装 1875nm 落在可见区。
+ */
+function positionOf(category: Category): number {
+  const nm = category.renderWavelengthNm;
+  return (
+    ((nm - VISIBLE_RANGE_NM.min) / (VISIBLE_RANGE_NM.max - VISIBLE_RANGE_NM.min)) * 100
+  );
+}
+
+const ticks = [400, 450, 500, 550, 600, 650, 700, 750];
+---
+
+<div class:list={['spectrum', className]}>
+  <div class="spectrum-plot">
+    <!-- 连续光谱参照带 -->
+    <div class="spectrum-continuum" style={`background: ${continuumGradient};`} aria-hidden="true">
+    </div>
+
+    <!-- 发射谱线 -->
+    <div class="spectrum-lines">
+      {
+        CATEGORIES.map((category) => {
+          const count = counts.get(category.id) ?? 0;
+          const intensity = Math.max(0.28, count / maxCount);
+          const isActive = activeId === category.id;
+          return (
+            <a
+              class:list={['spectrum-line-hit', { 'is-active': isActive, 'is-empty': count === 0 }]}
+              href={categoryPath(category.id)}
+              style={`left: ${positionOf(category)}%; --line-colour: ${category.lineHex};`}
+              aria-label={`${category.title}，${category.line} 谱线，${count} 篇`}
+              data-astro-prefetch="hover"
+            >
+              <span
+                class="spectrum-line"
+                style={`height: ${(24 + intensity * 76).toFixed(1)}%; opacity: ${(
+                  0.45 +
+                  intensity * 0.55
+                ).toFixed(2)};`}
+                aria-hidden="true"
+              ></span>
+              <span class="spectrum-line-tip">
+                <span class="spectrum-line-tip-title">{category.title}</span>
+                <span class="spectrum-line-tip-data">
+                  {category.line} · {formatWavelength(category.airWavelengthNm)} · {count} 篇
+                </span>
+              </span>
+            </a>
+          );
+        })
+      }
+    </div>
+
+    <!-- 波长刻度 -->
+    <div class="spectrum-axis" aria-hidden="true">
+      {
+        ticks.map((nm) => (
+          <span
+            class="spectrum-tick"
+            style={`left: ${(
+              ((nm - VISIBLE_RANGE_NM.min) / (VISIBLE_RANGE_NM.max - VISIBLE_RANGE_NM.min)) *
+              100
+            ).toFixed(2)}%;`}
+          >
+            {nm}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  {
+    showList && (
+      <ul class="spectrum-list">
+        {CATEGORIES.map((category) => {
+          const count = counts.get(category.id) ?? 0;
+          return (
+            <li>
+              <a
+                class:list={['spectrum-item', { 'is-active': activeId === category.id }]}
+                href={categoryPath(category.id)}
+                style={`--line-colour: ${category.lineHex}; --ink-colour: var(--spec-${category.id}-ink);`}
+                data-astro-prefetch="hover"
+              >
+                <span class="spectrum-item-head">
+                  <span class="spec-dot" aria-hidden="true"></span>
+                  <span class="spectrum-item-title">{category.title}</span>
+                  <span class="spectrum-item-count">{count}</span>
+                </span>
+                <span class="spectrum-item-blurb">{category.blurb}</span>
+                <span class="spectrum-item-data">
+                  {category.line} · {formatTransition(category)} ·{' '}
+                  {formatWavelength(category.airWavelengthNm)}
+                  {!category.visible && <span class="spectrum-item-false">红外，伪彩色显示</span>}
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+</div>
+
+<style>
+  .spectrum-plot {
+    position: relative;
+    padding-bottom: 1.5rem;
+  }
+
+  /*
+   * 连续谱背景。压到 0.16 不是为了好看，是因为它只是波长坐标的参照，
+   * 主体是上面那些发射线。铺满亮度会把发射线糊掉。
+   */
+  .spectrum-continuum {
+    height: 8.5rem;
+    border-radius: var(--radius-atom);
+    opacity: 0.16;
+  }
+
+  [data-theme='light'] .spectrum-continuum {
+    opacity: 0.28;
+  }
+
+  .spectrum-lines {
+    position: absolute;
+    inset: 0 0 1.5rem;
+  }
+
+  /* 命中区比谱线宽得多，否则 2px 的线在触屏上根本点不到。 */
+  .spectrum-line-hit {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 2.75rem;
+    height: 100%;
+    transform: translateX(-50%);
+  }
+
+  .spectrum-line {
+    width: 2px;
+    border-radius: 1px;
+    background: var(--line-colour);
+    box-shadow:
+      0 0 5px 0 var(--line-colour),
+      0 0 14px 1px color-mix(in oklab, var(--line-colour) 45%, transparent);
+    transition:
+      width 180ms var(--ease-atom),
+      opacity 180ms var(--ease-relax);
+  }
+
+  [data-theme='light'] .spectrum-line {
+    box-shadow: 0 0 4px 0 color-mix(in oklab, var(--line-colour) 60%, transparent);
+  }
+
+  .spectrum-line-hit:hover .spectrum-line,
+  .spectrum-line-hit:focus-visible .spectrum-line,
+  .spectrum-line-hit.is-active .spectrum-line {
+    width: 4px;
+    opacity: 1 !important;
+  }
+
+  /* 还没有文章的分类用虚线画，明确表示这条线目前是空的。 */
+  .spectrum-line-hit.is-empty .spectrum-line {
+    background: repeating-linear-gradient(
+      to top,
+      var(--line-colour) 0 3px,
+      transparent 3px 7px
+    );
+    box-shadow: none;
+  }
+
+  .spectrum-line-tip {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0.4375rem 0.625rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-atom);
+    background: var(--raised);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 4px);
+    transition:
+      opacity 160ms var(--ease-relax),
+      transform 160ms var(--ease-atom);
+    z-index: 2;
+  }
+
+  .spectrum-line-hit:hover .spectrum-line-tip,
+  .spectrum-line-hit:focus-visible .spectrum-line-tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .spectrum-line-tip-title {
+    font-size: 0.8125rem;
+    color: var(--ink);
+  }
+
+  .spectrum-line-tip-data {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .spectrum-axis {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5rem;
+  }
+
+  .spectrum-tick {
+    position: absolute;
+    top: 0.375rem;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .spectrum-tick::before {
+    content: '';
+    position: absolute;
+    top: -0.375rem;
+    left: 50%;
+    width: 1px;
+    height: 0.25rem;
+    background: var(--hairline-strong);
+  }
+
+  /* 分类清单。2 列而不是 5 等分卡片，避免一行五个挤成豆腐块。 */
+  .spectrum-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1px;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    overflow: hidden;
+  }
+
+  .spectrum-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    height: 100%;
+    padding: 1rem 1.125rem;
+    background: var(--surface);
+    transition: background-color 180ms var(--ease-relax);
+  }
+
+  .spectrum-item:hover,
+  .spectrum-item.is-active {
+    background: var(--raised);
+  }
+
+  .spectrum-item-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .spectrum-item-title {
+    flex: 1;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .spectrum-item-count {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .spectrum-item-blurb {
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--ink-dim);
+  }
+
+  .spectrum-item-data {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .spectrum-item-false {
+    color: var(--ink-colour);
+    opacity: 0.75;
+  }
+
+  @media (max-width: 640px) {
+    .spectrum-continuum {
+      height: 6.5rem;
+    }
+  }
+</style>

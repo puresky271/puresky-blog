@@ -1,0 +1,156 @@
+---
+/**
+ * PostCard — 文章条目。
+ *
+ * 刻意做成「有边框但无卡片阴影」的行式条目而不是三栏等宽卡片：
+ * 文章标题长度差异很大，等宽卡片会逼出一堆参差的空白。
+ * 行式条目让标题自然占满，元信息统一贴在右侧或下方。
+ */
+import type { Post } from '../../lib/content.ts';
+import { requireCategory } from '../../lib/spectrum.ts';
+import { requireShell } from '../../lib/shells.ts';
+import { formatDateISO, postPath, toDatetimeAttr } from '../../lib/format.ts';
+import SpecMark from '../atoms/SpecMark.astro';
+import ShellBadge from '../atoms/ShellBadge.astro';
+
+interface Props {
+  post: Post;
+  /** compact 用于侧栏和相关文章，只留标题和日期。 */
+  variant?: 'default' | 'compact';
+  /** 显示序号，用于系列文章。 */
+  index?: number;
+  class?: string;
+}
+
+const { post, variant = 'default', index, class: className = '' } = Astro.props;
+
+const category = requireCategory(post.data.category);
+const shell = requireShell(post.data.shell);
+const href = postPath(post.id);
+---
+
+<article
+  class:list={['post-card', `post-card-${variant}`, className]}
+  style={`--line-colour: ${category.lineHex};`}
+>
+  {index !== undefined && <span class="post-card-index">{String(index).padStart(2, '0')}</span>}
+
+  <div class="post-card-main">
+    <a class="post-card-title" href={href} data-astro-prefetch="hover">
+      {post.data.title}
+    </a>
+
+    {variant === 'default' && <p class="post-card-desc">{post.data.description}</p>}
+
+    <div class="post-card-meta">
+      <time class="post-card-date" datetime={toDatetimeAttr(post.data.pubDate)}>
+        {formatDateISO(post.data.pubDate)}
+      </time>
+      <SpecMark category={category} />
+      {variant === 'default' && <ShellBadge shell={shell} />}
+      {
+        post.data.series && (
+          <span class="post-card-series">
+            {post.data.series}
+            {post.data.seriesOrder !== undefined && ` #${post.data.seriesOrder}`}
+          </span>
+        )
+      }
+    </div>
+  </div>
+</article>
+
+<style>
+  .post-card {
+    position: relative;
+    display: flex;
+    gap: 1rem;
+    padding: 1.125rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  /* 悬停时左侧长出一段谱线色。分类的颜色在这里作为身份标识出现。 */
+  .post-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 0;
+    background: var(--line-colour);
+    transition: height 260ms var(--ease-atom);
+  }
+
+  .post-card:hover::before {
+    height: 100%;
+  }
+
+  .post-card-index {
+    flex: none;
+    padding-top: 0.1875rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .post-card-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .post-card-title {
+    display: block;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .post-card-title:hover {
+    color: var(--accent-ink);
+  }
+
+  .post-card-desc {
+    margin: 0.4375rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.62;
+    color: var(--ink-dim);
+    /* 摘要最多两行，超出截断，保证列表节奏整齐。 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.875rem;
+    margin-top: 0.625rem;
+  }
+
+  .post-card-date {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .post-card-series {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+
+  .post-card-compact {
+    padding: 0.75rem 0;
+  }
+
+  .post-card-compact .post-card-title {
+    font-size: 0.9375rem;
+  }
+</style>

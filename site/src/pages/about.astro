@@ -1,0 +1,157 @@
+---
+import { Image } from 'astro:assets';
+
+import Icon from '@/components/ui/Icon.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { AUTHOR, GITHUB } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getIllustrations, getPosts, getTags } from '@/lib/content';
+import { formatDate, withBase } from '@/lib/format';
+import { getGitHubSnapshot } from '@/lib/snapshots';
+
+const [posts, tags, illustrations, github] = await Promise.all([getPosts(), getTags(), getIllustrations(), getGitHubSnapshot()]);
+const first = posts.at(-1);
+// 关于页用一张横版插画打底；没有横版就用第一张。
+const banner = illustrations.find((i) => i.data.image.width > i.data.image.height) ?? illustrations[0];
+
+const facts = [
+  { label: '文章', value: `${posts.length} 篇` },
+  { label: '标签', value: `${tags.length} 个` },
+  { label: '第一篇', value: first ? formatDate(first.data.pubDate) : '还没有' },
+  { label: 'GitHub 贡献', value: github?.calendar ? `过去一年 ${github.calendar.total} 次` : '暂无数据' },
+];
+
+const links = [
+  { href: `https://github.com/${GITHUB.username}`, label: 'GitHub', icon: 'github-logo', external: true },
+  { href: withBase('/card/'), label: '名片', icon: 'identification-card', external: false },
+  { href: withBase('/friends/'), label: '友链', icon: 'users', external: false },
+  { href: withBase('/rss.xml'), label: 'RSS 订阅', icon: 'rss', external: false },
+] as const;
+---
+
+<Base title="关于" description={`${AUTHOR.name}，${AUTHOR.intro}`}>
+  <PageHeader title="关于" description={`${AUTHOR.name}，${AUTHOR.role}。${AUTHOR.intro}`} />
+
+  <div class="container-page">
+    {
+      banner && (
+        <figure class="banner" data-reveal>
+          <Image src={banner.data.image} alt={banner.data.alt} width={1600} class="h-full w-full object-cover" />
+        </figure>
+      )
+    }
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,42rem)_minmax(0,1fr)] lg:gap-16">
+      <div class="about-text">
+        <p>
+          写工程日志：做东西时遇到的问题，怎么想的，最后怎么解决的。不写教程，不总结方法论，记录一个具体问题从卡住到通的过程。
+        </p>
+        <p>
+          当前主要在做的项目是 mygo_chat，五个角色住在一座模拟的东京里，有四层记忆和认知管线。
+          文章大多围绕它展开：检索为什么掉点、角色为什么会「同时出现在两个地方」、上下文窗口怎么省。
+        </p>
+        <p>
+          这个站点本身也是一个项目。首页的天空跟着沈阳此刻的天色走，播放器连着网易云和本地曲库，GitHub 面板是实时的。
+          源码在 <a href={`https://github.com/${GITHUB.repo}`} class="link" target="_blank" rel="noopener noreferrer">GitHub</a> 上。
+        </p>
+
+        <h2>联系</h2>
+        <ul class="links">
+          {
+            links.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  class="card card-link link-card"
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'noopener noreferrer' : undefined}
+                >
+                  <Icon name={link.icon} size={18} class="text-fg-muted" />
+                  <span class="text-fg">{link.label}</span>
+                  <Icon name={link.external ? 'arrow-up-right' : 'arrow-right'} size={14} class="ml-auto text-fg-subtle" />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <aside>
+        <div class="card facts">
+          <p class="text-sm font-medium text-fg">现在</p>
+          <dl class="mt-3 space-y-2.5">
+            {
+              facts.map((f) => (
+                <div class="flex items-baseline justify-between gap-4 text-sm">
+                  <dt class="text-fg-muted">{f.label}</dt>
+                  <dd class="tabular text-fg">{f.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+          <div class="mt-5 border-t border-line pt-4">
+            <p class="text-sm font-medium text-fg">关注方向</p>
+            <ul class="mt-3 flex flex-wrap gap-1.5">
+              {AUTHOR.focus.map((item) => <li class="chip">{item}</li>)}
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .banner {
+    aspect-ratio: 21 / 8;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+  }
+  @media (width < 40rem) {
+    .banner {
+      aspect-ratio: 16 / 9;
+    }
+  }
+  .about-text p {
+    font-size: 1.0625rem;
+    line-height: 1.9;
+    color: var(--fg);
+  }
+  .about-text p + p {
+    margin-top: 1.1em;
+  }
+  .about-text h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .links {
+    display: grid;
+    gap: 0.75rem;
+  }
+  @media (width >= 40rem) {
+    .links {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .link-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    font-size: 0.9375rem;
+  }
+  .facts {
+    padding: 1.25rem;
+  }
+  @media (width >= 64rem) {
+    .facts {
+      position: sticky;
+      top: calc(var(--nav-h) + 1.5rem);
+    }
+  }
+</style>

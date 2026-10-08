@@ -1,0 +1,23 @@
+---
+/**
+ * spectrum/index.astro — 主题分类总览，画成氢原子发射光谱。
+ */
+import { categoryStats } from '../../lib/content.ts';
+import { CATEGORIES } from '../../lib/spectrum.ts';
+import Page from '../../layouts/Page.astro';
+import SpectrumBar from '../../components/organisms/SpectrumBar.astro';
+
+const categories = await categoryStats();
+const counts = new Map(categories.map((c) => [c.category.id, c.count]));
+const total = categories.reduce((sum, c) => sum + c.count, 0);
+
+---
+
+<Page
+  title="光谱"
+  lede="每个主题分类对应氢原子的一条真实发射谱线。分类的颜色不是挑的，是那条谱线波长的颜色。"
+  summary={`${total} 篇 · ${CATEGORIES.length} 条谱线`}
+  width="wide"
+>
+  <SpectrumBar counts={counts} />
+</Page>

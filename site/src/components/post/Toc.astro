@@ -1,0 +1,187 @@
+---
+/**
+ * Toc.astro — 文章目录。
+ *
+ * 桌面端是右侧粘性边栏，当前阅读到的章节高亮；移动端是正文上方的折叠块。
+ * 只收 h2 / h3，再深的层级在目录里只会制造噪音。
+ */
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+  variant: 'sidebar' | 'inline';
+}
+
+const { headings, variant } = Astro.props;
+// 标题里的锚点符号 # 会被收进 heading 文本，去掉。
+const items = headings
+  .filter((h) => h.depth === 2 || h.depth === 3)
+  .map((h) => ({ ...h, text: h.text.replace(/^#\s*/, '').trim() }));
+---
+
+{
+  items.length >= 2 &&
+    (variant === 'sidebar' ? (
+      <nav class="toc-sidebar" aria-label="文章目录" data-toc>
+        <p class="mb-3 text-[0.8125rem] font-medium text-fg">目录</p>
+        <ol class="toc-list">
+          {items.map((h) => (
+            <li class:list={[`depth-${h.depth}`]}>
+              <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ol>
+        <a href="#main" class="to-top">
+          回到顶部
+        </a>
+      </nav>
+    ) : (
+      <details class="toc-inline">
+        <summary>目录 · {items.length} 节</summary>
+        <ol>
+          {items.map((h) => (
+            <li class:list={[`depth-${h.depth}`]}>
+              <a href={`#${h.slug}`}>{h.text}</a>
+            </li>
+          ))}
+        </ol>
+      </details>
+    ))
+}
+
+<style>
+  .toc-sidebar {
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+    max-height: calc(100dvh - var(--nav-h) - 4rem);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .toc-list {
+    position: relative;
+    border-left: 1px solid var(--line);
+  }
+  .toc-list a {
+    position: relative;
+    display: block;
+    padding: 0.3rem 0 0.3rem 0.9rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .toc-list .depth-3 a {
+    padding-left: 1.7rem;
+    font-size: 0.78rem;
+  }
+  .toc-list a:hover {
+    color: var(--fg);
+  }
+  /* 当前章节：左侧亮起一段强调色，盖住灰色的竖线。 */
+  .toc-list a::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0.35rem;
+    bottom: 0.35rem;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 240ms var(--ease-out-expo);
+  }
+  .toc-list a[aria-current='true'] {
+    color: var(--accent);
+  }
+  .toc-list a[aria-current='true']::before {
+    transform: scaleY(1);
+  }
+  .to-top {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .to-top:hover {
+    color: var(--fg);
+  }
+
+  .toc-inline {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    font-size: 0.875rem;
+  }
+  .toc-inline summary {
+    padding: 0.7rem 1rem;
+    color: var(--fg-muted);
+    cursor: pointer;
+    list-style: none;
+  }
+  .toc-inline summary::-webkit-details-marker {
+    display: none;
+  }
+  .toc-inline summary::after {
+    content: '+';
+    float: right;
+    color: var(--fg-subtle);
+  }
+  .toc-inline[open] summary::after {
+    content: '−';
+  }
+  .toc-inline ol {
+    padding: 0 1rem 0.8rem;
+  }
+  .toc-inline a {
+    display: block;
+    padding: 0.3rem 0;
+    color: var(--fg-muted);
+  }
+  .toc-inline .depth-3 a {
+    padding-left: 1rem;
+  }
+</style>
+
+<script>
+  /*
+   * 当前章节高亮：观察每个标题，取「已经滚过视口上方 30% 线」的最后一个。
+   * 用 IntersectionObserver 记录标题的进出，不监听 scroll。
+   */
+  let observer: IntersectionObserver | null = null;
+
+  function setupToc() {
+    observer?.disconnect();
+    const toc = document.querySelector('[data-toc]');
+    if (!toc) return;
+    const links = new Map<string, HTMLElement>();
+    toc.querySelectorAll<HTMLElement>('[data-toc-link]').forEach((a) => links.set(a.dataset.tocLink!, a));
+    const headings = [...links.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    const above = new Set<string>();
+
+    const update = () => {
+      const current = headings.filter((h) => above.has(h.id)).pop() ?? headings[0];
+      links.forEach((a, id) => a.setAttribute('aria-current', String(id === current?.id)));
+    };
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          // 标题在观察区上方（已经读过）时记入集合。
+          if (entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 1) above.add(entry.target.id);
+          else above.delete(entry.target.id);
+        }
+        update();
+      },
+      { rootMargin: '0px 0px -70% 0px', threshold: [0, 1] }
+    );
+    headings.forEach((h) => observer!.observe(h));
+    update();
+  }
+
+  setupToc();
+  document.addEventListener('astro:page-load', setupToc);
+</script>

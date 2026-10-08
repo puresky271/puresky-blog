@@ -1,0 +1,124 @@
+---
+/**
+ * Lightbox.astro — 图片灯箱。
+ *
+ * 点正文图片或带 data-zoom 的图片时，从原位置放大到屏幕中央（FLIP 动画），
+ * 关闭时缩回原位置。用原生 <dialog>：Esc 关闭、焦点圈定由浏览器负责。
+ * data-zoom 可以带一个高清地址，否则用图片本身的 currentSrc。
+ */
+---
+
+<dialog class="lightbox" aria-label="查看大图">
+  <img alt="" />
+  <p class="caption"></p>
+</dialog>
+
+<style>
+  .lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: hidden;
+    cursor: zoom-out;
+  }
+  .lightbox::backdrop {
+    background: color-mix(in oklab, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    transition: opacity 260ms ease;
+  }
+  .lightbox img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: min(92vw, 1600px);
+    max-height: 84dvh;
+    border-radius: var(--radius-control);
+    box-shadow: var(--shadow-lg);
+    transform: translate(-50%, -50%);
+    transform-origin: center;
+  }
+  .caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 3dvh;
+    padding-inline: 16px;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+  }
+</style>
+
+<script>
+  const SELECTOR = '.prose img, img[data-zoom], [data-zoom] img';
+
+  let source: HTMLImageElement | null = null;
+
+  function dialogParts() {
+    const dialog = document.querySelector<HTMLDialogElement>('dialog.lightbox');
+    return dialog ? { dialog, img: dialog.querySelector('img')!, caption: dialog.querySelector('.caption')! } : null;
+  }
+
+  /** 从 from 矩形飞到 to 矩形（或反过来）的变换。 */
+  function flip(img: HTMLImageElement, from: DOMRect, reverse = false) {
+    const to = img.getBoundingClientRect();
+    const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+    const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    const scale = from.width / to.width;
+    const start = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${scale})`;
+    const end = 'translate(-50%, -50%) scale(1)';
+    return img.animate(
+      { transform: reverse ? [end, start] : [start, end], opacity: reverse ? [1, 0.6] : [0.6, 1] },
+      { duration: 380, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+    );
+  }
+
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element;
+    const parts = dialogParts();
+    if (!parts) return;
+
+    if (parts.dialog.open) {
+      event.preventDefault();
+      close();
+      return;
+    }
+
+    const img = target.closest<HTMLImageElement>('img');
+    if (!img || !img.matches(SELECTOR)) return;
+    event.preventDefault();
+
+    source = img;
+    const zoom = img.closest('[data-zoom]')?.getAttribute('data-zoom') || img.dataset.zoom;
+    parts.img.src = zoom && zoom !== '' ? zoom : img.currentSrc || img.src;
+    parts.img.alt = img.alt;
+    parts.caption.textContent = img.alt;
+    parts.dialog.showModal();
+    if (!reduced()) flip(parts.img, img.getBoundingClientRect());
+  });
+
+  function close() {
+    const parts = dialogParts();
+    if (!parts) return;
+    if (!source || reduced() || !source.isConnected) {
+      parts.dialog.close();
+      return;
+    }
+    flip(parts.img, source.getBoundingClientRect(), true).finished.finally(() => parts.dialog.close());
+  }
+
+  document.addEventListener('keydown', (event) => {
+    const parts = dialogParts();
+    if (event.key === 'Escape' && parts?.dialog.open) {
+      event.preventDefault();
+      close();
+    }
+  });
+</script>

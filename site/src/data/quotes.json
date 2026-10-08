@@ -1,0 +1,11 @@
+[
+  { "text": "Make it work, make it right, make it fast.", "author": "Kent Beck" },
+  { "text": "Simplicity is prerequisite for reliability.", "author": "Edsger W. Dijkstra" },
+  { "text": "Talk is cheap. Show me the code.", "author": "Linus Torvalds" },
+  { "text": "There are only two hard things in Computer Science: cache invalidation and naming things.", "author": "Phil Karlton" },
+  { "text": "Programs must be written for people to read, and only incidentally for machines to execute.", "author": "Harold Abelson" },
+  { "text": "Premature optimization is the root of all evil.", "author": "Donald Knuth" },
+  { "text": "纸上得来终觉浅，绝知此事要躬行。", "author": "陆游" },
+  { "text": "知之者不如好之者，好之者不如乐之者。", "author": "《论语》" },
+  { "text": "千里之行，始于足下。", "author": "《道德经》" }
+]

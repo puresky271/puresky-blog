@@ -1,0 +1,539 @@
+---
+import { SITE } from '../consts.ts';
+import { allPosts, categoryStats, shellStats, allProjects } from '../lib/content.ts';
+import { withBase, postPath, formatDateISO, toDatetimeAttr } from '../lib/format.ts';
+import { requireCategory } from '../lib/spectrum.ts';
+import { CATEGORIES } from '../lib/spectrum.ts';
+import { SHELLS } from '../lib/shells.ts';
+
+import Base from '../layouts/Base.astro';
+import AtomDiagram from '../components/organisms/AtomDiagram.astro';
+import SpectrumBar from '../components/organisms/SpectrumBar.astro';
+import PostCard from '../components/molecules/PostCard.astro';
+import SpecMark from '../components/atoms/SpecMark.astro';
+
+const posts = await allPosts();
+const categories = await categoryStats();
+const shells = await shellStats();
+const projects = await allProjects();
+
+const counts = new Map(categories.map((c) => [c.category.id, c.count]));
+const groundState = posts.filter((p) => p.data.shell === 1);
+const recent = posts.slice(0, 5);
+const featuredProjects = projects.filter((p) => p.data.featured).slice(0, 3);
+---
+
+<Base description={SITE.description}>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="shell hero-inner">
+      <div class="hero-copy">
+        <h1 class="t-display hero-title">一个人的工程日志</h1>
+        <p class="hero-lede">{SITE.description}</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href={withBase('posts/')}>读文章</a>
+          <a class="btn btn-ghost" href={withBase('projects/')}>看项目</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <AtomDiagram variant="mark" />
+      </div>
+    </div>
+  </section>
+
+  <!-- 光谱：分类导航 -->
+  <section class="band-spectrum">
+    <div class="shell">
+      <SpectrumBar counts={counts} showList={false} />
+      <ul class="home-categories">
+        {
+          categories
+            .filter((c) => c.count > 0)
+            .map(({ category, count }) => (
+              <li>
+                <a
+                  class="home-category"
+                  href={withBase(`spectrum/${category.id}/`)}
+                  style={`--line-colour: ${category.lineHex}; --ink-colour: var(--spec-${category.id}-ink);`}
+                  data-astro-prefetch="hover"
+                >
+                  <span class="spec-dot" aria-hidden="true" />
+                  <span class="home-category-title">{category.title}</span>
+                  <span class="home-category-count">{count}</span>
+                </a>
+              </li>
+            ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- 最新文章 -->
+  <section class="band">
+    <div class="shell home-recent">
+      <h2 class="t-heading home-section-title">
+        <a href={withBase('posts/')}>文章</a>
+      </h2>
+      {
+        recent.length > 0 ? (
+          <div>
+            {recent.map((post) => <PostCard post={post} />)}
+          </div>
+        ) : (
+          <div class="state-block">
+            <p>还没有发表的文章。</p>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 能级一览 -->
+  <section class="band">
+    <div class="shell">
+      <h2 class="t-heading home-section-title">
+        <a href={withBase('shells/')}>按深度</a>
+      </h2>
+      <ul class="home-shells">
+        {
+          shells.map(({ shell, occupied }) => {
+            const ratio = occupied / shell.capacity;
+            return (
+              <li>
+                <a
+                  class="home-shell"
+                  href={withBase(`shells/${shell.n}/`)}
+                  data-astro-prefetch="hover"
+                >
+                  <span class="home-shell-letter">{shell.letter}</span>
+                  <span class="home-shell-name">{shell.title}</span>
+                  <span class="home-shell-track" aria-hidden="true">
+                    <span class="home-shell-fill" style={`width: ${(ratio * 100).toFixed(1)}%;`} />
+                  </span>
+                  <span class="home-shell-count">
+                    {occupied}/{shell.capacity}
+                  </span>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- 项目 -->
+  {
+    featuredProjects.length > 0 && (
+      <section class="band">
+        <div class="shell">
+          <h2 class="t-heading home-section-title">
+            <a href={withBase('projects/')}>在做的东西</a>
+          </h2>
+          <ul class="home-projects">
+            {featuredProjects.map((project, index) => (
+              <li class:list={{ 'is-lead': index === 0 }}>
+                <a class="home-project" href={withBase(`projects/#${project.id}`)}>
+                  <span class="home-project-head">
+                    <span class="home-project-name">{project.data.name}</span>
+                    <span class:list={['home-project-status', `is-${project.data.status}`]}>
+                      {
+                        {
+                          active: '在做',
+                          maintained: '维护中',
+                          paused: '暂停',
+                          archived: '已归档',
+                        }[project.data.status]
+                      }
+                    </span>
+                  </span>
+                  <span class="home-project-tagline">{project.data.tagline}</span>
+                  <span class="home-project-stack">
+                    {project.data.stack.slice(0, index === 0 ? 6 : 3).join(' · ')}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 基态文章 -->
+  {
+    groundState.length > 0 && (
+      <section class="band">
+        <div class="shell">
+          <h2 class="t-heading home-section-title">
+            <a href={withBase('shells/1/')}>如果只读两篇</a>
+          </h2>
+          <div class="ground-grid">
+            {groundState.map((post) => {
+              const category = requireCategory(post.data.category);
+              return (
+                <a
+                  class="ground-item"
+                  href={postPath(post.id)}
+                  style={`--line-colour: ${category.lineHex};`}
+                  data-astro-prefetch="hover"
+                >
+                  <span class="ground-item-line" aria-hidden="true" />
+                  <h3 class="ground-item-title">{post.data.title}</h3>
+                  <p class="ground-item-desc">{post.data.description}</p>
+                  <span class="ground-item-meta">
+                    <SpecMark category={category} link={false} />
+                    <time datetime={toDatetimeAttr(post.data.pubDate)}>
+                      {formatDateISO(post.data.pubDate)}
+                    </time>
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  /* Hero */
+  .hero {
+    padding-top: clamp(3rem, 2.5rem + 4vw, 6rem);
+    padding-bottom: clamp(3rem, 2.5rem + 4vw, 5rem);
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+  }
+
+  .hero-title {
+    margin: 0;
+    max-width: 16ch;
+  }
+
+  .hero-lede {
+    margin: 1.125rem 0 0;
+    max-width: 34ch;
+    font-size: 1rem;
+    line-height: 1.72;
+    color: var(--ink-dim);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+
+  .hero-visual {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .home-section-title {
+    margin: 0 0 1.25rem;
+    font-weight: 500;
+  }
+
+  .home-section-title a {
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .home-section-title a:hover {
+    color: var(--accent-ink);
+  }
+
+  /* Spectrum */
+  .band-spectrum {
+    padding-top: 2.5rem;
+    padding-bottom: 2rem;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    background: var(--surface);
+  }
+
+  .home-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .home-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-orbit);
+    transition:
+      border-color 160ms var(--ease-relax),
+      background-color 160ms var(--ease-relax);
+  }
+
+  .home-category:hover {
+    border-color: color-mix(in oklab, var(--line-colour) 50%, transparent);
+    background: var(--wash);
+  }
+
+  .home-category-title {
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .home-category:hover .home-category-title {
+    color: var(--ink-colour);
+  }
+
+  .home-category-count {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  /* Recent */
+  .home-recent {
+    max-width: 52rem;
+  }
+
+  /* Shells */
+  .home-shells {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 34rem;
+  }
+
+  .home-shell {
+    display: grid;
+    grid-template-columns: auto 1fr 5rem auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .home-shells li:first-child .home-shell {
+    border-top: none;
+  }
+
+  .home-shell-letter {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.375rem;
+    height: 1.375rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--ink-dim);
+  }
+
+  .home-shell-name {
+    font-size: 0.875rem;
+    color: var(--ink);
+  }
+
+  .home-shell-track {
+    display: block;
+    width: 100%;
+    min-width: 2rem;
+    height: 1px;
+    background: var(--hairline);
+  }
+
+  .home-shell-fill {
+    display: block;
+    height: 1px;
+    margin-top: -1px;
+    background: var(--accent);
+    opacity: 0.65;
+  }
+
+  .home-shell-count {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+
+  /* Projects */
+  .home-projects {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .home-projects .is-lead {
+    grid-column: span 2;
+  }
+
+  .home-project {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.125rem 1.25rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+    transition:
+      border-color 180ms var(--ease-relax),
+      background-color 180ms var(--ease-relax);
+  }
+
+  .home-project:hover {
+    border-color: var(--hairline-strong);
+    background: var(--raised);
+  }
+
+  .home-project-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .home-project-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .home-project-status {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+  }
+
+  .home-project-status.is-active {
+    color: var(--accent-ink);
+  }
+
+  .home-project-tagline {
+    flex: 1;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+  }
+
+  .home-project-stack {
+    margin-top: 0.875rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    color: var(--ink-faint);
+  }
+
+  /* Ground-state */
+  .ground-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+    gap: 1.5rem;
+  }
+
+  .ground-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1.5rem 1.375rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+    overflow: hidden;
+    transition: border-color 200ms var(--ease-relax);
+  }
+
+  .ground-item:hover {
+    border-color: var(--hairline-strong);
+  }
+
+  .ground-item-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--line-colour);
+    opacity: 0.85;
+  }
+
+  .ground-item-title {
+    margin: 0;
+    font-size: 1.1875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.014em;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .ground-item:hover .ground-item-title {
+    color: var(--accent-ink);
+  }
+
+  .ground-item-desc {
+    flex: 1;
+    margin: 0.625rem 0 1.125rem;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--ink-dim);
+  }
+
+  .ground-item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 900px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-visual {
+      justify-content: flex-start;
+      order: -1;
+    }
+
+    .home-projects {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-projects .is-lead {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .home-projects {
+      grid-template-columns: 1fr;
+    }
+
+    .home-projects .is-lead {
+      grid-column: span 1;
+    }
+  }
+</style>

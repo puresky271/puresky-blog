@@ -1,0 +1,76 @@
+# wrangler.offline.toml — 不登录 Cloudflare 也能本地跑的配置：npm run dev:offline
+#
+# 和 wrangler.toml 相同，只是去掉了 [ai] 绑定（Workers AI 只能连远端）。
+# 没有 AI 时评论审核按 fail-closed 处理：规则拦不住的一律送人工审，不会放行。
+# 改 wrangler.toml 的绑定时同步改这里。
+
+name = "puresky-api"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 允许的前端来源。CORS 白名单，不用 * ——
+# 评论接口带 credentials，通配来源会被浏览器直接拒掉，
+# 而且那样任何站点都能拿着用户的 cookie 调这个 API。
+[vars]
+ALLOWED_ORIGINS = "https://puresky.dev,https://puresky.github.io,http://localhost:4321,http://127.0.0.1:4321"
+SITE_ORIGIN = "https://puresky.dev"
+# 站长的 GitHub 登录名。用于给作者本人的评论加标记、放行管理接口。
+OWNER_LOGIN = "puresky"
+# 评论是否需要审核后才显示。
+MODERATION_ENABLED = "true"
+# GitHub 概览只代理这个账号，避免被当成任意用户的查询代理。
+GITHUB_USERNAME = "puresky"
+# 允许代理的网易云歌单，逗号分隔。和 site/src/config.ts 的 MUSIC.playlistId 保持一致。
+MUSIC_PLAYLISTS = "19723756"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "puresky"
+# 用 `wrangler d1 create puresky` 建库后把返回的 id 填进来。
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+# 用 `wrangler kv namespace create SESSIONS` 建后填 id。
+id = "REPLACE_WITH_SESSIONS_KV_ID"
+
+[[kv_namespaces]]
+binding = "CACHE"
+# 第三方接口（GitHub、网易云）的响应缓存。`wrangler kv namespace create CACHE`。
+id = "REPLACE_WITH_CACHE_KV_ID"
+
+# R2：文章图片，以及放不进 Pages 的本地曲库（音频、视频）。
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "puresky-media"
+
+
+# 速率限制。Cloudflare 原生的限流绑定。
+[[unsafe.bindings]]
+name = "COMMENT_LIMITER"
+type = "ratelimit"
+namespace_id = "2001"
+simple = { limit = 5, period = 60 }
+
+[[unsafe.bindings]]
+name = "AUTH_LIMITER"
+type = "ratelimit"
+namespace_id = "2002"
+simple = { limit = 10, period = 60 }
+
+# 只在缓存未命中、真正请求上游时计数。
+[[unsafe.bindings]]
+name = "PROXY_LIMITER"
+type = "ratelimit"
+namespace_id = "2003"
+simple = { limit = 60, period = 60 }
+
+[observability]
+enabled = true
+
+# 以下是密钥，不写在这里。用 wrangler secret put 设置：
+#   wrangler secret put GITHUB_CLIENT_ID
+#   wrangler secret put GITHUB_CLIENT_SECRET
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put GITHUB_TOKEN        可选；有它 GitHub 面板走 GraphQL，拿得到精确的贡献日历和个人状态

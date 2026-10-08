@@ -1,0 +1,136 @@
+---
+/**
+ * TableOfContents — 文章目录。
+ *
+ * 数据来自 Astro 的 headings，不自己解析 HTML。
+ * 当前位置高亮用 IntersectionObserver，不监听 scroll。
+ */
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+  class?: string;
+}
+
+const { headings, class: className = '' } = Astro.props;
+
+// 只取 h2 和 h3。h4 以下放进目录会让层级看起来像大纲而不是导航。
+const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+  items.length >= 2 && (
+    <nav class:list={['toc', className]} aria-labelledby="toc-title" data-toc>
+      <p class="toc-title" id="toc-title">目录</p>
+      <ol class="toc-list">
+        {items.map((heading) => (
+          <li class:list={['toc-item', `toc-depth-${heading.depth}`]}>
+            <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<script>
+  // 当前阅读位置高亮。用 IntersectionObserver 观察所有标题，
+  // 记录哪些已经进入视口上方，取最靠下的那个作为当前节。
+  const toc = document.querySelector('[data-toc]');
+  if (toc) {
+    const links = new Map<string, HTMLAnchorElement>();
+    for (const link of toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')) {
+      const slug = link.dataset.tocLink;
+      if (slug) links.set(slug, link);
+    }
+
+    const headings = [...links.keys()]
+      .map((slug) => document.getElementById(slug))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (headings.length > 0) {
+      const visible = new Set<string>();
+
+      function refresh() {
+        // 视口内有标题时取最上面那个；全都划过去了就取最后划过的。
+        let currentSlug: string | null = null;
+        for (const heading of headings) {
+          if (visible.has(heading.id)) {
+            currentSlug = heading.id;
+            break;
+          }
+          const box = heading.getBoundingClientRect();
+          if (box.top < 120) currentSlug = heading.id;
+        }
+
+        for (const [slug, link] of links) {
+          link.toggleAttribute('data-current', slug === currentSlug);
+        }
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) visible.add(entry.target.id);
+            else visible.delete(entry.target.id);
+          }
+          refresh();
+        },
+        { rootMargin: '-100px 0px -70% 0px' }
+      );
+
+      for (const heading of headings) observer.observe(heading);
+      refresh();
+    }
+  }
+</script>
+
+<style>
+  .toc-title {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.0625rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--hairline);
+  }
+
+  .toc-item a {
+    display: block;
+    padding: 0.3125rem 0 0.3125rem 0.75rem;
+    margin-left: -1px;
+    border-left: 1px solid transparent;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--ink-faint);
+    transition:
+      color 160ms var(--ease-relax),
+      border-color 160ms var(--ease-relax);
+  }
+
+  .toc-depth-3 a {
+    padding-left: 1.625rem;
+    font-size: 0.78125rem;
+  }
+
+  .toc-item a:hover {
+    color: var(--ink-dim);
+  }
+
+  .toc-item a[data-current] {
+    color: var(--ink);
+    border-left-color: var(--accent);
+  }
+</style>

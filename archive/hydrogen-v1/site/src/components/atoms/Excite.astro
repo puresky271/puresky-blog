@@ -1,0 +1,52 @@
+---
+/**
+ * Excite — 全站唯一的渐进披露原子。
+ *
+ * 「简洁但可分层展开」这条要求在实现上就落在这个组件：任何需要
+ * 「默认收起、想看再展开」的内容都用它，全站只有一种展开手势、
+ * 一种指示器、一种动画曲线。用户学一次就够。
+ *
+ * 用原生 <details>，所以键盘操作、读屏、无 JS 环境全部自动可用。
+ */
+
+interface Props {
+  /** 收起时显示的标题。 */
+  summary: string;
+  /** 标题右侧的次要信息，通常是计数或数据。 */
+  meta?: string;
+  /** 默认展开。用于当前页面的主要内容。 */
+  open?: boolean;
+  class?: string;
+}
+
+const { summary, meta, open = false, class: className = '' } = Astro.props;
+---
+
+<details class:list={['excite', className]} open={open}>
+  <summary>
+    <span class="excite-marker" aria-hidden="true"></span>
+    <span class="excite-summary-text">{summary}</span>
+    {meta && <span class="excite-meta">{meta}</span>}
+  </summary>
+  <div class="excite-body">
+    <slot />
+  </div>
+</details>
+
+<style>
+  .excite-summary-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .excite-meta {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+</style>

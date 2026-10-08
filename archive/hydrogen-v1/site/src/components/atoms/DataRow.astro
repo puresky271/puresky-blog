@@ -1,0 +1,69 @@
+---
+/**
+ * DataRow — 一行可核对的量。左边是名称，右边是等宽数值。
+ *
+ * 存在的理由：本站到处要展示波长、能量、容量、半衰期这类数字。
+ * 如果每个地方各写一遍 flex + mono，很快就会漂成五种不同的对齐方式。
+ * 统一成一个原子后，所有数据表看起来都是同一台仪器的读数。
+ */
+
+interface Props {
+  label: string;
+  /** 数值。已经格式化好的字符串，本组件不做数值格式化。 */
+  value: string;
+  /** 数值右侧的单位或注解，比如「真空」「伪彩色」。 */
+  note?: string;
+  /** 数值着色，传谱线色可以让这一行和分类对应起来。 */
+  colour?: string;
+  class?: string;
+}
+
+const { label, value, note, colour, class: className = '' } = Astro.props;
+---
+
+<div class:list={['data-row', className]}>
+  <dt class="data-row-label">{label}</dt>
+  <dd class="data-row-value" style={colour ? `color: ${colour};` : undefined}>
+    <span>{value}</span>
+    {note && <span class="data-row-note">{note}</span>}
+  </dd>
+</div>
+
+<style>
+  .data-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.4375rem;
+  }
+
+  /* 只在行与行之间画线，不给每一行都加上下边框。 */
+  .data-row + .data-row {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .data-row-label {
+    flex: none;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+  }
+
+  .data-row-value {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4375rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-dim);
+    text-align: right;
+  }
+
+  .data-row-note {
+    font-size: 0.625rem;
+    color: var(--ink-faint);
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+/**
+ * isotopes.astro — 友链页。
+ */
+import { allFriends } from '../lib/content.ts';
+import type { FriendLink } from '../lib/isotopes.ts';
+
+import Page from '../layouts/Page.astro';
+import IsotopeGrid from '../components/organisms/IsotopeGrid.astro';
+
+const entries = await allFriends();
+
+const links: FriendLink[] = entries.map((entry) => ({
+  name: entry.data.name,
+  url: entry.data.url,
+  blurb: entry.data.blurb,
+  isotope: entry.data.isotope,
+  since: entry.data.since.toISOString(),
+  avatar: entry.data.avatar,
+  lastChecked: entry.data.lastChecked?.toISOString(),
+}));
+---
+
+<Page
+  title="同位素"
+  lede="友链按氢的三种同位素分档。氚档会按半衰期算剩余活度，到期提醒我复查死链。"
+  summary={`${links.length} 位`}
+  width="wide"
+>
+  <IsotopeGrid links={links} />
+
+  <section class="exchange">
+    <h2 class="t-heading">想交换链接</h2>
+    <p>
+      发个 issue 或者邮件，说一下你的站点和写什么。新加的默认进氚档，
+      不是不信任，是因为我还不知道这条链会活多久。
+    </p>
+  </section>
+</Page>
+
+<style>
+  .exchange p {
+    margin: 0;
+    max-width: 58ch;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    color: var(--ink-dim);
+  }
+
+</style>

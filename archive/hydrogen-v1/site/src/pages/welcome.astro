@@ -1,0 +1,169 @@
+---
+/**
+ * welcome.astro — 欢迎与登录界面。
+ *
+ * 经典氢原子结构图占据中心。它同时是三件事：站点的标识、
+ * 配色系统的说明（跃迁 → 波长 → 颜色），以及 GitHub 登录的落地页。
+ *
+ * bare 模式：不挂顶栏和页脚，整屏只有这一件事。
+ */
+import { API_BASE, SITE } from '../consts.ts';
+import { withBase } from '../lib/format.ts';
+import Base from '../layouts/Base.astro';
+import AtomDiagram from '../components/organisms/AtomDiagram.astro';
+
+/** 登录成功后回到首页。 */
+const loginUrl = `${API_BASE}/api/auth/github/start?redirect=${encodeURIComponent('/')}`;
+---
+
+<Base
+  title="欢迎"
+  description={SITE.description}
+  bare
+  noindex
+  class="welcome"
+>
+  <div class="welcome-stage graph-paper">
+    <div class="welcome-inner">
+      <AtomDiagram variant="hero" class="welcome-atom" />
+
+      <div class="welcome-copy">
+        <h1 class="t-display welcome-title">一个人的工程日志</h1>
+        <p class="welcome-lede">
+          写记忆系统、角色一致性、地理模拟，以及把这些东西真的跑起来之间发生的事。
+        </p>
+
+        <div class="welcome-actions">
+          <a class="btn btn-primary" href={withBase('')}>进入</a>
+          <a class="btn btn-ghost" href={loginUrl}>用 GitHub 登录</a>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      角落的元素方格。周期表第一格：原子序数 1、符号 H、
+      标准原子量 1.008（IUPAC 2021 区间值的常用缩写）。
+    -->
+    <div class="welcome-element" aria-hidden="true">
+      <span class="welcome-element-z">1</span>
+      <span class="welcome-element-symbol">H</span>
+      <span class="welcome-element-name">Hydrogen</span>
+      <span class="welcome-element-mass">1.008</span>
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* min-h-[100dvh] 而不是 100vh，避免 iOS Safari 地址栏导致的跳动。 */
+  .welcome-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100dvh;
+    padding: 2rem 1.25rem;
+  }
+
+  .welcome-inner {
+    display: grid;
+    /* 非对称：图占 5 份、文案占 6 份。不是 50/50。 */
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(2rem, 4vw, 4.5rem);
+    align-items: center;
+    width: 100%;
+    max-width: 62rem;
+  }
+
+  .welcome-copy {
+    min-width: 0;
+  }
+
+  .welcome-title {
+    margin: 0;
+    max-width: 18ch;
+  }
+
+  .welcome-lede {
+    margin: 1.25rem 0 0;
+    max-width: 34ch;
+    font-size: 1rem;
+    line-height: 1.72;
+    color: var(--ink-dim);
+  }
+
+  .welcome-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  /* 元素方格。固定在右下角，不参与主布局。 */
+  .welcome-element {
+    position: absolute;
+    right: clamp(1.25rem, 4vw, 3rem);
+    bottom: clamp(1.25rem, 4vw, 3rem);
+    display: grid;
+    grid-template-areas:
+      'z    .'
+      'sym  sym'
+      'name name'
+      'mass mass';
+    gap: 0.125rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-atom);
+    background: var(--surface);
+    min-width: 5.5rem;
+  }
+
+  .welcome-element-z {
+    grid-area: z;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    color: var(--ink-faint);
+  }
+
+  .welcome-element-symbol {
+    grid-area: sym;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: var(--accent-ink);
+  }
+
+  .welcome-element-name {
+    grid-area: name;
+    font-size: 0.625rem;
+    color: var(--ink-dim);
+  }
+
+  .welcome-element-mass {
+    grid-area: mass;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 860px) {
+    .welcome-inner {
+      grid-template-columns: 1fr;
+      gap: 2.25rem;
+      max-width: 32rem;
+      text-align: center;
+    }
+
+    .welcome-title,
+    .welcome-lede {
+      max-width: none;
+      margin-inline: auto;
+    }
+
+    .welcome-actions {
+      justify-content: center;
+    }
+
+    .welcome-element {
+      display: none;
+    }
+  }
+</style>

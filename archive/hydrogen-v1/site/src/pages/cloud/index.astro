@@ -1,0 +1,187 @@
+---
+/**
+ * cloud/index.astro — 标签总览，画成氢原子电子云。
+ */
+import { tagStats } from '../../lib/content.ts';
+import Page from '../../layouts/Page.astro';
+import ElectronCloud from '../../components/organisms/ElectronCloud.astro';
+import { tagPath } from '../../lib/format.ts';
+
+const tags = await tagStats();
+---
+
+<Page
+  title="电子云"
+  lede="标签按氢原子的电子概率密度分布。位置和形状是从径向波函数采样出来的，不是画的。"
+  summary={`${tags.length} 个标签`}
+  width="wide"
+>
+  {
+    tags.length > 0 ? (
+      <ElectronCloud tags={tags} />
+    ) : (
+      <div class="state-block">
+        <p>还没有标签。</p>
+        <p class="t-data">文章的 frontmatter 里加 tags 就会出现在这里。</p>
+      </div>
+    )
+  }
+
+  <!-- 完整标签表。云是探索用的，这里是要找特定标签时用的。 -->
+  {
+    tags.length > 0 && (
+      <section class="tag-table">
+        <h2 class="t-heading">全部标签</h2>
+        <ol>
+          {tags.map((stat) => (
+            <li style={`--line-colour: ${stat.dominantCategory.lineHex};`}>
+              <a href={tagPath(stat.tag)} data-astro-prefetch="hover">
+                <span class="spec-dot" aria-hidden="true" />
+                <span class="tag-table-name">{stat.tag}</span>
+                <span class="tag-table-category">{stat.dominantCategory.title}</span>
+                <span class="tag-table-shell">
+                  {stat.innermostShell.letter} 壳
+                </span>
+                <span class="tag-table-count">{stat.count}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )
+  }
+</Page>
+
+<style>
+  .tag-table {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .tag-table h2 {
+    margin: 0 0 0.75rem;
+  }
+
+  .orbital-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--hairline);
+    overflow: hidden;
+  }
+
+  .orbital {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 1.125rem 1.25rem;
+    background: var(--surface);
+  }
+
+  .orbital-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .orbital-name {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--accent-ink);
+  }
+
+  .orbital-shell {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .orbital-shape {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .orbital-formula {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--ink-dim);
+  }
+
+  .orbital-note {
+    flex: 1;
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.62;
+    color: var(--ink-dim);
+  }
+
+  .orbital-peak {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  /* 标签表。两列自适应，不是一行一条的长列表。 */
+  .tag-table ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+    gap: 0 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tag-table li {
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .tag-table a {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0;
+  }
+
+  .tag-table-name {
+    font-size: 0.875rem;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .tag-table a:hover .tag-table-name {
+    color: var(--accent-ink);
+  }
+
+  .tag-table-category,
+  .tag-table-shell {
+    font-size: 0.6875rem;
+    color: var(--ink-faint);
+  }
+
+  .tag-table-shell {
+    font-family: var(--font-mono);
+  }
+
+  .tag-table-count {
+    min-width: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--ink-dim);
+  }
+</style>

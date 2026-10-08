@@ -1,0 +1,178 @@
+---
+/**
+ * Base.astro — 全站外壳。
+ *
+ * 主题在 <head> 里用一段内联脚本决定，必须在首帧绘制之前执行，
+ * 否则暗主题用户会先看到一帧白屏。
+ */
+import '../styles/global.css';
+
+import { SITE } from '../consts.ts';
+import { withBase } from '../lib/format.ts';
+import Nav from '../components/organisms/Nav.astro';
+import Footer from '../components/organisms/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** OG 图片路径。缺省用站点默认卡片。 */
+  image?: string;
+  /** article 用于文章页，website 用于其余页面。 */
+  ogType?: 'website' | 'article';
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  /** 隐藏顶栏和页脚。欢迎页用。 */
+  bare?: boolean;
+  /** 让搜索引擎不要收录。 */
+  noindex?: boolean;
+  class?: string;
+}
+
+const {
+  title,
+  description = SITE.description,
+  image,
+  ogType = 'website',
+  publishedTime,
+  modifiedTime,
+  bare = false,
+  noindex = false,
+  class: className = '',
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${SITE.title}` : `${SITE.title} · ${SITE.theme}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+const ogImage = new URL(image ?? withBase('og-default.png'), Astro.site ?? Astro.url.origin);
+---
+
+<!doctype html>
+<html lang={SITE.lang} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title ?? SITE.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={ogImage.href} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:locale" content={SITE.locale} />
+    {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    {modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title ?? SITE.title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage.href} />
+
+    <link rel="icon" href={withBase('favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={withBase('apple-touch-icon.png')} />
+    <link rel="manifest" href={withBase('manifest.webmanifest')} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${SITE.title} RSS`}
+      href={withBase('rss.xml')}
+    />
+
+    <!--
+      主题引导脚本。必须内联且尽可能早：读 localStorage，没有记录就跟随
+      系统偏好。放到外部脚本或 body 里都会导致主题闪烁。
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('hydrogen-theme');
+          var prefersLight =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+          var theme = stored === 'light' || stored === 'dark' ? stored : prefersLight ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (error) {
+          // localStorage 在隐私模式下会抛错。默认暗主题即可，不影响可用性。
+        }
+      })();
+    </script>
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    {!bare && <Nav />}
+
+    <main id="main" class={className}>
+      <slot />
+    </main>
+
+    {!bare && <Footer />}
+
+    <script>
+      // ── 主题切换 ───────────────────────────────────────────────────────────
+      const root = document.documentElement;
+      const STORAGE_KEY = 'hydrogen-theme';
+
+      function applyTheme(theme: 'dark' | 'light') {
+        // 切换瞬间关掉全局颜色过渡，否则整页重绘会拖出一道渐变。
+        root.setAttribute('data-theme-switching', '');
+        root.setAttribute('data-theme', theme);
+        try {
+          localStorage.setItem(STORAGE_KEY, theme);
+        } catch {
+          // 隐私模式写不进去，本次会话内仍然生效。
+        }
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => root.removeAttribute('data-theme-switching'));
+        });
+      }
+
+      for (const button of document.querySelectorAll('[data-theme-toggle]')) {
+        button.addEventListener('click', () => {
+          applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+        });
+      }
+
+      // 用户没手动选过时跟随系统变化。
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (event) => {
+        let stored: string | null = null;
+        try {
+          stored = localStorage.getItem(STORAGE_KEY);
+        } catch {
+          stored = null;
+        }
+        if (stored !== 'dark' && stored !== 'light') {
+          root.setAttribute('data-theme', event.matches ? 'light' : 'dark');
+        }
+      });
+
+      // ── 进场揭示 ───────────────────────────────────────────────────────────
+      // 用 IntersectionObserver，不监听 scroll 事件。
+      const revealTargets = document.querySelectorAll('[data-reveal]');
+
+      if (revealTargets.length > 0) {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (reduceMotion) {
+          for (const el of revealTargets) el.setAttribute('data-revealed', '');
+        } else {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (!entry.isIntersecting) continue;
+                entry.target.setAttribute('data-revealed', '');
+                observer.unobserve(entry.target);
+              }
+            },
+            { rootMargin: '0px 0px -12% 0px', threshold: 0.08 }
+          );
+
+          for (const el of revealTargets) observer.observe(el);
+        }
+      }
+    </script>
+  </body>
+</html>

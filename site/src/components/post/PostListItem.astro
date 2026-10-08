@@ -1,0 +1,107 @@
+---
+/**
+ * PostListItem.astro — 列表页的文章条目：左边日期，右边标题、摘要和元信息，有封面时右侧带缩略图。
+ * 比卡片网格更适合扫读：标题对齐在同一条竖线上。
+ */
+import { Image } from 'astro:assets';
+
+import Icon from '@/components/ui/Icon.astro';
+import { categoryOf, postMinutes, type Post } from '@/lib/content';
+import { formatDateISO, postPath } from '@/lib/format';
+
+interface Props {
+  post: Post;
+  index?: number;
+}
+
+const { post, index = 0 } = Astro.props;
+const { title, description, pubDate, category, tags, cover, coverAlt, featured } = post.data;
+---
+
+<li data-reveal style={`--reveal-i: ${Math.min(index, 6)}`}>
+  <a href={postPath(post.id)} class="item group">
+    <time datetime={pubDate.toISOString()} class="date tabular">{formatDateISO(pubDate)}</time>
+    <div class="min-w-0">
+      <h2 class="title">
+        {featured && <Icon name="star-fill" size={14} class="mr-1.5 inline -translate-y-px text-accent" label="精选" />}
+        {title}
+      </h2>
+      <p class="desc">{description}</p>
+      <p class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8125rem] text-fg-subtle">
+        <span class="text-fg-muted">{categoryOf(category).label}</span>
+        <span>约 {postMinutes(post)} 分钟</span>
+        {tags.slice(0, 3).map((tag) => <span>#{tag}</span>)}
+      </p>
+    </div>
+    {
+      cover && (
+        <div class="thumb">
+          <Image src={cover} alt={coverAlt ?? ''} width={320} class="h-full w-full object-cover" />
+        </div>
+      )
+    }
+  </a>
+</li>
+
+<style>
+  .item {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    padding: 1.4rem 1rem;
+    margin-inline: -1rem;
+    border-radius: var(--radius-card);
+    transition: background-color 200ms ease;
+  }
+  .item:hover {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .date {
+    padding-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+    transition: color 160ms ease;
+  }
+  .item:hover .title {
+    color: var(--accent);
+  }
+  .desc {
+    margin-top: 0.35rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--fg-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .thumb {
+    width: 9rem;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+  }
+  @media (width < 48rem) {
+    .item {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.4rem;
+    }
+    .date {
+      padding-top: 0;
+    }
+    .thumb {
+      display: none;
+    }
+  }
+</style>

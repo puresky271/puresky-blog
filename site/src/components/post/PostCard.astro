@@ -1,0 +1,125 @@
+---
+/**
+ * PostCard.astro — 文章卡片。
+ *
+ * 有封面时上图下文；没有封面时用分类名做一个大号的字面标识，
+ * 而不是塞一张无关的图。size="lg" 用于首页「最近的文章」的主卡。
+ */
+import { Image } from 'astro:assets';
+
+import Icon from '@/components/ui/Icon.astro';
+import { categoryOf, postMinutes, type Post } from '@/lib/content';
+import { formatDate, postPath } from '@/lib/format';
+
+interface Props {
+  post: Post;
+  size?: 'md' | 'lg';
+  /** 列表里第几个，用于入场错峰。 */
+  index?: number;
+}
+
+const { post, size = 'md', index = 0 } = Astro.props;
+const { title, description, pubDate, category, cover, coverAlt, featured } = post.data;
+const cat = categoryOf(category);
+---
+
+<article class:list={['card card-link post-card group', size]} data-reveal style={`--reveal-i: ${index}`}>
+  <a href={postPath(post.id)} class="flex h-full flex-col">
+    {
+      cover ? (
+        <div class="cover">
+          <Image src={cover} alt={coverAlt ?? ''} width={size === 'lg' ? 960 : 640} class="h-full w-full object-cover" />
+        </div>
+      ) : (
+        size === 'lg' && (
+          <div class="cover cover-type" aria-hidden="true">
+            <span>{cat.label}</span>
+          </div>
+        )
+      )
+    }
+    <div class="body">
+      <p class="flex items-center gap-2 text-[0.8125rem] text-fg-muted">
+        <span class="text-accent">{cat.label}</span>
+        <span aria-hidden="true">·</span>
+        <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+        {featured && <Icon name="star-fill" size={13} class="text-accent" label="精选" />}
+      </p>
+      <h3 class="title">{title}</h3>
+      <p class="desc">{description}</p>
+      <p class="mt-auto flex items-center gap-1.5 pt-4 text-[0.8125rem] text-fg-subtle">
+        <Icon name="clock" size={14} />
+        约 {postMinutes(post)} 分钟
+      </p>
+    </div>
+  </a>
+</article>
+
+<style>
+  .post-card {
+    overflow: hidden;
+  }
+  .cover {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .cover :global(img) {
+    transition: transform 900ms var(--ease-out-expo);
+  }
+  .post-card:hover .cover :global(img) {
+    transform: scale(1.03);
+  }
+  /* 无封面时的字面标识：分类名放大压在一块带天色的底上。 */
+  .cover-type {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 1.5rem;
+    aspect-ratio: 21 / 9;
+    background:
+      radial-gradient(90% 120% at 100% 0%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 60%),
+      linear-gradient(180deg, var(--accent-soft), var(--surface-2));
+  }
+  .cover-type span {
+    font-size: clamp(2.5rem, 2rem + 2vw, 3.75rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: color-mix(in oklab, var(--accent) 55%, var(--surface));
+  }
+  .body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 1.25rem 1.35rem 1.3rem;
+  }
+  .title {
+    margin-top: 0.6rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+    text-wrap: balance;
+    transition: color 160ms ease;
+  }
+  .lg .title {
+    font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.6rem);
+    line-height: 1.35;
+  }
+  .post-card:hover .title {
+    color: var(--accent);
+  }
+  .desc {
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--fg-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

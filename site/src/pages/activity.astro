@@ -1,0 +1,18 @@
+---
+import ActivityView from '@/components/github/ActivityView.svelte';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { GITHUB } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getGitHubSnapshot } from '@/lib/snapshots';
+
+const github = await getGitHubSnapshot();
+// 仓库列表只留页面上用得到的前 30 个，减小序列化进页面的体积。
+const snapshot = github ? { ...github, repos: github.repos.slice(0, 30) } : null;
+---
+
+<Base title="动态" description={`${GITHUB.username} 在 GitHub 上的贡献、动态和仓库。`}>
+  <PageHeader title="动态" description="GitHub 上的贡献和最近在做的事。数据每次打开页面时刷新。" />
+  <div class="container-page">
+    <ActivityView client:load snapshot={snapshot} username={GITHUB.username} />
+  </div>
+</Base>

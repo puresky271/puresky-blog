@@ -1,0 +1,430 @@
+---
+/**
+ * ElectronCloud — 标签浏览界面，画成氢原子的电子云。
+ *
+ * 散点不是随机噪声。每个点都是从真实的氢原子径向概率密度
+ * P(r) = r²|R_nl(r)|² 里拒绝采样出来的，角向部分用 |Y_lm(θ)|²。
+ * 所以 2p 会长成哑铃、3d 会长成四叶、2s 会有一圈节面 —— 这些形状是算出来的，
+ * 不是画出来的。
+ *
+ * 映射规则：
+ *   标签涉及的最内层能级 → 它占据哪个轨道（越核心越靠近原子核）
+ *   标签的文章数         → 它贡献多少个点（出现越多，云越密）
+ *   标签的主导分类       → 点的颜色（所以云的颜色分布反映真实的主题构成）
+ *
+ * 无障碍与降级：标签本身是真实的 <a>，绝对定位在云上。canvas 只是背景层，
+ * 标了 aria-hidden。JS 或 canvas 不可用时，标签退化成一个正常的链接列表，
+ * 功能不受影响。
+ */
+import type { TagStat } from '../../lib/content.ts';
+import { tagPath } from '../../lib/format.ts';
+import { hashSeed } from '../../lib/physics.ts';
+import { SHELLS } from '../../lib/shells.ts';
+
+interface Props {
+  tags: TagStat[];
+  /** 高亮某个标签，标签详情页用。 */
+  activeTag?: string;
+  class?: string;
+}
+
+const { tags, activeTag, class: className = '' } = Astro.props;
+
+/**
+ * 能级 → 轨道。按最可能半径单调递增排，这样「标签涉及越核心的文章、
+ * 它的云越靠内」在几何上真的成立。
+ *   1s 峰值 1a₀ < 2p 峰值 4a₀ < 2s 外峰 5.24a₀ < 3d 峰值 9a₀
+ */
+const ORBITAL_BY_SHELL: Record<number, '1s' | '2s' | '2p' | '3d'> = {
+  1: '1s',
+  2: '2p',
+  3: '2s',
+  4: '3d',
+};
+
+const maxCount = Math.max(1, ...tags.map((t) => t.count));
+
+/**
+ * 给每个标签分配一个角向扇区。用标签名的哈希而不是索引，
+ * 这样新增标签不会把已有标签全部挪位置。
+ */
+const cloudTags = tags.map((stat, index) => {
+  const seed = hashSeed(stat.tag);
+  return {
+    tag: stat.tag,
+    count: stat.count,
+    href: tagPath(stat.tag),
+    orbital: ORBITAL_BY_SHELL[stat.innermostShell.n] ?? '2s',
+    shell: stat.innermostShell.n,
+    colour: stat.dominantCategory.lineHex,
+    categoryId: stat.dominantCategory.id,
+    categoryTitle: stat.dominantCategory.title,
+    seed,
+    // 哈希定角 + 索引微调，避免哈希碰撞时两个标签完全重叠。
+    angle: ((seed % 3600) / 3600) * Math.PI * 2 + index * 0.017,
+    weight: stat.count / maxCount,
+    active: activeTag ? stat.tag.toLowerCase() === activeTag.toLowerCase() : false,
+  };
+});
+
+const maxShell = Math.max(...SHELLS.map((s) => s.n));
+---
+
+<div class:list={['cloud', className]} data-cloud-root>
+  <div class="cloud-stage">
+    <canvas class="cloud-canvas" data-cloud-canvas aria-hidden="true"></canvas>
+
+    <!-- 原子核。云的中心，也是坐标原点。 -->
+    <span class="cloud-nucleus" aria-hidden="true"></span>
+
+    <!--
+      标签层。这些是真的链接，用绝对定位摆在云上。
+      canvas 挂了、JS 挂了，它们照样能用。
+    -->
+    <ul class="cloud-tags" data-cloud-tags>
+      {
+        cloudTags.map((tag) => (
+          <li>
+            <a
+              class:list={['cloud-tag', { 'is-active': tag.active }]}
+              href={tag.href}
+              data-tag={tag.tag}
+              style={`--line-colour: ${tag.colour}; --ink-colour: var(--spec-${tag.categoryId}-ink); --weight: ${tag.weight.toFixed(3)};`}
+              title={`${tag.tag} · ${tag.count} 篇 · ${tag.categoryTitle} · ${tag.orbital} 轨道`}
+              data-astro-prefetch="hover"
+            >
+              <span class="cloud-tag-name">{tag.tag}</span>
+              <span class="cloud-tag-count">{tag.count}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+</div>
+
+<script type="application/json" data-cloud-data set:html={JSON.stringify({ cloudTags, maxShell })} />
+
+<script>
+  import {
+    ORBITAL_SAMPLE_LIMIT,
+    sampleOrbitalPoint,
+    seededRandom,
+    type OrbitalName,
+  } from '../../lib/physics.ts';
+
+  interface CloudTag {
+    tag: string;
+    count: number;
+    orbital: OrbitalName;
+    shell: number;
+    colour: string;
+    angle: number;
+    weight: number;
+    seed: number;
+    active: boolean;
+  }
+
+  interface Point {
+    /** 归一化到 -1..1 的画布坐标。 */
+    x: number;
+    y: number;
+    /** 深度，用于控制大小和透明度。 */
+    depth: number;
+    colour: string;
+    tag: string;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-cloud-root]');
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-cloud-canvas]');
+  const dataNode = document.querySelector<HTMLScriptElement>('[data-cloud-data]');
+
+  if (root && canvas && dataNode) {
+    const { cloudTags, maxShell } = JSON.parse(dataNode.textContent ?? '{}') as {
+      cloudTags: CloudTag[];
+      maxShell: number;
+    };
+
+    const context = canvas.getContext('2d');
+
+    if (context && cloudTags.length > 0) {
+      /*
+       * 采样点总数上限。3000 点在低端机上仍能一帧画完，
+       * 而且再多也只是把云糊成一团实心，信息量不增加。
+       */
+      const TOTAL_POINT_BUDGET = 3000;
+      const totalWeight = cloudTags.reduce((sum, t) => sum + t.weight, 0) || 1;
+
+      /*
+       * 归一化参考半径 = maxShell² = 16（n=4，N 壳的半径）。
+       *
+       * 所有轨道的物理样本统一除以这个值，而不是各自归一化。
+       * 这样 1s 的云（最大 z≈5a₀）在画布上只占 5/16 ≈ 31%，
+       * 而 3d（z≈26a₀）会铺到 26/16 ≈ 163%，自然形成从内到外的
+       * 同心层状结构 —— 和标签定位用的玻尔半径比例完全一致。
+       *
+       * 之前的版本用了 globalLimit（所有轨道中最大的采样半径 = 26），
+       * 导致 1s 标签的点全部挤在中心 4% 处，肉眼看起来就是一个点。
+       */
+      const refRadius = maxShell * maxShell;
+
+      const points: Point[] = [];
+
+      for (const tag of cloudTags) {
+        const budget = Math.max(
+          24,
+          Math.round((tag.weight / totalWeight) * TOTAL_POINT_BUDGET)
+        );
+        const random = seededRandom(tag.seed);
+
+        const cos = Math.cos(tag.angle);
+        const sin = Math.sin(tag.angle);
+
+        for (let i = 0; i < budget; i += 1) {
+          const sample = sampleOrbitalPoint(tag.orbital, random);
+          const along = sample.z / refRadius;
+          const across = (sample.x * 0.55) / refRadius;
+          const depth = sample.y / refRadius;
+
+          const x = along * cos - across * sin;
+          const y = along * sin + across * cos;
+
+          points.push({
+            x,
+            y,
+            depth,
+            colour: tag.colour,
+            tag: tag.tag,
+          });
+        }
+      }
+
+      /** 当前高亮的标签。null 表示全部正常亮度。 */
+      let focused: string | null = cloudTags.find((t) => t.active)?.tag ?? null;
+
+      let width = 0;
+      let height = 0;
+
+      function resize() {
+        const rect = canvas!.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = rect.width;
+        height = rect.height;
+        canvas!.width = Math.round(width * dpr);
+        canvas!.height = Math.round(height * dpr);
+        context!.setTransform(dpr, 0, 0, dpr, 0, 0);
+        draw();
+      }
+
+      function draw() {
+        if (!context || width === 0 || height === 0) return;
+
+        context.clearRect(0, 0, width, height);
+
+        const centreX = width / 2;
+        const centreY = height / 2;
+        // 留 12% 边距，避免外层轨道的点被裁掉。
+        const scale = Math.min(width, height) * 0.44;
+
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        // 暗底用叠加混合让密集区自然发亮；亮底叠加会越画越白，所以用正常混合。
+        context.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
+
+        for (const point of points) {
+          const dimmed = focused !== null && point.tag !== focused;
+
+          // 深度决定大小和透明度，产生体积感。这是正交投影加深度衰减，
+          // 不是真的透视投影 —— 电子云没有「远近」，只有概率密度。
+          const depthFactor = (point.depth + 1) / 2;
+          const radius = 0.55 + depthFactor * 1.05;
+          const baseAlpha = (isLight ? 0.24 : 0.34) * (0.45 + depthFactor * 0.55);
+          const alpha = dimmed ? baseAlpha * 0.16 : baseAlpha;
+
+          context.globalAlpha = alpha;
+          context.fillStyle = point.colour;
+          context.beginPath();
+          context.arc(
+            centreX + point.x * scale,
+            centreY + point.y * scale,
+            radius,
+            0,
+            Math.PI * 2
+          );
+          context.fill();
+        }
+
+        context.globalAlpha = 1;
+        context.globalCompositeOperation = 'source-over';
+      }
+
+      // 标签定位。半径按 shell 的 n² 比例排，和玻尔模型一致。
+      function positionTags() {
+        const labels = root!.querySelectorAll<HTMLAnchorElement>('.cloud-tag');
+        for (const label of labels) {
+          const tag = cloudTags.find((t) => t.tag === label.dataset.tag);
+          if (!tag) continue;
+          // 0.34 到 0.92 之间，n=1 最靠内。避开中心的原子核区域。
+          const ratio = 0.34 + (tag.shell * tag.shell / (maxShell * maxShell)) * 0.58;
+          const x = 50 + Math.cos(tag.angle) * ratio * 46;
+          const y = 50 + Math.sin(tag.angle) * ratio * 42;
+          label.style.left = `${x.toFixed(2)}%`;
+          label.style.top = `${y.toFixed(2)}%`;
+        }
+      }
+
+      // 悬停 / 聚焦某个标签时，只让它的点保持亮度，其余压暗。
+      const tagList = root.querySelector('[data-cloud-tags]');
+      if (tagList) {
+        const focus = (event: Event) => {
+          const target = (event.target as HTMLElement).closest<HTMLElement>('.cloud-tag');
+          if (!target) return;
+          focused = target.dataset.tag ?? null;
+          draw();
+        };
+        const blur = () => {
+          focused = cloudTags.find((t) => t.active)?.tag ?? null;
+          draw();
+        };
+
+        tagList.addEventListener('pointerover', focus);
+        tagList.addEventListener('pointerout', blur);
+        tagList.addEventListener('focusin', focus);
+        tagList.addEventListener('focusout', blur);
+      }
+
+      // 主题切换要重画，因为混合模式和透明度都跟主题有关。
+      new MutationObserver(draw).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      });
+
+      // 尺寸变化用 ResizeObserver，不监听 window resize。
+      new ResizeObserver(() => {
+        resize();
+        positionTags();
+      }).observe(canvas);
+
+      positionTags();
+      resize();
+    }
+  }
+</script>
+
+<style>
+  .cloud-stage {
+    position: relative;
+    width: 100%;
+    /* 正方形舞台。电子云是球对称的，非方形容器会把 3d 轨道压变形。 */
+    aspect-ratio: 1;
+    max-height: 40rem;
+    margin-inline: auto;
+  }
+
+  .cloud-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cloud-nucleus {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-orbit);
+    background: var(--accent);
+    transform: translate(-50%, -50%);
+    box-shadow:
+      0 0 10px 1px color-mix(in oklab, var(--accent) 55%, transparent),
+      0 0 26px 5px color-mix(in oklab, var(--accent) 20%, transparent);
+  }
+
+  .cloud-tags {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cloud-tag {
+    position: absolute;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3125rem;
+    padding: 0.1875rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-orbit);
+    background: color-mix(in oklab, var(--void) 72%, transparent);
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    transition:
+      border-color 160ms var(--ease-relax),
+      background-color 160ms var(--ease-relax),
+      color 160ms var(--ease-relax);
+  }
+
+  /* 字号随权重变化，但下限 0.75rem，避免冷门标签小到读不了。 */
+  .cloud-tag-name {
+    font-size: calc(0.75rem + var(--weight, 0) * 0.4375rem);
+    color: var(--ink-dim);
+  }
+
+  .cloud-tag-count {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .cloud-tag:hover,
+  .cloud-tag:focus-visible,
+  .cloud-tag.is-active {
+    border-color: color-mix(in oklab, var(--line-colour) 55%, transparent);
+    background: var(--raised);
+  }
+
+  .cloud-tag:hover .cloud-tag-name,
+  .cloud-tag:focus-visible .cloud-tag-name,
+  .cloud-tag.is-active .cloud-tag-name {
+    color: var(--ink-colour);
+  }
+
+  /*
+   * 窄屏降级：云的舞台在 480px 以下会把标签挤到互相重叠，
+   * 所以改成纯列表。这不是隐藏功能，是换一种更适合小屏的呈现。
+   */
+  @media (max-width: 520px) {
+    .cloud-stage {
+      aspect-ratio: auto;
+      height: auto;
+    }
+
+    .cloud-canvas,
+    .cloud-nucleus {
+      display: none;
+    }
+
+    .cloud-tags {
+      position: static;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .cloud-tag {
+      position: static !important;
+      border-color: var(--hairline-strong);
+      transform: none;
+      backdrop-filter: none;
+    }
+
+    .cloud-tag-name {
+      font-size: 0.875rem;
+    }
+  }
+</style>

@@ -1,0 +1,16 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "noEmit": true,
+    // src/lib 内部互引写显式 .ts 扩展名，好让 scripts/*.mjs 能用 Node 原生
+    // TypeScript 剥离直接 import 同一份 SSOT，不必再拷一份 JS 出来。
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}

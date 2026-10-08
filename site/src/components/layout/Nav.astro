@@ -1,0 +1,388 @@
+---
+/**
+ * Nav.astro — 顶部栏：居中悬浮的胶囊导航 + 下方横向滚动的文章条目带。
+ *
+ * 胶囊固定在视口顶部，滚动时一直在；当前页的高亮底块带 transition:name，
+ * 站内跳转时会从旧位置滑到新位置。
+ * 条目带随页面滚走，不占用阅读空间；它挂在 transition:persist 上，换页时不会从头开始滚。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import { GITHUB, NAV_LINKS, SITE } from '@/config';
+import { getPosts } from '@/lib/content';
+import { formatDateISO, postPath, stripBase, withBase } from '@/lib/format';
+
+import ThemeToggle from './ThemeToggle.astro';
+
+const path = stripBase(Astro.url.pathname);
+const links = [{ href: '/', label: '首页', match: [] as readonly string[] }, ...NAV_LINKS];
+const active =
+  path === '/' ? links[0] : links.find((link) => link.match.some((m) => path.startsWith(m)));
+
+// 条目带：最近的文章。太少时重复几遍，保证一组的宽度超过屏幕，滚动才接得上。
+const posts = (await getPosts()).slice(0, 16).map((p) => ({
+  href: postPath(p.id),
+  title: p.data.title,
+  date: formatDateISO(p.data.pubDate),
+}));
+const group = posts.length ? Array.from({ length: Math.ceil(12 / posts.length) }, () => posts).flat() : [];
+
+const ICONS = {
+  '/': 'house',
+  '/posts/': 'article',
+  '/archive/': 'calendar-blank',
+  '/projects/': 'folder-simple',
+  '/gallery/': 'images',
+  '/activity/': 'git-commit',
+  '/about/': 'user',
+} as const;
+---
+
+<header class="site-header">
+  <div class="nav-float">
+    <nav class="pill" aria-label="主导航">
+      <ul class="hidden items-center gap-0.5 md:flex">
+        {
+          links.map((link) => (
+            <li>
+              <a href={withBase(link.href)} class="nav-link" aria-current={active === link ? 'page' : undefined}>
+                {active === link && <span class="nav-active" transition:name="nav-active" />}
+                {link.href === '/' && <span class="brand-mark" aria-hidden="true" />}
+                <span class="relative">{link.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <a href={withBase('/')} class="nav-link brand-mobile" aria-label={`${SITE.title} 首页`}>
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="relative font-semibold">{SITE.title}</span>
+      </a>
+
+      <span class="divider" aria-hidden="true"></span>
+
+      <div class="flex items-center">
+        <button type="button" class="icon-btn" data-search-open aria-label="搜索（Ctrl / ⌘ + K）" title="搜索  Ctrl / ⌘ + K">
+          <Icon name="magnifying-glass" size={17} />
+        </button>
+        <ThemeToggle />
+        <a
+          href={`https://github.com/${GITHUB.username}`}
+          class="icon-btn hidden sm:inline-grid"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <Icon name="github-logo" size={17} />
+        </a>
+        <button
+          type="button"
+          class="icon-btn md:hidden"
+          data-menu-toggle
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          aria-label="打开菜单"
+        >
+          <Icon name="list" size={19} />
+        </button>
+      </div>
+    </nav>
+
+    <div id="mobile-menu" class="mobile-menu md:hidden" data-open="false">
+      <nav aria-label="移动端导航" class="card mobile-panel">
+        <ul class="grid grid-cols-2 gap-2">
+          {
+            links.map((link) => (
+              <li>
+                <a href={withBase(link.href)} class="mobile-link" aria-current={active === link ? 'page' : undefined}>
+                  <Icon name={ICONS[link.href as keyof typeof ICONS]} size={17} />
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  {
+    group.length > 0 && (
+      <div class="ticker" transition:persist="ticker" aria-label="最近的文章">
+        <div class="ticker-track" style={`--ticker-duration: ${group.length * 4}s`}>
+          {[0, 1].map((copy) => (
+            <ul class="ticker-group" aria-hidden={copy === 1 ? 'true' : undefined}>
+              {group.map((item) => (
+                <li>
+                  <a href={item.href} class="tick" tabindex={copy === 1 ? -1 : undefined}>
+                    <span class="tick-title">{item.title}</span>
+                    <time class="tick-date">{item.date}</time>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ))}
+        </div>
+      </div>
+    )
+  }
+</header>
+
+<style>
+  /*
+   * 顶部栏占位：胶囊是 fixed 的，不占文档流，这里用 padding 给它留出位置；条目带在流里。
+   * 首页的天空用负边距顶到这块区域下面（见 HomeTop.astro 的 --header-h）。
+   */
+  .site-header {
+    position: relative;
+    z-index: var(--z-raised);
+    padding-top: var(--nav-h);
+  }
+
+  .nav-float {
+    position: fixed;
+    top: 12px;
+    left: 0;
+    right: 0;
+    z-index: var(--z-nav);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-inline: 16px;
+    pointer-events: none;
+  }
+  .nav-float > * {
+    pointer-events: auto;
+  }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 46px;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: color-mix(in oklab, var(--surface) 74%, transparent);
+    backdrop-filter: blur(18px) saturate(170%);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--surface) 70%, transparent),
+      var(--shadow-md);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .pill {
+      background: var(--surface);
+      backdrop-filter: none;
+    }
+  }
+
+  .nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 36px;
+    padding-inline: 0.85rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    color: var(--fg-muted);
+    white-space: nowrap;
+    transition: color 160ms ease;
+  }
+  .nav-link:hover,
+  .nav-link[aria-current='page'] {
+    color: var(--fg);
+  }
+  .nav-active {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      var(--shadow-sm);
+  }
+  :global([data-theme='dark']) .nav-active {
+    background: var(--surface-3);
+  }
+
+  /* 标识：一小块天色。 */
+  .brand-mark {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    border-radius: 5px;
+    background: linear-gradient(160deg, oklch(0.86 0.08 230), var(--accent) 70%);
+    box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.25);
+  }
+  :global([data-theme='dark']) .brand-mark {
+    background: linear-gradient(160deg, oklch(0.42 0.1 262), var(--accent) 90%);
+  }
+
+  /* 手机端的品牌链接。作用域样式优先级高于 Tailwind 的 md:hidden，所以在这里自己隐藏。 */
+  @media (width >= 48rem) {
+    .brand-mobile {
+      display: none;
+    }
+  }
+
+  .divider {
+    width: 1px;
+    height: 18px;
+    margin-inline: 0.25rem;
+    background: var(--line-strong);
+  }
+
+  .mobile-menu {
+    width: min(100%, 26rem);
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 320ms var(--ease-out-expo);
+  }
+  .mobile-menu > nav {
+    overflow: hidden;
+    min-height: 0;
+  }
+  .mobile-menu[data-open='false'] > nav {
+    visibility: hidden;
+    transition: visibility 0s 320ms;
+  }
+  .mobile-menu[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+  .mobile-panel {
+    margin-top: 8px;
+    padding: 8px;
+    box-shadow: var(--shadow-lg);
+  }
+  .mobile-menu[data-open='false'] .mobile-panel {
+    padding-block: 0;
+    border-width: 0;
+  }
+  .mobile-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    height: 2.75rem;
+    padding-inline: 0.9rem;
+    border-radius: var(--radius-control);
+    color: var(--fg-muted);
+    font-size: 0.9375rem;
+  }
+  .mobile-link:hover {
+    background: var(--surface-2);
+  }
+  .mobile-link[aria-current='page'] {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+  }
+
+  /* ── 条目带 ── */
+
+  .ticker {
+    height: var(--ticker-h);
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
+  }
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    height: 100%;
+    animation: ticker var(--ticker-duration) linear infinite;
+  }
+  .ticker:hover .ticker-track,
+  .ticker:focus-within .ticker-track {
+    animation-play-state: paused;
+  }
+  @keyframes ticker {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .ticker-group {
+    display: flex;
+    align-items: center;
+    gap: 2.75rem;
+    padding-right: 2.75rem;
+  }
+  .tick {
+    display: grid;
+    gap: 0.15rem;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+  .tick-title,
+  .tick-date {
+    position: relative;
+    padding-left: 0.85rem;
+  }
+  /* 每行前面一个小圆点，标题和日期上下对齐。 */
+  .tick-title::before,
+  .tick-date::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 999px;
+    background: var(--fg-subtle);
+    opacity: 0.6;
+  }
+  .tick-title {
+    color: var(--fg-muted);
+    font-weight: 500;
+    transition: color 160ms ease;
+  }
+  .tick:hover .tick-title {
+    color: var(--accent);
+  }
+  .tick:hover .tick-title::before {
+    background: var(--accent);
+  }
+  .tick-date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .ticker-track {
+      animation: none;
+    }
+    .ticker-group[aria-hidden='true'] {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  function setMenu(open: boolean) {
+    const menu = document.getElementById('mobile-menu');
+    const toggle = document.querySelector<HTMLElement>('[data-menu-toggle]');
+    if (!menu || !toggle) return;
+    menu.dataset.open = String(open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element;
+    if (target.closest('[data-menu-toggle]')) {
+      setMenu(document.getElementById('mobile-menu')?.dataset.open !== 'true');
+    } else if (target.closest('#mobile-menu a') || !target.closest('.nav-float')) {
+      setMenu(false);
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setMenu(false);
+  });
+</script>

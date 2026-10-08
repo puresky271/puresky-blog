@@ -1,0 +1,180 @@
+---
+/**
+ * search.astro — 站内搜索。
+ *
+ * 用 Pagefind：构建后扫描 dist 生成静态索引，搜索完全在浏览器里跑，
+ * 不需要后端也不需要第三方服务。索引文件只在 astro build 之后存在，
+ * 所以 dev 模式下这一页会提示索引未就绪，而不是静默失败。
+ */
+import Page from '../layouts/Page.astro';
+import { withBase } from '../lib/format.ts';
+
+const pagefindBase = withBase('pagefind/');
+---
+
+<Page title="搜索" lede="搜索全部文章的标题和正文。" noindex width="default">
+  <form class="search-form" role="search" data-search-form>
+    <div class="field">
+      <label class="field-label" for="search-input">关键词</label>
+      <input
+        class="field-input"
+        id="search-input"
+        type="search"
+        name="q"
+        autocomplete="off"
+        placeholder="比如 记忆 / 检索 / prompt"
+        data-search-input
+      />
+      <p class="field-help" data-search-help>输入两个字以上开始搜索。</p>
+    </div>
+  </form>
+
+  <div class="search-results" data-search-results aria-live="polite"></div>
+</Page>
+
+<script define:vars={{ pagefindBase }}>
+  const input = document.querySelector('[data-search-input]');
+  const results = document.querySelector('[data-search-results]');
+  const help = document.querySelector('[data-search-help]');
+  const form = document.querySelector('[data-search-form]');
+
+  if (input && results && help && form) {
+    form.addEventListener('submit', (event) => event.preventDefault());
+
+    let pagefind = null;
+    let loadFailed = false;
+
+    async function ensurePagefind() {
+      if (pagefind || loadFailed) return pagefind;
+      try {
+        // 索引由 `pagefind --site dist` 在构建后生成，dev 下不存在。
+        pagefind = await import(/* @vite-ignore */ `${pagefindBase}pagefind.js`);
+        await pagefind.options({ excerptLength: 26 });
+        return pagefind;
+      } catch {
+        loadFailed = true;
+        help.textContent =
+          '搜索索引尚未生成。索引在 astro build 之后才会出现，开发模式下这一页不可用。';
+        return null;
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    let latestQuery = 0;
+
+    async function run(query) {
+      const token = ++latestQuery;
+
+      if (query.length < 2) {
+        results.innerHTML = '';
+        help.textContent = '输入两个字以上开始搜索。';
+        return;
+      }
+
+      const engine = await ensurePagefind();
+      if (!engine) return;
+
+      help.textContent = '搜索中';
+      const search = await engine.search(query);
+
+      // 输入变化很快时丢弃过期结果，避免旧查询覆盖新查询。
+      if (token !== latestQuery) return;
+
+      if (search.results.length === 0) {
+        results.innerHTML = '';
+        help.textContent = `没有匹配「${query}」的内容。`;
+        return;
+      }
+
+      help.textContent = `${search.results.length} 条结果`;
+
+      // 只取前 12 条详情，其余按需再取。一次性 load 全部会打很多请求。
+      const shown = await Promise.all(search.results.slice(0, 12).map((r) => r.data()));
+
+      results.innerHTML = shown
+        .map(
+          (item) => `
+            <li class="search-hit">
+              <a href="${escapeHtml(item.url)}">
+                <span class="search-hit-title">${escapeHtml(item.meta?.title ?? item.url)}</span>
+                <span class="search-hit-excerpt">${item.excerpt}</span>
+              </a>
+            </li>
+          `
+        )
+        .join('');
+      results.innerHTML = `<ol class="search-list">${results.innerHTML}</ol>`;
+    }
+
+    // 输入防抖。180ms 足够避免每键一次请求，又不至于让人觉得卡。
+    let timer = 0;
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void run(input.value.trim()), 180);
+    });
+
+    // 支持 ?q= 直接带参数进来。
+    const initial = new URLSearchParams(window.location.search).get('q');
+    if (initial) {
+      input.value = initial;
+      void run(initial.trim());
+    }
+
+    input.focus();
+  }
+</script>
+
+<style>
+  .search-form {
+    max-width: 28rem;
+    margin-bottom: 2rem;
+  }
+
+  .search-results :global(.search-list) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .search-results :global(.search-hit) {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .search-results :global(.search-hit a) {
+    display: block;
+    padding: 1rem 0;
+  }
+
+  .search-results :global(.search-hit-title) {
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  .search-results :global(.search-hit a:hover .search-hit-title) {
+    color: var(--accent-ink);
+  }
+
+  .search-results :global(.search-hit-excerpt) {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    color: var(--ink-dim);
+  }
+
+  /* Pagefind 用 <mark> 标出命中词。 */
+  .search-results :global(mark) {
+    background: color-mix(in oklab, var(--accent) 22%, transparent);
+    color: var(--ink);
+    border-radius: 2px;
+    padding: 0 0.125em;
+  }
+</style>

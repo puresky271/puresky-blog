@@ -1,0 +1,73 @@
+---
+/**
+ * PostRow.astro — 文章的单行形态：日期、标题、分类。
+ * 用在首页次要文章列表和归档页，信息密度高，扫一眼就能找到。
+ */
+import { categoryOf, type Post } from '@/lib/content';
+import { formatDateISO, formatMonthDay, postPath } from '@/lib/format';
+
+interface Props {
+  post: Post;
+  /** 显示完整年月日，而不只是月日。 */
+  fullDate?: boolean;
+  index?: number;
+}
+
+const { post, fullDate = false, index = 0 } = Astro.props;
+const { title, pubDate, category } = post.data;
+const date = fullDate ? formatDateISO(pubDate) : formatMonthDay(pubDate);
+---
+
+<li data-reveal style={`--reveal-i: ${index}`}>
+  <a href={postPath(post.id)} class:list={['row group', { 'full-date': fullDate }]}>
+    <time datetime={pubDate.toISOString()} class="date tabular">{date}</time>
+    <span class="title">{title}</span>
+    <span class="cat">{categoryOf(category).label}</span>
+  </a>
+</li>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.85rem 0.9rem;
+    margin-inline: -0.9rem;
+    border-radius: var(--radius-control);
+    transition: background-color 160ms ease;
+  }
+  .row:hover {
+    background: var(--surface-2);
+  }
+  .date {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .row.full-date {
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  }
+  .title {
+    font-size: 0.9875rem;
+    line-height: 1.55;
+    color: var(--fg);
+    transition: color 160ms ease;
+  }
+  .row:hover .title {
+    color: var(--accent);
+  }
+  .cat {
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+    white-space: nowrap;
+  }
+  @media (width < 30rem) {
+    .row {
+      grid-template-columns: 3.6rem minmax(0, 1fr);
+    }
+    .cat {
+      display: none;
+    }
+  }
+</style>

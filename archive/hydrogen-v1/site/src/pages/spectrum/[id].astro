@@ -1,0 +1,175 @@
+---
+/**
+ * spectrum/[id].astro — 单个分类页。
+ */
+import type { GetStaticPaths } from 'astro';
+
+import { categoryStats, postsByCategory } from '../../lib/content.ts';
+import {
+  CATEGORIES,
+  formatTransition,
+  formatWavelength,
+  requireCategory,
+} from '../../lib/spectrum.ts';
+import { transitionEnergyEv } from '../../lib/physics.ts';
+
+import Page from '../../layouts/Page.astro';
+import SpectrumBar from '../../components/organisms/SpectrumBar.astro';
+import PostCard from '../../components/molecules/PostCard.astro';
+import DataRow from '../../components/atoms/DataRow.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return CATEGORIES.map((category) => ({
+    params: { id: category.id },
+    props: { categoryId: category.id },
+  }));
+};
+
+const { categoryId } = Astro.props;
+const category = requireCategory(categoryId);
+const posts = await postsByCategory(categoryId);
+const stats = await categoryStats();
+const counts = new Map(stats.map((s) => [s.category.id, s.count]));
+
+const photonEv = transitionEnergyEv(category.seriesMeta.nLow, category.nHigh);
+---
+
+<Page
+  title={category.title}
+  lede={category.blurb}
+  description={`${category.title}：${category.blurb}。对应 ${category.line} 谱线。`}
+  summary={`${posts.length} 篇 · ${category.line}`}
+  width="wide"
+>
+  <SpectrumBar counts={counts} activeId={categoryId} showList={false} />
+
+  <div class="category-layout">
+    <div class="category-posts">
+      {
+        posts.length > 0 ? (
+          posts.map((post) => <PostCard post={post} />)
+        ) : (
+          <div class="state-block">
+            <p>这个分类还没有文章。</p>
+            <p class="t-data">
+              {category.line} 这条谱线在光谱图上会画成虚线，表示它目前是空的。
+            </p>
+          </div>
+        )
+      }
+    </div>
+
+    <aside class="category-aside">
+      <div class="category-card" style={`--line-colour: ${category.lineHex};`}>
+        <div class="category-card-head">
+          <span class="category-card-line">{category.line}</span>
+          <span class="emission-swatch" aria-hidden="true"></span>
+        </div>
+
+        <dl class="category-card-data">
+          <DataRow label="谱系" value={category.seriesMeta.label} note={category.seriesMeta.band} />
+          <DataRow label="跃迁" value={formatTransition(category)} />
+          <DataRow
+            label="波长（真空）"
+            value={formatWavelength(category.wavelengthNm)}
+          />
+          <DataRow
+            label="波长（空气）"
+            value={formatWavelength(category.airWavelengthNm)}
+            note={category.visible ? undefined : '不可见'}
+          />
+          <DataRow label="光子能量" value={`${photonEv.toFixed(4)} eV`} />
+          <DataRow
+            label="屏幕颜色"
+            value={category.lineHex}
+            note={category.visible ? '真色' : '伪彩色'}
+            colour={`var(--spec-${category.id}-ink)`}
+          />
+        </dl>
+
+        {
+          !category.visible && (
+            <p class="category-card-note">
+              这条谱线在 {formatWavelength(category.airWavelengthNm)}，落在近红外，人眼看不到。
+              界面上的颜色是把整个{category.seriesMeta.label}线性映射到可见橙端得到的伪彩色，
+              和天文图像处理的做法一致。
+            </p>
+          )
+        }
+      </div>
+    </aside>
+  </div>
+</Page>
+
+<style>
+  .category-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    gap: 3rem;
+    align-items: start;
+    margin-top: 2.5rem;
+  }
+
+  .category-posts {
+    min-width: 0;
+  }
+
+  .category-aside {
+    position: sticky;
+    top: 5.5rem;
+  }
+
+  .category-card {
+    padding: 1.25rem 1.375rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .category-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .category-card-line {
+    font-size: 1.25rem;
+    color: var(--ink);
+  }
+
+  /* 一小块该波长的真色。这是唯一用大面积真色的地方，尺寸控制在 40×10px。 */
+  .emission-swatch {
+    width: 2.5rem;
+    height: 0.625rem;
+    border-radius: 2px;
+    background: var(--line-colour);
+    box-shadow: 0 0 8px 0 color-mix(in oklab, var(--line-colour) 55%, transparent);
+  }
+
+  .category-card-data {
+    margin: 0;
+  }
+
+  .category-card-note {
+    margin: 1rem 0 0;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--hairline);
+    font-size: 0.75rem;
+    line-height: 1.68;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 960px) {
+    .category-layout {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .category-aside {
+      position: static;
+      order: -1;
+    }
+  }
+</style>

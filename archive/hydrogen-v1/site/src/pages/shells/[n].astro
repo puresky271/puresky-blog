@@ -1,0 +1,164 @@
+---
+/**
+ * shells/[n].astro — 单个能级页。
+ */
+import type { GetStaticPaths } from 'astro';
+
+import { postsByShell, shellStats } from '../../lib/content.ts';
+import { SHELLS, formatBindingEnergy, requireShell } from '../../lib/shells.ts';
+import { transitionWavelengthNm, vacuumToAirNm } from '../../lib/physics.ts';
+import { CATEGORIES } from '../../lib/spectrum.ts';
+
+import Page from '../../layouts/Page.astro';
+import BohrIndex from '../../components/organisms/BohrIndex.astro';
+import DataRow from '../../components/atoms/DataRow.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return SHELLS.map((shell) => ({
+    params: { n: String(shell.n) },
+    props: { n: shell.n },
+  }));
+};
+
+const { n } = Astro.props;
+const shell = requireShell(n);
+const posts = await postsByShell(n);
+const groups = await shellStats();
+
+const remaining = shell.capacity - posts.length;
+
+/**
+ * 从这一层往内跃迁能落到哪些分类上。
+ * n=1 是基态，没有更内层可去，所以列表为空。
+ */
+const downward = CATEGORIES.filter((c) => c.nHigh === n);
+
+/** 落到 n−1 层时放出的光子波长。 */
+const emissionNm = n > 1 ? vacuumToAirNm(transitionWavelengthNm(n - 1, n)) : null;
+---
+
+<Page
+  title={`${shell.title}（${shell.letter} 壳）`}
+  lede={shell.blurb}
+  description={`n=${n} 能级的文章。${shell.blurb}`}
+  summary={`${posts.length}/${shell.capacity} 个位置`}
+  width="wide"
+>
+  <div class="shell-detail">
+    <dl class="shell-facts">
+      <DataRow label="主量子数" value={`n = ${n}`} />
+      <DataRow label="光谱学记号" value={`${shell.letter} 壳`} />
+      <DataRow label="容量" value={String(shell.capacity)} note="= 2n²" />
+      <DataRow
+        label="占用"
+        value={`${posts.length}`}
+        note={remaining === 0 ? '已满' : `剩 ${remaining}`}
+      />
+      <DataRow label="束缚能" value={formatBindingEnergy(shell.bindingEnergyEv)} />
+      <DataRow label="轨道半径" value={`${n * n} a₀`} />
+      {
+        shell.emissionToInnerEv !== null && emissionNm !== null && (
+          <DataRow
+            label={`降到 n=${n - 1}`}
+            value={`${shell.emissionToInnerEv.toFixed(4)} eV`}
+            note={`${emissionNm.toFixed(1)} nm`}
+          />
+        )
+      }
+    </dl>
+
+    {
+      downward.length > 0 && (
+        <div class="shell-transitions">
+          <p class="shell-transitions-title">从这一层往内跃迁对应的分类</p>
+          <ul>
+            {downward.map((category) => (
+              <li style={`--line-colour: ${category.lineHex};`}>
+                <span class="spec-dot" aria-hidden="true" />
+                <span class="shell-transition-line">{category.line}</span>
+                <span class="shell-transition-title">{category.title}</span>
+                <span class="shell-transition-nm">
+                  {category.airWavelengthNm.toFixed(1)} nm
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+  </div>
+
+  <BohrIndex groups={groups} activeN={n} expanded class="shell-detail-bohr" />
+</Page>
+
+<style>
+  .shell-detail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .shell-facts {
+    margin: 0;
+    padding: 1.125rem 1.25rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .shell-transitions {
+    padding: 1.125rem 1.25rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .shell-transitions-title {
+    margin: 0 0 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .shell-transitions ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shell-transitions li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding-block: 0.4375rem;
+  }
+
+  .shell-transitions li + li {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .shell-transition-line {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+  }
+
+  .shell-transition-title {
+    flex: 1;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .shell-transition-nm {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+</style>

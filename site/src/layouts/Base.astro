@@ -1,0 +1,200 @@
+---
+/**
+ * Base.astro — 所有页面的外壳。
+ *
+ * 站内跳转走 ClientRouter（View Transitions），播放器和搜索框挂在
+ * transition:persist 的节点上：换页时音乐不断，搜索框的状态也不丢。
+ */
+import '@/styles/global.css';
+
+import { ClientRouter } from 'astro:transitions';
+
+import Footer from '@/components/layout/Footer.astro';
+import Nav from '@/components/layout/Nav.astro';
+import PlayerDock from '@/components/player/PlayerDock.svelte';
+import SearchDialog from '@/components/search/SearchDialog.svelte';
+import { SITE, WEATHER } from '@/config';
+import { withBase } from '@/lib/format';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** OG 图片的绝对或站内路径。 */
+  image?: string;
+  type?: 'website' | 'article';
+  publishedTime?: Date;
+  noindex?: boolean;
+  /** 首页这类 hero 要顶到导航下面的页面，把 main 的上边距去掉。 */
+  flush?: boolean;
+}
+
+const {
+  title,
+  description = SITE.description,
+  image,
+  type = 'website',
+  publishedTime,
+  noindex = false,
+  flush = false,
+} = Astro.props;
+
+const fullTitle = title ? `${title} - ${SITE.title}` : `${SITE.title} 的博客`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = image ? new URL(image, Astro.site).href : undefined;
+---
+
+<!doctype html>
+<html lang={SITE.lang} data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title ?? SITE.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:locale" content={SITE.locale} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+
+    <meta name="theme-color" content="#f6f9fc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1320" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+    <link rel="manifest" href={withBase('/manifest.webmanifest')} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href={withBase('/rss.xml')} />
+    <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+
+    <!--
+      主题必须在首次绘制前确定，否则暗色用户会先看到一闪白屏。
+      站内跳转时 ClientRouter 会用新页面的 <html> 属性覆盖当前的，所以在 before-swap 里再写一次。
+    -->
+    <script is:inline>
+      (() => {
+        const resolve = () => {
+          let pref = null;
+          try {
+            pref = localStorage.getItem('theme');
+          } catch {}
+          if (pref === 'light' || pref === 'dark') return pref;
+          return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        };
+        const root = document.documentElement;
+        root.dataset.theme = resolve();
+        root.classList.add('js');
+        document.addEventListener('astro:before-swap', (event) => {
+          event.newDocument.documentElement.dataset.theme = root.dataset.theme;
+          event.newDocument.documentElement.classList.add('js');
+        });
+      })();
+    </script>
+
+    <!--
+      天色（时段 + 天气）同理：先用会话缓存或固定地点的钟点给一个值，真实天气由 lib/sky/ambient.ts 异步覆盖。
+      逻辑与 shared/weather.ts 的 phaseBySun / phaseByClock 一致。
+    -->
+    <script is:inline define:vars={{ tz: WEATHER.timeZone }}>
+      (() => {
+        const root = document.documentElement;
+        const byClock = (h) => (h >= 5 && h < 7 ? 'dawn' : h >= 7 && h < 17 ? 'day' : h >= 17 && h < 19.5 ? 'dusk' : 'night');
+        let sky = null;
+        try {
+          const q = new URLSearchParams(location.search);
+          if (q.get('sky') !== 'auto') {
+            sky = q.get('sky') || q.get('weather')
+              ? { phase: q.get('sky'), weather: q.get('weather') }
+              : JSON.parse(sessionStorage.getItem('ambient-preview') || 'null');
+          }
+          const r = sky ? null : JSON.parse(sessionStorage.getItem('ambient-report') || 'null');
+          if (r && r.sun && Date.now() - Date.parse(r.fetchedAt) < 1.2e6) {
+            const m = Math.floor((Date.now() / 60000 + r.sun.utcOffset / 60) % 1440);
+            const phase =
+              Math.abs(m - r.sun.sunrise) <= 45 ? 'dawn'
+              : Math.abs(m - r.sun.sunset) <= 45 ? 'dusk'
+              : m > r.sun.sunrise && m < r.sun.sunset ? 'day' : 'night';
+            sky = { phase, weather: r.kind, intensity: r.intensity };
+          }
+        } catch {}
+        if (!sky || !sky.phase) {
+          const parts = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(new Date());
+          const get = (t) => Number((parts.find((p) => p.type === t) || {}).value || 0);
+          sky = { phase: byClock(get('hour') + get('minute') / 60), weather: (sky && sky.weather) || 'clear' };
+        }
+        root.dataset.phase = sky.phase;
+        root.dataset.weather = sky.weather || 'clear';
+        root.dataset.intensity = String(sky.intensity || 0);
+        document.addEventListener('astro:before-swap', (event) => {
+          const next = event.newDocument.documentElement;
+          next.dataset.phase = root.dataset.phase;
+          next.dataset.weather = root.dataset.weather;
+          next.dataset.intensity = root.dataset.intensity;
+        });
+      })();
+    </script>
+
+    <ClientRouter />
+    <slot name="head" />
+  </head>
+
+  <body class="flex min-h-dvh flex-col">
+    <a href="#main" class="skip-link">跳到正文</a>
+    <Nav />
+    <main id="main" class:list={['flex-1', { 'pt-6 md:pt-10': !flush }]}>
+      <slot />
+    </main>
+    <Footer />
+
+    <PlayerDock client:idle transition:persist="player" />
+    <SearchDialog client:idle transition:persist="search" />
+
+    <script>
+      /*
+       * 进入视口的上浮淡入。只给 data-reveal 的元素用，并且只在有 JS 时才隐藏（见 global.css 的 .js 前缀），
+       * 脚本没跑起来时内容照常显示。
+       */
+      let observer: IntersectionObserver | null = null;
+
+      function reveal() {
+        observer?.disconnect();
+        observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-revealed');
+              observer?.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+        );
+        document.querySelectorAll('[data-reveal]:not(.is-revealed)').forEach((el) => observer!.observe(el));
+      }
+
+      reveal();
+      document.addEventListener('astro:page-load', reveal);
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: var(--z-toast);
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 0.875rem;
+    transform: translateY(-200%);
+    transition: transform 200ms var(--ease-out-expo);
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+</style>

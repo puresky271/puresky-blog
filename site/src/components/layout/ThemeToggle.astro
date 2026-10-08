@@ -1,0 +1,57 @@
+---
+/**
+ * ThemeToggle.astro — 导航栏里的亮/暗切换按钮。
+ * 点一下在亮暗之间切换（变成显式偏好）；想回到跟随系统，用页脚的三段开关。
+ */
+import Icon from '@/components/ui/Icon.astro';
+---
+
+<button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="切换亮暗主题">
+  <span class="theme-icon theme-icon-sun"><Icon name="sun" size={18} /></span>
+  <span class="theme-icon theme-icon-moon"><Icon name="moon" size={18} /></span>
+</button>
+
+<style>
+  .theme-toggle {
+    position: relative;
+  }
+  .theme-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transition:
+      transform 420ms var(--ease-spring),
+      opacity 220ms ease;
+  }
+  /* 亮色时显示月亮（点了去夜里），暗色时显示太阳。图标旋转着交接。 */
+  .theme-icon-sun {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  :global([data-theme='dark']) .theme-icon-sun {
+    opacity: 1;
+    transform: none;
+  }
+  :global([data-theme='dark']) .theme-icon-moon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.6);
+  }
+</style>
+
+<script>
+  import { currentTheme, setPref, watchSystemTheme } from '@/lib/theme';
+
+  watchSystemTheme();
+
+  // 事件委托挂在 document 上：导航在页面切换时会被替换，委托不需要重新绑定。
+  document.addEventListener('click', (event) => {
+    const button = (event.target as Element).closest<HTMLElement>('[data-theme-toggle]');
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    setPref(currentTheme() === 'dark' ? 'light' : 'dark', {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    });
+  });
+</script>

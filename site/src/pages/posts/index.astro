@@ -1,0 +1,17 @@
+---
+import PostListing from '@/components/post/PostListing.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { POSTS_PER_PAGE } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getPosts } from '@/lib/content';
+
+const posts = await getPosts();
+// 精选文章置顶，其余按时间。
+const ordered = [...posts.filter((p) => p.data.featured), ...posts.filter((p) => !p.data.featured)];
+const total = Math.max(1, Math.ceil(ordered.length / POSTS_PER_PAGE));
+---
+
+<Base title="文章" description="全部文章，按时间倒序，精选置顶。">
+  <PageHeader title="文章" count={posts.length} description="工程日志、系统设计和一些不那么技术的东西。精选的几篇放在最前面。" />
+  <PostListing posts={ordered.slice(0, POSTS_PER_PAGE)} active="all" page={{ current: 1, total, base: '/posts/' }} />
+</Base>

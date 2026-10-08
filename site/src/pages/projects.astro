@@ -1,0 +1,100 @@
+---
+/**
+ * 项目：手写的项目卡片在前；后面列出 GitHub 上其余公开仓库，数据来自构建期快照。
+ */
+import ProjectCard from '@/components/project/ProjectCard.astro';
+import Icon from '@/components/ui/Icon.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { GITHUB } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getProjects } from '@/lib/content';
+import { formatCount, formatDate } from '@/lib/format';
+import { getGitHubSnapshot } from '@/lib/snapshots';
+
+const [projects, github] = await Promise.all([getProjects(), getGitHubSnapshot()]);
+const repoByName = new Map((github?.repos ?? []).map((r) => [r.fullName.toLowerCase(), r]));
+const listed = new Set(projects.map((p) => p.data.repo?.toLowerCase()).filter(Boolean));
+const others = (github?.repos ?? []).filter((r) => !listed.has(r.fullName.toLowerCase()) && !r.archived).slice(0, 9);
+---
+
+<Base title="项目" description="在做和做过的东西，以及 GitHub 上的其他仓库。">
+  <PageHeader title="项目" count={projects.length} description="在做和做过的东西。仓库数据来自 GitHub。" />
+  <div class="container-page">
+    <div class="grid gap-5 md:grid-cols-2">
+      {
+        projects.map((project, i) => (
+          <ProjectCard
+            project={project}
+            repo={project.data.repo ? repoByName.get(project.data.repo.toLowerCase()) : undefined}
+            index={i}
+          />
+        ))
+      }
+    </div>
+
+    {
+      others.length > 0 && (
+        <section class="mt-16" aria-labelledby="repos-title">
+          <div class="mb-5 flex items-end justify-between">
+            <h2 id="repos-title" class="section-title">GitHub 上的其他仓库</h2>
+            <a
+              href={`https://github.com/${GITHUB.username}?tab=repositories`}
+              class="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-accent"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              全部仓库
+              <Icon name="arrow-up-right" size={14} />
+            </a>
+          </div>
+          <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {others.map((repo, i) => (
+              <li data-reveal style={`--reveal-i: ${i}`}>
+                <a href={repo.url} target="_blank" rel="noopener noreferrer" class="card card-link repo">
+                  <span class="flex items-center gap-2 font-medium text-fg">
+                    <Icon name="book-bookmark" size={16} class="text-fg-subtle" />
+                    <span class="truncate">{repo.name}</span>
+                  </span>
+                  <span class="desc">{repo.description ?? '没有描述'}</span>
+                  <span class="meta flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {repo.language && (
+                      <span class="inline-flex items-center gap-1.5">
+                        <span class="h-2 w-2 rounded-full" style={`background: ${repo.languageColor ?? 'var(--fg-subtle)'}`} />
+                        {repo.language}
+                      </span>
+                    )}
+                    <span class="inline-flex items-center gap-1">
+                      <Icon name="star" size={13} />
+                      {formatCount(repo.stars)}
+                    </span>
+                    <span>{formatDate(repo.pushedAt)}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .repo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1rem 1.1rem;
+  }
+  .desc {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--fg-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

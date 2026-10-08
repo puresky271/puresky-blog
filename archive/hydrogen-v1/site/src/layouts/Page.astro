@@ -1,0 +1,103 @@
+---
+/**
+ * Page.astro — 普通页面布局。标题区 + 内容区。
+ */
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  /** 页面说明。一到两句，跟在标题下方。 */
+  lede?: string;
+  description?: string;
+  /** 标题区右侧的数据摘要，例如「32 篇 · 5 个分类」。 */
+  summary?: string;
+  noindex?: boolean;
+  /** 内容区宽度。wide 用于光谱、电子云这类需要横向空间的界面。 */
+  width?: 'default' | 'wide' | 'reading';
+  class?: string;
+}
+
+const {
+  title,
+  lede,
+  description,
+  summary,
+  noindex = false,
+  width = 'default',
+  class: className = '',
+} = Astro.props;
+---
+
+<Base title={title} description={description ?? lede} noindex={noindex}>
+  <header class="page-header">
+    <div class="shell page-header-inner">
+      <div class="page-header-copy">
+        <h1 class="t-title">{title}</h1>
+        {lede && <p class="page-lede">{lede}</p>}
+      </div>
+      {summary && <p class="page-summary">{summary}</p>}
+    </div>
+  </header>
+
+  <div class:list={['page-body', `page-body-${width}`, className]}>
+    <div class="shell">
+      <slot />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page-header {
+    padding-block: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem) 1.75rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .page-header-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .page-header-copy h1 {
+    margin: 0;
+  }
+
+  .page-lede {
+    margin: 0.75rem 0 0;
+    max-width: 52ch;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--ink-dim);
+  }
+
+  .page-summary {
+    flex: none;
+    margin: 0;
+    padding-bottom: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .page-body {
+    padding-block: clamp(2rem, 1.5rem + 2vw, 3rem) 4rem;
+  }
+
+  .page-body-default :global(.shell) > :global(*) {
+    max-width: 52rem;
+  }
+
+  .page-body-reading :global(.shell) > :global(*) {
+    max-width: var(--container-reading);
+  }
+
+  @media (max-width: 700px) {
+    .page-header-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.875rem;
+    }
+  }
+</style>

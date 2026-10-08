@@ -1,0 +1,376 @@
+---
+/**
+ * 名片页。
+ *
+ * 一张实体名片的比例（90 × 54），指针移动时 3D 倾斜，表面一层跟着指针走的光泽；
+ * 点击（或回车、空格）翻面，背面是指向博客的二维码（构建期生成 SVG，不依赖外部服务）。
+ * 下方可以保存联系人（vCard）、复制链接。
+ * 背景是和首页同一份天色的天空与粒子。
+ */
+import QRCode from 'qrcode';
+
+import SkyBackdrop from '@/components/SkyBackdrop.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { AUTHOR, GITHUB, SITE } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getPosts } from '@/lib/content';
+import { getGitHubSnapshot } from '@/lib/snapshots';
+
+const siteUrl = new URL(import.meta.env.BASE_URL, Astro.site).href;
+const host = new URL(siteUrl).host + new URL(siteUrl).pathname.replace(/\/$/, '');
+const [github, posts] = await Promise.all([getGitHubSnapshot(), getPosts()]);
+const avatar = github?.user?.avatarUrl
+  ? `${github.user.avatarUrl}${github.user.avatarUrl.includes('?') ? '&' : '?'}s=200`
+  : `https://github.com/${GITHUB.username}.png?size=200`;
+
+// 二维码：currentColor 着色，亮暗主题下都跟随名片文字颜色。
+const qr = (await QRCode.toString(siteUrl, { type: 'svg', margin: 0, errorCorrectionLevel: 'M' }))
+  .replace(/fill="#ffffff"/gi, 'fill="transparent"')
+  .replace(/stroke="#000000"/gi, 'stroke="currentColor"')
+  .replace(/fill="#000000"/gi, 'fill="currentColor"');
+
+const vcard = [
+  'BEGIN:VCARD',
+  'VERSION:3.0',
+  `FN:${AUTHOR.name}`,
+  `TITLE:${AUTHOR.role}`,
+  `URL:${siteUrl}`,
+  `URL;TYPE=GitHub:https://github.com/${GITHUB.username}`,
+  AUTHOR.email ? `EMAIL:${AUTHOR.email}` : '',
+  `NOTE:${AUTHOR.intro}`,
+  'END:VCARD',
+]
+  .filter(Boolean)
+  .join('\r\n');
+
+const stats = [
+  { label: '文章', value: posts.length },
+  { label: '仓库', value: github?.user?.publicRepos ?? github?.repos.length ?? 0 },
+  { label: '贡献', value: github?.calendar?.total ?? 0 },
+];
+---
+
+<Base title="名片" description={`${AUTHOR.name}，${AUTHOR.role}。${AUTHOR.intro}`} flush>
+  <section class="card-stage" data-sky-host>
+    <SkyBackdrop density={1.4} />
+
+    <div class="relative grid place-items-center px-4 py-10 md:py-16">
+      <div class="scene">
+        <button type="button" class="biz" data-card aria-label="名片，点击翻面" aria-pressed="false">
+          <span class="face front">
+            <span class="sheen" aria-hidden="true"></span>
+            <span class="row-top">
+              <span class="brand"><span class="brand-mark" aria-hidden="true"></span>{SITE.title}</span>
+              <span class="host">{host}</span>
+            </span>
+            <span class="row-mid">
+              <span class="min-w-0">
+                <span class="name">{AUTHOR.name}</span>
+                <span class="role">{AUTHOR.role}</span>
+                <span class="focus">{AUTHOR.focus.join(' / ')}</span>
+              </span>
+              <img src={avatar} alt="" width="84" height="84" class="avatar" />
+            </span>
+            <span class="row-bottom">
+              <span class="contact"><Icon name="github-logo" size={14} />github.com/{GITHUB.username}</span>
+              {AUTHOR.email && <span class="contact"><Icon name="envelope-simple" size={14} />{AUTHOR.email}</span>}
+            </span>
+          </span>
+
+          <span class="face back">
+            <span class="sheen" aria-hidden="true"></span>
+            <span class="qr" set:html={qr} />
+            <span class="back-text">
+              <span class="text-[0.8125rem] opacity-70">扫码访问博客</span>
+              <span class="mt-1 font-mono text-sm">{host}</span>
+              <span class="stats">
+                {
+                  stats.map((s) => (
+                    <span>
+                      <span class="tabular text-lg font-semibold">{s.value.toLocaleString('zh-CN')}</span>
+                      <span class="text-[0.6875rem] opacity-70">{s.label}</span>
+                    </span>
+                  ))
+                }
+              </span>
+            </span>
+          </span>
+        </button>
+      </div>
+
+      <p class="mt-6 text-[0.8125rem] text-fg-muted">点名片翻面，在电脑上可以晃一晃。</p>
+
+      <div class="mt-6 flex flex-wrap justify-center gap-2.5">
+        <button type="button" class="btn btn-ghost" data-flip>
+          <Icon name="arrows-clockwise" size={16} />
+          翻面
+        </button>
+        <a class="btn btn-primary" download={`${AUTHOR.name}.vcf`} href={`data:text/vcard;charset=utf-8,${encodeURIComponent(vcard)}`}>
+          <Icon name="download-simple" size={16} />
+          保存联系人
+        </a>
+        <button type="button" class="btn btn-ghost" data-copy-url={siteUrl}>
+          <Icon name="link" size={16} />
+          <span data-copy-label>复制链接</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* 天空顶到顶部栏下面，和首页一样。 */
+  .card-stage {
+    position: relative;
+    margin-top: calc(var(--header-h) * -1);
+    padding-top: var(--header-h);
+    min-height: calc(100dvh - 6rem);
+    isolation: isolate;
+  }
+
+  .scene {
+    width: min(100%, 30rem);
+    perspective: 1400px;
+  }
+  .biz {
+    --rx: 0deg;
+    --ry: 0deg;
+    --flip: 0deg;
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 90 / 54;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx)) rotateY(calc(var(--ry) + var(--flip)));
+    transition: transform 700ms var(--ease-out-expo);
+    cursor: pointer;
+    text-align: left;
+    border-radius: 20px;
+  }
+  .biz.tracking {
+    transition: transform 120ms ease-out;
+  }
+  .biz[aria-pressed='true'] {
+    --flip: 180deg;
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: clamp(1rem, 4vw, 1.6rem);
+    border-radius: 20px;
+    backface-visibility: hidden;
+    color: var(--fg);
+    background:
+      radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 60%),
+      linear-gradient(160deg, var(--surface), color-mix(in oklab, var(--surface-2) 70%, var(--surface)));
+    border: 1px solid var(--line);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 40%, transparent),
+      0 30px 60px -24px oklch(0.3 0.08 255 / 0.45),
+      0 8px 20px -10px oklch(0.3 0.08 255 / 0.25);
+  }
+  :global([data-theme='dark']) .face {
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.06),
+      0 30px 70px -20px oklch(0.02 0.02 262 / 0.9);
+  }
+  .back {
+    transform: rotateY(180deg);
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(1rem, 4vw, 1.75rem);
+  }
+
+  /* 光泽：一团跟着指针走的蓝白高光，叠加混合，只在悬停时出现。 */
+  .sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      60% 80% at var(--mx, 50%) var(--my, 30%),
+      color-mix(in oklab, white 55%, transparent),
+      color-mix(in oklab, var(--accent) 12%, transparent) 40%,
+      transparent 70%
+    );
+    mix-blend-mode: soft-light;
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+  .biz.tracking .sheen {
+    opacity: 1;
+  }
+
+  .row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .brand-mark {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    background: linear-gradient(160deg, oklch(0.86 0.08 230), var(--accent) 70%);
+  }
+  .host {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .row-mid {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .name {
+    display: block;
+    font-size: clamp(1.75rem, 1.2rem + 3vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .role {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.9375rem;
+    color: var(--fg-muted);
+  }
+  .focus {
+    display: block;
+    margin-top: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .avatar {
+    flex-shrink: 0;
+    width: clamp(56px, 16vw, 84px);
+    height: clamp(56px, 16vw, 84px);
+    border-radius: 999px;
+    background: var(--surface-2);
+    box-shadow:
+      0 0 0 3px var(--surface),
+      0 0 0 4px var(--line);
+  }
+  .row-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.25rem;
+  }
+  .contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+  }
+  .qr {
+    flex-shrink: 0;
+    width: 42%;
+    aspect-ratio: 1;
+    padding: 0.6rem;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--fg);
+  }
+  .qr :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .back-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .stats {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 1rem;
+  }
+  .stats > span {
+    display: flex;
+    flex-direction: column;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .biz,
+    .biz.tracking {
+      transition: none;
+      transform: none;
+    }
+    .face {
+      transition: opacity 200ms ease;
+    }
+    .back {
+      transform: none;
+      opacity: 0;
+    }
+    .biz[aria-pressed='true'] .front {
+      opacity: 0;
+    }
+    .biz[aria-pressed='true'] .back {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  function setupCard() {
+    const card = document.querySelector<HTMLElement>('[data-card]');
+    if (!card || card.dataset.ready) return;
+    card.dataset.ready = '';
+    const fine = matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const flip = () => card.setAttribute('aria-pressed', String(card.getAttribute('aria-pressed') !== 'true'));
+    card.addEventListener('click', flip);
+    document.querySelector('[data-flip]')?.addEventListener('click', flip);
+
+    if (fine) {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        card.classList.add('tracking');
+        card.style.setProperty('--ry', `${(x - 0.5) * 16}deg`);
+        card.style.setProperty('--rx', `${(0.5 - y) * 12}deg`);
+        // 翻到背面时光泽的横坐标要镜像，否则高光会往反方向走。
+        const mirrored = card.getAttribute('aria-pressed') === 'true' ? 1 - x : x;
+        card.style.setProperty('--mx', `${mirrored * 100}%`);
+        card.style.setProperty('--my', `${y * 100}%`);
+      });
+      card.addEventListener('pointerleave', () => {
+        card.classList.remove('tracking');
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      });
+    }
+
+    document.querySelector<HTMLElement>('[data-copy-url]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLElement;
+      const label = button.querySelector('[data-copy-label]');
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyUrl!);
+        if (label) label.textContent = '已复制';
+      } catch {
+        if (label) label.textContent = '复制失败';
+      }
+      setTimeout(() => label && (label.textContent = '复制链接'), 1600);
+    });
+  }
+
+  setupCard();
+  document.addEventListener('astro:page-load', setupCard);
+</script>

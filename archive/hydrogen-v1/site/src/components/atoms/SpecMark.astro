@@ -1,0 +1,53 @@
+---
+/**
+ * SpecMark — 分类标记。一个谱线色点 + 分类名。
+ *
+ * 这是分类在全站唯一的视觉呈现方式。色点用谱线真色（小面积，允许高饱和），
+ * 文字用派生的 ink 色（保证对比度）。
+ */
+import type { Category } from '../../lib/spectrum.ts';
+import { categoryPath } from '../../lib/format.ts';
+
+interface Props {
+  category: Category;
+  /** 是否可点击跳到分类页。 */
+  link?: boolean;
+  /** 显示谱线记号（Hα）而不是分类名。 */
+  showLine?: boolean;
+  class?: string;
+}
+
+const { category, link = true, showLine = false, class: className = '' } = Astro.props;
+
+const Tag = link ? 'a' : 'span';
+const label = showLine ? category.line : category.title;
+---
+
+<Tag
+  class:list={['spec-mark', className]}
+  style={`--line-colour: ${category.lineHex}; --ink-colour: var(--spec-${category.id}-ink);`}
+  {...link ? { href: categoryPath(category.id) } : {}}
+  {...link ? { 'data-astro-prefetch': 'hover' } : {}}
+>
+  <span class="spec-dot" aria-hidden="true"></span>
+  <span class="spec-mark-label">{label}</span>
+</Tag>
+
+<style>
+  .spec-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+    transition: color 160ms var(--ease-relax);
+  }
+
+  a.spec-mark:hover {
+    color: var(--ink-colour);
+  }
+
+  .spec-mark-label {
+    line-height: 1.3;
+  }
+</style>

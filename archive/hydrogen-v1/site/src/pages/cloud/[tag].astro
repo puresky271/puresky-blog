@@ -1,0 +1,134 @@
+---
+/**
+ * cloud/[tag].astro — 单个标签页。
+ */
+import type { GetStaticPaths } from 'astro';
+
+import { postsByTag, tagStats } from '../../lib/content.ts';
+import { ORBITAL_PEAK_RADIUS } from '../../lib/physics.ts';
+
+import Page from '../../layouts/Page.astro';
+import PostCard from '../../components/molecules/PostCard.astro';
+import ElectronCloud from '../../components/organisms/ElectronCloud.astro';
+import DataRow from '../../components/atoms/DataRow.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const stats = await tagStats();
+  return stats.map((stat) => ({
+    // slug 统一小写，因为 tagPath 也是小写，两边必须一致否则会 404。
+    params: { tag: stat.tag.toLowerCase() },
+    props: { tag: stat.tag },
+  }));
+};
+
+const { tag } = Astro.props;
+const posts = await postsByTag(tag);
+const allStats = await tagStats();
+const stat = allStats.find((s) => s.tag === tag)!;
+
+const ORBITAL_BY_SHELL: Record<number, '1s' | '2s' | '2p' | '3d'> = {
+  1: '1s',
+  2: '2p',
+  3: '2s',
+  4: '3d',
+};
+const orbital = ORBITAL_BY_SHELL[stat.innermostShell.n] ?? '2s';
+---
+
+<Page
+  title={tag}
+  lede={`标记为「${tag}」的文章。`}
+  description={`标签 ${tag} 下的 ${posts.length} 篇文章。`}
+  summary={`${posts.length} 篇`}
+  width="wide"
+>
+  <div class="tag-layout">
+    <div class="tag-posts">
+      {posts.map((post) => <PostCard post={post} />)}
+    </div>
+
+    <aside class="tag-aside">
+      <dl class="tag-facts">
+        <DataRow label="文章数" value={String(stat.count)} />
+        <DataRow
+          label="主导分类"
+          value={stat.dominantCategory.title}
+          colour={`var(--spec-${stat.dominantCategory.id}-ink)`}
+        />
+        <DataRow
+          label="最内层"
+          value={`${stat.innermostShell.letter} 壳`}
+          note={`n=${stat.innermostShell.n}`}
+        />
+        <DataRow label="占据轨道" value={orbital} />
+        <DataRow label="最可能半径" value={`${ORBITAL_PEAK_RADIUS[orbital]} a₀`} />
+      </dl>
+
+      <p class="tag-note">
+        这个标签在电子云里落在 {orbital} 轨道上，因为它关联到的最内层文章在 n=
+        {stat.innermostShell.n}。散点的颜色取自主导分类
+        {stat.dominantCategory.title} 对应的 {stat.dominantCategory.line} 谱线。
+      </p>
+    </aside>
+  </div>
+
+  <section class="tag-cloud-section">
+    <h2 class="t-heading">在云里的位置</h2>
+    <ElectronCloud tags={allStats} activeTag={tag} />
+  </section>
+</Page>
+
+<style>
+  .tag-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .tag-posts {
+    min-width: 0;
+  }
+
+  .tag-aside {
+    position: sticky;
+    top: 5.5rem;
+  }
+
+  .tag-facts {
+    margin: 0;
+    padding: 1.125rem 1.25rem;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-shell);
+    background: var(--surface);
+  }
+
+  .tag-note {
+    margin: 1rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--ink-faint);
+  }
+
+  .tag-cloud-section {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .tag-cloud-section h2 {
+    margin: 0 0 1.5rem;
+  }
+
+  @media (max-width: 960px) {
+    .tag-layout {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .tag-aside {
+      position: static;
+      order: -1;
+    }
+  }
+</style>

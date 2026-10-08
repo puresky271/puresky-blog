@@ -1,0 +1,48 @@
+---
+/**
+ * posts/[...slug].astro — 文章详情。
+ */
+import { render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+
+import {
+  adjacentPosts,
+  allPosts,
+  contentLength,
+  postsBySeries,
+  readingMinutes,
+  relatedPosts,
+} from '../../lib/content.ts';
+import PostLayout from '../../layouts/Post.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const posts = await allPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+};
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+
+const body = post.body ?? '';
+const minutes = readingMinutes(body);
+const words = contentLength(body);
+
+const related = await relatedPosts(post, 3);
+const seriesPosts = post.data.series ? await postsBySeries(post.data.series) : [];
+const adjacent = await adjacentPosts(post);
+---
+
+<PostLayout
+  post={post}
+  headings={headings}
+  readingMinutes={minutes}
+  words={words}
+  related={related}
+  seriesPosts={seriesPosts}
+  adjacent={adjacent}
+>
+  <Content />
+</PostLayout>

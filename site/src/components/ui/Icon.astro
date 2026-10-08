@@ -1,0 +1,29 @@
+---
+/**
+ * Icon.astro — 服务端渲染的图标。按名字查表，不进客户端包。
+ * Svelte 组件里用 Icon.svelte + 命名导入。
+ */
+import { icons, type IconName } from '@/lib/icons.generated';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+  label?: string;
+}
+
+const { name, size = 18, class: className, label } = Astro.props;
+const icon = icons[name];
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox={`0 0 ${icon.size} ${icon.size}`}
+  class:list={['shrink-0', className]}
+  aria-hidden={label ? undefined : 'true'}
+  aria-label={label}
+  role={label ? 'img' : undefined}
+  set:html={icon.body}
+/>

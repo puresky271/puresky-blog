@@ -1,0 +1,67 @@
+/*
+ * 本文件由 scripts/generate-tokens.mjs 生成，请不要手改。
+ * 要改颜色就去改 src/lib/spectrum.ts 里的谱线定义，然后 npm run tokens。
+ *
+ * 派生链：里德伯公式 → 波长 → Dan Bruton 波长转 sRGB → 谱线真色（line）
+ *          → 保色相抬明度直到对比度 ≥ 6.0 → 文字色（ink）
+ */
+
+@theme {
+  /* Hα n=3 → 2 真空 656.47 nm / 空气 656.29 nm 真色 */
+  --color-spec-engineering: #ff0000;
+  --color-spec-engineering-ink: #f35959;
+  --color-spec-engineering-rgb: 255 0 0;
+  /* Hβ n=4 → 2 真空 486.27 nm / 空气 486.14 nm 真色 */
+  --color-spec-systems: #00f0ff;
+  --color-spec-systems-ink: #12e0ed;
+  --color-spec-systems-rgb: 0 240 255;
+  /* Hγ n=5 → 2 真空 434.17 nm / 空气 434.05 nm 真色 */
+  --color-spec-cognition: #2700ff;
+  --color-spec-cognition-ink: #917ff5;
+  --color-spec-cognition-rgb: 39 0 255;
+  /* Hδ n=6 → 2 真空 410.29 nm / 空气 410.18 nm 真色 */
+  --color-spec-essays: #7d00dc;
+  --color-spec-essays-ink: #b96cf4;
+  --color-spec-essays-rgb: 125 0 220;
+  /* Paα n=4 → 3 真空 1875.6 nm / 空气 1875.1 nm 伪彩色 */
+  --color-spec-field-notes: #ffbe00;
+  --color-spec-field-notes-ink: #edb512;
+  --color-spec-field-notes-rgb: 255 190 0;
+}
+
+:root {
+  --spec-engineering: #ff0000;
+  --spec-engineering-ink: #f35959;
+  --spec-engineering-rgb: 255 0 0;
+  --spec-systems: #00f0ff;
+  --spec-systems-ink: #12e0ed;
+  --spec-systems-rgb: 0 240 255;
+  --spec-cognition: #2700ff;
+  --spec-cognition-ink: #917ff5;
+  --spec-cognition-rgb: 39 0 255;
+  --spec-essays: #7d00dc;
+  --spec-essays-ink: #b96cf4;
+  --spec-essays-rgb: 125 0 220;
+  --spec-field-notes: #ffbe00;
+  --spec-field-notes-ink: #edb512;
+  --spec-field-notes-rgb: 255 190 0;
+}
+
+[data-theme="light"] {
+  --spec-engineering-ink: #c20f0f;
+  --spec-systems-ink: #08676d;
+  --spec-cognition-ink: #3312ed;
+  --spec-essays-ink: #8c11e8;
+  --spec-field-notes-ink: #775b09;
+}
+
+:root {
+  /* K 壳 容量 2 束缚能 -13.61 eV */
+  --shell-1-radius: 6.250%;
+  /* L 壳 容量 8 束缚能 -3.40 eV */
+  --shell-2-radius: 25.000%;
+  /* M 壳 容量 18 束缚能 -1.51 eV */
+  --shell-3-radius: 56.250%;
+  /* N 壳 容量 32 束缚能 -0.85 eV */
+  --shell-4-radius: 100.000%;
+}

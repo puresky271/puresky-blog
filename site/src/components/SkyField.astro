@@ -1,0 +1,50 @@
+---
+/**
+ * SkyField.astro — 粒子场容器。
+ *
+ * 放在一个 position: relative 的宿主里，宿主加 data-sky-host 才能接收指针交互。
+ * 底部用遮罩渐隐，不和下面的内容生硬地切开。
+ */
+interface Props {
+  class?: string;
+  density?: number;
+  interactive?: boolean;
+  /** 底部渐隐。默认开。 */
+  fade?: boolean;
+}
+
+const { class: className, density = 1.2, interactive = true, fade = true } = Astro.props;
+---
+
+<div class:list={['sky-field', { 'sky-fade': fade }, className]} aria-hidden="true">
+  <canvas
+    data-sky
+    data-density={density}
+    data-interactive={String(interactive)}
+  ></canvas>
+</div>
+
+<style>
+  .sky-field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .sky-field canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .sky-fade {
+    mask-image: linear-gradient(to bottom, black 55%, transparent);
+  }
+</style>
+
+<script>
+  import { mountSkyFields, unmountSkyFields } from '@/lib/sky/mount';
+
+  // 站内跳转时这个模块可能在 page-load 之后才执行完，所以先手动挂一次（重复调用是幂等的）。
+  mountSkyFields();
+  document.addEventListener('astro:page-load', mountSkyFields);
+  document.addEventListener('astro:before-swap', unmountSkyFields);
+</script>

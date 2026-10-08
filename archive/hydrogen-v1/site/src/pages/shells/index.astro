@@ -1,0 +1,25 @@
+---
+/**
+ * shells/index.astro — 文章分层总览（玻尔模型）。
+ */
+import { shellStats } from '../../lib/content.ts';
+import { SHELLS } from '../../lib/shells.ts';
+
+import Page from '../../layouts/Page.astro';
+import BohrIndex from '../../components/organisms/BohrIndex.astro';
+
+const groups = await shellStats();
+const total = groups.reduce((sum, g) => sum + g.occupied, 0);
+const capacity = SHELLS.reduce((sum, s) => sum + s.capacity, 0);
+---
+
+<Page
+  title="能级"
+  lede="文章按玻尔模型分四层。每层的容量是 2n²，来自泡利不相容原理，不是编辑口味。"
+  summary={`${total}/${capacity} 个位置`}
+  width="wide"
+>
+  <BohrIndex groups={groups} />
+
+</Page>
+
