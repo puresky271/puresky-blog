@@ -1,0 +1,50 @@
+---
+/**
+ * EditorPage.astro — /__editor，本地文章编辑器的页面壳。
+ * 由 editor/integration.mjs 只在 astro dev 时注入，构建产物里没有这个页面。
+ * 不套站点的 Base（没有导航、页脚、播放器），只借用全局样式、正文排版和亮暗主题。
+ */
+import '@/styles/global.css';
+import '@/styles/prose.css';
+
+import { CATEGORIES, TAG_GROUPS, TAGS } from '@/config';
+
+import Editor from './Editor.svelte';
+---
+
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>编辑器 · puresky</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      (() => {
+        let pref = null;
+        try {
+          pref = localStorage.getItem('theme');
+        } catch {}
+        const dark = pref === 'dark' || (pref !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
+  </head>
+  <body>
+    <Editor
+      client:only="svelte"
+      categories={CATEGORIES.map((c) => ({ ...c }))}
+      tagGroups={TAG_GROUPS.map((g) => ({ ...g }))}
+      tags={TAGS.map((t) => ({ ...t }))}
+    />
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+</style>

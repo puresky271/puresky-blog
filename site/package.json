@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist",
+    "deploy": "npm run build && node scripts/deploy-pages.mjs",
     "preview": "astro preview",
     "check": "astro check && svelte-check --tsconfig ./tsconfig.json --threshold error",
     "icons": "node scripts/gen-icons.mjs",
@@ -22,6 +23,7 @@
     "@astrojs/svelte": "^9.0.1",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource/noto-serif-sc": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.7",
     "qrcode": "^1.5.4",
@@ -32,11 +34,20 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/language-data": "^6.5.2",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.14",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/simple-icons": "^1.2.99",
+    "@lezer/highlight": "^1.2.5",
     "@types/qrcode": "^1.5.6",
     "pagefind": "^1.5.2",
     "svelte-check": "^4.7.6",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "yaml": "^2.9.1"
   }
 }

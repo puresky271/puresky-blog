@@ -66,6 +66,14 @@ const ICONS = {
           <Icon name="magnifying-glass" size={17} />
         </button>
         <ThemeToggle />
+        {
+          // 本地文章编辑器的入口：只在 astro dev 下渲染，构建产物里没有这个按钮。
+          import.meta.env.DEV && (
+            <a href="/__editor/" class="icon-btn" aria-label="打开本地编辑器" title="本地编辑器（只在本机开发时可见）">
+              <Icon name="pencil-simple" size={17} />
+            </a>
+          )
+        }
         <a
           href={`https://github.com/${GITHUB.username}`}
           class="icon-btn hidden sm:inline-grid"

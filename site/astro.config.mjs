@@ -10,6 +10,7 @@ import { defineConfig } from 'astro/config';
 
 import remarkCjkFriendly from 'remark-cjk-friendly';
 
+import editor from './editor/integration.mjs';
 import { rehypeExternalLinks } from './src/lib/markdown/rehype-external-links.mjs';
 import { rehypeHeadingAnchors } from './src/lib/markdown/rehype-heading-anchors.mjs';
 import { remarkCallout } from './src/lib/markdown/remark-callout.mjs';
@@ -26,7 +27,18 @@ const isGitHubPages =
 const isProduction = process.env.NODE_ENV === 'production';
 
 const runtimeBase = isCloudflarePages ? '/' : isGitHubPages && isProduction ? REPO_BASE : '/';
-const runtimeSite = process.env.PUBLIC_SITE_ORIGIN || 'https://puresky.dev';
+
+/*
+ * Markdown 管线。站点和本地编辑器的预览共用同一份，预览里看到的就是发布后的样子。
+ * cjk-friendly：让「**依赖。**不是」这类全角标点紧贴定界符的加粗也能成立。
+ */
+const remarkPlugins = [remarkCjkFriendly, remarkCjkLines, remarkCallout];
+const rehypePlugins = [rehypeHeadingAnchors, rehypeExternalLinks];
+const shikiConfig = /** @type {const} */ ({
+  themes: { light: 'github-light', dark: 'github-dark-dimmed' },
+  wrap: false,
+});
+const runtimeSite = process.env.PUBLIC_SITE_ORIGIN || 'https://pureskyblog.dpdns.org';
 
 export default defineConfig({
   site: runtimeSite,
@@ -43,17 +55,12 @@ export default defineConfig({
     sitemap({
       filter: (page) => !/\/posts\/\d+\/$/.test(page),
     }),
+    // 只在 astro dev 里生效，构建时什么都不注入。
+    editor({ markdown: { remarkPlugins, rehypePlugins, shikiConfig } }),
   ],
   markdown: {
-    processor: unified({
-      // cjk-friendly：让「**依赖。**不是」这类全角标点紧贴定界符的加粗也能成立。
-      remarkPlugins: [remarkCjkFriendly, remarkCjkLines, remarkCallout],
-      rehypePlugins: [rehypeHeadingAnchors, rehypeExternalLinks],
-    }),
-    shikiConfig: {
-      themes: { light: 'github-light', dark: 'github-dark-dimmed' },
-      wrap: false,
-    },
+    processor: unified({ remarkPlugins, rehypePlugins }),
+    shikiConfig,
   },
   vite: {
     plugins: [tailwindcss()],
