@@ -167,7 +167,9 @@
     <p class="context">
       {#if mode === 'art' && images[artIndex]}
         <span class="truncate text-fg">{images[artIndex].title}</span>
-        <a href={withBase(`/gallery/#${images[artIndex].id}`)} class="more">画廊<Icon icon={iArrowRight} size={13} /></a>
+        {#if images[artIndex].id !== 'local-home'}
+          <a href={withBase(`/gallery/#${images[artIndex].id}`)} class="more">画廊<Icon icon={iArrowRight} size={13} /></a>
+        {/if}
       {:else if mode === 'sky'}
         <span class="truncate">天气来自 Open-Meteo，按日出日落划分时段</span>
       {:else if player.playlist}

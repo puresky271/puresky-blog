@@ -11,6 +11,7 @@ dist/
 
 # pagefind
 site/public/pagefind/
+site/public/home-illustration.local.png
 
 # cloudflare
 .wrangler/

@@ -29,7 +29,7 @@ const { avatar, status, illustrations, latest } = Astro.props;
 
 // 舞台图片在构建期优化成 1600 宽，featured 的排第一张。
 const ordered = [...illustrations.filter((i) => i.data.featured), ...illustrations.filter((i) => !i.data.featured)];
-const images: StageImage[] = await Promise.all(
+const builtImages: StageImage[] = await Promise.all(
   ordered.map(async (item) => {
     const main = await getImage({ src: item.data.image, width: 1600 });
     const night = item.data.imageDark ? await getImage({ src: item.data.imageDark, width: 1600 }) : null;
@@ -44,6 +44,21 @@ const images: StageImage[] = await Promise.all(
     };
   })
 );
+// 本地开发可用被 gitignore 的图片覆盖首页舞台，缺少时自动回退到仓库内插画。
+const localHomeImage = import.meta.env.PUBLIC_HOME_ILLUSTRATION?.trim();
+const images: StageImage[] = localHomeImage
+  ? [
+      {
+        id: 'local-home',
+        title: '本地首页插画',
+        alt: '蓝色天空下伸展双臂的粉发少女插画',
+        src: localHomeImage,
+        srcNight: null,
+        width: 1750,
+        height: 1080,
+      },
+    ]
+  : builtImages;
 ---
 
 <section class="home-top" data-sky-host>
