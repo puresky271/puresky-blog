@@ -15,6 +15,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 常用命令
 
+仓库根目录的 package.json 只转发命令、不装依赖：`npm run dev`（就是 site 的 dev）、`npm run dev:worker` / `dev:worker:offline`、
+`npm run check`（site 的 check 加 worker 的 typecheck）、`npm run setup`（两边各自 npm install）。
+
 ### site（Node ≥ 22.12）
 
 ```bash

@@ -1,0 +1,15 @@
+{
+  "name": "puresky-blog",
+  "private": true,
+  "description": "根目录只转发命令：site 和 worker 各有自己的依赖和锁文件，这里不装依赖。",
+  "scripts": {
+    "setup": "npm install --prefix site && npm install --prefix worker",
+    "dev": "npm run dev --prefix site",
+    "dev:worker": "npm run dev --prefix worker",
+    "dev:worker:offline": "npm run dev:offline --prefix worker",
+    "build": "npm run build --prefix site",
+    "check": "npm run check --prefix site && npm run typecheck --prefix worker",
+    "deploy:site": "npm run deploy --prefix site",
+    "deploy:worker": "npm run deploy --prefix worker"
+  }
+}
