@@ -30,8 +30,10 @@ class GitHubLive {
       this.status = 'refreshing';
       try {
         const fresh = await api<GitHubOverview>('/api/github/overview', { timeoutMs: 12000 });
-        if (fresh?.username) this.data = fresh;
-        this.status = 'live';
+        if (!fresh?.username) throw new Error('GitHub 数据格式不对');
+        this.data = merge(this.data, fresh);
+        // 有块没拉到时页面上一部分还是旧数据，不能标成实时。
+        this.status = fresh.missing?.length ? 'stale' : 'live';
       } catch {
         this.status = 'stale';
         // 失败后允许下次再试。
@@ -47,6 +49,31 @@ class GitHubLive {
     if ('repoCount' in data) return data.repoCount;
     return data.user?.publicRepos ?? data.repos.length;
   }
+}
+
+/**
+ * 把刷新结果并进手里的数据。worker 标为 missing 的块（这次没拉到、它那边也没有旧值可补）
+ * 保留手里的值，不让一次限流把首屏快照冲成空的。这时整体的更新时间也按旧数据算。
+ */
+function merge(prev: GitHubOverview | GitHubSlice | null, fresh: GitHubOverview): GitHubOverview | GitHubSlice {
+  const missing = new Set(fresh.missing ?? []);
+  if (!prev || missing.size === 0) return fresh;
+
+  const merged: GitHubOverview = {
+    ...fresh,
+    fetchedAt: prev.fetchedAt,
+    user: missing.has('user') ? prev.user : fresh.user,
+    status: missing.has('status') ? prev.status : fresh.status,
+    calendar: missing.has('calendar') ? prev.calendar : fresh.calendar,
+    events: missing.has('events') ? prev.events : fresh.events,
+  };
+  if (!missing.has('repos')) return merged;
+
+  // 语言和 Star 总数由仓库列表算出，仓库没拉到时一起沿用旧值。
+  merged.repos = 'repos' in prev ? prev.repos : [];
+  merged.languages = prev.languages;
+  merged.totals = prev.totals;
+  return 'repoCount' in prev ? { ...merged, repoCount: prev.repoCount } : merged;
 }
 
 export const githubLive = new GitHubLive();

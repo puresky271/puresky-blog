@@ -34,6 +34,7 @@ npm run deploy    # 构建 + 搜索索引 + 把 dist/ 上传到 Cloudflare（需
 
 构建时可设 `GITHUB_TOKEN`：有它 GitHub 快照走 GraphQL（精确贡献日历、个人状态），没有就走公开接口。
 开发模式下 GitHub / 网易云快照缓存在 `node_modules/.cache/puresky/`（30 分钟），要强制刷新就删掉这个目录。
+构建时也会写这份缓存，抓取失败时沿用里面上一次的结果。
 
 ### worker
 
@@ -45,7 +46,8 @@ npm run db:local      # 把 schema.sql 灌进本地 D1（首次本地开发前�
 npm run deploy
 ```
 
-本地 secret 放 `worker/.dev.vars`（已 gitignore）；线上 `wrangler secret put GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET / SESSION_SECRET / GITHUB_TOKEN(可选)`。
+本地 secret 放 `worker/.dev.vars`（已 gitignore）；线上 `wrangler secret put GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET / SESSION_SECRET / GITHUB_TOKEN`。
+GITHUB_TOKEN 对构建是可选的，对线上 worker 实际是必需的：未认证配额按出口 IP 计，Cloudflare 的出口 IP 和大量服务共用，基本总是用完的。
 `wrangler.toml` 里 D1 和两个 KV 的 id 是占位符，建好后替换；改绑定时同步改 `wrangler.offline.toml`。
 
 ### 视觉验证（本地工具，不入库）
@@ -107,6 +109,8 @@ Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点�
 
 GitHub 与网易云数据在构建期抓一份快照渲染进页面（`lib/snapshots.ts`），运行时再由 worker 刷新（`lib/github-live.svelte.ts`、播放器 store）。
 worker 挂了页面上仍是上次构建的数据，不会是一片骨架屏。构建不能因第三方接口失败而失败。
+GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：没拉到的用上一次的值补上，补不上的记进 `missing`，
+前端合并时这几块保留自己手里的旧值；一块都没拉到就抛错，交给缓存兜底，不缓存空壳。
 
 ### Worker
 
@@ -119,7 +123,7 @@ worker 挂了页面上仍是上次构建的数据，不会是一片骨架屏。�
 - **admin 全部返回 404 而非 403**，OWNER 校验集中在中间件。
 - **浏览数/点赞去重不追踪用户**：按天加盐的 IP+UA 哈希，不设 cookie 不做指纹。
 - **评论软删**（`deleted_at`）；楼中楼只有一层，回复回复时挂到根评论。
-- **代理不做开放代理**：GitHub 只代理配置的账号，网易云歌单只代理白名单；第三方响应缓存在 KV（`lib/cache.ts`），只在缓存未命中时过 `PROXY_LIMITER`，上游失败时用过期值兜底（MV 除外）。
+- **代理不做开放代理**：GitHub 只代理配置的账号，网易云歌单只代理白名单；第三方响应缓存在 KV（`lib/cache.ts`），只在缓存未命中时过 `PROXY_LIMITER`，过了新鲜期先返回旧值、在后台刷新，上游失败时继续用旧值（MV 除外）。
 - **`/media/*` 支持 Range**，本地曲库放 R2 时音视频才能拖进度。
 
 ### 本地文章编辑器

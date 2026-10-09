@@ -11,7 +11,7 @@
 
 import { Hono } from 'hono';
 
-import { fetchGitHubOverview } from '../../../shared/github.ts';
+import { fetchGitHubOverview, type GitHubOverview } from '../../../shared/github.ts';
 import { fetchLyric, fetchMvUrl, fetchPlaylist } from '../../../shared/netease.ts';
 import { cached, UpstreamError } from '../lib/cache.ts';
 import type { Env, Variables } from '../types.ts';
@@ -31,10 +31,12 @@ proxy.onError((error, c) => {
 
 proxy.get('/github/overview', async (c) => {
   const username = c.env.GITHUB_USERNAME;
-  const data = await cached(c, `github:${username}`, 10 * 60, () =>
+  // 键里的 v2：数据多了 missing 字段，旧键下还存着不带它的空壳数据，换个键让它作废。
+  const data = await cached<GitHubOverview>(c, `github:v2:${username}`, 10 * 60, (previous) =>
     fetchGitHubOverview(username, {
       token: c.env.GITHUB_TOKEN || undefined,
       userAgent: 'puresky-blog-worker',
+      previous,
     })
   );
   return c.json(data, 200, browserCache(120));

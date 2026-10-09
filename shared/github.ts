@@ -8,6 +8,8 @@
  *   有 token：GraphQL 拿贡献日历、个人状态、仓库（含语言颜色）。
  *   无 token：REST 拿资料和仓库，贡献日历从公开的 contributions 页面解析。
  * 每一块独立失败，拿到多少用多少，不因为一块挂了让整个面板空掉。
+ * 没拿到的块用调用方给的上一次结果补上；补不上的记进 missing，前端据此保留自己手里的旧值。
+ * 一块都没拿到时直接抛错，交给调用方用旧缓存兜底，不返回一个「成功」的空壳。
  */
 
 export interface GitHubUser {
@@ -90,6 +92,9 @@ export interface GitHubLanguage {
   repos: number;
 }
 
+/** 概览里能各自失败的几块。languages 和 totals 由 repos 算出，跟着 repos 走。 */
+export type GitHubBlock = 'user' | 'status' | 'calendar' | 'repos' | 'events';
+
 export interface GitHubOverview {
   username: string;
   fetchedAt: string;
@@ -101,6 +106,11 @@ export interface GitHubOverview {
   events: GitHubEvent[];
   languages: GitHubLanguage[];
   totals: { stars: number; forks: number };
+  /**
+   * 这次没拉到、也没有旧值可补的块。这些字段是占位的空值，不代表 GitHub 上真的没有。
+   * 旧版本写进缓存的数据没有这个字段。
+   */
+  missing?: GitHubBlock[];
 }
 
 export interface GitHubFetchOptions {
@@ -110,6 +120,8 @@ export interface GitHubFetchOptions {
   timeoutMs?: number;
   /** 补取提交信息的推送事件数量上限。每条一个请求，所以要克制。 */
   enrichPushes?: number;
+  /** 上一次的结果。某一块这次没拉到时用它补上。 */
+  previous?: GitHubOverview | null;
 }
 
 const API = 'https://api.github.com';
@@ -155,51 +167,75 @@ export async function fetchGitHubOverview(
   options: GitHubFetchOptions
 ): Promise<GitHubOverview> {
   const ctx = new Ctx(options);
-
-  const graph = options.token ? ctx.graphql(username) : Promise.resolve(null);
+  const login = encodeURIComponent(username);
 
   const [userResult, graphResult, reposResult, eventsResult] = await Promise.allSettled([
-    ctx.rest<RestUser>(`/users/${encodeURIComponent(username)}`),
-    graph,
+    ctx.rest<RestUser>(`/users/${login}`),
+    options.token ? ctx.graphql(username) : Promise.resolve(null),
     options.token
       ? Promise.resolve(null)
-      : ctx.rest<RestRepo[]>(
-          `/users/${encodeURIComponent(username)}/repos?type=owner&sort=pushed&per_page=100`
-        ),
-    ctx.rest<RestEvent[]>(`/users/${encodeURIComponent(username)}/events/public?per_page=60`),
+      : ctx.rest<RestRepo[]>(`/users/${login}/repos?type=owner&sort=pushed&per_page=100`),
+    ctx.rest<RestEvent[]>(`/users/${login}/events/public?per_page=60`),
   ]);
+  const failures = [userResult, graphResult, reposResult, eventsResult]
+    .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+    .map((r) => (r.reason as Error).message);
 
-  const user = userResult.status === 'fulfilled' ? normalizeUser(userResult.value) : null;
+  // 这次真正拿到的块。status 没设置时本来就是 null，所以按「键在不在」判断有没有拿到，不看值。
+  const fresh: Partial<Pick<GitHubOverview, GitHubBlock>> = {};
+  if (userResult.status === 'fulfilled') fresh.user = normalizeUser(userResult.value);
+
   const graphData = graphResult.status === 'fulfilled' ? graphResult.value : null;
+  if (graphData) {
+    fresh.status = graphData.status;
+    fresh.calendar = graphData.calendar;
+    fresh.repos = graphData.repos;
+  } else if (reposResult.status === 'fulfilled' && reposResult.value) {
+    fresh.repos = reposResult.value.filter((r) => !r.fork).map(normalizeRestRepo);
+  }
 
-  let calendar: ContributionCalendar | null = graphData?.calendar ?? null;
-  if (!calendar) {
+  if (!fresh.calendar) {
     // GraphQL 不可用时退回解析公开页面。这个页面不需要登录，也不占 API 配额。
-    calendar = await ctx.scrapeCalendar(username).catch(() => null);
+    const scraped = await ctx.scrapeCalendar(username).catch(() => null);
+    if (scraped) fresh.calendar = scraped;
+    else failures.push('贡献日历页面没拉到');
   }
 
-  let repos: GitHubRepo[] = graphData?.repos ?? [];
-  if (!graphData && reposResult.status === 'fulfilled' && reposResult.value) {
-    repos = reposResult.value.filter((r) => !r.fork).map(normalizeRestRepo);
+  if (eventsResult.status === 'fulfilled') {
+    fresh.events = await ctx.normalizeEvents(eventsResult.value, options.enrichPushes ?? 4);
   }
 
-  const rawEvents = eventsResult.status === 'fulfilled' ? eventsResult.value : [];
-  const events = await ctx.normalizeEvents(rawEvents, options.enrichPushes ?? 4);
+  if (Object.keys(fresh).length === 0) throw new Error(`GitHub 一块数据都没拉到：${failures.join('；')}`);
+  if (failures.length > 0) console.warn(`[github] 部分数据没拉到：${failures.join('；')}`);
+  // 没有 token 本来就拿不到个人状态，不算没拉到。
+  if (!options.token) fresh.status = null;
 
+  const previous = options.previous ?? null;
+  const missing: GitHubBlock[] = [];
+  /** 这次拿到了用新的；没拿到用上一次的；上一次也没有，记为缺失并留空。 */
+  function settle<K extends GitHubBlock>(block: K, empty: GitHubOverview[K]): GitHubOverview[K] {
+    if (block in fresh) return fresh[block] as GitHubOverview[K];
+    if (previous && !previous.missing?.includes(block)) return previous[block];
+    missing.push(block);
+    return empty;
+  }
+
+  const repos = settle('repos', []);
   return {
     username,
     fetchedAt: new Date().toISOString(),
     source: graphData ? 'graphql' : 'rest',
-    user,
-    status: graphData?.status ?? null,
-    calendar,
+    user: settle('user', null),
+    status: settle('status', null),
+    calendar: settle('calendar', null),
     repos,
-    events,
+    events: settle('events', []),
     languages: summarizeLanguages(repos),
     totals: {
       stars: repos.reduce((sum, r) => sum + r.stars, 0),
       forks: repos.reduce((sum, r) => sum + r.forks, 0),
     },
+    missing,
   };
 }
 
@@ -228,9 +264,19 @@ class Ctx {
     }
   }
 
+  /**
+   * 403/429 且剩余配额为 0 是被限流，不是权限问题，在错误信息里点明。
+   * 未认证的配额按出口 IP 计，worker 的出口 IP 和大量别的服务共用，基本总是用完的。
+   */
+  private quotaHint(response: Response): string {
+    if (response.status !== 403 && response.status !== 429) return '';
+    if (response.headers.get('x-ratelimit-remaining') !== '0') return '';
+    return this.options.token ? '（配额用完）' : '（未认证配额用完，需要配置 GITHUB_TOKEN）';
+  }
+
   async rest<T>(path: string): Promise<T> {
     const response = await this.request(`${API}${path}`, { headers: this.headers() });
-    if (!response.ok) throw new Error(`GitHub REST ${path} → ${response.status}`);
+    if (!response.ok) throw new Error(`GitHub REST ${path} → ${response.status}${this.quotaHint(response)}`);
     return (await response.json()) as T;
   }
 
@@ -240,7 +286,7 @@ class Ctx {
       headers: { ...this.headers('application/json'), 'content-type': 'application/json' },
       body: JSON.stringify({ query: GRAPH_QUERY, variables: { login } }),
     });
-    if (!response.ok) throw new Error(`GitHub GraphQL → ${response.status}`);
+    if (!response.ok) throw new Error(`GitHub GraphQL → ${response.status}${this.quotaHint(response)}`);
 
     const payload = (await response.json()) as { data?: { user?: GraphUser | null } };
     const node = payload.data?.user;
