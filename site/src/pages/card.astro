@@ -329,8 +329,10 @@ const stats = [
 
 <script>
   function setupCard() {
-    const card = document.querySelector<HTMLElement>('[data-card]');
-    if (!card || card.dataset.ready) return;
+    // 首次加载时这里和 astro:page-load 各跑一次，靠 data-ready 只绑定一回。
+    // 判断要看属性在不在：dataset.ready 的值是空串，按真假判断永远拦不住，点一下会翻两次面。
+    const card = document.querySelector<HTMLElement>('[data-card]:not([data-ready])');
+    if (!card) return;
     card.dataset.ready = '';
     const fine = matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
