@@ -17,18 +17,26 @@ export type Friend = CollectionEntry<'friends'>;
 
 const showDrafts = import.meta.env.DEV;
 
-let postsCache: Promise<Post[]> | null = null;
+let allCache: Promise<Post[]> | null = null;
 
-/** 全部已发布文章，按发布日期倒序。开发模式下包含草稿。 */
-export function getPosts(): Promise<Post[]> {
-  postsCache ??= getCollection('posts', (p) => showDrafts || !p.data.draft).then((posts) =>
+/**
+ * 全部文章，包括归档的，按发布日期倒序。开发模式下包含草稿。
+ * 只给文章页生成路由用：归档的文章不进任何列表，但原链接要继续有效。
+ */
+export function getAllPosts(): Promise<Post[]> {
+  allCache ??= getCollection('posts', (p) => showDrafts || !p.data.draft).then((posts) =>
     posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
   );
-  return postsCache;
+  return allCache;
+}
+
+/** 出现在列表里的文章（不含归档），按发布日期倒序。首页、列表、归档页、分类标签、RSS 都用它。 */
+export async function getPosts(): Promise<Post[]> {
+  return (await getAllPosts()).filter((p) => !p.data.archived);
 }
 
 export async function getPost(id: string): Promise<Post | undefined> {
-  return (await getPosts()).find((p) => p.id === id);
+  return (await getAllPosts()).find((p) => p.id === id);
 }
 
 export function postMinutes(post: Post): number {
@@ -111,16 +119,17 @@ export async function getCategoryTags(id: CategoryId, limit = 8): Promise<TagSta
     .map((t) => ({ ...t, count: counts.get(t.name)! }));
 }
 
-/** 时间上相邻的两篇。newer 是更新的那篇。 */
+/** 时间上相邻的两篇。newer 是更新的那篇。归档的文章不在时间线上，没有相邻。 */
 export async function getAdjacent(post: Post): Promise<{ newer?: Post; older?: Post }> {
   const posts = await getPosts();
   const index = posts.findIndex((p) => p.id === post.id);
+  if (index < 0) return {};
   return { newer: posts[index - 1], older: posts[index + 1] };
 }
 
-/** 同系列文章，按系列序号排。 */
+/** 同系列文章，按系列序号排。归档的文章已经移出系列导航，自己的页面上也不再显示。 */
 export async function getSeries(post: Post): Promise<Post[]> {
-  if (!post.data.series) return [];
+  if (!post.data.series || post.data.archived) return [];
   return (await getPosts())
     .filter((p) => p.data.series === post.data.series)
     .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0));

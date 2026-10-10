@@ -17,7 +17,7 @@ import Base from '@/layouts/Base.astro';
 import {
   categoryOf,
   getAdjacent,
-  getPosts,
+  getAllPosts,
   getRelated,
   getSeries,
   postMinutes,
@@ -27,7 +27,8 @@ import {
 import { categoryPath, formatDate, postPath, tagPath } from '@/lib/format';
 
 export async function getStaticPaths() {
-  const posts = await getPosts();
+  // 归档的文章也生成页面：它们不进任何列表，但原链接要继续有效。
+  const posts = await getAllPosts();
   return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
 }
 
@@ -37,7 +38,7 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-const { title, description, pubDate, updatedDate, category, tags, cover, coverAlt, mayBeStale, commentsOff } = post.data;
+const { title, description, pubDate, updatedDate, category, tags, cover, coverAlt, mayBeStale, commentsOff, archived } = post.data;
 
 const [adjacent, series, related] = await Promise.all([getAdjacent(post), getSeries(post), getRelated(post)]);
 const cat = categoryOf(category);
@@ -103,6 +104,15 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
         </div>
 
         {
+          archived && (
+            <aside class="stale archived" role="note">
+              <Icon name="archive" size={17} />
+              <p>这篇文章已经归档，不再出现在文章列表和搜索里。内容保留在这里供参考，不再更新。</p>
+            </aside>
+          )
+        }
+
+        {
           mayBeStale && (
             <aside class="stale" role="note">
               <Icon name="hourglass-medium" size={17} />
@@ -136,7 +146,8 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
           )
         }
 
-        <div class="prose mt-8" data-pagefind-body>
+        {/* 归档的文章不进站内搜索：没有 data-pagefind-body 的页面 pagefind 不收录。 */}
+        <div class="prose mt-8" data-pagefind-body={archived ? undefined : ''}>
           <Content />
         </div>
 
@@ -383,6 +394,14 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
   .stale :global(svg) {
     margin-top: 0.15rem;
     color: var(--warning);
+  }
+  .stale.archived {
+    border-color: var(--line-strong);
+    background: var(--surface-2);
+    color: var(--fg-muted);
+  }
+  .stale.archived :global(svg) {
+    color: var(--fg-subtle);
   }
 
   .series {

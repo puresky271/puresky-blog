@@ -3,12 +3,14 @@
    * CodeEditor.svelte — 基于 CodeMirror 6 的 Markdown 编辑区。
    *
    * 正文用无衬线（写中文更舒服），行内代码和代码块用等宽；代码块按语言高亮（language-data 按需加载）。
-   * 列表回车自动续写、Tab 缩进、Ctrl+F 搜索；粘贴或拖进图片会调用 onimage 上传并插入 Markdown。
+   * 列表回车自动续写、Tab 缩进、Ctrl+F 搜索替换；粘贴或拖进图片会调用 onimage 上传并插入 Markdown；
+   * 选中文字后粘贴一个网址，会直接变成链接。
    * 颜色全部走站点的 CSS 变量，亮暗主题切换时编辑器跟着变，不需要重建。
    *
-   * 对外的方法（bind:this 后调用）：load 换文档（清空撤销历史）、wrap / prefix / insert 给工具栏用、focus。
+   * 对外的方法（bind:this 后调用）：load 换文档（清空撤销历史）；wrap / prefix / insert / heading / codeBlock /
+   * callout / footnote 给工具栏用；jumpTo 给大纲用；undo / redo / focus。
    */
-  import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+  import { defaultKeymap, history, historyKeymap, indentWithTab, redo as redoCommand, undo as undoCommand } from '@codemirror/commands';
   import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
   import { bracketMatching, HighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
   import { languages } from '@codemirror/language-data';
@@ -36,7 +38,7 @@
     /** 挂载时的初始内容；之后换文章用 load()。 */
     initial?: string;
     onchange: (value: string) => void;
-    oncursor?: (pos: { line: number; col: number; lines: number }) => void;
+    oncursor?: (pos: { line: number; col: number; lines: number; selected: number }) => void;
     onscrollratio?: (ratio: number) => void;
     onimage?: (file: File) => Promise<string>;
   } = $props();
@@ -137,6 +139,10 @@
         { key: 'Mod-i', run: () => (wrap('*', '*', '斜体'), true) },
         { key: 'Mod-k', run: () => (wrap('[', '](https://)', '链接文字'), true) },
         { key: 'Mod-e', run: () => (wrap('`', '`', 'code'), true) },
+        { key: 'Mod-Alt-0', run: () => (heading(0), true) },
+        { key: 'Mod-Alt-2', run: () => (heading(2), true) },
+        { key: 'Mod-Alt-3', run: () => (heading(3), true) },
+        { key: 'Mod-Alt-4', run: () => (heading(4), true) },
         indentWithTab,
         ...searchKeymap,
         ...historyKeymap,
@@ -145,18 +151,23 @@
       theme,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) onchange(update.state.doc.toString());
-        if (update.selectionSet || update.docChanged) {
-          const head = update.state.selection.main.head;
-          const line = update.state.doc.lineAt(head);
-          oncursor?.({ line: line.number, col: head - line.from + 1, lines: update.state.doc.lines });
-        }
+        if (update.selectionSet || update.docChanged) report(update.state);
       }),
       EditorView.domEventHandlers({
-        paste(event) {
+        paste(event, v) {
           const files = [...(event.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'));
-          if (!files.length) return false;
+          if (files.length) {
+            event.preventDefault();
+            void insertImages(files);
+            return true;
+          }
+          // 选中文字后粘贴网址：变成 [文字](网址)，不用先按 Ctrl+K 再把网址填进去。
+          const text = event.clipboardData?.getData('text/plain').trim() ?? '';
+          const range = v.state.selection.main;
+          if (range.empty || !/^https?:\/\/\S+$/.test(text)) return false;
           event.preventDefault();
-          void insertImages(files);
+          const label = v.state.sliceDoc(range.from, range.to);
+          v.dispatch({ changes: { from: range.from, to: range.to, insert: `[${label}](${text})` }, selection: { anchor: range.from + label.length + text.length + 4 } });
           return true;
         },
         drop(event, v) {
@@ -177,9 +188,16 @@
     ];
   }
 
+  function report(state: EditorState) {
+    const head = state.selection.main.head;
+    const line = state.doc.lineAt(head);
+    const selected = state.selection.ranges.reduce((n, r) => n + (r.to - r.from), 0);
+    oncursor?.({ line: line.number, col: head - line.from + 1, lines: state.doc.lines, selected });
+  }
+
   onMount(() => {
     view = new EditorView({ parent: host!, state: EditorState.create({ doc: initial, extensions: extensions() }) });
-    oncursor?.({ line: 1, col: 1, lines: view.state.doc.lines });
+    report(view.state);
     return () => view?.destroy();
   });
 
@@ -188,7 +206,7 @@
     if (!view) return;
     view.setState(EditorState.create({ doc, extensions: extensions() }));
     view.scrollDOM.scrollTop = 0;
-    oncursor?.({ line: 1, col: 1, lines: view.state.doc.lines });
+    report(view.state);
   }
 
   /** 用 before / after 包住选区；没有选区时插入占位文字并选中它。 */
@@ -257,6 +275,119 @@
     }
     view.dispatch({ changes: { from, to, insert: insertText }, selection: { anchor: from + insertText.length } });
     view.focus();
+  }
+
+  /**
+   * 在 from..to 处放一个独占几行的块（前后补空行），选中块里的 inner 部分，方便接着输入。
+   * 默认位置是当前选区。
+   */
+  function insertBlock(head: string, tail: string, inner = '', from?: number, to?: number) {
+    if (!view) return;
+    const state = view.state;
+    const start = from ?? state.selection.main.from;
+    const end = to ?? state.selection.main.to;
+    const before = state.sliceDoc(Math.max(0, start - 2), start);
+    const lead = start === 0 ? '' : before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+    const next = state.sliceDoc(end, end + 1);
+    const trail = end === state.doc.length || next === '\n' ? '\n' : '\n\n';
+    const anchor = start + lead.length + head.length;
+    view.dispatch({
+      changes: { from: start, to: end, insert: `${lead}${head}${inner}${tail}${trail}` },
+      selection: { anchor, head: anchor + inner.length },
+      scrollIntoView: true,
+    });
+    view.focus();
+  }
+
+  /** 选区覆盖的整行范围。 */
+  function selectedLines() {
+    const state = view!.state;
+    const { from, to } = state.selection.main;
+    return { from: state.doc.lineAt(from).from, to: state.doc.lineAt(to).to, empty: from === to };
+  }
+
+  /** 把选中的行设成 level 级标题；0 表示变回正文。 */
+  export function heading(level: number) {
+    if (!view) return;
+    const state = view.state;
+    const mark = level ? `${'#'.repeat(level)} ` : '';
+    const changes: { from: number; to: number; insert: string }[] = [];
+    const seen = new Set<number>();
+    for (const range of state.selection.ranges) {
+      for (let pos = range.from; pos <= range.to; ) {
+        const line = state.doc.lineAt(pos);
+        if (!seen.has(line.number)) {
+          seen.add(line.number);
+          const current = /^#{1,6}\s+/.exec(line.text);
+          changes.push({ from: line.from, to: line.from + (current?.[0].length ?? 0), insert: mark });
+        }
+        pos = line.to + 1;
+      }
+    }
+    view.dispatch({ changes });
+    view.focus();
+  }
+
+  /** 插入代码块；有选区时把选中的行包进去。 */
+  export function codeBlock(lang: string) {
+    if (!view) return;
+    const fence = '```';
+    const lines = selectedLines();
+    if (lines.empty) insertBlock(`${fence}${lang}\n`, `\n${fence}`);
+    else insertBlock(`${fence}${lang}\n`, `\n${fence}`, view.state.sliceDoc(lines.from, lines.to), lines.from, lines.to);
+  }
+
+  /** 插入提示块（> [!NOTE] 之类）；有选区时把选中的行变成提示块的内容。 */
+  export function callout(kind: string) {
+    if (!view) return;
+    const lines = selectedLines();
+    if (lines.empty) insertBlock(`> [!${kind}]\n> `, '');
+    else {
+      const quoted = view.state
+        .sliceDoc(lines.from, lines.to)
+        .split('\n')
+        .map((l) => `> ${l}`)
+        .join('\n');
+      insertBlock(`> [!${kind}]\n`, '', quoted, lines.from, lines.to);
+    }
+  }
+
+  /** 在光标处插入下一个编号的脚注引用，在文末补上定义，光标跳到定义处接着写。 */
+  export function footnote() {
+    if (!view) return;
+    const state = view.state;
+    const doc = state.doc.toString();
+    const used = [...doc.matchAll(/\[\^(\d+)\]/g)].map((m) => Number(m[1]));
+    const ref = `[^${(used.length ? Math.max(...used) : 0) + 1}]`;
+    const def = `${doc.endsWith('\n') ? '' : '\n'}\n${ref}: `;
+    const { head } = state.selection.main;
+    view.dispatch({
+      changes: [
+        { from: head, insert: ref },
+        { from: doc.length, insert: def },
+      ],
+      selection: { anchor: doc.length + ref.length + def.length },
+      scrollIntoView: true,
+    });
+    view.focus();
+  }
+
+  /** 跳到第 line 行（大纲点击用），这一行滚到视口上方。 */
+  export function jumpTo(line: number) {
+    if (!view) return;
+    const target = view.state.doc.line(Math.min(Math.max(1, line), view.state.doc.lines));
+    view.dispatch({ selection: { anchor: target.from }, effects: EditorView.scrollIntoView(target.from, { y: 'start', yMargin: 24 }) });
+    view.focus();
+  }
+
+  export function undo() {
+    if (view) undoCommand(view);
+    view?.focus();
+  }
+
+  export function redo() {
+    if (view) redoCommand(view);
+    view?.focus();
   }
 
   export function pickImages(files: File[]) {

@@ -15,6 +15,7 @@ import { rehypeExternalLinks } from './src/lib/markdown/rehype-external-links.mj
 import { rehypeHeadingAnchors } from './src/lib/markdown/rehype-heading-anchors.mjs';
 import { remarkCallout } from './src/lib/markdown/remark-callout.mjs';
 import { remarkCjkLines } from './src/lib/markdown/remark-cjk-lines.mjs';
+import { remarkLocalImages } from './src/lib/markdown/remark-local-images.mjs';
 
 /*
  * 同一份代码要同时能部署到 Cloudflare Pages（根路径）和 GitHub Pages（仓库子路径），
@@ -31,8 +32,9 @@ const runtimeBase = isCloudflarePages ? '/' : isGitHubPages && isProduction ? RE
 /*
  * Markdown 管线。站点和本地编辑器的预览共用同一份，预览里看到的就是发布后的样子。
  * cjk-friendly：让「**依赖。**不是」这类全角标点紧贴定界符的加粗也能成立。
+ * local-images：文章图片不进仓库，没有图的构建（CI、别人 clone）跳过缺的图，而不是构建失败。
  */
-const remarkPlugins = [remarkCjkFriendly, remarkCjkLines, remarkCallout];
+const remarkPlugins = [remarkCjkFriendly, remarkCjkLines, remarkCallout, remarkLocalImages];
 const rehypePlugins = [rehypeHeadingAnchors, rehypeExternalLinks];
 const shikiConfig = /** @type {const} */ ({
   themes: { light: 'github-light', dark: 'github-dark-dimmed' },

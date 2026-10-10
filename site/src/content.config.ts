@@ -5,11 +5,20 @@
  * 而不是渲染出一个没有名字的分类页，或者长出第二个意思相同的标签。
  */
 
+import { existsSync } from 'node:fs';
+
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 import { CATEGORY_IDS, TAG_NAMES } from './config';
+
+/**
+ * 文章图片（posts/images/）不进仓库，只在本机。没有这张图的构建（CI、别人 clone）当作没有封面，
+ * 而不是让 image() 报错、整个文章集合加载失败。正文里的图片由 remark-local-images.mjs 做同样的回退。
+ */
+const POSTS_DIR = new URL('./content/posts/', import.meta.url);
+const localCover = (value: unknown) => (typeof value === 'string' && value.startsWith('./') && !existsSync(new URL(value, POSTS_DIR)) ? undefined : value);
 
 const posts = defineCollection({
   loader: glob({ base: './src/content/posts', pattern: '**/*.{md,mdx}' }),
@@ -29,12 +38,17 @@ const posts = defineCollection({
       seriesOrder: z.number().int().positive().optional(),
 
       /** 封面插画。列表卡片和文章头部都会用到。 */
-      cover: image().optional(),
+      cover: z.preprocess(localCover, image().optional()),
       coverAlt: z.string().optional(),
 
       /** 置顶到首页「精选」。 */
       featured: z.boolean().default(false),
       draft: z.boolean().default(false),
+      /**
+       * 归档：从首页、文章列表、归档页、分类和标签页、RSS 和站内搜索里收起来，但文章页照常生成，
+       * 原链接仍然能打开（页面顶部会提示已归档）。和草稿的区别是草稿线上根本没有这一页。
+       */
+      archived: z.boolean().default(false),
       commentsOff: z.boolean().default(false),
       /** 结论可能已过期但仍有参考价值时打开，正文顶部会显示一条时效提醒。 */
       mayBeStale: z.boolean().default(false),

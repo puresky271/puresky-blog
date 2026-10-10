@@ -14,6 +14,8 @@ site/public/pagefind/
 
 # 本机专用插画：不进仓库，本地构建和直接上传部署时才带上（见 CLAUDE.md）
 site/src/assets/local/
+# 文章里的图片（编辑器上传、粘贴进来的）同样只在本机；没有图的构建会跳过它们（remark-local-images.mjs）
+site/src/content/posts/images/
 
 # cloudflare
 .wrangler/

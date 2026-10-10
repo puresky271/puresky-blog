@@ -28,6 +28,10 @@ const PHOSPHOR = `
   list-bullets sliders-horizontal hand-tap paper-plane-tilt arrow-counter-clockwise dots-three
   plus minus waveform command arrows-out-simple x-circle microphone-stage arrow-elbow-down-right
   buildings hourglass-medium cloud cloud-rain snowflake
+  archive stack arrow-clockwise text-h text-b text-italic text-strikethrough table upload-simple
+  sidebar-simple list-numbers check-square text-superscript dots-six-vertical folders
+  cloud-arrow-up cloud-arrow-down git-diff file-text file-image gear-six corners-out corners-in
+  keyboard text-t books floppy-disk
 `;
 
 /** Simple Icons，只用于第三方品牌标识。 */

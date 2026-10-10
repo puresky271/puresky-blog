@@ -6,8 +6,7 @@
  */
 import '@/styles/global.css';
 import '@/styles/prose.css';
-
-import { CATEGORIES, TAG_GROUPS, TAGS } from '@/config';
+import '@/editor/editor.css';
 
 import Editor from './Editor.svelte';
 ---
@@ -32,12 +31,7 @@ import Editor from './Editor.svelte';
     </script>
   </head>
   <body>
-    <Editor
-      client:only="svelte"
-      categories={CATEGORIES.map((c) => ({ ...c }))}
-      tagGroups={TAG_GROUPS.map((g) => ({ ...g }))}
-      tags={TAGS.map((t) => ({ ...t }))}
-    />
+    <Editor client:only="svelte" />
   </body>
 </html>
 

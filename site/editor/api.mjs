@@ -1,50 +1,37 @@
 /**
  * api.mjs — 本地文章编辑器的后端，只在 `astro dev` 里挂在 /__editor/api 上（见 integration.mjs）。
  *
- * 能做的事：列出 / 读取 / 新建 / 保存 / 重命名 / 删除文章，渲染预览，接收粘贴的图片，
- * 查看 Git 状态，把文章目录的改动提交并推送到 GitHub。
+ * 能做的事：
+ *   文章   列出 / 读取 / 新建 / 保存 / 重命名 / 删除，渲染预览，接收粘贴的图片；
+ *   整理   分类、标签分组、标签的增删改和排序（写回 config.ts，见 vocab.mjs），系列的成员和顺序；
+ *   Git    看改动和 diff、勾选文件提交、推送、拉取、提交历史、撤销最近一次提交（见 git.mjs）。
  *
- * 安全边界（这个接口能写文件、能执行 git，必须只对本机开放）：
- *   1. 只接受来自回环地址的连接：dev server 即使用 --host 暴露到局域网，别的机器也用不了；
- *   2. Host 头必须是 localhost / 127.0.0.1 / [::1]：挡 DNS rebinding（恶意域名解析到 127.0.0.1）；
- *   3. 有 Origin 头时必须是本机来源，且每个请求都要带自定义头 x-puresky-editor：
- *      别的网站的页面即使在你的浏览器里，也没法跨站调这个接口（自定义头会触发预检，而这里从不放行）；
- *   4. slug 只允许小写字母、数字、连字符，所有路径解析后都必须落在文章目录里。
- * Git 提交只包含文章目录（git commit -- <文章目录>），不会把工作区里别的改动一起带走。
+ * 安全边界见 http.mjs：只对本机开放、挡 DNS rebinding、挡跨站请求。
+ * 另外 slug 只允许小写字母、数字、连字符，所有路径解析后都必须落在文章目录里；
+ * Git 只碰文章目录和 config.ts，不会把工作区里别的改动一起提交。
  */
 
-import { execFile } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { promisify } from 'node:util';
 
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
-import YAML from 'yaml';
 
-const run = promisify(execFile);
+import { countWords, parse, serialize } from './frontmatter.mjs';
+import { createGit } from './git.mjs';
+import { guard, guardAsset, HttpError, json, readBody, send } from './http.mjs';
+import { applyVocabOp, readVocab, writeVocab } from './vocab.mjs';
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
-const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
-const MAX_BODY = 16 * 1024 * 1024;
 const IMAGE_TYPES = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif', '.svg': 'image/svg+xml' };
-
-/** frontmatter 的键写回文件时的顺序；不认识的键原样保留在最后。 */
-const KEY_ORDER = ['title', 'description', 'pubDate', 'updatedDate', 'category', 'tags', 'series', 'seriesOrder', 'cover', 'coverAlt', 'featured', 'draft', 'commentsOff', 'mayBeStale'];
-/** 这些布尔值默认 false，为 false 时不写进文件。 */
-const DEFAULT_FALSE = new Set(['featured', 'draft', 'commentsOff', 'mayBeStale']);
-
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
 
 export function createEditorApi({ root, markdown }) {
   const postsDir = path.resolve(root, 'src/content/posts');
+  const configFile = path.resolve(root, 'src/config.ts');
   const repoRoot = path.resolve(root, '..');
-  const postsRel = path.relative(repoRoot, postsDir).split(path.sep).join('/');
+  const toRepo = (file) => path.relative(repoRoot, file).split(path.sep).join('/');
+  const git = createGit({ repoRoot, postsRel: toRepo(postsDir), configRel: toRepo(configFile) });
+  // 每次 dev server（重新）启动都会重新创建这个接口：前端改完词表后靠它变了没有，判断重启是否已经完成。
+  const boot = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   let renderer = null;
 
   // ── 文件 ───────────────────────────────────────────────────────────────────
@@ -78,60 +65,7 @@ export function createEditorApi({ root, markdown }) {
     return null;
   }
 
-  function parse(raw) {
-    const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(raw);
-    if (!match) return { frontmatter: {}, body: raw };
-    let frontmatter = {};
-    try {
-      frontmatter = YAML.parse(match[1]) ?? {};
-    } catch (error) {
-      throw new HttpError(422, `frontmatter 解析失败：${error.message}`);
-    }
-    // 日期统一成 YYYY-MM-DD 字符串，编辑器里用 <input type="date">。
-    for (const key of ['pubDate', 'updatedDate']) {
-      const value = frontmatter[key];
-      if (value instanceof Date) frontmatter[key] = value.toISOString().slice(0, 10);
-    }
-    return { frontmatter, body: raw.slice(match[0].length).replace(/^\r?\n/, '') };
-  }
-
-  function quote(value) {
-    return `'${String(value).replace(/'/g, "''")}'`;
-  }
-
-  /** 手写序列化：键顺序固定、字符串统一单引号、标签用行内数组，和仓库里手写的文章保持同一个样子。 */
-  function serialize(frontmatter, body) {
-    const keys = [...KEY_ORDER.filter((k) => k in frontmatter), ...Object.keys(frontmatter).filter((k) => !KEY_ORDER.includes(k))];
-    const lines = [];
-    for (const key of keys) {
-      const value = frontmatter[key];
-      if (value === undefined || value === null || value === '') continue;
-      if (DEFAULT_FALSE.has(key) && value === false) continue;
-      if (Array.isArray(value)) {
-        if (value.length === 0) continue;
-        lines.push(`${key}: [${value.map(quote).join(', ')}]`);
-      } else if (typeof value === 'boolean' || typeof value === 'number') {
-        lines.push(`${key}: ${value}`);
-      } else if ((key === 'pubDate' || key === 'updatedDate') && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        lines.push(`${key}: ${value}`);
-      } else if (key === 'category') {
-        lines.push(`${key}: ${value}`);
-      } else if (typeof value === 'object') {
-        lines.push(YAML.stringify({ [key]: value }).trimEnd());
-      } else {
-        lines.push(`${key}: ${quote(value)}`);
-      }
-    }
-    const text = body.replace(/\r\n/g, '\n').replace(/^\n+/, '');
-    return `---\n${lines.join('\n')}\n---\n\n${text.endsWith('\n') ? text : `${text}\n`}`;
-  }
-
-  function countWords(body) {
-    const text = body.replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`~[\]()!|-]/g, ' ');
-    const cjk = text.match(/[㐀-鿿豈-﫿]/g)?.length ?? 0;
-    const latin = text.replace(/[㐀-鿿豈-﫿]/g, ' ').match(/[A-Za-z0-9]+/g)?.length ?? 0;
-    return cjk + latin;
-  }
+  // ── 文章 ───────────────────────────────────────────────────────────────────
 
   async function listPosts() {
     const entries = await fs.readdir(postsDir, { withFileTypes: true });
@@ -157,9 +91,14 @@ export function createEditorApi({ root, markdown }) {
         title: frontmatter.title ?? slug,
         description: frontmatter.description ?? '',
         category: frontmatter.category ?? null,
-        tags: frontmatter.tags ?? [],
+        tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
         pubDate: frontmatter.pubDate ?? null,
+        updatedDate: frontmatter.updatedDate ?? null,
+        series: frontmatter.series ?? null,
+        seriesOrder: typeof frontmatter.seriesOrder === 'number' ? frontmatter.seriesOrder : null,
+        cover: frontmatter.cover ?? null,
         draft: Boolean(frontmatter.draft),
+        archived: Boolean(frontmatter.archived),
         featured: Boolean(frontmatter.featured),
         words: countWords(body),
         mtime: stat.mtimeMs,
@@ -176,20 +115,29 @@ export function createEditorApi({ root, markdown }) {
     return { slug, ext: found.ext, ...parse(raw), mtime: stat.mtimeMs };
   }
 
-  async function savePost({ slug, previousSlug, frontmatter, body, create }) {
+  /**
+   * 保存。baseMtime 是编辑器打开（或上次保存）时文件的修改时间：磁盘上的文件在这之后被别的程序改过，
+   * 就返回 409 conflict，由用户决定覆盖还是载入磁盘上的版本（force 表示确认覆盖）。
+   */
+  async function savePost({ slug, previousSlug, frontmatter, body, create, baseMtime, force }) {
     checkSlug(slug);
     if (typeof body !== 'string' || typeof frontmatter !== 'object' || !frontmatter) throw new HttpError(400, '缺少内容');
     const current = previousSlug ? await fileOf(checkSlug(previousSlug)) : await fileOf(slug);
-    if (create && current) throw new HttpError(409, `已经有一篇叫 ${slug} 的文章了`);
+    if (create && current) throw new HttpError(409, `已经有一篇叫 ${slug} 的文章了`, 'exists');
+    if (current && !create && !force && typeof baseMtime === 'number') {
+      const stat = await fs.stat(current.file);
+      if (Math.abs(stat.mtimeMs - baseMtime) > 1) throw new HttpError(409, '这篇文章在编辑器之外被改过', 'conflict');
+    }
     let text = body;
 
     if (current && previousSlug && previousSlug !== slug) {
-      // 改名：目标不能已存在；图片目录跟着搬，正文里的图片路径跟着改。
-      if (await fileOf(slug)) throw new HttpError(409, `已经有一篇叫 ${slug} 的文章了`);
+      // 改名：目标不能已存在；图片目录跟着搬，正文和封面里的图片路径跟着改。
+      if (await fileOf(slug)) throw new HttpError(409, `已经有一篇叫 ${slug} 的文章了`, 'exists');
       const oldImages = inPosts('images', previousSlug);
       if (await exists(oldImages)) {
         await fs.rename(oldImages, inPosts('images', slug));
         text = text.split(`./images/${previousSlug}/`).join(`./images/${slug}/`);
+        if (typeof frontmatter.cover === 'string') frontmatter = { ...frontmatter, cover: frontmatter.cover.replace(`./images/${previousSlug}/`, `./images/${slug}/`) };
       }
     }
 
@@ -199,7 +147,24 @@ export function createEditorApi({ root, markdown }) {
     await fs.writeFile(target, serialize(frontmatter, text), 'utf8');
     if (current && current.file !== target) await fs.rm(current.file);
     const stat = await fs.stat(target);
-    return { slug, ext, mtime: stat.mtimeMs, body: text };
+    return { slug, ext, mtime: stat.mtimeMs, body: text, frontmatter };
+  }
+
+  /** 只改 frontmatter 里的几个键（值为 null 表示删掉这个键），正文原样不动。没有变化就不写文件。 */
+  async function patchPost(slug, changes) {
+    const found = await fileOf(checkSlug(slug));
+    if (!found) throw new HttpError(404, `文章不存在：${slug}`);
+    const raw = await fs.readFile(found.file, 'utf8');
+    const { frontmatter, body } = parse(raw);
+    const next = { ...frontmatter };
+    for (const [key, value] of Object.entries(changes)) {
+      if (value === null) delete next[key];
+      else next[key] = value;
+    }
+    if (JSON.stringify(next) === JSON.stringify(frontmatter)) return null;
+    await fs.writeFile(found.file, serialize(next, body), 'utf8');
+    const stat = await fs.stat(found.file);
+    return { slug, frontmatter: next, mtime: stat.mtimeMs };
   }
 
   async function deletePost(slug) {
@@ -227,6 +192,78 @@ export function createEditorApi({ root, markdown }) {
     return { path: `./images/${slug}/${file}` };
   }
 
+  // ── 系列 ───────────────────────────────────────────────────────────────────
+
+  /**
+   * order：把 slugs 按顺序设为这个系列的第 1、2、3… 篇；原来在这个系列、但不在 slugs 里的移出系列。
+   *        slugs 为空就是解散系列。
+   * rename：系列改名，目标名字已经存在时拒绝（合并两个系列请用 order）。
+   */
+  async function seriesOp(op) {
+    const posts = await listPosts();
+    const changed = [];
+    const apply = async (slug, changes) => {
+      const result = await patchPost(slug, changes);
+      if (result) changed.push(result);
+    };
+    if (op?.action === 'order') {
+      const name = String(op.name ?? '').trim();
+      if (!name) throw new HttpError(400, '系列名不能为空');
+      if ([...name].length > 40) throw new HttpError(400, '系列名最多 40 个字');
+      const slugs = Array.isArray(op.slugs) ? op.slugs.map(checkSlug) : [];
+      if (new Set(slugs).size !== slugs.length) throw new HttpError(400, '同一篇文章不能在系列里出现两次');
+      const known = new Set(posts.map((p) => p.slug));
+      for (const slug of slugs) if (!known.has(slug)) throw new HttpError(404, `文章不存在：${slug}`);
+      for (const [i, slug] of slugs.entries()) await apply(slug, { series: name, seriesOrder: i + 1 });
+      for (const p of posts) if (p.series === name && !slugs.includes(p.slug)) await apply(p.slug, { series: null, seriesOrder: null });
+    } else if (op?.action === 'rename') {
+      const from = String(op.from ?? '').trim();
+      const to = String(op.to ?? '').trim();
+      if (!to) throw new HttpError(400, '系列名不能为空');
+      if ([...to].length > 40) throw new HttpError(400, '系列名最多 40 个字');
+      if (from !== to && posts.some((p) => p.series === to)) throw new HttpError(409, `已经有叫「${to}」的系列了`);
+      for (const p of posts) if (p.series === from) await apply(p.slug, { series: to });
+    } else throw new HttpError(400, '不认识的操作');
+    return { changed };
+  }
+
+  // ── 词表 ───────────────────────────────────────────────────────────────────
+
+  async function vocabState(posts) {
+    const vocab = await readVocab(configFile);
+    const usage = { categories: {}, tags: {} };
+    for (const p of posts) {
+      if (p.category) (usage.categories[p.category] ??= []).push(p.title);
+      for (const t of p.tags) (usage.tags[t] ??= []).push(p.title);
+    }
+    return { vocab, usage };
+  }
+
+  function withCounts({ vocab, usage }) {
+    const count = (map) => Object.fromEntries(Object.entries(map).map(([k, v]) => [k, v.length]));
+    return { ...vocab, usage: { categories: count(usage.categories), tags: count(usage.tags) } };
+  }
+
+  /**
+   * 改词表。写 config.ts 之后 dev server 会自动重启（integration.mjs 把它登记成了 watch file），
+   * 重启后内容集合按新词表重新校验，新建的分类和标签马上能用。
+   */
+  async function vocabOp(op) {
+    const posts = await listPosts();
+    const state = await vocabState(posts);
+    const { vocab, rename } = applyVocabOp(state.vocab, op, state.usage);
+    const changed = [];
+    if (rename) {
+      for (const p of posts) {
+        if (!p.tags.includes(rename.from)) continue;
+        const result = await patchPost(p.slug, { tags: p.tags.map((t) => (t === rename.from ? rename.to : t)) });
+        if (result) changed.push(result);
+      }
+    }
+    const restart = await writeVocab(configFile, vocab);
+    return { vocab: withCounts(await vocabState(await listPosts())), changed, restart, boot };
+  }
+
   // ── 预览 ───────────────────────────────────────────────────────────────────
 
   async function preview(slug, body) {
@@ -244,128 +281,18 @@ export function createEditorApi({ root, markdown }) {
     return { type, data: await fs.readFile(file) };
   }
 
-  // ── Git ────────────────────────────────────────────────────────────────────
-
-  async function git(args, allowFail = false) {
-    try {
-      const { stdout, stderr } = await run('git', args, { cwd: repoRoot, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
-      // 只去掉末尾空白：porcelain 状态的第一列可能是空格（例如 " M"），不能 trim 开头。
-      return { ok: true, out: `${stdout}${stderr}`.replace(/\s+$/, '') };
-    } catch (error) {
-      if (!allowFail) throw new HttpError(500, `${error.stderr || error.stdout || error.message}`.trim());
-      return { ok: false, out: `${error.stdout ?? ''}${error.stderr ?? error.message}`.trim() };
-    }
-  }
-
-  async function gitStatus() {
-    const [branch, status, counts, last, remote] = await Promise.all([
-      git(['rev-parse', '--abbrev-ref', 'HEAD'], true),
-      git(['status', '--porcelain=v1', '-uall', '--', postsRel], true),
-      git(['rev-list', '--left-right', '--count', '@{u}...HEAD'], true),
-      git(['log', '-1', '--format=%h%x09%s%x09%cr'], true),
-      git(['remote', 'get-url', 'origin'], true),
-    ]);
-    const [behind = 0, ahead = 0] = counts.ok ? counts.out.split(/\s+/).map(Number) : [];
-    const [hash, subject, when] = last.ok ? last.out.split('\t') : [];
-    const changes = status.ok
-      ? status.out
-          .split('\n')
-          .filter(Boolean)
-          .map((line) => ({ code: line.slice(0, 2).trim() || '?', file: line.slice(3).replace(`${postsRel}/`, '') }))
-      : [];
-    return {
-      branch: branch.ok ? branch.out : null,
-      upstream: counts.ok,
-      ahead,
-      behind,
-      changes,
-      last: hash ? { hash, subject, when } : null,
-      remote: remote.ok ? remote.out.replace(/\.git$/, '').replace(/^git@github\.com:/, 'https://github.com/') : null,
-    };
-  }
-
-  async function publish(message) {
-    const msg = String(message || '').trim();
-    if (!msg) throw new HttpError(400, '提交说明不能为空');
-    const log = [];
-    await git(['add', '-A', '--', postsRel]);
-    const commit = await git(['commit', '-m', msg, '--', postsRel], true);
-    log.push(`$ git commit -m "${msg}" -- ${postsRel}`, commit.out);
-    if (!commit.ok && !/nothing to commit|无文件要提交|没有.*提交/.test(commit.out)) throw new HttpError(500, log.join('\n'));
-    const push = await git(['push'], true);
-    log.push('$ git push', push.out || '(没有输出)');
-    if (!push.ok) throw new HttpError(500, log.join('\n'));
-    return { log: log.join('\n'), status: await gitStatus() };
-  }
-
-  async function pull() {
-    const result = await git(['pull', '--rebase', '--autostash'], true);
-    if (!result.ok) throw new HttpError(500, result.out);
-    return { log: `$ git pull --rebase --autostash\n${result.out}`, status: await gitStatus() };
-  }
-
   // ── 请求处理 ───────────────────────────────────────────────────────────────
-
-  function guard(req) {
-    if (!LOOPBACK.has(req.socket.remoteAddress ?? '')) throw new HttpError(403, '编辑器只对本机开放');
-    const host = String(req.headers.host ?? '').replace(/:\d+$/, '');
-    if (!LOCAL_HOSTS.has(host)) throw new HttpError(403, '编辑器只能通过 localhost 访问');
-    const origin = req.headers.origin;
-    if (origin) {
-      let hostname = '';
-      try {
-        hostname = new URL(origin).hostname;
-      } catch {
-        // 解析不了的 Origin 一律拒绝。
-      }
-      if (!LOCAL_HOSTS.has(hostname) && hostname !== '[::1]') throw new HttpError(403, '拒绝跨站请求');
-    }
-    if (req.headers['x-puresky-editor'] !== '1') throw new HttpError(403, '缺少编辑器请求头');
-  }
-
-  function readBody(req) {
-    return new Promise((resolve, reject) => {
-      const chunks = [];
-      let size = 0;
-      req.on('data', (chunk) => {
-        size += chunk.length;
-        if (size > MAX_BODY) {
-          reject(new HttpError(413, '内容太大'));
-          req.destroy();
-          return;
-        }
-        chunks.push(chunk);
-      });
-      req.on('end', () => resolve(Buffer.concat(chunks)));
-      req.on('error', reject);
-    });
-  }
-
-  async function json(req) {
-    const raw = await readBody(req);
-    try {
-      return JSON.parse(raw.toString('utf8') || '{}');
-    } catch {
-      throw new HttpError(400, '请求体不是合法 JSON');
-    }
-  }
-
-  function send(res, status, payload) {
-    res.statusCode = status;
-    res.setHeader('content-type', 'application/json; charset=utf-8');
-    res.setHeader('cache-control', 'no-store');
-    res.end(JSON.stringify(payload));
-  }
 
   return async function handler(req, res) {
     try {
       const url = new URL(req.url ?? '/', 'http://localhost');
       const route = `${req.method} ${url.pathname.replace(/\/+$/, '') || '/'}`;
+      const q = (name) => url.searchParams.get(name);
 
-      // 预览图片由 <img> 直接请求，带不了自定义头；只校验来源是本机，且只读文章目录里的图片。
+      // 预览图片由 <img> 直接请求，带不了自定义头；校验本机来源，且只读文章目录里的图片。
       if (route === 'GET /asset') {
-        if (!LOOPBACK.has(req.socket.remoteAddress ?? '')) throw new HttpError(403, '编辑器只对本机开放');
-        const { type, data } = await asset(url.searchParams.get('p') ?? '');
+        guardAsset(req);
+        const { type, data } = await asset(q('p') ?? '');
         res.setHeader('content-type', type);
         res.setHeader('cache-control', 'no-store');
         res.end(data);
@@ -375,34 +302,50 @@ export function createEditorApi({ root, markdown }) {
       guard(req);
 
       switch (route) {
+        case 'GET /ping':
+          return send(res, 200, { ok: true, boot });
         case 'GET /posts':
           return send(res, 200, { posts: await listPosts() });
         case 'GET /post':
-          return send(res, 200, await readPost(url.searchParams.get('slug')));
+          return send(res, 200, await readPost(q('slug')));
         case 'POST /post':
           return send(res, 200, await savePost(await json(req)));
         case 'DELETE /post':
-          return send(res, 200, await deletePost(url.searchParams.get('slug')));
+          return send(res, 200, await deletePost(q('slug')));
         case 'POST /preview': {
           const { slug, body } = await json(req);
           return send(res, 200, await preview(slug, String(body ?? '')));
         }
         case 'POST /upload':
-          return send(res, 200, await upload(url.searchParams.get('slug'), url.searchParams.get('name') ?? '', await readBody(req)));
+          return send(res, 200, await upload(q('slug'), q('name') ?? '', await readBody(req)));
+        case 'GET /vocab':
+          return send(res, 200, withCounts(await vocabState(await listPosts())));
+        case 'POST /vocab':
+          return send(res, 200, await vocabOp(await json(req)));
+        case 'POST /series':
+          return send(res, 200, await seriesOp(await json(req)));
         case 'GET /git':
-          return send(res, 200, await gitStatus());
-        case 'POST /git/publish': {
-          const { message } = await json(req);
-          return send(res, 200, await publish(message));
+          return send(res, 200, await git.status());
+        case 'GET /git/diff':
+          return send(res, 200, await git.diff(q('path')));
+        case 'GET /git/log':
+          return send(res, 200, await git.history());
+        case 'POST /git/commit': {
+          const { message, files } = await json(req);
+          return send(res, 200, await git.commit(message, files));
         }
+        case 'POST /git/push':
+          return send(res, 200, await git.push());
         case 'POST /git/pull':
-          return send(res, 200, await pull());
+          return send(res, 200, await git.pull());
+        case 'POST /git/undo':
+          return send(res, 200, await git.undo());
         default:
           throw new HttpError(404, '没有这个接口');
       }
     } catch (error) {
       const status = error instanceof HttpError ? error.status : 500;
-      send(res, status, { error: error.message ?? String(error) });
+      send(res, status, { error: error.message ?? String(error), code: error.code });
     }
   };
 }
