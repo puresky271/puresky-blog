@@ -90,6 +90,7 @@ export const CATEGORIES = [
   { id: 'persona', label: '人格', blurb: '人格、语气与内心：同一个角色怎么在每一轮都还是她。' },
   { id: 'engineering', label: '工程', blurb: '延迟、并发、提示词装配，把系统跑稳的那些事。' },
   { id: 'essays', label: '随想', blurb: 'AI 时代里的一些想法，不那么技术。' },
+  { id: 'tools', label: '工具', blurb: '开发人员日常会使用到的那些玩意' },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
@@ -136,6 +137,9 @@ export const TAGS = [
   { name: '缓存', slug: 'cache', group: 'tech', blurb: '缓存什么、何时失效、谁是权威数据源。' },
   { name: 'Python', slug: 'python', group: 'tech', blurb: 'Python 生态与运行环境。' },
   { name: '前端', slug: 'frontend', group: 'tech', blurb: '界面、交互与浏览器。' },
+  { name: '版本管理', slug: 'version-control', group: 'tech', blurb: '开发时的文件/环境等的版本管理' },
+  { name: 'git', slug: 'git', group: 'tech', blurb: '关于git的各种知识' },
+  { name: 'github', slug: 'github', group: 'tech', blurb: 'github的各种知识' },
   // 体裁
   { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
   { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
