@@ -11,7 +11,6 @@
     iCheckSquare,
     iCode,
     iImage,
-    iLightbulb,
     iLink,
     iListBullets,
     iListNumbers,
@@ -38,7 +37,7 @@
     ['ts', 'TypeScript'],
     ['js', 'JavaScript'],
     ['python', 'Python'],
-    ['bash', 'Shell'],
+    ['bash', 'Bash'],
     ['json', 'JSON'],
     ['yaml', 'YAML'],
     ['toml', 'TOML'],
@@ -107,7 +106,21 @@
   <button type="button" class="tb" onclick={() => ed.cm?.wrap('[', '](https://)', '链接文字')} title="链接（Ctrl+K）。选中文字后直接粘贴网址也行" aria-label="链接"><Icon icon={iLink} size={16} /></button>
   <span class="sep"></span>
 
-  <button type="button" class="tb" onclick={() => ed.cm?.prefix('> ')} title="引用" aria-label="引用"><Icon icon={iQuotes} size={16} /></button>
+  <div class="drop">
+    <button type="button" class="tb wide" onclick={(e) => toggle('callout', e)} aria-label="引用" aria-expanded={menu === 'callout'} title="引用：普通引用或带 [!TIP] 等标记的提示块">
+      <Icon icon={iQuotes} size={16} /><span>引用</span><Icon icon={iCaretDown} size={11} />
+    </button>
+    {#if menu === 'callout'}
+      <div class="ed-menu" role="menu">
+        <button type="button" class="ed-menu-item" role="menuitem" onclick={() => run(() => ed.cm?.prefix('> '))}>普通引用<span class="aside">&gt;</span></button>
+        {#each CALLOUTS as [kind, label, hint]}
+          <button type="button" class="ed-menu-item" role="menuitem" title={hint} onclick={() => run(() => ed.cm?.callout(kind))}>
+            <span class="callout-dot" data-kind={kind}></span>{label}<span class="aside">[!{kind}]</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
+  </div>
   <button type="button" class="tb" onclick={() => ed.cm?.prefix('- ')} title="无序列表" aria-label="无序列表"><Icon icon={iListBullets} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.prefix('1. ')} title="有序列表" aria-label="有序列表"><Icon icon={iListNumbers} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.prefix('- [ ] ')} title="任务列表" aria-label="任务列表"><Icon icon={iCheckSquare} size={16} /></button>
@@ -121,20 +134,6 @@
       <div class="ed-menu cols" role="menu">
         {#each LANGS as [lang, label]}
           <button type="button" class="ed-menu-item" role="menuitem" onclick={() => run(() => ed.cm?.codeBlock(lang))}>{label}<span class="aside">{lang}</span></button>
-        {/each}
-      </div>
-    {/if}
-  </div>
-  <div class="drop">
-    <button type="button" class="tb wide" onclick={(e) => toggle('callout', e)} aria-expanded={menu === 'callout'} title="提示块（选中几行再点，会把它们变成提示块）">
-      <Icon icon={iLightbulb} size={16} /><span>提示块</span><Icon icon={iCaretDown} size={11} />
-    </button>
-    {#if menu === 'callout'}
-      <div class="ed-menu" role="menu">
-        {#each CALLOUTS as [kind, label, hint]}
-          <button type="button" class="ed-menu-item" role="menuitem" onclick={() => run(() => ed.cm?.callout(kind))}>
-            <span class="callout-dot" data-kind={kind}></span>{label}<span class="aside">{hint}</span>
-          </button>
         {/each}
       </div>
     {/if}

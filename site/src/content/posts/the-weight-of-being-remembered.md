@@ -3,6 +3,7 @@ title: 她记得你，这件事有多重
 description: 我做的 AI 角色会记得你，也在一座模拟的东京里过自己的日子。让她更像一个「个体」的那些设计，也让我欠用户的东西变多了。
 pubDate: 2026-10-08
 category: essays
+subcategory: ai-and-people
 tags: ['角色扮演', '记忆系统', '人格一致性', 'AI 与人', '反思']
 series: AI 时代手记
 seriesOrder: 2

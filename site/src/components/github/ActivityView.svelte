@@ -7,14 +7,16 @@
   import type { GitHubOverview } from '@shared/github';
 
   import Icon from '@/components/ui/Icon.svelte';
+  import LeetCodeCard from '@/components/leetcode/LeetCodeCard.svelte';
   import { formatCount, formatDate, formatRelative } from '@/lib/format';
   import { githubLive } from '@/lib/github-live.svelte';
+  import type { LeetCodeSubmissionCalendar } from '@/lib/leetcode';
   import { iArrowUpRight, iBuildings, iGitFork, iGithubLogo, iGlobe, iMapPin, iStar } from '@/lib/icons.generated';
 
   import ActivityList from './ActivityList.svelte';
   import ContributionGraph from './ContributionGraph.svelte';
 
-  let { snapshot, username }: { snapshot: GitHubOverview | null; username: string } = $props();
+  let { snapshot, username, leetcode }: { snapshot: GitHubOverview | null; username: string; leetcode: LeetCodeSubmissionCalendar } = $props();
 
   // 只用首屏快照做一次初始化，之后的数据由 refresh() 更新，所以这里有意只读初始值。
   // svelte-ignore state_referenced_locally
@@ -38,6 +40,9 @@
     <Icon icon={iGithubLogo} size={28} class="text-fg-subtle" />
     <p>GitHub 数据暂时拉不到。</p>
     <a class="link" href={`https://github.com/${username}`} target="_blank" rel="noopener noreferrer">直接去 GitHub 主页</a>
+  </div>
+  <div class="mt-5">
+    <LeetCodeCard calendar={leetcode} />
   </div>
 {:else}
   <section class="card profile">
@@ -103,6 +108,10 @@
       </div>
     {/if}
   </section>
+
+  <div class="mt-5">
+    <LeetCodeCard calendar={leetcode} />
+  </div>
 
   <div class="mt-5 grid gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
     <section class="card p-5" aria-labelledby="events-title">

@@ -7,7 +7,7 @@
 
 import { getCollection, type CollectionEntry } from 'astro:content';
 
-import { CATEGORIES, TAG_GROUPS, TAGS, type CategoryId } from '@/config';
+import { CATEGORIES, SUBCATEGORIES, SUBCATEGORIES_BY_CATEGORY, TAG_GROUPS, TAGS, type CategoryId, type SubcategoryId } from '@/config';
 import { formatDateISO, readingMinutes, wordCount } from '@/lib/format';
 
 export type Post = CollectionEntry<'posts'>;
@@ -51,11 +51,27 @@ export function categoryOf(id: CategoryId) {
   return CATEGORIES.find((c) => c.id === id)!;
 }
 
+export function subcategoryOf(id: SubcategoryId) {
+  return SUBCATEGORIES.find((c) => c.id === id)!;
+}
+
 export async function getCategories() {
   const posts = await getPosts();
   return CATEGORIES.map((c) => ({
     ...c,
     count: posts.filter((p) => p.data.category === c.id).length,
+    subcategories: SUBCATEGORIES_BY_CATEGORY[c.id].map((subcategory) => ({
+      ...subcategory,
+      count: posts.filter((p) => p.data.subcategory === subcategory.id).length,
+    })),
+  }));
+}
+
+export async function getSubcategories(category: CategoryId) {
+  const posts = await getPosts();
+  return SUBCATEGORIES_BY_CATEGORY[category].map((subcategory) => ({
+    ...subcategory,
+    count: posts.filter((p) => p.data.subcategory === subcategory.id).length,
   }));
 }
 
@@ -117,6 +133,10 @@ export async function getCategoryTags(id: CategoryId, limit = 8): Promise<TagSta
     .sort((a, b) => counts.get(b.name)! - counts.get(a.name)!)
     .slice(0, limit)
     .map((t) => ({ ...t, count: counts.get(t.name)! }));
+}
+
+export async function getSubcategoryPosts(id: SubcategoryId): Promise<Post[]> {
+  return (await getPosts()).filter((post) => post.data.subcategory === id);
 }
 
 /** 时间上相邻的两篇。newer 是更新的那篇。归档的文章不在时间线上，没有相邻。 */

@@ -1,12 +1,11 @@
 ---
 /**
- * PostListItem.astro — 列表页的文章条目：左边日期，右边标题、摘要和元信息，有封面时右侧带缩略图。
- * 比卡片网格更适合扫读：标题对齐在同一条竖线上。
+ * PostListItem.astro — 列表页的文章卡片：顶部一行左边是日期和阅读量、右边是标签胶囊，
+ * 下面是加粗标题和摘要，整卡可点。
  */
-import { Image } from 'astro:assets';
-
 import Icon from '@/components/ui/Icon.astro';
-import { categoryOf, postMinutes, type Post } from '@/lib/content';
+import ViewBadge from '@/components/post/ViewBadge.svelte';
+import { type Post } from '@/lib/content';
 import { formatDateISO, postPath } from '@/lib/format';
 
 interface Props {
@@ -15,59 +14,81 @@ interface Props {
 }
 
 const { post, index = 0 } = Astro.props;
-const { title, description, pubDate, category, tags, cover, coverAlt, featured } = post.data;
+const { title, description, pubDate, tags, featured } = post.data;
 ---
 
 <li data-reveal style={`--reveal-i: ${Math.min(index, 6)}`}>
   <a href={postPath(post.id)} class="item group">
-    <time datetime={pubDate.toISOString()} class="date tabular">{formatDateISO(pubDate)}</time>
-    <div class="min-w-0">
-      <h2 class="title">
-        {featured && <Icon name="star-fill" size={14} class="mr-1.5 inline -translate-y-px text-accent" label="精选" />}
-        {title}
-      </h2>
-      <p class="desc">{description}</p>
-      <p class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8125rem] text-fg-subtle">
-        <span class="text-fg-muted">{categoryOf(category).label}</span>
-        <span>约 {postMinutes(post)} 分钟</span>
-        {tags.slice(0, 3).map((tag) => <span>#{tag}</span>)}
+    <div class="item-head">
+      <p class="meta">
+        <time datetime={pubDate.toISOString()} class="tabular">{formatDateISO(pubDate)}</time>
+        <ViewBadge slug={post.id} client:idle />
       </p>
+      <div class="tags" aria-label="标签">
+        {tags.slice(0, 5).map((tag) => <span class="tag">{tag}</span>)}
+      </div>
     </div>
-    {
-      cover && (
-        <div class="thumb">
-          <Image src={cover} alt={coverAlt ?? ''} width={320} class="h-full w-full object-cover" />
-        </div>
-      )
-    }
+    <h2 class="title">
+      {featured && <Icon name="star-fill" size={14} class="mr-1.5 inline -translate-y-px text-accent" label="精选" />}
+      {title}
+    </h2>
+    <p class="desc">{description}</p>
   </a>
 </li>
 
 <style>
   .item {
-    display: grid;
-    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
-    gap: 1.5rem;
-    padding: 1.4rem 1rem;
-    margin-inline: -1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
     border-radius: var(--radius-card);
-    transition: background-color 200ms ease;
+    transition: border-color 180ms ease, background-color 180ms ease, transform 180ms var(--ease-out-expo), box-shadow 180ms ease;
   }
   .item:hover {
-    background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--line);
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
-  .date {
-    padding-top: 0.2rem;
+  .item-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+  }
+  .meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
     font-family: var(--font-mono);
-    font-size: 0.8125rem;
+    font-size: 0.78rem;
     color: var(--fg-subtle);
   }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-left: auto;
+  }
+  .tag {
+    padding: 0.18rem 0.55rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--fg-muted);
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
   .title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
+    margin: 0;
+    font-size: 1.18rem;
+    font-weight: 700;
+    line-height: 1.35;
     color: var(--fg);
     transition: color 160ms ease;
   }
@@ -75,33 +96,15 @@ const { title, description, pubDate, category, tags, cover, coverAlt, featured }
     color: var(--accent);
   }
   .desc {
-    margin-top: 0.35rem;
-    font-size: 0.9375rem;
-    line-height: 1.7;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.8;
     color: var(--fg-muted);
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-  .thumb {
-    width: 9rem;
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    border-radius: var(--radius-control);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-  }
-  @media (width < 48rem) {
-    .item {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.4rem;
-    }
-    .date {
-      padding-top: 0;
-    }
-    .thumb {
-      display: none;
-    }
   }
 </style>

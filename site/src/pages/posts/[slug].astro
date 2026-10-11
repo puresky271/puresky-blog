@@ -13,9 +13,11 @@ import Toc from '@/components/post/Toc.astro';
 import ViewCount from '@/components/post/ViewCount.svelte';
 import Icon from '@/components/ui/Icon.astro';
 import { GITHUB } from '@/config';
+import { questionOf } from '@/lib/leetcode';
 import Base from '@/layouts/Base.astro';
 import {
   categoryOf,
+  subcategoryOf,
   getAdjacent,
   getAllPosts,
   getRelated,
@@ -24,7 +26,7 @@ import {
   postWords,
   type Post,
 } from '@/lib/content';
-import { categoryPath, formatDate, postPath, tagPath } from '@/lib/format';
+import { categoryPath, formatDate, postPath, subcategoryPath, tagPath } from '@/lib/format';
 
 export async function getStaticPaths() {
   // 归档的文章也生成页面：它们不进任何列表，但原链接要继续有效。
@@ -38,10 +40,11 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-const { title, description, pubDate, updatedDate, category, tags, cover, coverAlt, mayBeStale, commentsOff, archived } = post.data;
+const { title, description, pubDate, updatedDate, category, subcategory, leetcodeSlug, tags, cover, coverAlt, mayBeStale, commentsOff, archived } = post.data;
 
 const [adjacent, series, related] = await Promise.all([getAdjacent(post), getSeries(post), getRelated(post)]);
 const cat = categoryOf(category);
+const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
 const sourcePath = `${GITHUB.contentPath}/${post.filePath?.split('/').pop() ?? `${post.id}.mdx`}`;
 const sourceUrl = `https://github.com/${GITHUB.repo}/blob/${GITHUB.branch}/${sourcePath}`;
 const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/${sourcePath}`;
@@ -55,6 +58,7 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
       <header class="post-header">
         <p class="post-meta">
           <a href={categoryPath(category)} class="cat">{cat.label}</a>
+          <a href={subcategoryPath(category, subcategory)} class="text-fg-subtle">{subcategoryOf(subcategory).label}</a>
           <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
           <ViewCount client:idle slug={post.id} />
           <span aria-hidden="true">·</span>
@@ -117,6 +121,15 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
             <aside class="stale" role="note">
               <Icon name="hourglass-medium" size={17} />
               <p>这篇文章的结论可能已经过时。写作时的环境和依赖版本与现在不同，参考时请留意。</p>
+            </aside>
+          )
+        }
+
+        {
+          leetcodeSlug && (
+            <aside class="stale" role="note">
+              <Icon name="code" size={17} />
+              <p>这篇文章关联力扣题目 <a class="link" href={`https://leetcode.cn/problems/${leetcodeSlug}/`} target="_blank" rel="noopener noreferrer">{leetcode?.titleCn ?? leetcodeSlug}</a>{leetcode ? `（${leetcode.frontendId} · ${leetcode.difficulty} · ${leetcode.acRate == null ? '暂无通过率' : `${leetcode.acRate.toFixed(1)}% 通过率`}）` : ''}。</p>
             </aside>
           )
         }

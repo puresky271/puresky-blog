@@ -31,6 +31,7 @@
   });
 
   const categoryLabel = (id: string | null) => ed.vocab.categories.find((c) => c.id === id)?.label ?? '未分类';
+  const subcategoryLabel = (id: string | null) => ed.vocab.subcategories.find((c) => c.id === id)?.label ?? '待归类';
 </script>
 
 <aside class="side">
@@ -59,7 +60,7 @@
             {p.title}
           </span>
           <span class="meta">
-            <span class="tabular">{p.pubDate ?? '无日期'}</span><span class="sep">·</span>{categoryLabel(p.category)}<span class="sep">·</span><span class="tabular">{p.words.toLocaleString('zh-CN')} 字</span>
+            <span class="tabular">{p.pubDate ?? '无日期'}</span><span class="sep">·</span>{categoryLabel(p.category)} / {subcategoryLabel(p.subcategory)}<span class="sep">·</span><span class="tabular">{p.words.toLocaleString('zh-CN')} 字</span>
           </span>
           {#if p.draft || p.archived || p.featured || p.series || p.error}
             <span class="badges">

@@ -2,7 +2,8 @@
 title: 我给提示词做了版本控制，因为它根本没有源文件
 description: 角色提示词拼完约 51000 字符，却不在仓库里。我把它当成没有源文件的编译产物，改动前后各 dump 一份逐场景 diff：27 个固定场景、冻结运行时状态、基线不能事后补造，以及一次伪装成代码问题的配置漂移。
 pubDate: 2026-10-08
-category: engineering
+category: technology
+subcategory: context-prompt
 tags: ['角色扮演', '提示词', '上下文工程', '评测', '方法论']
 ---
 

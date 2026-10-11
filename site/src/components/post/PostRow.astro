@@ -3,7 +3,7 @@
  * PostRow.astro — 文章的单行形态：日期、标题、分类。
  * 用在首页次要文章列表和归档页，信息密度高，扫一眼就能找到。
  */
-import { categoryOf, type Post } from '@/lib/content';
+import { subcategoryOf, type Post } from '@/lib/content';
 import { formatDateISO, formatMonthDay, postPath } from '@/lib/format';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const { post, fullDate = false, index = 0 } = Astro.props;
-const { title, pubDate, category } = post.data;
+const { title, pubDate, subcategory } = post.data;
 const date = fullDate ? formatDateISO(pubDate) : formatMonthDay(pubDate);
 ---
 
@@ -22,7 +22,7 @@ const date = fullDate ? formatDateISO(pubDate) : formatMonthDay(pubDate);
   <a href={postPath(post.id)} class:list={['row group', { 'full-date': fullDate }]}>
     <time datetime={pubDate.toISOString()} class="date tabular">{date}</time>
     <span class="title">{title}</span>
-    <span class="cat">{categoryOf(category).label}</span>
+    <span class="cat">{subcategoryOf(subcategory).label}</span>
   </a>
 </li>
 

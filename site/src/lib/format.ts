@@ -110,6 +110,7 @@ export const postPath = (id: string) => withBase(`posts/${id}/`);
 const TAG_SLUGS = new Map<string, string>(TAGS.map((t) => [t.name, t.slug]));
 export const tagPath = (tag: string) => withBase(`tags/${TAG_SLUGS.get(tag) ?? encodeURIComponent(tag)}/`);
 export const categoryPath = (id: string) => withBase(`categories/${id}/`);
+export const subcategoryPath = (category: string, subcategory: string) => withBase(`categories/${category}/${subcategory}/`);
 
 /** 去掉 base 前缀后的路径，用于导航高亮比较。 */
 export function stripBase(pathname: string): string {

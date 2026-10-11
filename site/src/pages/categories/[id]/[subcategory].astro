@@ -1,0 +1,44 @@
+---
+import PostListing from '@/components/post/PostListing.astro';
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { CATEGORIES, SUBCATEGORIES } from '@/config';
+import Base from '@/layouts/Base.astro';
+import { getSubcategoryPosts, type Post } from '@/lib/content';
+import { categoryPath, withBase } from '@/lib/format';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const category of CATEGORIES) {
+    for (const subcategory of SUBCATEGORIES.filter((item) => item.category === category.id)) {
+      paths.push({
+        params: { id: category.id, subcategory: subcategory.id },
+        props: { category, subcategory, posts: await getSubcategoryPosts(subcategory.id) },
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  category: (typeof CATEGORIES)[number];
+  subcategory: (typeof SUBCATEGORIES)[number];
+  posts: Post[];
+}
+
+const { category, subcategory, posts } = Astro.props;
+---
+
+<Base title={`${category.label} / ${subcategory.label}`} description={subcategory.blurb}>
+  <PageHeader title={subcategory.label} count={posts.length} description={subcategory.blurb}>
+    <Breadcrumb
+      items={[
+        { label: '文章', href: withBase('/posts/') },
+        { label: '分类与标签', href: withBase('/tags/') },
+        { label: category.label, href: categoryPath(category.id) },
+        { label: subcategory.label },
+      ]}
+    />
+  </PageHeader>
+  <PostListing posts={posts} active={category.id} />
+</Base>

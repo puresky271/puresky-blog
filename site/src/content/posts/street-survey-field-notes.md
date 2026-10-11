@@ -3,7 +3,8 @@ title: 踏查笔记：把一条电车线变成可感知的空间
 description: 给一条 6 站的电车线做环境感知，坐标和时刻表都不难，难的是决定写哪些细节。最后只保留五类静态事实、禁掉行为动词，把判断权留给角色；验证时还踩了两个验证方法本身的坑。
 pubDate: 2026-07-12
 updatedDate: 2026-10-09
-category: world
+category: technology
+subcategory: system-engineering
 tags: ['地理', '环境感知', '世界模拟', '踏查']
 ---
 

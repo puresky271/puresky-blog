@@ -7,10 +7,11 @@
  * 读者能一眼看出这个博客关心哪些东西、哪些还没来得及写。
  */
 import Icon from '@/components/ui/Icon.astro';
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import Base from '@/layouts/Base.astro';
 import { getCategories, getCategoryTags, getTagGroups } from '@/lib/content';
-import { categoryPath, tagPath } from '@/lib/format';
+import { categoryPath, tagPath, withBase } from '@/lib/format';
 
 const [categories, groups] = await Promise.all([getCategories(), getTagGroups()]);
 const withTags = await Promise.all(categories.map(async (c) => ({ ...c, tags: await getCategoryTags(c.id, 4) })));
@@ -19,7 +20,9 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
 ---
 
 <Base title="分类与标签" description="五个分类和完整的标签词表。">
-  <PageHeader title="分类与标签" count={used} description="分类回答「属于哪个方向」，一篇只有一个；标签回答「涉及哪些具体的东西」，一篇三到五个。" />
+  <PageHeader title="分类与标签" count={used} description="分类回答「属于哪个方向」，一篇只有一个；标签回答「涉及哪些具体的东西」，一篇三到五个。">
+    <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签' }]} />
+  </PageHeader>
 
   <div class="container-page">
     <section aria-labelledby="cat-title">

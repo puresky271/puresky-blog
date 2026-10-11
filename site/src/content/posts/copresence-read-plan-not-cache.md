@@ -3,7 +3,8 @@ title: 读缓存判位置，四个角色被判定在同一条街上
 description: 通勤时段的共处判定全错：判定读了一个滞后整整一个 tick 的运行时缓存，把角色要去的地方当成了她们所在的地方。改成从 plan step 现算位置后判定恢复正确，教训是判定前先问数据是真源还是派生视图。
 pubDate: 2026-07-18
 updatedDate: 2026-10-09
-category: world
+category: technology
+subcategory: system-engineering
 tags: ['地理', '世界模拟', '时间', '缓存', '排障复盘']
 mayBeStale: true
 ---

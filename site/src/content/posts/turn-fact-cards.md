@@ -3,7 +3,8 @@ title: 别把原始对话喂给模型
 description: 上下文窗口不是靠塞得更多来利用的。把每轮对话抽成带来源和置信度的结构化事实卡、只保留最近一轮原文，同样的预算能覆盖四到六倍的对话轮数，指代也不会随窗口滑出而失效。
 pubDate: 2026-07-24
 updatedDate: 2026-10-09
-category: memory
+category: technology
+subcategory: context-prompt
 tags: ['记忆系统', '上下文工程', '提示词', 'LLM', '方法论']
 series: 记忆系统工程笔记
 seriesOrder: 2

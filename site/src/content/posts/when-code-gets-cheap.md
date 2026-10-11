@@ -3,6 +3,7 @@ title: 当写代码变得廉价
 description: 这个博客是我和 AI 编程助手一起搭的。代码出来得太快，快到我开始认真想：写代码的人，手里还剩下什么。
 pubDate: 2026-10-07
 category: essays
+subcategory: learning-growth
 tags: ['AI 与人', 'LLM', '方法论', '反思']
 series: AI 时代手记
 seriesOrder: 1

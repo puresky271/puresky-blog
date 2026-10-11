@@ -2,7 +2,8 @@
 title: 用户等了我 55 秒，其中 45 秒跟模型一点关系没有
 description: 一轮对话 55 秒，所有模型调用加起来只占 8 到 12 秒。剩下的时间花在每轮上百次全量反序列化 10MB 的世界账本，而账本能长到 10MB，是因为只会追加的合并语义让清理逻辑静默失效。
 pubDate: 2026-09-26
-category: engineering
+category: technology
+subcategory: system-engineering
 tags: ['世界模拟', '性能', '缓存', '可观测性', '排障复盘']
 ---
 

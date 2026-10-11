@@ -53,7 +53,7 @@ const pageHref = (n: number) => (n === 1 ? withBase(page!.base) : withBase(`${pa
 <div class="container-page">
   {
     posts.length > 0 ? (
-      <ol class="flex flex-col gap-1">
+      <ol class="flex flex-col gap-5">
         {posts.map((post, i) => (
           <PostListItem post={post} index={i} />
         ))}

@@ -11,7 +11,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
-import { CATEGORY_IDS, TAG_NAMES } from './config';
+import { CATEGORY_IDS, SUBCATEGORIES, SUBCATEGORY_IDS, TAG_NAMES } from './config';
 
 /**
  * 文章图片（posts/images/）不进仓库，只在本机。没有这张图的构建（CI、别人 clone）当作没有封面，
@@ -30,6 +30,9 @@ const posts = defineCollection({
       pubDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
       category: z.enum(CATEGORY_IDS),
+      subcategory: z.enum(SUBCATEGORY_IDS),
+      /** 子类必须属于当前一级分类。 */
+      leetcodeSlug: z.string().regex(/^[a-z0-9-]{1,120}$/).optional(),
       /** 三到五个，只能从 config.ts 的 TAGS 里选。 */
       tags: z.array(z.enum(TAG_NAMES)).max(6).default([]),
 
@@ -52,6 +55,14 @@ const posts = defineCollection({
       commentsOff: z.boolean().default(false),
       /** 结论可能已过期但仍有参考价值时打开，正文顶部会显示一条时效提醒。 */
       mayBeStale: z.boolean().default(false),
+    }).superRefine((data, ctx) => {
+      const subcategory = SUBCATEGORIES.find((item) => item.id === data.subcategory);
+      if (!subcategory || subcategory.category !== data.category) {
+        ctx.addIssue({ code: 'custom', path: ['subcategory'], message: '子类不属于当前一级分类' });
+      }
+      if (data.category === 'algorithms' && !data.leetcodeSlug) {
+        ctx.addIssue({ code: 'custom', path: ['leetcodeSlug'], message: '算法解题文章需要关联 leetcodeSlug' });
+      }
     }),
 });
 

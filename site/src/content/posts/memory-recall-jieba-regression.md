@@ -3,7 +3,8 @@ title: 一个缺失的分词库让召回率掉了十个点
 description: 记忆系统的 canon 召回从 90% 掉到 80%，原因不在算法：生产进程跑在另一个没装 jieba 的 Python 解释器上，分词静默退化成按字切。修法是让退化可见，并给每个召回通道配一条哨兵事实。
 pubDate: 2026-07-22
 updatedDate: 2026-10-09
-category: memory
+category: technology
+subcategory: system-engineering
 tags: ['记忆系统', '检索', 'Python', '评测', '排障复盘']
 series: 记忆系统工程笔记
 seriesOrder: 1

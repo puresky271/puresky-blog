@@ -7,6 +7,7 @@
    *   大纲   正文里的标题，点一下跳到那一行，预览也跟着滚过去；当前光标所在的小节高亮。
    */
   import Icon from '@/components/ui/Icon.svelte';
+  import { SERIES } from '@/config';
   import { iArchive, iGlobe, iImage, iPencilSimple, iPlus, iTrash, iUploadSimple, iWarning, iX } from '@/lib/icons.generated';
 
   import { api, assetUrl } from './client';
@@ -25,6 +26,8 @@
     description: 'f-desc',
     pubDate: 'f-pub',
     category: 'f-category',
+    subcategory: 'f-subcategory',
+    leetcodeSlug: 'f-leetcode',
     tags: 'f-tags',
     series: 'f-series',
     cover: 'f-cover',
@@ -39,6 +42,7 @@
   const fm = $derived(doc.frontmatter);
   const status = $derived<Status>(fm.archived ? 'archived' : fm.draft ? 'draft' : 'public');
   const category = $derived(ed.vocab.categories.find((c) => c.id === fm.category));
+  const subcategories = $derived(ed.vocab.subcategories.filter((c) => c.category === fm.category));
 
   function setStatus(next: Status) {
     fm.draft = next === 'draft';
@@ -67,7 +71,10 @@
 
   // ── 系列 ───────────────────────────────────────────────────────────────────
 
-  const seriesNames = $derived([...new Set(ed.posts.map((p) => p.series).filter((s): s is string => Boolean(s)))].sort((a, b) => a.localeCompare(b, 'zh-CN')));
+  // config.ts 里登记的系列名 + 已有文章里用到的，合并去重后给输入框补全。
+  const seriesNames = $derived(
+    [...new Set([...SERIES.map((s) => s.name), ...ed.posts.map((p) => p.series).filter((s): s is string => Boolean(s))])].sort((a, b) => a.localeCompare(b, 'zh-CN'))
+  );
   const others = $derived(ed.posts.filter((p) => fm.series && p.series === fm.series.trim() && p.slug !== doc.previousSlug));
   const members = $derived(
     fm.series?.trim()
@@ -192,7 +199,7 @@
         <h3>分类</h3>
         <div class="cats" id="f-category" role="radiogroup" aria-label="分类" tabindex="-1">
           {#each ed.vocab.categories as c}
-            <button type="button" role="radio" aria-checked={fm.category === c.id} class="cat" onclick={() => (fm.category = c.id)} title={c.blurb}>{c.label}</button>
+            <button type="button" role="radio" aria-checked={fm.category === c.id} class="cat" onclick={() => { fm.category = c.id; fm.subcategory = ed.vocab.subcategories.find((item) => item.category === c.id)?.id ?? ''; }} title={c.blurb}>{c.label}</button>
           {/each}
           <button type="button" class="cat add" onclick={() => (newCategory = newCategory ? null : { label: '', id: '', blurb: '' })} title="新建分类">
             <Icon icon={iPlus} size={12} />新分类
@@ -216,6 +223,24 @@
           </div>
         {/if}
       </section>
+
+      <section>
+        <h3>子类</h3>
+        <div class="cats" id="f-subcategory" role="radiogroup" aria-label="子类" tabindex="-1">
+          {#each subcategories as c}
+            <button type="button" role="radio" aria-checked={fm.subcategory === c.id} class="cat" onclick={() => (fm.subcategory = c.id)} title={c.blurb}>{c.label}</button>
+          {/each}
+        </div>
+        {#if subcategories.length === 0}<p class="ed-hint">这个分类还没有子类，请在「整理」里新建。</p>{/if}
+      </section>
+
+      {#if fm.category === 'algorithms'}
+        <section>
+          <h3>力扣题目</h3>
+          <label class="f" for="f-leetcode"><span class="ed-label">题目 slug</span><input id="f-leetcode" class="ed-input mono" bind:value={fm.leetcodeSlug} placeholder="例如 two-sum" spellcheck="false" /></label>
+          <p class="ed-hint">算法解题文章需要关联一道题，填写力扣 URL 中的 slug。</p>
+        </section>
+      {/if}
 
       <section>
         <h3>标签 <span class="ed-hint">{fm.tags?.length ?? 0} / 6，建议 3 到 5 个</span></h3>

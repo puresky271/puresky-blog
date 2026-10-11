@@ -254,6 +254,18 @@
       {:else if catDraft === null}
         <button type="button" class="add" onclick={() => (catDraft = { ...emptyForm })} disabled={busy}><Icon icon={iPlus} size={15} />新建分类</button>
       {/if}
+      {#each ed.vocab.categories as parent}
+        {@const children = ed.vocab.subcategories.filter((c) => c.category === parent.id)}
+        <h2 class="loose">{parent.label} 的子类 <span class="ed-badge muted tabular">{children.length}</span></h2>
+        <ul class="rows">
+          {#each children as c, i}
+            <li>
+              <div class="info"><p class="label"><span class="font-mono id">{c.id}</span> <b>{c.label}</b> <span class="ed-badge muted tabular">{useCount('subcategories', c.id)} 篇</span></p><p class="blurb">{c.blurb}</p></div>
+              <div class="moves"><button type="button" class="ed-icon sm" onclick={() => ed.vocabOp({ kind: 'subcategory', action: 'move', id: c.id, delta: -1 })} disabled={i === 0 || busy} aria-label="上移"><Icon icon={iCaretUp} size={13} /></button><button type="button" class="ed-icon sm" onclick={() => ed.vocabOp({ kind: 'subcategory', action: 'move', id: c.id, delta: 1 })} disabled={i === children.length - 1 || busy} aria-label="下移"><Icon icon={iCaretDown} size={13} /></button><button type="button" class="ed-icon sm danger" onclick={() => ed.vocabOp({ kind: 'subcategory', action: 'delete', id: c.id })} disabled={useCount('subcategories', c.id) > 0 || busy} aria-label={`删除 ${c.label}`}><Icon icon={iTrash} size={13} /></button></div>
+            </li>
+          {/each}
+        </ul>
+      {/each}
     </div>
   {:else if ed.organizeTab === 'tags'}
     <div class="panel">

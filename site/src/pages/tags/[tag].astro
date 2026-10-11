@@ -4,6 +4,7 @@
  * 只为写过文章的标签生成页面。
  */
 import PostListing from '@/components/post/PostListing.astro';
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { TAG_GROUPS } from '@/config';
 import Base from '@/layouts/Base.astro';
@@ -32,11 +33,7 @@ const related = await getRelatedTags(tag.name);
 
 <Base title={`#${tag.name}`} description={`${tag.blurb}「${tag.name}」标签下的 ${posts.length} 篇文章。`}>
   <PageHeader title={`#${tag.name}`} count={posts.length} description={tag.blurb}>
-    <div class="tag-meta">
-      <a href={withBase('/tags/')} class="crumb">分类与标签</a>
-      <span aria-hidden="true">/</span>
-      <span>{group.label}</span>
-    </div>
+    <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签', href: withBase('/tags/') }, { label: group.label }]} />
     {
       related.length > 0 && (
         <div class="related">
@@ -58,21 +55,6 @@ const related = await getRelatedTags(tag.name);
 </Base>
 
 <style>
-  .tag-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.9rem;
-    font-size: 0.8125rem;
-    color: var(--fg-subtle);
-  }
-  .crumb {
-    color: var(--fg-muted);
-    transition: color 160ms ease;
-  }
-  .crumb:hover {
-    color: var(--accent);
-  }
   .related {
     display: flex;
     flex-wrap: wrap;

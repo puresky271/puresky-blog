@@ -82,9 +82,12 @@
   let previewToken = 0;
   function schedulePreview(delay = 320) {
     clearTimeout(previewTimer);
-    const doc = ed.doc;
-    if (!doc || ed.view === 'write') return;
     const token = ++previewToken;
+    const doc = ed.doc;
+    if (!doc || ed.view === 'write') {
+      previewBusy = false;
+      return;
+    }
     const { slug, body } = doc;
     previewTimer = window.setTimeout(async () => {
       previewBusy = true;
@@ -164,8 +167,10 @@
 
   async function uploadImage(file: File): Promise<string> {
     if (!ed.doc) throw new Error('没有打开的文章');
+    const doc = ed.doc;
     try {
-      const { path } = await api.upload(ed.doc.slug, file);
+      const { path } = await api.upload(doc.slug, file);
+      if (ed.doc === doc && ed.view === 'write') ed.view = 'split';
       ed.toast('ok', '图片已保存到本机（不进仓库）');
       return path;
     } catch (error) {

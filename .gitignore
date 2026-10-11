@@ -45,3 +45,6 @@ npm-debug.log*
 _scratch/
 .serena/
 *.local.*
+
+# playwright 输出
+output/

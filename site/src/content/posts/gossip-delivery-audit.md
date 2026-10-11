@@ -2,7 +2,8 @@
 title: 日志显示八卦已经送到，但角色还是不知道
 description: 五个角色之间传话的链路，日志里 873 条「已投递」，成员间的真八卦却只有 58% 进过对方的提示词。根因不是掷骰概率，是摘要洪水造成的队头阻塞；修法是分层留槽，再用变异测试证明断言真的能变红。
 pubDate: 2026-10-06
-category: memory
+category: technology
+subcategory: ai-llm
 tags: ['多智能体', '记忆系统', '可观测性', '评测', '排障复盘']
 series: 记忆系统工程笔记
 seriesOrder: 3

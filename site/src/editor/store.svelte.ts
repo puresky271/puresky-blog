@@ -147,7 +147,7 @@ class EditorStore {
 
   // ── 数据 ─────────────────────────────────────────────────────────────────
   posts = $state<PostSummary[]>([]);
-  vocab = $state<Vocab>({ categories: [], tagGroups: [], tags: [], usage: { categories: {}, tags: {} } });
+  vocab = $state<Vocab>({ categories: [], subcategories: [], tagGroups: [], tags: [], usage: { categories: {}, subcategories: {}, tags: {} } });
   git = $state<GitStatus | null>(null);
   /** 改了词表、dev server 正在重启。这期间不能保存，写作不受影响。 */
   restarting = $state(false);
@@ -184,6 +184,8 @@ class EditorStore {
     else if (description.length > 200) list.push({ field: 'description', text: `摘要超过 200 字（现在 ${description.length}）`, level: 'error' });
     if (!fm.pubDate) list.push({ field: 'pubDate', text: '缺少发布日期', level: 'error' });
     if (this.vocab.categories.length && !this.vocab.categories.some((c) => c.id === fm.category)) list.push({ field: 'category', text: '选一个分类', level: 'error' });
+    if (this.vocab.subcategories.length && !this.vocab.subcategories.some((c) => c.id === fm.subcategory && c.category === fm.category)) list.push({ field: 'subcategory', text: '选一个属于当前分类的子类', level: 'error' });
+    if (fm.category === 'algorithms' && !String(fm.leetcodeSlug ?? '').trim()) list.push({ field: 'leetcodeSlug', text: '算法解题文章需要填写力扣题目 slug', level: 'error' });
     const unknown = this.vocab.tags.length ? chosen.filter((t) => !this.vocab.tags.some((x) => x.name === t)) : [];
     if (unknown.length) list.push({ field: 'tags', text: `词表里没有：${unknown.join('、')}`, level: 'error' });
     if (chosen.length > 6) list.push({ field: 'tags', text: '标签最多 6 个', level: 'error' });
@@ -306,7 +308,8 @@ class EditorStore {
     let slug = `post-${date.replace(/-/g, '')}`;
     for (let i = 2; this.posts.some((p) => p.slug === slug); i += 1) slug = `post-${date.replace(/-/g, '')}-${i}`;
     const category = this.vocab.categories.some((c) => c.id === 'essays') ? 'essays' : (this.vocab.categories[0]?.id ?? '');
-    this.setDoc({ slug, previousSlug: null, openedAs: null, isNew: true, frontmatter: { title: '', description: '', pubDate: date, category, tags: [], draft: true }, body: '', mtime: null });
+    const subcategory = this.vocab.subcategories.find((c) => c.category === category)?.id ?? '';
+    this.setDoc({ slug, previousSlug: null, openedAs: null, isNew: true, frontmatter: { title: '', description: '', pubDate: date, category, subcategory, tags: [], draft: true }, body: '', mtime: null });
     this.savedAt = null;
     this.restore = null;
     this.inspector = true;

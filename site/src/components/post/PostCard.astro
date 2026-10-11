@@ -10,7 +10,7 @@ import { Image } from 'astro:assets';
 import { render } from 'astro:content';
 
 import Icon from '@/components/ui/Icon.astro';
-import { categoryOf, postMinutes, postWords, type Post } from '@/lib/content';
+import { categoryOf, subcategoryOf, postMinutes, postWords, type Post } from '@/lib/content';
 import { formatDate, postPath } from '@/lib/format';
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const { post, size = 'md', index = 0 } = Astro.props;
-const { title, description, pubDate, category, cover, coverAlt, featured } = post.data;
+const { title, description, pubDate, category, subcategory, cover, coverAlt, featured } = post.data;
 const cat = categoryOf(category);
 
 const feature = size === 'lg' && !cover;
@@ -40,7 +40,7 @@ const outline = feature
       <a href={postPath(post.id)} class="feature-link">
         <span class="deco" aria-hidden="true" />
         <p class="feature-meta">
-          <span class="cat-chip">{cat.label}</span>
+          <span class="cat-chip">{cat.label} / {subcategoryOf(subcategory).label}</span>
           <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
           {featured && (
             <span class="pick">
@@ -84,7 +84,7 @@ const outline = feature
         )}
         <div class="body">
           <p class="flex items-center gap-2 text-[0.8125rem] text-fg-muted">
-            <span class="text-accent">{cat.label}</span>
+            <span class="text-accent">{cat.label} / {subcategoryOf(subcategory).label}</span>
             <span aria-hidden="true">·</span>
             <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
             {featured && <Icon name="star-fill" size={13} class="text-accent" label="精选" />}

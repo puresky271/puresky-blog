@@ -1,31 +1,58 @@
 ---
-/** 分类页：说明、篇数、这个分类里最常用的标签，然后是文章列表。 */
+/** 一级分类页：三大类，以及旧分类 URL 的兼容页。 */
 import PostListing from '@/components/post/PostListing.astro';
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { CATEGORIES } from '@/config';
 import Base from '@/layouts/Base.astro';
-import { getCategoryTags, getPosts, type Post } from '@/lib/content';
-import { tagPath } from '@/lib/format';
+import { getCategories, getCategoryTags, getPosts, type Post } from '@/lib/content';
+import { categoryPath, subcategoryPath, tagPath, withBase } from '@/lib/format';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
-  return CATEGORIES.map((category) => ({
+  const current = CATEGORIES.map((category) => ({
     params: { id: category.id },
     props: { category, posts: posts.filter((p) => p.data.category === category.id) },
   }));
+  const legacyMap = {
+    memory: { label: '记忆', target: 'technology' },
+    world: { label: '时空', target: 'technology' },
+    persona: { label: '人格', target: 'technology' },
+    engineering: { label: '工程', target: 'technology' },
+    tools: { label: '工具', target: 'technology' },
+  };
+  const legacy = Object.entries(legacyMap).map(([id, old]) => ({ params: { id }, props: { legacy: { id, ...old } } }));
+  return [...current, ...legacy];
 }
 
 interface Props {
-  category: (typeof CATEGORIES)[number];
-  posts: Post[];
+  category?: (typeof CATEGORIES)[number];
+  posts?: Post[];
+  legacy?: { id: string; label: string; target: string };
 }
 
-const { category, posts } = Astro.props;
-const tags = await getCategoryTags(category.id);
+const { category, posts = [], legacy } = Astro.props;
+const tags = category ? await getCategoryTags(category.id) : [];
+const subcategories = category ? ((await getCategories()).find((item) => item.id === category.id)?.subcategories ?? []) : [];
 ---
 
-<Base title={category.label} description={category.blurb}>
-  <PageHeader title={category.label} count={posts.length} description={category.blurb}>
+{legacy ? (
+  <Base title={`${legacy.label}（旧分类）`} description={`旧分类「${legacy.label}」已并入新分类。`}>
+    <PageHeader title={`${legacy.label} 已迁移`} description={`这个旧分类已经并入「${CATEGORIES.find((item) => item.id === legacy.target)?.label ?? legacy.target}」。`}>
+      <a class="mt-4 inline-flex text-sm text-fg-muted hover:text-accent" href={categoryPath(legacy.target)}>查看新分类</a>
+    </PageHeader>
+  </Base>
+) : (
+<Base title={category!.label} description={category!.blurb}>
+  <PageHeader title={category!.label} count={posts.length} description={category!.blurb}>
+    <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签', href: withBase('/tags/') }, { label: category!.label }]} />
+    <nav class="mt-4 flex flex-wrap gap-1.5" aria-label="子类">
+      {subcategories.map((subcategory) => (
+        <a href={subcategoryPath(category!.id, subcategory.id)} class="chip">
+          {subcategory.label}<span class="tabular opacity-60">{subcategory.count}</span>
+        </a>
+      ))}
+    </nav>
     {
       tags.length > 0 && (
         <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="常用标签">
@@ -41,5 +68,6 @@ const tags = await getCategoryTags(category.id);
       )
     }
   </PageHeader>
-  <PostListing posts={posts} active={category.id} />
+  <PostListing posts={posts} active={category!.id} />
 </Base>
+)}

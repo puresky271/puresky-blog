@@ -19,6 +19,7 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import { countWords, parse, serialize } from './frontmatter.mjs';
 import { createGit } from './git.mjs';
 import { guard, guardAsset, HttpError, json, readBody, send } from './http.mjs';
+import { rehypePreviewImages } from './preview-images.mjs';
 import { applyVocabOp, readVocab, writeVocab } from './vocab.mjs';
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
@@ -91,6 +92,7 @@ export function createEditorApi({ root, markdown }) {
         title: frontmatter.title ?? slug,
         description: frontmatter.description ?? '',
         category: frontmatter.category ?? null,
+        subcategory: frontmatter.subcategory ?? null,
         tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
         pubDate: frontmatter.pubDate ?? null,
         updatedDate: frontmatter.updatedDate ?? null,
@@ -231,9 +233,10 @@ export function createEditorApi({ root, markdown }) {
 
   async function vocabState(posts) {
     const vocab = await readVocab(configFile);
-    const usage = { categories: {}, tags: {} };
+    const usage = { categories: {}, subcategories: {}, tags: {} };
     for (const p of posts) {
       if (p.category) (usage.categories[p.category] ??= []).push(p.title);
+      if (p.subcategory) (usage.subcategories[p.subcategory] ??= []).push(p.title);
       for (const t of p.tags) (usage.tags[t] ??= []).push(p.title);
     }
     return { vocab, usage };
@@ -241,7 +244,7 @@ export function createEditorApi({ root, markdown }) {
 
   function withCounts({ vocab, usage }) {
     const count = (map) => Object.fromEntries(Object.entries(map).map(([k, v]) => [k, v.length]));
-    return { ...vocab, usage: { categories: count(usage.categories), tags: count(usage.tags) } };
+    return { ...vocab, usage: { categories: count(usage.categories), subcategories: count(usage.subcategories), tags: count(usage.tags) } };
   }
 
   /**
@@ -267,7 +270,10 @@ export function createEditorApi({ root, markdown }) {
   // ── 预览 ───────────────────────────────────────────────────────────────────
 
   async function preview(slug, body) {
-    renderer ??= await createMarkdownProcessor(markdown);
+    renderer ??= await createMarkdownProcessor({
+      ...markdown,
+      rehypePlugins: [...(markdown.rehypePlugins ?? []), rehypePreviewImages],
+    });
     const { code, metadata } = await renderer.render(body, { fileURL: new URL(`file:///${inPosts(`${slug || 'preview'}.md`).replace(/\\/g, '/')}`) });
     // 正文里的相对图片路径在预览里换成经 asset 接口读取。
     const html = code.replace(/(<img[^>]+src=")(\.\/[^"]+)"/g, (_, head, src) => `${head}/__editor/api/asset?p=${encodeURIComponent(src)}"`);

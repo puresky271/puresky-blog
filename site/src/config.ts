@@ -43,6 +43,12 @@ export const GITHUB = {
   contentPath: 'site/src/content/posts',
 } as const;
 
+/** 力扣账号与快照配置。用户名用于公开 GraphQL 查询，不保存登录态。 */
+export const LEETCODE = {
+  username: 'puresky271',
+  profileUrl: 'https://leetcode.cn/u/puresky271/',
+} as const;
+
 /**
  * 网易云音乐歌单。
  * 打开歌单网页，地址里 playlist?id= 后面那串数字就是 id。
@@ -83,18 +89,43 @@ export const SOCIAL_LINKS: readonly { label: string; href: string; icon: string 
   { label: 'RSS', href: '/rss.xml', icon: 'rss' },
 ];
 
-/** 文章分类。id 进 URL，改了会断链，只增不改。 */
+/** 文章一级分类。id 进 URL，改了会断链，只增不改。 */
 export const CATEGORIES = [
-  { id: 'memory', label: '记忆', blurb: '角色记得什么、知道什么，信息怎么在她们之间流动。' },
-  { id: 'world', label: '时空', blurb: '地理、时间与环境：让角色真的身处某个地方、某个时刻。' },
-  { id: 'persona', label: '人格', blurb: '人格、语气与内心：同一个角色怎么在每一轮都还是她。' },
-  { id: 'engineering', label: '工程', blurb: '延迟、并发、提示词装配，把系统跑稳的那些事。' },
-  { id: 'essays', label: '随想', blurb: 'AI 时代里的一些想法，不那么技术。' },
-  { id: 'tools', label: '工具', blurb: '开发人员日常会使用到的那些玩意' },
+  { id: 'technology', label: '技术', blurb: 'AI 系统、软件工程和日常开发工具。' },
+  { id: 'algorithms', label: '算法解题', blurb: '算法题的思路、证明、复杂度和实现。' },
+  { id: 'essays', label: '随笔', blurb: '学习、生活和 AI 时代里的一些想法。' },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id) as [CategoryId, ...CategoryId[]];
+
+/** 二级分类。category 与 categoryId 的组合在构建期校验。 */
+export const SUBCATEGORIES = [
+  { id: 'ai-llm', category: 'technology', label: 'AI 与大模型', blurb: '模型行为、角色系统和 AI 应用。' },
+  { id: 'context-prompt', category: 'technology', label: '上下文与提示词', blurb: '提示词、上下文装配和检索。' },
+  { id: 'system-engineering', category: 'technology', label: '系统工程', blurb: '性能、并发、缓存、可观测性和可靠性。' },
+  { id: 'frontend-tools', category: 'technology', label: '前端与工具', blurb: '界面、浏览器、Git 和开发工具。' },
+  { id: 'technology-unclassified', category: 'technology', label: '待归类', blurb: '暂时无法确定子类的技术文章。' },
+  { id: 'arrays-strings', category: 'algorithms', label: '数组与字符串', blurb: '数组、字符串和双指针问题。' },
+  { id: 'linked-lists-trees', category: 'algorithms', label: '链表与树', blurb: '链表、二叉树和递归结构。' },
+  { id: 'hash-stack-queue', category: 'algorithms', label: '哈希与栈队列', blurb: '哈希表、栈、队列和单调结构。' },
+  { id: 'binary-search-sorting', category: 'algorithms', label: '二分与排序', blurb: '二分答案、排序和区间处理。' },
+  { id: 'dynamic-programming', category: 'algorithms', label: '动态规划', blurb: '状态设计、转移和优化。' },
+  { id: 'graph-theory', category: 'algorithms', label: '图论', blurb: '图遍历、最短路、并查集和拓扑排序。' },
+  { id: 'greedy-backtracking', category: 'algorithms', label: '贪心与回溯', blurb: '贪心证明、搜索和剪枝。' },
+  { id: 'mathematics', category: 'algorithms', label: '数学', blurb: '数论、组合、几何和模拟。' },
+  { id: 'algorithms-unclassified', category: 'algorithms', label: '待归类', blurb: '暂时无法确定子类的算法文章。' },
+  { id: 'learning-growth', category: 'essays', label: '学习成长', blurb: '学习方法、成长和学生生活。' },
+  { id: 'ai-and-people', category: 'essays', label: 'AI 与人', blurb: 'AI 时代里人的位置、责任和关系。' },
+  { id: 'life-observation', category: 'essays', label: '生活观察', blurb: '日常生活里的观察和记录。' },
+  { id: 'essays-unclassified', category: 'essays', label: '待归类', blurb: '暂时无法确定子类的随笔。' },
+] as const;
+
+export type SubcategoryId = (typeof SUBCATEGORIES)[number]['id'];
+export const SUBCATEGORY_IDS = SUBCATEGORIES.map((c) => c.id) as [SubcategoryId, ...SubcategoryId[]];
+export const SUBCATEGORIES_BY_CATEGORY = Object.fromEntries(
+  CATEGORIES.map((category) => [category.id, SUBCATEGORIES.filter((item) => item.category === category.id)])
+) as unknown as Record<CategoryId, readonly (typeof SUBCATEGORIES)[number][]>;
 
 /*
  * 标签：受控词表。
@@ -107,6 +138,8 @@ export const CATEGORY_IDS = CATEGORIES.map((c) => c.id) as [CategoryId, ...Categ
 export const TAG_GROUPS = [
   { id: 'topic', label: '主题', blurb: '文章在讨论的对象。' },
   { id: 'tech', label: '技术', blurb: '用到的方法、模型和工具。' },
+  { id: 'algo', label: '算法', blurb: '解题的技法与题型，给题解文章用。' },
+  { id: 'dsa', label: '数据结构', blurb: '数据结构本身的概念与实现，给知识讲解文章用，和算法技法分开。' },
   { id: 'kind', label: '体裁', blurb: '文章是怎么写的：复盘、实验、踏查还是随想。' },
 ] as const;
 
@@ -142,6 +175,61 @@ export const TAGS = [
   { name: 'github', slug: 'github', group: 'tech', blurb: 'github的各种知识' },
   { name: '规范性', slug: 'normative', group: 'tech', blurb: '开发时的规范性标准' },
   { name: '自动化', slug: 'automation', group: 'tech', blurb: '' },
+  { name: 'TypeScript', slug: 'typescript', group: 'tech', blurb: 'TypeScript 语言与类型工程。' },
+  { name: 'Astro', slug: 'astro', group: 'tech', blurb: 'Astro 框架与岛屿架构。' },
+  { name: 'Svelte', slug: 'svelte', group: 'tech', blurb: 'Svelte 组件与响应式。' },
+  { name: 'CSS', slug: 'css', group: 'tech', blurb: '样式、布局与设计令牌。' },
+  { name: 'Node.js', slug: 'nodejs', group: 'tech', blurb: 'Node.js 运行时与工具链。' },
+  { name: 'Cloudflare', slug: 'cloudflare', group: 'tech', blurb: 'Workers、KV、D1、R2 等边缘平台能力。' },
+  { name: 'GitHub Actions', slug: 'github-actions', group: 'tech', blurb: 'workflow、定时任务与 CI/CD 实践。' },
+  { name: 'Docker', slug: 'docker', group: 'tech', blurb: '容器与镜像。' },
+  { name: 'Linux', slug: 'linux', group: 'tech', blurb: 'Linux 系统与服务器运维。' },
+  { name: '命令行', slug: 'cli', group: 'tech', blurb: '终端、shell 与命令行工具。' },
+  { name: '数据库', slug: 'database', group: 'tech', blurb: 'SQL、索引与数据建模。' },
+  { name: '测试', slug: 'testing', group: 'tech', blurb: '单元测试、集成测试与断言设计。' },
+  { name: 'MCP', slug: 'mcp', group: 'tech', blurb: 'Model Context Protocol 的配置与接入。' },
+  { name: 'Agent', slug: 'agent', group: 'tech', blurb: '编码 Agent 与自主任务执行。' },
+  { name: 'Claude Code', slug: 'claude-code', group: 'tech', blurb: 'Claude Code 的配置与用法。' },
+  { name: 'Codex', slug: 'codex', group: 'tech', blurb: 'Codex 的配置与用法。' },
+  { name: 'AI 编程', slug: 'ai-coding', group: 'tech', blurb: '用 AI 辅助写代码的工作流。' },
+  { name: 'MATLAB', slug: 'matlab', group: 'tech', blurb: 'MATLAB 语言与工具箱。' },
+  { name: 'Simulink', slug: 'simulink', group: 'tech', blurb: 'Simulink 建模与仿真。' },
+  // 算法（题解技法，和数据结构概念分开）
+  { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
+  { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
+  { name: '前缀和', slug: 'prefix-sum', group: 'algo', blurb: '前缀和与差分。' },
+  { name: '二分查找', slug: 'binary-search', group: 'algo', blurb: '二分位置与二分答案。' },
+  { name: '排序', slug: 'sorting', group: 'algo', blurb: '排序作为前置处理或问题本身。' },
+  { name: '贪心', slug: 'greedy', group: 'algo', blurb: '局部最优与交换论证。' },
+  { name: '回溯', slug: 'backtracking', group: 'algo', blurb: '搜索、剪枝与撤销。' },
+  { name: '分治', slug: 'divide-and-conquer', group: 'algo', blurb: '拆分、递归与合并。' },
+  { name: '动态规划', slug: 'dynamic-programming', group: 'algo', blurb: '状态设计、转移与优化。' },
+  { name: '深度优先搜索', slug: 'dfs', group: 'algo', blurb: 'DFS 遍历与其变形。' },
+  { name: '广度优先搜索', slug: 'bfs', group: 'algo', blurb: 'BFS 分层与最短路。' },
+  { name: '记忆化搜索', slug: 'memoization', group: 'algo', blurb: '自顶向下的 DP 写法。' },
+  { name: '位运算', slug: 'bit-manipulation', group: 'algo', blurb: '位掩码与状态压缩。' },
+  { name: '单调栈', slug: 'monotonic-stack', group: 'algo', blurb: '下一个更大元素这一类。' },
+  { name: '拓扑排序', slug: 'topological-sort', group: 'algo', blurb: '入度、出度与依赖顺序。' },
+  { name: '最短路', slug: 'shortest-path', group: 'algo', blurb: 'Dijkstra、Bellman-Ford 与 Floyd。' },
+  { name: '数学', slug: 'math', group: 'algo', blurb: '数论、组合与数学观察。' },
+  { name: '模拟', slug: 'simulation', group: 'algo', blurb: '按题意直接实现过程。' },
+  { name: '复杂度分析', slug: 'complexity', group: 'algo', blurb: '时间与空间复杂度的估算。' },
+  // 数据结构（概念与实现，给讲解文章用）
+  { name: '数组', slug: 'array', group: 'dsa', blurb: '连续存储与随机访问。' },
+  { name: '字符串', slug: 'string', group: 'dsa', blurb: '字符串的表示与处理。' },
+  { name: '链表', slug: 'linked-list', group: 'dsa', blurb: '指针串联的线性结构。' },
+  { name: '栈', slug: 'stack', group: 'dsa', blurb: '后进先出。' },
+  { name: '队列', slug: 'queue', group: 'dsa', blurb: '先进先出与双端队列。' },
+  { name: '哈希表', slug: 'hash-table', group: 'dsa', blurb: '散列、冲突与查找。' },
+  { name: '堆', slug: 'heap', group: 'dsa', blurb: '优先队列与堆化。' },
+  { name: '二叉树', slug: 'binary-tree', group: 'dsa', blurb: '遍历、递归与树的形态。' },
+  { name: '二叉搜索树', slug: 'bst', group: 'dsa', blurb: '有序性与查找维护。' },
+  { name: '红黑树', slug: 'red-black-tree', group: 'dsa', blurb: '自平衡与旋转。' },
+  { name: '字典树', slug: 'trie', group: 'dsa', blurb: '前缀树与逐位存储。' },
+  { name: '图', slug: 'graph', group: 'dsa', blurb: '邻接表、邻接矩阵与图的表示。' },
+  { name: '并查集', slug: 'union-find', group: 'dsa', blurb: '路径压缩与按秩合并。' },
+  { name: '树状数组', slug: 'fenwick-tree', group: 'dsa', blurb: '区间和的轻量维护。' },
+  { name: '线段树', slug: 'segment-tree', group: 'dsa', blurb: '区间查询与懒惰标记。' },
   // 体裁
   { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
   { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
@@ -152,6 +240,20 @@ export const TAGS = [
 
 export type TagName = (typeof TAGS)[number]['name'];
 export const TAG_NAMES = TAGS.map((t) => t.name) as [TagName, ...TagName[]];
+
+/*
+ * 系列：半受控词表。
+ *
+ * 文章 frontmatter 的 series 还是自由字符串（新建系列直接在文章里写名字），
+ * 这里登记的名字会进编辑器的自动补全，防止「热题100 / 热题 100」这种漂移。
+ */
+export const SERIES = [
+  { name: '记忆系统工程笔记', blurb: '长期记忆系统的设计、踩坑与迭代。' },
+  { name: 'AI 时代手记', blurb: 'AI 时代里学习、工作和生活的一些记录。' },
+  { name: '力扣热题 100', blurb: '力扣热题 100 的题解。' },
+  { name: '数据结构笔记', blurb: '数据结构的概念与实现讲解。' },
+  { name: 'GitHub Actions 笔记', blurb: 'GitHub Actions 的用法与自动化实践。' },
+] as const;
 
 /** 每页文章数。 */
 export const POSTS_PER_PAGE = 12;

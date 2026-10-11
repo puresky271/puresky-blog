@@ -15,7 +15,7 @@ import vm from 'node:vm';
 
 import { HttpError } from './http.mjs';
 
-const BLOCKS = /** @type {const} */ (['CATEGORIES', 'TAG_GROUPS', 'TAGS']);
+const BLOCKS = /** @type {const} */ (['CATEGORIES', 'SUBCATEGORIES', 'TAG_GROUPS', 'TAGS']);
 const ID = /^[a-z][a-z0-9-]{0,31}$/;
 const TAG_SLUG = /^[a-z0-9][a-z0-9-]{0,47}$/;
 
@@ -43,6 +43,7 @@ export async function readVocab(file) {
   }
   return {
     categories: [...raw.CATEGORIES].map((c) => ({ id: str(c.id), label: str(c.label), blurb: str(c.blurb) })),
+    subcategories: [...raw.SUBCATEGORIES].map((c) => ({ id: str(c.id), category: str(c.category), label: str(c.label), blurb: str(c.blurb) })),
     tagGroups: [...raw.TAG_GROUPS].map((g) => ({ id: str(g.id), label: str(g.label), blurb: str(g.blurb) })),
     tags: [...raw.TAGS].map((t) => ({ name: str(t.name), slug: str(t.slug), group: str(t.group), blurb: str(t.blurb) })),
   };
@@ -56,6 +57,8 @@ function render(name, vocab, eol) {
   const lines = [];
   if (name === 'CATEGORIES') {
     for (const c of vocab.categories) lines.push(`  { id: ${q(c.id)}, label: ${q(c.label)}, blurb: ${q(c.blurb)} },`);
+  } else if (name === 'SUBCATEGORIES') {
+    for (const c of vocab.subcategories) lines.push(`  { id: ${q(c.id)}, category: ${q(c.category)}, label: ${q(c.label)}, blurb: ${q(c.blurb)} },`);
   } else if (name === 'TAG_GROUPS') {
     for (const g of vocab.tagGroups) lines.push(`  { id: ${q(g.id)}, label: ${q(g.label)}, blurb: ${q(g.blurb)} },`);
   } else {
@@ -110,6 +113,9 @@ function check(vocab) {
   };
   seen(vocab.categories, (c) => c.id, '分类 id ');
   seen(vocab.categories, (c) => c.label, '分类名');
+  seen(vocab.subcategories ?? [], (c) => c.id, '子类 id ');
+  const categoryIds = new Set(vocab.categories.map((c) => c.id));
+  for (const c of vocab.subcategories ?? []) if (!categoryIds.has(c.category)) throw new HttpError(400, `子类「${c.label}」的所属分类不存在`);
   seen(vocab.tagGroups, (g) => g.id, '分组 id ');
   seen(vocab.tags, (t) => t.slug, '标签 slug ');
   seen(vocab.tags, (t) => nameKey(t.name), '标签名');
@@ -165,7 +171,8 @@ function used(usage, key, what) {
  * usage：{ categories: { id: [标题…] }, tags: { 名字: [标题…] } }，用来拦下删除还在用的条目。
  */
 export function applyVocabOp(vocab, op, usage) {
-  const v = { categories: [...vocab.categories], tagGroups: [...vocab.tagGroups], tags: [...vocab.tags] };
+  /** @type {{ categories: any[]; subcategories: any[]; tagGroups: any[]; tags: any[] }} */
+  const v = { categories: [...vocab.categories], subcategories: [...(vocab.subcategories ?? [])], tagGroups: [...vocab.tagGroups], tags: [...vocab.tags] };
   const { kind, action } = op ?? {};
 
   if (kind === 'category') {
@@ -179,9 +186,35 @@ export function applyVocabOp(vocab, op, usage) {
       v.categories[index] = category(op.item, op.id);
     } else if (action === 'delete') {
       used(usage.categories, op.id, '分类');
+      if (v.subcategories.some((item) => item.category === op.id)) throw new HttpError(409, '这个分类下还有子类，先移走或删除子类');
       v.categories.splice(index, 1);
     } else if (action === 'move') {
       v.categories = move(v.categories, index, Math.sign(op.delta));
+    } else throw new HttpError(400, '不认识的操作');
+    return { vocab: v };
+  }
+
+  if (kind === 'subcategory') {
+    const index = v.subcategories.findIndex((c) => c.id === op.id);
+    if (action !== 'create' && index < 0) throw new HttpError(404, '没有这个子类');
+    if (action === 'create') {
+      const item = category(op.item);
+      const categoryId = String(op.item?.category ?? '').trim();
+      if (!v.categories.some((c) => c.id === categoryId)) throw new HttpError(400, '子类所属分类不存在');
+      if (v.subcategories.some((c) => c.id === item.id)) throw new HttpError(409, `已经有 id 为 ${item.id} 的子类了`);
+      v.subcategories.push({ ...item, category: categoryId });
+    } else if (action === 'update') {
+      const before = v.subcategories[index];
+      const item = category(op.item, op.id);
+      const categoryId = String(op.item?.category ?? before.category).trim();
+      if (!v.categories.some((c) => c.id === categoryId)) throw new HttpError(400, '子类所属分类不存在');
+      v.subcategories[index] = { ...item, category: categoryId };
+    } else if (action === 'delete') {
+      used(usage.subcategories, op.id, '子类');
+      v.subcategories.splice(index, 1);
+    } else if (action === 'move') {
+      const categoryId = v.subcategories[index].category;
+      v.subcategories = move(v.subcategories, index, Math.sign(op.delta), (item) => item.category === categoryId);
     } else throw new HttpError(400, '不认识的操作');
     return { vocab: v };
   }

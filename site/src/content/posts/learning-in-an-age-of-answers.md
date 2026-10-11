@@ -3,6 +3,7 @@ title: 在答案过剩的时代学习
 description: 作为一个 AI 专业的大二学生，答案随手可得之后，我得重新想「学会」是什么意思，以及卡住和走弯路还剩下什么价值。
 pubDate: 2026-10-09
 category: essays
+subcategory: learning-growth
 tags: ['学习', 'AI 与人', '方法论', '反思']
 series: AI 时代手记
 seriesOrder: 3

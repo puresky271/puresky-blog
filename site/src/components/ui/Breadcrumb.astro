@@ -1,0 +1,63 @@
+---
+/**
+ * Breadcrumb.astro — 文章 / 分类与标签 / 分类 / 子类、标签这一组页面之间的面包屑。
+ * 放在 PageHeader 的 slot 里（说明文字下面），最后一级是当前页，纯文本不可点。
+ */
+interface Props {
+  items: { label: string; href?: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumb" aria-label="位置">
+  <ol>
+    {
+      items.map((item, i) => (
+        <li>
+          {i > 0 && (
+            <span class="sep" aria-hidden="true">
+              /
+            </span>
+          )}
+          {item.href && i < items.length - 1 ? (
+            <a href={item.href}>{item.label}</a>
+          ) : (
+            <span class="current" aria-current={i === items.length - 1 ? 'page' : undefined}>
+              {item.label}
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .breadcrumb {
+    margin-top: 0.9rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .breadcrumb li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .breadcrumb a {
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .breadcrumb a:hover {
+    color: var(--accent);
+  }
+</style>

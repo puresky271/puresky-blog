@@ -2,7 +2,8 @@
 title: 五个角色共吃一份 10MB 的 JSON，八月它把我坑了三次
 description: 多个进程共写一份世界账本，生成是分钟级、写入是秒级。八月的三次事故：把日程当集合合并、旧进程覆写引发全天生成无限重做、真正的瓶颈是没人计数的发布提交。最后收口到发布 CAS 加同一临界区内 rebase。
 pubDate: 2026-09-28
-category: engineering
+category: technology
+subcategory: system-engineering
 tags: ['世界模拟', '并发', '可观测性', '排障复盘']
 ---
 

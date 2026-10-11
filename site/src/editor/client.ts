@@ -8,6 +8,7 @@ export interface PostSummary {
   title: string;
   description: string;
   category: string | null;
+  subcategory: string | null;
   tags: string[];
   pubDate: string | null;
   updatedDate: string | null;
@@ -28,6 +29,8 @@ export type Frontmatter = Record<string, unknown> & {
   pubDate?: string;
   updatedDate?: string;
   category?: string;
+  subcategory?: string;
+  leetcodeSlug?: string;
   tags?: string[];
   series?: string;
   seriesOrder?: number;
@@ -53,6 +56,9 @@ export interface Category {
   label: string;
   blurb: string;
 }
+export interface Subcategory extends Category {
+  category: string;
+}
 export interface TagGroup {
   id: string;
   label: string;
@@ -66,17 +72,18 @@ export interface Tag {
 }
 export interface Vocab {
   categories: Category[];
+  subcategories: Subcategory[];
   tagGroups: TagGroup[];
   tags: Tag[];
   /** 每个分类 / 标签被多少篇文章用着。 */
-  usage: { categories: Record<string, number>; tags: Record<string, number> };
+  usage: { categories: Record<string, number>; subcategories: Record<string, number>; tags: Record<string, number> };
 }
 
 export type VocabOp =
-  | { kind: 'category' | 'group'; action: 'create'; item: Category | TagGroup }
-  | { kind: 'category' | 'group'; action: 'update'; id: string; item: Omit<Category, 'id'> }
-  | { kind: 'category' | 'group'; action: 'delete'; id: string }
-  | { kind: 'category' | 'group'; action: 'move'; id: string; delta: number }
+  | { kind: 'category' | 'group' | 'subcategory'; action: 'create'; item: Category | Subcategory | TagGroup }
+  | { kind: 'category' | 'group' | 'subcategory'; action: 'update'; id: string; item: Omit<Category, 'id'> | Omit<Subcategory, 'id'> }
+  | { kind: 'category' | 'group' | 'subcategory'; action: 'delete'; id: string }
+  | { kind: 'category' | 'group' | 'subcategory'; action: 'move'; id: string; delta: number }
   | { kind: 'tag'; action: 'create'; item: Tag }
   | { kind: 'tag'; action: 'update'; name: string; item: Omit<Tag, 'slug'> }
   | { kind: 'tag'; action: 'delete'; name: string }

@@ -71,6 +71,8 @@ GITHUB_TOKEN 对构建是可选的，对线上 worker 实际是必需的：未�
 `site/src/content/` 四个集合：`posts`（md，新文章一律 .md；MDX 会把正文里的 { } < 当语法）、`illustrations`（md + `src/assets/illustrations` 里的图）、`projects`、`friends`（json）。
 分类（一篇一个）和标签（一篇三到五个）都是 `config.ts` 里的受控词表：`CATEGORIES`、`TAG_GROUPS`、`TAGS`。
 写了词表外的分类或标签，整个 posts 集合会加载失败（dev 下所有文章 404），新增标签先在 `TAGS` 里登记，slug 只增不改。
+算法题解技法（`algo` 组）和数据结构概念（`dsa` 组）是分开的两组标签，别混用。
+系列名是自由字符串，但 `SERIES` 里登记的名字会进编辑器的自动补全，开新系列先登记更稳妥。
 页面一律通过 `src/lib/content.ts` 查内容（草稿过滤、排序、统计只在这一处），不直接调 `getCollection`。
 Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点旁的加粗）、`remark-cjk-lines`（去掉汉字间软换行）、
 `remark-callout`（`> [!NOTE]`）、`rehype-heading-anchors`（保留中文的锚点）、`rehype-external-links`。
