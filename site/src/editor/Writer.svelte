@@ -116,9 +116,10 @@
     lastVersion = version;
   });
 
-  /** 和站点一样，把代码块包成带标题栏的「窗」。 */
+  /** 和站点一样，把代码块包成带标题栏的「窗」。选项卡里的代码块由 .code-tabs 自己提供外框，跳过。 */
   function enhancePreview() {
     previewEl?.querySelectorAll<HTMLPreElement>('pre:not([data-enhanced])').forEach((pre) => {
+      if (pre.closest('.code-tabs')) return;
       pre.dataset.enhanced = '';
       const block = document.createElement('div');
       block.className = 'code-block';

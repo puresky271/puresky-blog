@@ -15,6 +15,7 @@ import { rehypeExternalLinks } from './src/lib/markdown/rehype-external-links.mj
 import { rehypeHeadingAnchors } from './src/lib/markdown/rehype-heading-anchors.mjs';
 import { remarkCallout } from './src/lib/markdown/remark-callout.mjs';
 import { remarkCjkLines } from './src/lib/markdown/remark-cjk-lines.mjs';
+import { remarkCodeTabs } from './src/lib/markdown/remark-code-tabs.mjs';
 import { remarkLocalImages } from './src/lib/markdown/remark-local-images.mjs';
 
 /*
@@ -33,12 +34,15 @@ const runtimeBase = isCloudflarePages ? '/' : isGitHubPages && isProduction ? RE
  * Markdown 管线。站点和本地编辑器的预览共用同一份，预览里看到的就是发布后的样子。
  * cjk-friendly：让「**依赖。**不是」这类全角标点紧贴定界符的加粗也能成立。
  * local-images：文章图片不进仓库，没有图的构建（CI、别人 clone）跳过缺的图，而不是构建失败。
+ * code-tabs：:::tabs 容器里的相邻围栏代码块合成多语言选项卡（见 remark-code-tabs.mjs 头注释）。
  */
-const remarkPlugins = [remarkCjkFriendly, remarkCjkLines, remarkCallout, remarkLocalImages];
+const remarkPlugins = [remarkCjkFriendly, remarkCjkLines, remarkCallout, remarkLocalImages, remarkCodeTabs];
 const rehypePlugins = [rehypeHeadingAnchors, rehypeExternalLinks];
 const shikiConfig = /** @type {const} */ ({
   themes: { light: 'github-light', dark: 'github-dark-dimmed' },
   wrap: false,
+  // shiki 自带的别名表没有这几个常见写法，不写别名的话围栏会静默退成纯文本。
+  langAlias: { python3: 'python', golang: 'go', 'c++': 'cpp', 'c#': 'csharp' },
 });
 const runtimeSite = process.env.PUBLIC_SITE_ORIGIN || 'https://pureskyblog.dpdns.org';
 

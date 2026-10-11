@@ -194,7 +194,7 @@ export const TAGS = [
   { name: 'AI 编程', slug: 'ai-coding', group: 'tech', blurb: '用 AI 辅助写代码的工作流。' },
   { name: 'MATLAB', slug: 'matlab', group: 'tech', blurb: 'MATLAB 语言与工具箱。' },
   { name: 'Simulink', slug: 'simulink', group: 'tech', blurb: 'Simulink 建模与仿真。' },
-  // 算法（题解技法，和数据结构概念分开）
+  // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
   { name: '前缀和', slug: 'prefix-sum', group: 'algo', blurb: '前缀和与差分。' },
@@ -214,7 +214,8 @@ export const TAGS = [
   { name: '数学', slug: 'math', group: 'algo', blurb: '数论、组合与数学观察。' },
   { name: '模拟', slug: 'simulation', group: 'algo', blurb: '按题意直接实现过程。' },
   { name: '复杂度分析', slug: 'complexity', group: 'algo', blurb: '时间与空间复杂度的估算。' },
-  // 数据结构（概念与实现，给讲解文章用）
+  { name: '递归', slug: 'recursion', group: 'algo', blurb: '用递归思想求解算法题的方法' },
+  // 数据结构
   { name: '数组', slug: 'array', group: 'dsa', blurb: '连续存储与随机访问。' },
   { name: '字符串', slug: 'string', group: 'dsa', blurb: '字符串的表示与处理。' },
   { name: '链表', slug: 'linked-list', group: 'dsa', blurb: '指针串联的线性结构。' },

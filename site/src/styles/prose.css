@@ -390,6 +390,93 @@
   text-decoration: var(--shiki-dark-text-decoration) !important;
 }
 
+/*
+ * 多语言代码选项卡（remark-code-tabs.mjs 的输出）。
+ * 结构是 n 个隐藏的 radio + nav 标签栏 + n 个面板，切换全部靠 :checked 选择器，
+ * 没有 JS 也能用。PostEnhance 会给标签栏补一个复制当前面板代码的按钮。
+ */
+.prose .code-tabs {
+  margin-inline: -0.25rem;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--code-line);
+  background: var(--code-bg);
+}
+@media (width >= 48rem) {
+  .prose .code-tabs {
+    margin-inline: -1rem;
+  }
+}
+.code-tab-radio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.code-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 2.6rem;
+  padding: 0 0.4rem 0 1rem;
+  border-bottom: 1px solid var(--code-line);
+  background: var(--code-head);
+  overflow-x: auto;
+  user-select: none;
+}
+.code-tabs-bar label {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+.code-tabs-bar label:hover {
+  color: var(--fg);
+}
+.code-tabs .code-copy {
+  flex-shrink: 0;
+}
+.code-tab-panel > pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.code-tab-panel {
+  display: none;
+}
+
+/* 选项卡切换规则，支持到 8 个语言页签。 */
+.code-tabs > .code-tab-radio:nth-of-type(1):checked ~ .code-tab-panel:nth-of-type(1),
+.code-tabs > .code-tab-radio:nth-of-type(2):checked ~ .code-tab-panel:nth-of-type(2),
+.code-tabs > .code-tab-radio:nth-of-type(3):checked ~ .code-tab-panel:nth-of-type(3),
+.code-tabs > .code-tab-radio:nth-of-type(4):checked ~ .code-tab-panel:nth-of-type(4),
+.code-tabs > .code-tab-radio:nth-of-type(5):checked ~ .code-tab-panel:nth-of-type(5),
+.code-tabs > .code-tab-radio:nth-of-type(6):checked ~ .code-tab-panel:nth-of-type(6),
+.code-tabs > .code-tab-radio:nth-of-type(7):checked ~ .code-tab-panel:nth-of-type(7),
+.code-tabs > .code-tab-radio:nth-of-type(8):checked ~ .code-tab-panel:nth-of-type(8) {
+  display: block;
+}
+.code-tabs > .code-tab-radio:nth-of-type(1):checked ~ .code-tabs-bar > label:nth-child(1),
+.code-tabs > .code-tab-radio:nth-of-type(2):checked ~ .code-tabs-bar > label:nth-child(2),
+.code-tabs > .code-tab-radio:nth-of-type(3):checked ~ .code-tabs-bar > label:nth-child(3),
+.code-tabs > .code-tab-radio:nth-of-type(4):checked ~ .code-tabs-bar > label:nth-child(4),
+.code-tabs > .code-tab-radio:nth-of-type(5):checked ~ .code-tabs-bar > label:nth-child(5),
+.code-tabs > .code-tab-radio:nth-of-type(6):checked ~ .code-tabs-bar > label:nth-child(6),
+.code-tabs > .code-tab-radio:nth-of-type(7):checked ~ .code-tabs-bar > label:nth-child(7),
+.code-tabs > .code-tab-radio:nth-of-type(8):checked ~ .code-tabs-bar > label:nth-child(8) {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+
 /* ── 表格 ── */
 
 .prose table {

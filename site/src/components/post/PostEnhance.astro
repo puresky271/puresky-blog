@@ -20,6 +20,8 @@ const svg = (icon: { size: number; body: string }) =>
     const icons = document.getElementById('code-icons') as HTMLTemplateElement | null;
     if (!icons) return;
     document.querySelectorAll<HTMLPreElement>('.prose pre:not([data-enhanced])').forEach((pre) => {
+      // 选项卡里的代码块由 .code-tabs 自己提供窗口外框，不再各自包一层。
+      if (pre.closest('.code-tabs')) return;
       pre.dataset.enhanced = '';
 
       const block = document.createElement('div');
@@ -60,6 +62,42 @@ const svg = (icon: { size: number; body: string }) =>
     });
   }
 
+  /**
+   * 多语言选项卡（remark-code-tabs.mjs 的输出）：切换是纯 CSS 的，这里只补一个
+   * 「复制当前面板代码」的按钮，放在标签栏右端。
+   */
+  function enhanceCodeTabs() {
+    const icons = document.getElementById('code-icons') as HTMLTemplateElement | null;
+    if (!icons) return;
+    document.querySelectorAll<HTMLDivElement>('.prose .code-tabs:not([data-enhanced])').forEach((tabs) => {
+      tabs.dataset.enhanced = '';
+      const bar = tabs.querySelector('.code-tabs-bar');
+      if (!bar) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'code-copy';
+      const idle = `${icons.dataset.copy!}<span>复制</span>`;
+      button.innerHTML = idle;
+      button.addEventListener('click', async () => {
+        const index = [...tabs.querySelectorAll<HTMLInputElement>('.code-tab-radio')].findIndex((radio) => radio.checked);
+        const panel = tabs.querySelectorAll('.code-tab-panel')[index];
+        const code = panel?.querySelector('code')?.innerText ?? '';
+        try {
+          await navigator.clipboard.writeText(code.replace(/\n$/, ''));
+          button.innerHTML = `${icons.dataset.check!}<span>已复制</span>`;
+          button.dataset.copied = '';
+          setTimeout(() => {
+            button.innerHTML = idle;
+            delete button.dataset.copied;
+          }, 1600);
+        } catch {
+          button.innerHTML = `${icons.dataset.copy!}<span>复制失败</span>`;
+        }
+      });
+      bar.append(button);
+    });
+  }
+
   /** 分享：支持系统分享面板的设备（主要是手机）用系统面板，否则复制链接。 */
   document.addEventListener('click', async (event) => {
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-share]');
@@ -88,5 +126,9 @@ const svg = (icon: { size: number; body: string }) =>
   });
 
   enhanceCode();
-  document.addEventListener('astro:page-load', enhanceCode);
+  enhanceCodeTabs();
+  document.addEventListener('astro:page-load', () => {
+    enhanceCode();
+    enhanceCodeTabs();
+  });
 </script>
