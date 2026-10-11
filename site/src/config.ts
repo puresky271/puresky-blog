@@ -105,6 +105,7 @@ export const SUBCATEGORIES = [
   { id: 'context-prompt', category: 'technology', label: '上下文与提示词', blurb: '提示词、上下文装配和检索。' },
   { id: 'system-engineering', category: 'technology', label: '系统工程', blurb: '性能、并发、缓存、可观测性和可靠性。' },
   { id: 'frontend-tools', category: 'technology', label: '前端与工具', blurb: '界面、浏览器、Git 和开发工具。' },
+  { id: 'data-structures', category: 'technology', label: '数据结构', blurb: '数据结构的概念、实现与应用。' },
   { id: 'technology-unclassified', category: 'technology', label: '待归类', blurb: '暂时无法确定子类的技术文章。' },
   { id: 'arrays-strings', category: 'algorithms', label: '数组与字符串', blurb: '数组、字符串和双指针问题。' },
   { id: 'linked-lists-trees', category: 'algorithms', label: '链表与树', blurb: '链表、二叉树和递归结构。' },
@@ -231,6 +232,7 @@ export const TAGS = [
   { name: '并查集', slug: 'union-find', group: 'dsa', blurb: '路径压缩与按秩合并。' },
   { name: '树状数组', slug: 'fenwick-tree', group: 'dsa', blurb: '区间和的轻量维护。' },
   { name: '线段树', slug: 'segment-tree', group: 'dsa', blurb: '区间查询与懒惰标记。' },
+  { name: '迭代', slug: 'iteration', group: 'dsa', blurb: '按步推进、循环求解，和递归互为对照。' },
   // 体裁
   { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
   { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
