@@ -129,7 +129,7 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
           leetcodeSlug && (
             <aside class="stale" role="note">
               <Icon name="code" size={17} />
-              <p>这篇文章关联力扣题目 <a class="link" href={`https://leetcode.cn/problems/${leetcodeSlug}/`} target="_blank" rel="noopener noreferrer">{leetcode?.titleCn ?? leetcodeSlug}</a>{leetcode ? `（${leetcode.frontendId} · ${leetcode.difficulty} · ${leetcode.acRate == null ? '暂无通过率' : `${leetcode.acRate.toFixed(1)}% 通过率`}）` : ''}。</p>
+              <p>这篇文章关联力扣题目 <a class="link" href={`https://leetcode.cn/problems/${leetcodeSlug}/`} target="_blank" rel="noopener noreferrer">{leetcode?.titleCn ?? leetcodeSlug}</a>{leetcode ? `（${leetcode.frontendId} · ${leetcode.difficulty} · ${leetcode.acRate == null ? '暂无通过率' : `${leetcode.acRate.toFixed(1)}% 通过率`}）` : ''}。代码风格因人而异，文中的题解代码以力扣官方题解为准。</p>
             </aside>
           )
         }

@@ -92,7 +92,7 @@ export const SOCIAL_LINKS: readonly { label: string; href: string; icon: string 
 /** 文章一级分类。id 进 URL，改了会断链，只增不改。 */
 export const CATEGORIES = [
   { id: 'technology', label: '技术', blurb: 'AI 系统、软件工程和日常开发工具。' },
-  { id: 'algorithms', label: '算法解题', blurb: '算法题的思路、证明、复杂度和实现。' },
+  { id: 'algorithms', label: '算法解题', blurb: '算法题的思路、证明、复杂度和实现。代码风格因人而异，题解代码以力扣官方题解为准。' },
   { id: 'essays', label: '随笔', blurb: '学习、生活和 AI 时代里的一些想法。' },
 ] as const;
 
