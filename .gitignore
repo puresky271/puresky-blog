@@ -44,6 +44,7 @@ npm-debug.log*
 # local scratch
 _scratch/
 .serena/
+.workbuddy/
 *.local.*
 
 # playwright 输出

@@ -50,7 +50,7 @@ const postsDir = path.join(root, 'src/content/posts');
 const postFiles = (await readdir(postsDir)).filter((file) => file.endsWith('.md') || file.endsWith('.mdx'));
 const slugs = [...new Set((await Promise.all(postFiles.map(async (file) => {
   const source = await readFile(path.join(postsDir, file), 'utf8');
-  return /^leetcodeSlug:\s*([a-z0-9-]+)\s*$/m.exec(source)?.[1] ?? null;
+  return /^leetcodeSlug:\s*['"]?([a-z0-9-]+)['"]?\s*$/m.exec(source)?.[1] ?? null;
 }))).filter(Boolean))];
 const previousCalendar = await readJson(calendarFile, { username, fetchedAt: '', total: 0, days: [] });
 const fetchedAt = new Date().toISOString();
