@@ -140,6 +140,8 @@ export const TAGS = [
   { name: '版本管理', slug: 'version-control', group: 'tech', blurb: '开发时的文件/环境等的版本管理' },
   { name: 'git', slug: 'git', group: 'tech', blurb: '关于git的各种知识' },
   { name: 'github', slug: 'github', group: 'tech', blurb: 'github的各种知识' },
+  { name: '规范性', slug: 'normative', group: 'tech', blurb: '开发时的规范性标准' },
+  { name: '自动化', slug: 'automation', group: 'tech', blurb: '' },
   // 体裁
   { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
   { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
