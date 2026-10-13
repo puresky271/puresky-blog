@@ -9,6 +9,7 @@
  */
 
 @import '@fontsource/noto-serif-sc/600.css';
+@import 'katex/dist/katex.min.css';
 
 .prose {
   --prose-size: 1.0625rem;
@@ -153,6 +154,21 @@
 .prose sub,
 .prose sup {
   font-size: 0.72em;
+}
+
+/* ── 数学公式（KaTeX） ── */
+
+/* 行间公式独占一段，上下留白；太长时横向滚动而不是挤爆版心。 */
+.prose .katex-display {
+  margin: 1.6em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.15em;
+}
+
+/* 行内公式字号跟随正文，比 KaTeX 默认略大的一档收回来。 */
+.prose .katex {
+  font-size: 1.02em;
 }
 
 /* ── 列表 ── */

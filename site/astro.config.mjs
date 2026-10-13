@@ -8,7 +8,9 @@ import svelte from '@astrojs/svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
+import rehypeKatex from 'rehype-katex';
 import remarkCjkFriendly from 'remark-cjk-friendly';
+import remarkMath from 'remark-math';
 
 import editor from './editor/integration.mjs';
 import { rehypeExternalLinks } from './src/lib/markdown/rehype-external-links.mjs';
@@ -35,9 +37,10 @@ const runtimeBase = isCloudflarePages ? '/' : isGitHubPages && isProduction ? RE
  * cjk-friendly：让「**依赖。**不是」这类全角标点紧贴定界符的加粗也能成立。
  * local-images：文章图片不进仓库，没有图的构建（CI、别人 clone）跳过缺的图，而不是构建失败。
  * code-tabs：:::tabs 容器里的相邻围栏代码块合成多语言选项卡（见 remark-code-tabs.mjs 头注释）。
+ * math：$...$ 行内公式、$$...$$ 行间公式，渲染成 KaTeX（样式在 prose.css 顶部 @import）。
  */
-const remarkPlugins = [remarkCjkFriendly, remarkCjkLines, remarkCallout, remarkLocalImages, remarkCodeTabs];
-const rehypePlugins = [rehypeHeadingAnchors, rehypeExternalLinks];
+const remarkPlugins = [remarkCjkFriendly, remarkMath, remarkCjkLines, remarkCallout, remarkLocalImages, remarkCodeTabs];
+const rehypePlugins = [rehypeKatex, rehypeHeadingAnchors, rehypeExternalLinks];
 const shikiConfig = /** @type {const} */ ({
   themes: { light: 'github-light', dark: 'github-dark-dimmed' },
   wrap: false,
