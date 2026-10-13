@@ -1,18 +1,24 @@
 {
   "username": "puresky271",
-  "fetchedAt": "2026-10-11T15:12:15.016Z",
-  "total": 4,
+  "fetchedAt": "2026-10-13T00:49:08.397Z",
+  "total": 11,
   "days": [
     {
       "timestamp": 1769212800,
       "date": "2026-01-24",
       "count": 1,
-      "level": 2
+      "level": 1
     },
     {
       "timestamp": 1791676800,
       "date": "2026-10-11",
-      "count": 3,
+      "count": 4,
+      "level": 3
+    },
+    {
+      "timestamp": 1791763200,
+      "date": "2026-10-12",
+      "count": 6,
       "level": 4
     }
   ]
