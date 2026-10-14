@@ -40,6 +40,8 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
+// 正文一个标题也没有时没有目录可放，整页版心居中。
+const noToc = headings.length === 0;
 const { title, description, pubDate, updatedDate, category, subcategory, leetcodeSlug, tags, cover, coverAlt, mayBeStale, commentsOff, archived } = post.data;
 
 const [adjacent, series, related] = await Promise.all([getAdjacent(post), getSeries(post), getRelated(post)]);
@@ -54,7 +56,7 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
   <div class="reading-progress" aria-hidden="true"></div>
 
   <article class="container-page post-container">
-    <div class="post-grid">
+    <div class="post-grid" class:list={{ 'no-toc': noToc }}>
       <header class="post-header">
         <p class="post-meta">
           <a href={categoryPath(category)} class="cat">{cat.label}</a>
@@ -98,14 +100,22 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
         }
       </header>
 
-      <aside class="post-aside" aria-label="目录">
-        <Toc headings={headings} variant="sidebar" />
-      </aside>
+      {
+        !noToc && (
+          <aside class="post-aside" aria-label="目录">
+            <Toc headings={headings} variant="sidebar" />
+          </aside>
+        )
+      }
 
       <div class="post-main">
-        <div class="lg:hidden">
-          <Toc headings={headings} variant="inline" />
-        </div>
+        {
+          !noToc && (
+            <div class="lg:hidden">
+              <Toc headings={headings} variant="inline" />
+            </div>
+          )
+        }
 
         {
           archived && (
@@ -297,6 +307,13 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
     }
     .post-aside {
       grid-area: aside;
+    }
+    /* 没有目录：单栏居中，头部和正文同在中间一栏 */
+    .post-grid.no-toc {
+      grid-template-columns: minmax(0, 58rem);
+      grid-template-areas:
+        'header'
+        'main';
     }
   }
   .post-aside {
