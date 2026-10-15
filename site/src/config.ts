@@ -216,6 +216,7 @@ export const TAGS = [
   { name: '模拟', slug: 'simulation', group: 'algo', blurb: '按题意直接实现过程。' },
   { name: '复杂度分析', slug: 'complexity', group: 'algo', blurb: '时间与空间复杂度的估算。' },
   { name: '递归', slug: 'recursion', group: 'algo', blurb: '用递归思想求解算法题的方法' },
+  { name: '字符串匹配', slug: 'string-matching', group: 'algo', blurb: 'KMP 等在主串中查找模式串的算法。' },
   // 数据结构
   { name: '数组', slug: 'array', group: 'dsa', blurb: '连续存储与随机访问。' },
   { name: '字符串', slug: 'string', group: 'dsa', blurb: '字符串的表示与处理。' },
