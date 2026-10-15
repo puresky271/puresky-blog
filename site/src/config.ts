@@ -195,6 +195,7 @@ export const TAGS = [
   { name: 'AI 编程', slug: 'ai-coding', group: 'tech', blurb: '用 AI 辅助写代码的工作流。' },
   { name: 'MATLAB', slug: 'matlab', group: 'tech', blurb: 'MATLAB 语言与工具箱。' },
   { name: 'Simulink', slug: 'simulink', group: 'tech', blurb: 'Simulink 建模与仿真。' },
+  { name: 'PyTorch', slug: 'pytorch', group: 'tech', blurb: '关于PyTorch的相关知识' },
   // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
