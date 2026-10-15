@@ -26,7 +26,7 @@
     ],
     "acRate": 68,
     "url": "https://leetcode.cn/problems/reorder-list/",
-    "fetchedAt": "2026-10-14T21:47:39.025Z"
+    "fetchedAt": "2026-10-15T07:41:43.843Z"
   },
   {
     "slug": "trapping-rain-water",
@@ -59,6 +59,43 @@
     ],
     "acRate": 66.1,
     "url": "https://leetcode.cn/problems/trapping-rain-water/",
-    "fetchedAt": "2026-10-14T21:47:39.025Z"
+    "fetchedAt": "2026-10-15T07:41:43.843Z"
+  },
+  {
+    "slug": "find-the-index-of-the-first-occurrence-in-a-string",
+    "questionId": "28",
+    "frontendId": "28",
+    "title": "Find the Index of the First Occurrence in a String",
+    "titleCn": "找出字符串中第一个匹配项的下标",
+    "difficulty": "Easy",
+    "topicTags": [
+      {
+        "name": "Two Pointers",
+        "slug": "two-pointers"
+      },
+      {
+        "name": "String",
+        "slug": "string"
+      },
+      {
+        "name": "String Matching",
+        "slug": "string-matching"
+      },
+      {
+        "name": "KMP 算法",
+        "slug": "knuth-morris-pratt-algorithm"
+      },
+      {
+        "name": "Boyer–Moore 算法",
+        "slug": "boyer-moore-string-search-algorithm"
+      },
+      {
+        "name": "扩展 KMP",
+        "slug": "z-algorithm"
+      }
+    ],
+    "acRate": 45.5,
+    "url": "https://leetcode.cn/problems/find-the-index-of-the-first-occurrence-in-a-string/",
+    "fetchedAt": "2026-10-15T07:41:43.843Z"
   }
 ]
