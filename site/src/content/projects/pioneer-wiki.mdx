@@ -1,0 +1,24 @@
+---
+name: Pioneer Wiki
+tagline: 用自然史图鉴的方式整理计算机科学，按尺度、角色与关系编目的中英双语维基。
+weight: 97
+status: active
+since: '2026'
+stack: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind v4', 'Supabase']
+repo: NEUP-Net-Depart/pioneer-wiki
+demo: https://wiki.perlica.cloud
+featured: true
+---
+
+算法、系统与概念之间有怎样的联系？Pioneer Wiki 为每条目记录尺度、角色、来源和关系，
+让阅读既能深入一份档案，也能沿着关联继续探索。
+
+### 五个入口
+
+博物、地理、艺术、蓝图与编年册五套视觉语言，把知识与参与者放进同一份目录。
+条目保留双语正文、来源、作者和版本历史，公开读者只读已发布修订。
+
+### 工程
+
+Next.js App Router 构建，严格 TypeScript。没有配置后端时用确定性的内存 Mock 数据，
+本地不用数据库也能跑起来；接上 Supabase 后内容、搜索、认证与审核走同一套服务契约。

@@ -1,6 +1,7 @@
 ---
 /**
- * 项目：手写的项目卡片在前；后面列出 GitHub 上其余公开仓库，数据来自构建期快照。
+ * 项目：精选项目里权重最高的那个独占一行，其余两列并列；
+ * 后面列出 GitHub 上其余公开仓库，数据来自构建期快照。
  */
 import ProjectCard from '@/components/project/ProjectCard.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -8,6 +9,7 @@ import PageHeader from '@/components/ui/PageHeader.astro';
 import { GITHUB } from '@/config';
 import Base from '@/layouts/Base.astro';
 import { getProjects } from '@/lib/content';
+import type { Project } from '@/lib/content';
 import { formatCount, formatDate } from '@/lib/format';
 import { getGitHubSnapshot } from '@/lib/snapshots';
 
@@ -15,22 +17,47 @@ const [projects, github] = await Promise.all([getProjects(), getGitHubSnapshot()
 const repoByName = new Map((github?.repos ?? []).map((r) => [r.fullName.toLowerCase(), r]));
 const listed = new Set(projects.map((p) => p.data.repo?.toLowerCase()).filter(Boolean));
 const others = (github?.repos ?? []).filter((r) => !listed.has(r.fullName.toLowerCase()) && !r.archived).slice(0, 9);
+
+/** 填了 repo 且这个仓库在快照里才有实时数据，没有就让卡片只显示链接。 */
+const repoOf = (project: Project) =>
+  project.data.repo ? repoByName.get(project.data.repo.toLowerCase()) : undefined;
+
+const featured = projects.filter((p) => p.data.featured);
+const more = projects.filter((p) => !p.data.featured);
+const [lead, ...rest] = featured;
 ---
 
 <Base title="项目" description="在做和做过的东西，以及 GitHub 上的其他仓库。">
   <PageHeader title="项目" count={projects.length} description="在做和做过的东西。仓库数据来自 GitHub。" />
   <div class="container-page">
-    <div class="grid gap-5 md:grid-cols-2">
-      {
-        projects.map((project, i) => (
-          <ProjectCard
-            project={project}
-            repo={project.data.repo ? repoByName.get(project.data.repo.toLowerCase()) : undefined}
-            index={i}
-          />
-        ))
-      }
-    </div>
+    {
+      lead && (
+        <section aria-labelledby="featured-title">
+          <h2 id="featured-title" class="section-title mb-5">精选项目</h2>
+          <ProjectCard project={lead} repo={repoOf(lead)} index={0} />
+          {rest.length > 0 && (
+            <div class="mt-5 grid gap-5 md:grid-cols-2">
+              {rest.map((project, i) => (
+                <ProjectCard project={project} repo={repoOf(project)} index={i + 1} />
+              ))}
+            </div>
+          )}
+        </section>
+      )
+    }
+
+    {
+      more.length > 0 && (
+        <section class="mt-16" aria-labelledby="more-title">
+          <h2 id="more-title" class="section-title mb-5">其他项目</h2>
+          <div class="grid gap-5 md:grid-cols-2">
+            {more.map((project, i) => (
+              <ProjectCard project={project} repo={repoOf(project)} index={featured.length + i} />
+            ))}
+          </div>
+        </section>
+      )
+    }
 
     {
       others.length > 0 && (
