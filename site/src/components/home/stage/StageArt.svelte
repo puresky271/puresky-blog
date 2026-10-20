@@ -42,20 +42,31 @@
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
     start = null;
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      go(dx < 0 ? 1 : -1);
+      // 滑完浏览器可能补一个 click，别让它顺手把灯箱打开。
+      suppressClickUntil = performance.now() + 400;
+    }
+  }
+
+  // 图片本身没有点击动作，点了就是放大（灯箱在 document 上监听 [data-zoom] img）。
+  let suppressClickUntil = 0;
+  function onClick(event: MouseEvent) {
+    if (performance.now() < suppressClickUntil) event.stopPropagation();
   }
 
 </script>
 
 {#snippet picture(image: StageImage, eager: boolean)}
-  <img class="art-img" class:has-night={!!image.srcNight} src={image.src} alt={image.alt} width={image.width} height={image.height} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+  <img class="art-img" class:has-night={!!image.srcNight} src={image.src} alt={image.alt} width={image.width} height={image.height} loading={eager ? 'eager' : 'lazy'} decoding="async" data-zoom />
   {#if image.srcNight}
-    <img class="art-img art-night" src={image.srcNight} alt={image.alt} width={image.width} height={image.height} loading="lazy" decoding="async" />
+    <img class="art-img art-night" src={image.srcNight} alt={image.alt} width={image.width} height={image.height} loading="lazy" decoding="async" data-zoom />
   {/if}
 {/snippet}
 
 <!-- 触摸滑动切换只是左右箭头按钮的补充，键盘用户用箭头按钮操作。 -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<!-- 这里的 click 只用于吞掉滑动结束后浏览器补发的那一下，不承担交互。 -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events -->
 <div
   class="art"
   role="group"
@@ -63,6 +74,7 @@
   aria-label="插画"
   onpointerdown={onPointerDown}
   onpointerup={onPointerUp}
+  onclick={onClick}
 >
   {#if outgoing}
     {#key outgoing.key}
@@ -106,6 +118,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    cursor: zoom-in;
   }
   .art-night {
     display: none;

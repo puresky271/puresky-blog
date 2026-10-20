@@ -1,6 +1,7 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 
+import Lightbox from '@/components/Lightbox.astro';
 import Icon from '@/components/ui/Icon.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { AUTHOR, GITHUB } from '@/config';
@@ -26,6 +27,9 @@ const banner = localAbout
     ? { src: fallback.data.image, alt: fallback.data.alt, local: false }
     : null;
 
+/* 点开灯箱时用更大的图，比页面里那张更清楚。 */
+const bannerZoom = banner ? (await getImage({ src: banner.src, width: 2400 })).src : undefined;
+
 const facts = [
   { label: '文章', value: `${posts.length} 篇` },
   { label: '标签', value: `${tags.length} 个` },
@@ -47,7 +51,7 @@ const links = [
   <div class="container-page">
     {
       banner && (
-        <figure class:list={['banner', { local: banner.local }]} data-reveal>
+        <figure class:list={['banner', { local: banner.local }]} data-zoom={bannerZoom} data-reveal>
           <Image src={banner.src} alt={banner.alt} width={1600} class="h-full w-full object-cover" />
         </figure>
       )
@@ -108,6 +112,8 @@ const links = [
       </aside>
     </div>
   </div>
+
+  <Lightbox />
 </Base>
 
 <style>
@@ -117,6 +123,13 @@ const links = [
     border-radius: var(--radius-card);
     border: 1px solid var(--line);
     background: var(--surface-2);
+    cursor: zoom-in;
+    transition:
+      transform 500ms var(--ease-out-expo),
+      box-shadow 500ms var(--ease-out-expo);
+  }
+  .banner:hover {
+    box-shadow: var(--shadow-md);
   }
   /* 本机那张是白底插画，人物在画面中间。21:9 刚好把五个人从头发到鞋子都框进来。 */
   .banner.local {

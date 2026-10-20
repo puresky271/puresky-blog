@@ -4,6 +4,7 @@ import { Image } from 'astro:assets';
 import ClockCard from '@/components/home/ClockCard.svelte';
 import GitHubWidgets from '@/components/home/GitHubWidgets.svelte';
 import HomeTop from '@/components/home/HomeTop.astro';
+import Lightbox from '@/components/Lightbox.astro';
 import PostCard from '@/components/post/PostCard.astro';
 import PostRow from '@/components/post/PostRow.astro';
 import ProjectCard from '@/components/project/ProjectCard.astro';
@@ -114,6 +115,8 @@ const avatar = github?.user?.avatarUrl
       </section>
     )
   }
+
+  <Lightbox />
 </Base>
 
 <style>
