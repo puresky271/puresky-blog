@@ -226,6 +226,7 @@ export const TAGS = [
   { name: '队列', slug: 'queue', group: 'dsa', blurb: '先进先出与双端队列。' },
   { name: '哈希表', slug: 'hash-table', group: 'dsa', blurb: '散列、冲突与查找。' },
   { name: '堆', slug: 'heap', group: 'dsa', blurb: '优先队列与堆化。' },
+  { name: '树', slug: 'tree', group: 'dsa', blurb: '父子关系、遍历与树高。' },
   { name: '二叉树', slug: 'binary-tree', group: 'dsa', blurb: '遍历、递归与树的形态。' },
   { name: '二叉搜索树', slug: 'bst', group: 'dsa', blurb: '有序性与查找维护。' },
   { name: '红黑树', slug: 'red-black-tree', group: 'dsa', blurb: '自平衡与旋转。' },
