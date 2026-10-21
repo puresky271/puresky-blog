@@ -26,7 +26,7 @@
     ],
     "acRate": 68,
     "url": "https://leetcode.cn/problems/reorder-list/",
-    "fetchedAt": "2026-10-20T21:43:05.455Z"
+    "fetchedAt": "2026-10-21T21:49:16.180Z"
   },
   {
     "slug": "trapping-rain-water",
@@ -57,9 +57,9 @@
         "slug": "monotonic-stack"
       }
     ],
-    "acRate": 66.2,
+    "acRate": 66.1,
     "url": "https://leetcode.cn/problems/trapping-rain-water/",
-    "fetchedAt": "2026-10-20T21:43:05.455Z"
+    "fetchedAt": "2026-10-21T21:49:16.180Z"
   },
   {
     "slug": "shortest-palindrome",
@@ -100,6 +100,6 @@
     ],
     "acRate": 41.3,
     "url": "https://leetcode.cn/problems/shortest-palindrome/",
-    "fetchedAt": "2026-10-20T21:43:05.455Z"
+    "fetchedAt": "2026-10-21T21:49:16.180Z"
   }
 ]
