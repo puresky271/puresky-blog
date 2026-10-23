@@ -34,14 +34,8 @@ const bannerZoom = banner ? (await getImage({ src: banner.src, width: 2400 })).s
 
 const facts = [
   { label: '文章', value: `${posts.length} 篇` },
-  // 十万级用「万」，留一位小数（整数时不显示 .0）；不满一万时精确到个位。
-  {
-    label: '字数',
-    value:
-      totalWords >= 10000
-        ? `${(totalWords / 10000).toFixed(1).replace(/\.0$/, '')} 万字`
-        : `${totalWords.toLocaleString('zh-CN')} 字`,
-  },
+  // 精确到个位，和文章页、卡片上的字数用同一种写法（带千分位）。
+  { label: '字数', value: `${totalWords.toLocaleString('zh-CN')} 字` },
   { label: '标签', value: `${tags.length} 个` },
   { label: '第一篇', value: first ? formatDate(first.data.pubDate) : '还没有' },
   { label: 'GitHub 贡献', value: github?.calendar ? `过去一年 ${github.calendar.total} 次` : '暂无数据' },
