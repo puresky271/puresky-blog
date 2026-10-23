@@ -51,8 +51,15 @@
 
   // 图片本身没有点击动作，点了就是放大（灯箱在 document 上监听 [data-zoom] img）。
   let suppressClickUntil = 0;
-  function onClick(event: MouseEvent) {
-    if (performance.now() < suppressClickUntil) event.stopPropagation();
+
+  // 这里的 click 只用来吞掉滑动结束后浏览器补发的那一下，不承担交互。用 action 挂原生监听，
+  // 容器就能保持「纯容器」的语义：没有 click 属性，也就不需要配键盘处理或 a11y 豁免。
+  function swallowSwipeClick(node: HTMLElement) {
+    const handler = (event: MouseEvent) => {
+      if (performance.now() < suppressClickUntil) event.stopPropagation();
+    };
+    node.addEventListener('click', handler);
+    return { destroy: () => node.removeEventListener('click', handler) };
   }
 
 </script>
@@ -65,16 +72,14 @@
 {/snippet}
 
 <!-- 触摸滑动切换只是左右箭头按钮的补充，键盘用户用箭头按钮操作。 -->
-<!-- 这里的 click 只用于吞掉滑动结束后浏览器补发的那一下，不承担交互。 -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events -->
 <div
   class="art"
   role="group"
   aria-roledescription="轮播"
   aria-label="插画"
+  use:swallowSwipeClick
   onpointerdown={onPointerDown}
   onpointerup={onPointerUp}
-  onclick={onClick}
 >
   {#if outgoing}
     {#key outgoing.key}
