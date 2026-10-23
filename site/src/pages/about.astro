@@ -6,12 +6,14 @@ import Icon from '@/components/ui/Icon.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { AUTHOR, GITHUB } from '@/config';
 import Base from '@/layouts/Base.astro';
-import { getIllustrations, getPosts, getTags } from '@/lib/content';
+import { getIllustrations, getPosts, getTags, postWords } from '@/lib/content';
 import { formatDate, withBase } from '@/lib/format';
 import { getGitHubSnapshot } from '@/lib/snapshots';
 
 const [posts, tags, github, illustrations] = await Promise.all([getPosts(), getTags(), getGitHubSnapshot(), getIllustrations()]);
 const first = posts.at(-1);
+/* 全站正文总字数，口径和文章卡片上的字数、阅读时长一致（汉字按字、西文按词）。 */
+const totalWords = posts.reduce((sum, post) => sum + postWords(post), 0);
 
 /*
  * 关于页的横幅：优先用本机专用的 src/assets/local/about.*（已 gitignore，不进公开仓库），
@@ -32,6 +34,14 @@ const bannerZoom = banner ? (await getImage({ src: banner.src, width: 2400 })).s
 
 const facts = [
   { label: '文章', value: `${posts.length} 篇` },
+  // 十万级用「万」，留一位小数（整数时不显示 .0）；不满一万时精确到个位。
+  {
+    label: '字数',
+    value:
+      totalWords >= 10000
+        ? `${(totalWords / 10000).toFixed(1).replace(/\.0$/, '')} 万字`
+        : `${totalWords.toLocaleString('zh-CN')} 字`,
+  },
   { label: '标签', value: `${tags.length} 个` },
   { label: '第一篇', value: first ? formatDate(first.data.pubDate) : '还没有' },
   { label: 'GitHub 贡献', value: github?.calendar ? `过去一年 ${github.calendar.total} 次` : '暂无数据' },
