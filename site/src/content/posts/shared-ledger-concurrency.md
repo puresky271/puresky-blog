@@ -11,13 +11,13 @@ tags: ['世界模拟', '并发', '可观测性', '排障复盘']
 
 写它的东西有五类：`chat_server`（每个请求都可能 ensure_active_plan、投影世界状态）、town 的 tick driver（每 30 分钟推一次世界）、一个独立的 plan-gen 进程（一天一次全天生成，**要跑 4 到 5 分钟**）、kairos 的夜间整理和晨间发布、还有我散在各个工作树里的脚本。
 
-保护只有两样：进程内的 `threading.Lock`，和一把**只保护存盘那一瞬间**的文件锁。没有全局版本号，没有事务，没有任何「世界提交点」。
+保护只有两样：进程内的 `threading.Lock`，和一把**只保护存盘那一瞬间**的文件锁。没有全局版本号，没有事务，没有任何“世界提交点”。
 
-最要命的是时间尺度错配：**生成是分钟级的，写入是秒级和请求级的。**任何「先读个基线、算几分钟再写回去」的流程，在这个形态下必然撞上基线漂移。八月那两周，它换了三张脸坑我：把一份日程当成集合去合并（8/18）；旧进程覆写让全天生成一天跑了三遍（8/26）；以及我盯错了瓶颈，真正卡住自动发布的是没人计数的发布提交（8/31）。最后收口在发布的 CAS 和同一个临界区里的 rebase。而世界级的提交点，我到今天还没建。
+最要命的是时间尺度错配：**生成是分钟级的，写入是秒级和请求级的。**任何“先读个基线、算几分钟再写回去”的流程，在这个形态下必然撞上基线漂移。八月那两周，它换了三张脸坑我：把一份日程当成集合去合并（8/18）；旧进程覆写让全天生成一天跑了三遍（8/26）；以及我盯错了瓶颈，真正卡住自动发布的是没人计数的发布提交（8/31）。最后收口在发布的 CAS 和同一个临界区里的 rebase。而世界级的提交点，我到今天还没建。
 
 ## 第一次（8/18）：我把一份日程当成集合去合并
 
-根因是我为了「让写入更安全」而加的一个清单。commit `3bc230bc`（8/16，标题 `fix: harden ledger writes and add runtime module tests`）引入 `_LEDGER_MERGE_KEYS`，顺手把 `plans` 也塞了进去：
+根因是我为了“让写入更安全”而加的一个清单。commit `3bc230bc`（8/16，标题 `fix: harden ledger writes and add runtime module tests`）引入 `_LEDGER_MERGE_KEYS`，顺手把 `plans` 也塞了进去：
 
 ```python
 _LEDGER_MERGE_KEYS = ("events", "plans", "mailbox", "runtime", "joints", "meta") + _LEDGER_DAILY_HOLDER_KEYS
@@ -64,7 +64,7 @@ def _merge_active_plan_changes(base, local, current) -> dict:
 
 ### 我那道防重复生成的守卫，变成了无限重做的发动机
 
-生成入口有一道短路检查 `_published_plan_bundle_is_complete`：「今天已经发好了就别再生成」。它要求四条同时成立，其中第四条是 `validate_active_plan_batch`：要看每个 `plans[char]` 的 `source_date_key` / `source_revision` 是不是等于当天发布的那个。
+生成入口有一道短路检查 `_published_plan_bundle_is_complete`：“今天已经发好了就别再生成”。它要求四条同时成立，其中第四条是 `validate_active_plan_batch`：要看每个 `plans[char]` 的 `source_date_key` / `source_revision` 是不是等于当天发布的那个。
 
 爱音那份是 7 月 6 号的裸对象，**它连元数据字段都没有**。所以第四条恒假，短路恒不触发。于是：
 
@@ -78,7 +78,7 @@ def _merge_active_plan_changes(base, local, current) -> dict:
   → 发布（五人 active 全写）→ 爱音再被覆写 → 回到第一行
 ```
 
-最阴的一条是：**「任何碰到爱音的操作」都会触发重建。**有人给她发条消息、tick 走到她、别的角色查她的位置，全都算。这个循环不需要外部故障来驱动，正常流量就是它的燃料。
+最阴的一条是：**“任何碰到爱音的操作”都会触发重建。**有人给她发条消息、tick 走到她、别的角色查她的位置，全都算。这个循环不需要外部故障来驱动，正常流量就是它的燃料。
 
 ### 另外两个附带伤害
 
@@ -92,14 +92,14 @@ def _merge_active_plan_changes(base, local, current) -> dict:
 
 | 路径 | 条件 | 判断 |
 | --- | --- | --- |
-| A. 删除规则 | 角色不在进程内存 + 在 baseline + 磁盘等于 baseline → `merged.pop(char)` | 代码存在，能产生「爱音缺失」的中间态 |
+| A. 删除规则 | 角色不在进程内存 + 在 baseline + 磁盘等于 baseline → `merged.pop(char)` | 代码存在，能产生“爱音缺失”的中间态 |
 | B. 没有 save_base 的联合写 | 进程账本里没 `_LEDGER_SAVE_BASE_KEY`（比如发布事务后 `staged.pop(save_base)`，或 `_new_ledger()` 造出来的），代码就是 `{**current, **local}`，local **无条件**覆盖磁盘 | **最可疑** |
 | C. identity 裁决降级 | `local_replaced and not current_replaced` → local 胜 | 需要进程加载到新发布后本地仍被换成退化版 |
 | D. 发布事务 | CAS + 原子写 + 五人全写 | **已验证安全**，不可能丢爱音 |
 
 能确认的：发布链路原子且完整，覆写一定发生在常规 `_save_ledger`（A/B/C 之一或组合）。
 
-确认不了的：到底是谁。我的推测是「一个凌晨前启动、内存里带着前夜损坏状态的长驻进程，周期性保存账本」。证据是 `world_ledger.prev1.json` 和 `prev2.json` 的 **md5 完全相同**（`4aa010bf…`）。轮转语义能反推出「保存 X 把爱音覆成古董，紧接着保存 Y 写出完全一样的内容」，**这是周期性无条件保存的特征**。但排查时点所有 python 进程都死了，没法锁定是哪个进程、走的哪条分支。
+确认不了的：到底是谁。我的推测是“一个凌晨前启动、内存里带着前夜损坏状态的长驻进程，周期性保存账本”。证据是 `world_ledger.prev1.json` 和 `prev2.json` 的 **md5 完全相同**（`4aa010bf…`）。轮转语义能反推出“保存 X 把爱音覆成古董，紧接着保存 Y 写出完全一样的内容”，**这是周期性无条件保存的特征**。但排查时点所有 python 进程都死了，没法锁定是哪个进程、走的哪条分支。
 
 这份诚实留着：**循环我切断了，覆写者到今天没抓到。**同类覆写两天里发生了三次。
 
@@ -136,12 +136,12 @@ quality_gate_recovery                6 次
 
 我那份报告完全没检查 publish 这条路。**这件事是三起里最值得讲的：你能观测到什么，就会以为问题出在哪里。**我整个月都围着质量门禁转，因为那是唯一有计数的地方。
 
-### 「一次瞬时故障吃掉一整天」是三层叠出来的
+### “一次瞬时故障吃掉一整天”是三层叠出来的
 
 | 层 | 原本 | 改后 |
 | --- | --- | --- |
 | 冷却时长 | 任何失败都写 `max(次日逻辑日界, now+24h)`，**下限 24 小时** | 按失败阶段分级：publish 那条约 **17 分钟**，其余保持整天 |
-| 尝试消耗 | `failed` 也算已消耗，而且**只有 `generating` 有逃生口** | 加了「过期瞬时失败可重新 claim」 |
+| 尝试消耗 | `failed` 也算已消耗，而且**只有 `generating` 有逃生口** | 加了“过期瞬时失败可重新 claim” |
 | 运行时兜底 | 逃生口**只对 `status=="published"` 开**，`failed` 走不进去 | 过期瞬时失败同样放行 fallback |
 
 第三层正是日志里那 62 次 `fallback_raw=true` 却 `attempt_consumed_blocked=true` 的来源。
@@ -164,11 +164,11 @@ plan_gen.end   ok=false  reason=impl_returned_None
 
 改法是 clamp：`duration = limit - offset`，起点已经在窗口末之后的 leg 直接丢弃。leg 时长本来就是模型估的，压回窗口的语义损失可以忽略。**但保留第一次重试**：第一次越界照旧重试，因为新一次可能给出更好的 leg，clamp 只在最后一次收口。这条边界是靠已有测试 `test_overlong_leg_windows_retry_then_accept_valid_segment` 暴露并保住的。
 
-**「走到不能重试的分支就返回空」是我会再犯的错。它不是失败，是放弃。**
+**“走到不能重试的分支就返回空”是我会再犯的错。它不是失败，是放弃。**
 
 ### 我以为有三轮重试，实际是 0 轮
 
-审阅器的恢复循环里有两个 `break`（一个捕 `DailyPlanReviewContractError`，一个捕 `Exception`）。**任何审阅器故障都直接跳出整个循环。**「最多三轮」只在「审阅器跑完了但 findings 没清干净」时才生效；截断、JSON 语法错、白名单违规这三种，实际拿到的重试次数是 **0**。
+审阅器的恢复循环里有两个 `break`（一个捕 `DailyPlanReviewContractError`，一个捕 `Exception`）。**任何审阅器故障都直接跳出整个循环。**“最多三轮”只在“审阅器跑完了但 findings 没清干净”时才生效；截断、JSON 语法错、白名单违规这三种，实际拿到的重试次数是 **0**。
 
 恢复失败的真实分布（从账本里挖的）：`reviewer_unavailable` **9** 次、`findings_remain` 6、`quality_gate_failed` 6、`recovered` 6、`edit_rejected` 3、`recovered_by_segment` 1。
 
@@ -179,18 +179,18 @@ plan_gen.end   ok=false  reason=impl_returned_None
 1. 瞬时故障改成 `continue`，消耗剩下轮次。
 2. 只有永久故障（凭证缺失、客户端构造不出来、SSOT 不可用）才提前退出，这三类重试多少次都一样。
 3. 截断此前**零重试**，且同上限重试只会再截断一次，现在给一次**抬倍预算**（上限 24k）。
-4. 合同 retry 的资格从「循环下标」改成**独立标志**，否则截断消耗掉第 0 次尝试会连带把合同 retry 一起丢了。
+4. 合同 retry 的资格从“循环下标”改成**独立标志**，否则截断消耗掉第 0 次尝试会连带把合同 retry 一起丢了。
 
-`edit_rejected` **我故意留着 break**：「no applicable exact edits」意思是审阅器认为没什么可改，再问同一问题只会得到同一答案。**不是所有 break 都该改成 continue。**
+`edit_rejected` **我故意留着 break**：“no applicable exact edits”意思是审阅器认为没什么可改，再问同一问题只会得到同一答案。**不是所有 break 都该改成 continue。**
 
-还有一个「靠异常侥幸工作」的例子：`_ensure_active_plan_in_ledger` 里 `_in_flight` 只在 else 分支赋值却被无条件读，`_stale_published=True` 时抛 `UnboundLocalError`，被外面的 `except` 吞掉，打印成「fallback detection error」。结果**我在 08-19 加的 stale-published 逃生口一直靠这个异常侥幸生效**，同时绕过了 in-flight 防抖和「每天只 force rebuild 一次」两道防 livelock 的闸。
+还有一个“靠异常侥幸工作”的例子：`_ensure_active_plan_in_ledger` 里 `_in_flight` 只在 else 分支赋值却被无条件读，`_stale_published=True` 时抛 `UnboundLocalError`，被外面的 `except` 吞掉，打印成“fallback detection error”。结果**我在 08-19 加的 stale-published 逃生口一直靠这个异常侥幸生效**，同时绕过了 in-flight 防抖和“每天只 force rebuild 一次”两道防 livelock 的闸。
 
 > [!WARNING]
 > 一个被宽 except 吞掉的异常路径，可能正在侥幸地做对，同时也侥幸地绕过你其他所有保护。
 
-### 18 条规则全是 error，而「小瑕疵可以忍」在我代码里无处安放
+### 18 条规则全是 error，而“小瑕疵可以忍”在我代码里无处安放
 
-18 条质量规则全部 `severity="error"`，`valid` 沾一条 error 就是 False，模块里**没有任何 env flag**。产品上我一直觉得「轻微瑕疵进已发布计划可以」，但代码里没地方表达。
+18 条质量规则全部 `severity="error"`，`valid` 沾一条 error 就是 False，模块里**没有任何 env flag**。产品上我一直觉得“轻微瑕疵进已发布计划可以”，但代码里没地方表达。
 
 而历史上真正触发过恢复的只有四种 code，全是表述层面：`japanese_kana_residue` 26 次（**恢复后仍残留 17 次**）、`unexplained_destination_revisit` 10、`weather_realtime_residue` 4、`companion_not_reciprocal` 1。
 
@@ -200,11 +200,11 @@ plan_gen.end   ok=false  reason=impl_returned_None
 
 - **降级只在一个出口做**（`_normalize_finding_severity`），18 处构造点照旧写默认 `error`。新加规则时，边界不会跟着构造点漂。
 - **advisory 不能隐形**：加了 `candidate.quality_advisory` 遥测加一行控制台输出，否则计划一边无声变差、一边日志干净。
-- **堵了一个降级自己引入的回归**：`_recover_kana_residue_deterministic` 原本只在 `not valid` 时跑。假名那条降级之后，只剩假名的候选变成 valid，于是**它跳过了本来能修好它的确定性修复**，直接把残留发出去。改成无条件跑（纯词表查找，成本可忽略）。**放宽门禁会让门禁下游的修复路径失效**，因为那些路径的触发条件本来就是「门禁失败了」。做任何严重度降级，都要重新查一遍哪些修复挂在 `not valid` 分支里。
+- **堵了一个降级自己引入的回归**：`_recover_kana_residue_deterministic` 原本只在 `not valid` 时跑。假名那条降级之后，只剩假名的候选变成 valid，于是**它跳过了本来能修好它的确定性修复**，直接把残留发出去。改成无条件跑（纯词表查找，成本可忽略）。**放宽门禁会让门禁下游的修复路径失效**，因为那些路径的触发条件本来就是“门禁失败了”。做任何严重度降级，都要重新查一遍哪些修复挂在 `not valid` 分支里。
 
-顺带，「17 次残留」的机制也挖出来了：替换表是固定词表，表里没有的专名重跑多少次都修不掉。现在 `_recover_kana_residue_deterministic` 会把仍含假名的字段连同原文经 `candidate.kana_table_gap` 报出来，**这是我知道该往词表补哪条所需的唯一信息**。另外 43 条归档 finding 的 `field` 全是 `None`，既看不出哪个字段残留，修复也只能整个 step 重跑词表，所以 `_audit_language` 改成逐字段判定并写进 `field`。
+顺带，“17 次残留”的机制也挖出来了：替换表是固定词表，表里没有的专名重跑多少次都修不掉。现在 `_recover_kana_residue_deterministic` 会把仍含假名的字段连同原文经 `candidate.kana_table_gap` 报出来，**这是我知道该往词表补哪条所需的唯一信息**。另外 43 条归档 finding 的 `field` 全是 `None`，既看不出哪个字段残留，修复也只能整个 step 重跑词表，所以 `_audit_language` 改成逐字段判定并写进 `field`。
 
-最后一条是产品判断：`companion_not_reciprocal`（`灯[5] names 爱音, but no overlapping reciprocal step exists`）降 warn。**单向提及在现实里也会发生**：灯想着爱音，爱音在做别的事，不值得为它废掉一整天日程。我没用「确定性摘除单向提及」，因为那样必须连带剔除 `pending_companion_memories`（这些记忆是发布之后才写的），否则记忆里会留下「计划里根本不存在的同行事件」。
+最后一条是产品判断：`companion_not_reciprocal`（`灯[5] names 爱音, but no overlapping reciprocal step exists`）降 warn。**单向提及在现实里也会发生**：灯想着爱音，爱音在做别的事，不值得为它废掉一整天日程。我没用“确定性摘除单向提及”，因为那样必须连带剔除 `pending_companion_memories`（这些记忆是发布之后才写的），否则记忆里会留下“计划里根本不存在的同行事件”。
 
 ## 收口：发布的 CAS，以及在同一个临界区里 rebase
 
@@ -227,7 +227,7 @@ def _plan_token_joint_keys(joint_delta) -> set[str]:
     return {str(key) for key in joint_delta}
 ```
 
-docstring 里那句「must agree exactly or every publish would conflict」是我踩过之后加的。**生成侧和提交侧必须调用同一个函数推 token。**两边各写一遍，只要在一个边界情况上不同，症状就是「每一次发布都冲突」，**而这个症状看起来像并发太激烈，完全不像两处代码不一致。**这是我这个月最喜欢的一个 bug 形状。
+docstring 里那句“must agree exactly or every publish would conflict”是我踩过之后加的。**生成侧和提交侧必须调用同一个函数推 token。**两边各写一遍，只要在一个边界情况上不同，症状就是“每一次发布都冲突”，**而这个症状看起来像并发太激烈，完全不像两处代码不一致。**这是我这个月最喜欢的一个 bug 形状。
 
 ### 冲突了不重试，直接判断能不能 rebase
 
@@ -255,22 +255,22 @@ return ""
 
 两点：
 
-一是**唯一拒绝 rebase 的情况是「别人已经发布了另一个完整版本」**，那属于会毁掉别人的工作；其余都是无关噪声，该 rebase。
+一是**唯一拒绝 rebase 的情况是“别人已经发布了另一个完整版本”**，那属于会毁掉别人的工作；其余都是无关噪声，该 rebase。
 
-二是那段注释体现的东西：**要区分故障形态，而不是区分状态值。**「published 但 bundle 不完整」字面上也是「已有 published」，但它是需要被这次发布修掉的旧故障，不该成为拒绝理由。能写下这条豁免，靠的是我把 8 月 19 号那次的形状记住了。
+二是那段注释体现的东西：**要区分故障形态，而不是区分状态值。**“published 但 bundle 不完整”字面上也是“已有 published”，但它是需要被这次发布修掉的旧故障，不该成为拒绝理由。能写下这条豁免，靠的是我把 8 月 19 号那次的形状记住了。
 
 rebase 通过的条件是：**用盘上最新的 joints 重跑一遍阻塞级质量门禁**。
 
 ### 收窄让出去的保护，得在同一批里补回来
 
-收窄 token 意味着「无关 joint 漂移不再算冲突」，代价是少了一层保护。这个账必须当次结清，不然就是把安全性换成可用性：
+收窄 token 意味着“无关 joint 漂移不再算冲突”，代价是少了一层保护。这个账必须当次结清，不然就是把安全性换成可用性：
 
 > 行为树对 joint board 的陈旧由两道独立检查接住——`_audit_bt_projection` 把每棵树对照 joint board 展平（`bt_projection_failed` / `bt_step_count_mismatch` / `bt_step_drift` 都保持阻塞），并且发布前用**最新的 board** 重跑一遍质量门禁。
 
 而且这条论证**是被测试钉住的**，不是留在我文档里的一句话：`test_publish_refuses_rebase_when_fresh_joints_break_quality`。
 
 > [!IMPORTANT]
-> 「我推理过它是安全的」和「有一条测试会在它不安全时变红」是两件事。
+> “我推理过它是安全的”和“有一条测试会在它不安全时变红”是两件事。
 
 顺手还核了一件：rebase 被拒时，调用方记失败**不会**覆写已发布的记录。`_write_plan_generation_entry` 本来就有守卫，拒绝用非 published 的条目覆盖一个完整的 published bundle。
 
@@ -292,7 +292,7 @@ rebase 通过的条件是：**用盘上最新的 joints 重跑一遍阻塞级质
 
 ## 还有一个我一直没建的东西：世界的提交点
 
-我调研过「世界级原子提交边界」，结论是**没实施**。`grep WorldCommit|world_revision|WorldProposal` 在所有 `.py` 里零命中，那份调研自己的状态写着「调查完成，尚未实施」。
+我调研过“世界级原子提交边界”，结论是**没实施**。`grep WorldCommit|world_revision|WorldProposal` 在所有 `.py` 里零命中，那份调研自己的状态写着“调查完成，尚未实施”。
 
 原来列的八个缺口，老实版：
 
@@ -307,10 +307,10 @@ rebase 通过的条件是：**用盘上最新的 joints 重跑一遍阻塞级质
 | 幂等只扫最近 1200 条事件         | 还在                                                                         |
 | 快照是浅拷贝                     | **部分解决**（被零拷贝那套覆盖）                                             |
 
-这三批修的是「生成出来的候选能不能稳定发布」，**不是**「这个世界到底有没有提交点」。这两件事的差距，就是修症状和消结构的差距。这张表我留着，是因为「我修了三次 bug」很容易让人以为已经解决了。
+这三批修的是“生成出来的候选能不能稳定发布”，**不是**“这个世界到底有没有提交点”。这两件事的差距，就是修症状和消结构的差距。这张表我留着，是因为“我修了三次 bug”很容易让人以为已经解决了。
 
 ## 如果只记三句
 
 1. 生成窗口是分钟级、写入是秒级，你的乐观并发一定会冲突。先设计 rebase，再设计重试。
-2. token 必须由两侧共用的那一个函数推导。它不一致时的症状是「每次发布都冲突」，看起来像并发问题。
+2. token 必须由两侧共用的那一个函数推导。它不一致时的症状是“每次发布都冲突”，看起来像并发问题。
 3. 你能数到什么，你就以为问题在那里。八月那阵子我能数的只有质量门禁，于是我花了一整个月以为瓶颈是质量门禁。
