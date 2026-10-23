@@ -342,6 +342,8 @@ export function createEditorApi({ root, markdown }) {
         }
         case 'POST /git/push':
           return send(res, 200, await git.push());
+        case 'POST /git/sync':
+          return send(res, 200, await git.sync());
         case 'POST /git/pull':
           return send(res, 200, await git.pull());
         case 'POST /git/undo':

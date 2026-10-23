@@ -201,6 +201,8 @@ export const api = {
   log: () => call<{ commits: Commit[]; undo: { ok: boolean; reason: string } }>('/git/log'),
   commit: (message: string, files: string[]) => post<{ log: string; hash: string | null; status: GitStatus }>('/git/commit', { message, files }),
   push: () => post<{ log: string; status: GitStatus }>('/git/push', {}),
+  /** 推送；远端有新提交时先变基再推。hash 是推送后的 HEAD（变基会改写哈希）。 */
+  sync: () => post<{ log: string; hash: string | null; status: GitStatus }>('/git/sync', {}),
   pull: () => post<{ log: string; status: GitStatus }>('/git/pull', {}),
   undo: () => post<{ message: string; status: GitStatus }>('/git/undo', {}),
 };

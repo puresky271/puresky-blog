@@ -4,6 +4,9 @@
  * 范围只有文章目录和 config.ts（分类与标签词表）。提交时只带勾选的、并且确实在这个范围里有改动的文件
  * （git commit -- <这些文件>），工作区里别的改动、别人暂存好的东西都不会被带走。
  * 撤销只针对最近一次提交，并且要求它还没推送、只改了这个范围里的文件，用 reset --soft，改动回到待提交状态，不丢东西。
+ *
+ * 推送走 sync()：先推，被拒（远端有新提交）就 pull --rebase 再推一次。main 每天会被 leetcode 同步任务推一次，
+ * 本地攒几天再发时几乎必然落后，这一步省掉的是每次都要手动「拉取 → 再推送」。
  */
 
 import { execFile } from 'node:child_process';
@@ -198,13 +201,18 @@ export function createGit({ repoRoot, postsRel, configRel }) {
     });
   }
 
+  /** 推一次；返回实际用的参数和结果，供 push 和 sync 共用。 */
+  async function pushOnce() {
+    const upstream = await git(['rev-parse', '--abbrev-ref', '@{u}'], true);
+    // 新分支还没有上游时顺手建立跟踪关系。
+    const args = upstream.ok ? ['push'] : ['push', '-u', 'origin', 'HEAD'];
+    const result = await git(args, true, 120_000);
+    return { args, result, log: `$ git ${args.join(' ')}\n${result.out || '(没有输出)'}` };
+  }
+
   function push() {
     return exclusive(async () => {
-      const upstream = await git(['rev-parse', '--abbrev-ref', '@{u}'], true);
-      // 新分支还没有上游时顺手建立跟踪关系。
-      const args = upstream.ok ? ['push'] : ['push', '-u', 'origin', 'HEAD'];
-      const result = await git(args, true, 120_000);
-      const log = `$ git ${args.join(' ')}\n${result.out || '(没有输出)'}`;
+      const { log, result } = await pushOnce();
       if (!result.ok) throw new HttpError(500, log);
       return { log, status: await status() };
     });
@@ -216,6 +224,33 @@ export function createGit({ repoRoot, postsRel, configRel }) {
       const log = `$ git pull --rebase --autostash\n${result.out}`;
       if (!result.ok) throw new HttpError(500, log);
       return { log, status: await status() };
+    });
+  }
+
+  /**
+   * 推送；如果远端已经往前走了（比如每天凌晨那次 leetcode 快照提交），先 pull --rebase 再重试一次。
+   * 只有「非快进」才会自动变基，认证、网络之类的失败原样报出去，不掩盖问题。
+   * 返回的 hash 是推送之后的 HEAD：变基会改写提交哈希，前端拿它做「看提交」的链接才不会指向一个不存在的提交。
+   */
+  function sync() {
+    return exclusive(async () => {
+      const first = await pushOnce();
+      const head = async () => {
+        const result = await git(['rev-parse', 'HEAD'], true);
+        return result.ok ? result.out : null;
+      };
+      if (first.result.ok) return { log: first.log, hash: await head(), status: await status() };
+
+      // 只有「远端有新提交」这种能自动处理的情况才变基；认证、网络之类的失败原样报出去。
+      if (!/non-fast-forward|fetch first|rejected/i.test(first.result.out)) throw new HttpError(500, first.log);
+
+      const pulled = await git(['pull', '--rebase', '--autostash'], true, 120_000);
+      const rebaseLog = `$ git pull --rebase --autostash\n${pulled.out || '(没有输出)'}`;
+      if (!pulled.ok) throw new HttpError(500, `${first.log}\n${rebaseLog}\n远端和本地改到了同一处，需要在终端里解决冲突`);
+      const second = await pushOnce();
+      const log = `${first.log}\n${rebaseLog}\n${second.log}`;
+      if (!second.result.ok) throw new HttpError(500, log);
+      return { log, hash: await head(), status: await status() };
     });
   }
 
@@ -256,5 +291,5 @@ export function createGit({ repoRoot, postsRel, configRel }) {
     });
   }
 
-  return { status, diff, commit, push, pull, history, undo };
+  return { status, diff, commit, push, pull, sync, history, undo };
 }

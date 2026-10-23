@@ -588,17 +588,21 @@ class EditorStore {
     this.gitBusy = true;
     this.gitLog = push ? '正在提交并推送……' : '正在提交……';
     let log = '';
+    let hash: string | null = null;
     try {
       const committed = await api.commit(msg, files);
       log = committed.log;
+      hash = committed.hash;
       this.git = committed.status;
       if (push) {
-        const pushed = await api.push();
+        // 远端可能刚被别的提交（比如每天的 leetcode 快照）推过，所以走「推送 → 必要时变基 → 再推送」。
+        const pushed = await api.sync();
         log += `\n${pushed.log}`;
+        hash = pushed.hash ?? hash;
         this.git = pushed.status;
       }
       this.gitLog = log;
-      const href = this.commitUrl(committed.hash);
+      const href = this.commitUrl(hash);
       this.toast('ok', push ? '已提交并推送到 GitHub' : '已提交，还没推送', push && href ? { label: '在 GitHub 上看', href } : undefined);
       return true;
     } catch (error) {
@@ -616,7 +620,7 @@ class EditorStore {
     this.gitBusy = true;
     this.gitLog = kind === 'push' ? '正在推送……' : '正在拉取……';
     try {
-      const result = kind === 'push' ? await api.push() : await api.pull();
+      const result = kind === 'push' ? await api.sync() : await api.pull();
       this.git = result.status;
       this.gitLog = result.log;
       this.toast('ok', kind === 'push' ? '已推送到 GitHub' : '已和远端同步');
@@ -673,8 +677,9 @@ class EditorStore {
         log = committed.log;
         hash = committed.hash;
       }
-      const pushed = await api.push();
+      const pushed = await api.sync();
       log += `${log ? '\n' : ''}${pushed.log}`;
+      hash = pushed.hash ?? hash;
       this.git = pushed.status;
       this.gitLog = log;
       const href = this.commitUrl(hash);

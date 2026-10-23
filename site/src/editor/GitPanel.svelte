@@ -129,7 +129,7 @@
       </p>
       <span class="spacer"></span>
       <button type="button" class="ed-btn" onclick={() => ed.gitAction('pull')} disabled={ed.gitBusy} title="从远端拉取（git pull --rebase）"><Icon icon={iCloudArrowDown} size={15} />拉取</button>
-      <button type="button" class="ed-btn" onclick={() => ed.gitAction('push')} disabled={ed.gitBusy || !ed.git?.ahead} title="把本地已有的提交推上去"><Icon icon={iCloudArrowUp} size={15} />推送</button>
+      <button type="button" class="ed-btn" onclick={() => ed.gitAction('push')} disabled={ed.gitBusy || !ed.git?.ahead} title="把本地已有的提交推上去（远端有新提交时先变基再推）"><Icon icon={iCloudArrowUp} size={15} />推送</button>
       <button type="button" class="ed-btn" onclick={openLog}>提交历史</button>
     </header>
 
