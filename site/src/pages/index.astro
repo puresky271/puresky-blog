@@ -51,19 +51,9 @@ const avatar = github?.user?.avatarUrl
 <Base flush footer="curtain">
   <HomeTop avatar={avatar} status={github?.status} illustrations={illustrations} latest={latest} />
 
-  <section class="container-page mt-14" aria-labelledby="now-title">
-    <SectionHeader title="此刻" id="now-title" href={withBase('/activity/')} linkLabel="GitHub 动态" />
-    <div class="bento">
-      <div class="area-clock">
-        <ClockCard client:load posts={calendar} />
-      </div>
-      <GitHubWidgets client:load snapshot={githubSlice} username={GITHUB.username} />
-    </div>
-  </section>
-
   {
     latest && (
-      <section class="container-page mt-20" aria-labelledby="posts-title">
+      <section class="container-page mt-14" aria-labelledby="posts-title">
         <SectionHeader title="最近的文章" id="posts-title" href={withBase('/posts/')} linkLabel="全部文章" />
         <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <PostCard post={latest} size="lg" />
@@ -78,6 +68,16 @@ const avatar = github?.user?.avatarUrl
       </section>
     )
   }
+
+  <section class="container-page mt-20" aria-labelledby="now-title">
+    <SectionHeader title="此刻" id="now-title" href={withBase('/activity/')} linkLabel="GitHub 动态" />
+    <div class="bento">
+      <div class="area-clock">
+        <ClockCard client:load posts={calendar} />
+      </div>
+      <GitHubWidgets client:load snapshot={githubSlice} username={GITHUB.username} />
+    </div>
+  </section>
 
   {
     featuredProjects.length > 0 && (
