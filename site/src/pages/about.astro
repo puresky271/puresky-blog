@@ -22,7 +22,7 @@ const localAbout = Object.values(
 )[0]?.default;
 const fallback = illustrations.find((i) => i.data.image.width > i.data.image.height) ?? illustrations[0];
 const banner = localAbout
-  ? { src: localAbout, alt: '五个女孩并排站在一起的手绘插画', local: true }
+  ? { src: localAbout, alt: '“一辈子”', local: true }
   : fallback
     ? { src: fallback.data.image, alt: fallback.data.alt, local: false }
     : null;
