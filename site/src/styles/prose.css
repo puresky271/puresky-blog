@@ -568,6 +568,28 @@
   padding: 0 1em 0.9em 2em;
 }
 
+/* ── 交互动画 ── */
+
+.prose .animation-demo {
+  margin-block: 1.8em;
+}
+.prose .animation-fallback,
+.prose .animation-error {
+  padding: 0.8em 1em;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--fg-muted);
+  font-size: 0.9em;
+}
+.prose .animation-error {
+  border-color: color-mix(in oklab, var(--danger) 45%, var(--line));
+  color: var(--danger);
+}
+.prose :is(.animation-fallback, .animation-error) p {
+  margin: 0;
+  text-align: left;
+}
+
 /* ── 图片与分隔 ── */
 
 .prose img {

@@ -12,6 +12,8 @@ const svg = (icon: { size: number; body: string }) =>
 <template id="code-icons" data-copy={svg(iCopy)} data-check={svg(iCheck)}></template>
 
 <script>
+  import { mountAnimations } from '@/components/animation/mount';
+
   /**
    * 代码块包成一扇「窗」：标题栏（三点 + 语言 + 复制按钮）在上，<pre> 在下。
    * 样式见 prose.css 的 .code-block / .code-head。
@@ -127,8 +129,10 @@ const svg = (icon: { size: number; body: string }) =>
 
   enhanceCode();
   enhanceCodeTabs();
+  void mountAnimations(document);
   document.addEventListener('astro:page-load', () => {
     enhanceCode();
     enhanceCodeTabs();
+    void mountAnimations(document);
   });
 </script>

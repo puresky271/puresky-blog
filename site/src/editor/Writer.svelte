@@ -9,8 +9,9 @@
    *
    * 没保存的内容每隔一会儿存一份到 localStorage，意外关掉页面后打开同一篇会提示恢复。
    */
-  import { tick, untrack } from 'svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
 
+  import { mountAnimations } from '@/components/animation/mount';
   import Icon from '@/components/ui/Icon.svelte';
   import {
     iArrowSquareOut,
@@ -80,6 +81,9 @@
 
   let previewTimer = 0;
   let previewToken = 0;
+  let cleanupAnimations: (() => void) | undefined;
+  onDestroy(() => cleanupAnimations?.());
+
   function schedulePreview(delay = 320) {
     clearTimeout(previewTimer);
     const token = ++previewToken;
@@ -94,10 +98,12 @@
       try {
         const { html } = await api.preview(slug, body);
         if (token !== previewToken) return;
+        cleanupAnimations?.();
+        cleanupAnimations = undefined;
         previewHtml = html;
         previewError = '';
         await tick();
-        enhancePreview();
+        await enhancePreview(token);
       } catch (error) {
         if (token === previewToken) previewError = (error as Error).message;
       } finally {
@@ -116,8 +122,8 @@
     lastVersion = version;
   });
 
-  /** 和站点一样，把代码块包成带标题栏的「窗」。选项卡里的代码块由 .code-tabs 自己提供外框，跳过。 */
-  function enhancePreview() {
+  /** 和站点一样增强代码块，并挂载当前预览里的动画。 */
+  async function enhancePreview(token: number) {
     previewEl?.querySelectorAll<HTMLPreElement>('pre:not([data-enhanced])').forEach((pre) => {
       if (pre.closest('.code-tabs')) return;
       pre.dataset.enhanced = '';
@@ -130,6 +136,12 @@
       pre.replaceWith(block);
       block.append(head, pre);
     });
+
+    const root = previewEl?.querySelector('.pv-body');
+    if (!root) return;
+    const cleanup = await mountAnimations(root);
+    if (token !== previewToken || !root.isConnected) cleanup();
+    else cleanupAnimations = cleanup;
   }
 
   function syncScroll(ratio: number) {
