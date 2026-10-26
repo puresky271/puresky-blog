@@ -9,6 +9,7 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'tree-traversal': async () => (await import('./TreeTraversalDemo.svelte')).default,
   'tree-levelorder': async () => (await import('./TreeLevelorderDemo.svelte')).default,
   'tree-reconstruction': async () => (await import('./TreeReconstructionDemo.svelte')).default,
+  'expression-tree': async () => (await import('./ExpressionTreeDemo.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

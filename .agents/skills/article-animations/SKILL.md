@@ -53,6 +53,14 @@ order: preorder
 :::
 ```
 
+`expression-tree` 不需要配置，演示用两个栈把 `(3 + 4) * (2 - 1)` 构建成表达式二叉树：
+
+```md
+:::animation expression-tree
+
+:::
+```
+
 需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
 
 ## 新增动画类型

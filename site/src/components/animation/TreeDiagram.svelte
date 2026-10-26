@@ -1,34 +1,22 @@
 <script lang="ts">
-  let {
-    ids,
-    focus,
-    activeEdge,
-    visitOrder = [],
-    members = new Set<string>(),
-    fresh = null,
-    focusLabel = '当前',
-    ariaLabel,
-  }: {
-    ids: string[];
-    focus: string | null;
-    activeEdge: [string, string] | null;
-    visitOrder?: string[];
-    members?: Set<string>;
-    fresh?: string | null;
-    focusLabel?: string;
-    ariaLabel: string;
-  } = $props();
+  interface DiagramNode {
+    id: string;
+    label: string;
+    x: number;
+    y: number;
+  }
+  type DiagramEdge = [string, string];
 
-  const positions: Record<string, { x: number; y: number }> = {
-    a: { x: 280, y: 48 },
-    b: { x: 155, y: 140 },
-    c: { x: 405, y: 140 },
-    d: { x: 75, y: 238 },
-    e: { x: 235, y: 238 },
-    f: { x: 325, y: 238 },
-    g: { x: 485, y: 238 },
-  };
-  const edges: Array<[string, string]> = [
+  const DEFAULT_NODES: DiagramNode[] = [
+    { id: 'a', label: 'a', x: 280, y: 48 },
+    { id: 'b', label: 'b', x: 155, y: 140 },
+    { id: 'c', label: 'c', x: 405, y: 140 },
+    { id: 'd', label: 'd', x: 75, y: 238 },
+    { id: 'e', label: 'e', x: 235, y: 238 },
+    { id: 'f', label: 'f', x: 325, y: 238 },
+    { id: 'g', label: 'g', x: 485, y: 238 },
+  ];
+  const DEFAULT_EDGES: DiagramEdge[] = [
     ['a', 'b'],
     ['a', 'c'],
     ['b', 'd'],
@@ -37,22 +25,54 @@
     ['c', 'g'],
   ];
 
+  let {
+    ids,
+    focus,
+    activeEdge = null,
+    activeEdges = [],
+    nodes = DEFAULT_NODES,
+    edges = DEFAULT_EDGES,
+    visitOrder = [],
+    members = new Set<string>(),
+    fresh = null,
+    focusLabel = '当前',
+    ariaLabel,
+  }: {
+    ids: string[];
+    focus: string | null;
+    activeEdge?: DiagramEdge | null;
+    activeEdges?: DiagramEdge[];
+    nodes?: DiagramNode[];
+    edges?: DiagramEdge[];
+    visitOrder?: string[];
+    members?: Set<string>;
+    fresh?: string | null;
+    focusLabel?: string;
+    ariaLabel: string;
+  } = $props();
+
   const instanceId = $props.id();
   const markerId = `tree-arrow-${instanceId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const nodeMap = $derived(new Map(nodes.map((node) => [node.id, node])));
   const visible = $derived(new Set(ids));
   const visibleEdges = $derived(edges.filter(([from, to]) => visible.has(from) && visible.has(to)));
-  const activeLine = $derived.by(() => {
-    if (!activeEdge || !visible.has(activeEdge[0]) || !visible.has(activeEdge[1])) return null;
-    const from = positions[activeEdge[0]];
-    const to = positions[activeEdge[1]];
-    const length = Math.hypot(to.x - from.x, to.y - from.y);
-    const offset = 29;
-    return {
-      x1: from.x + ((to.x - from.x) / length) * offset,
-      y1: from.y + ((to.y - from.y) / length) * offset,
-      x2: to.x - ((to.x - from.x) / length) * offset,
-      y2: to.y - ((to.y - from.y) / length) * offset,
-    };
+  const highlightedEdges = $derived(activeEdge ? [activeEdge] : activeEdges);
+  const activeLines = $derived.by(() => {
+    const lines: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+    for (const [fromId, toId] of highlightedEdges) {
+      if (!visible.has(fromId) || !visible.has(toId)) continue;
+      const from = nodeMap.get(fromId)!;
+      const to = nodeMap.get(toId)!;
+      const length = Math.hypot(to.x - from.x, to.y - from.y);
+      const offset = 29;
+      lines.push({
+        x1: from.x + ((to.x - from.x) / length) * offset,
+        y1: from.y + ((to.y - from.y) / length) * offset,
+        x2: to.x - ((to.x - from.x) / length) * offset,
+        y2: to.y - ((to.y - from.y) / length) * offset,
+      });
+    }
+    return lines;
   });
 
   function badgeOffset(id: string) {
@@ -70,17 +90,17 @@
   </defs>
   <g class="edges">
     {#each visibleEdges as [from, to]}
-      {@const start = positions[from]}
-      {@const end = positions[to]}
+      {@const start = nodeMap.get(from)!}
+      {@const end = nodeMap.get(to)!}
       <line x1={start.x} y1={start.y} x2={end.x} y2={end.y} class="edge" />
     {/each}
-    {#if activeLine}
-      <line {...activeLine} class="active-edge" marker-end={`url(#${markerId})`} />
-    {/if}
+    {#each activeLines as line}
+      <line {...line} class="active-edge" marker-end={`url(#${markerId})`} />
+    {/each}
   </g>
   <g class="nodes">
     {#each ids as id}
-      {@const point = positions[id]}
+      {@const point = nodeMap.get(id)!}
       {@const order = visitOrder.indexOf(id)}
       {@const badge = badgeOffset(id)}
       <g
@@ -94,7 +114,7 @@
         <circle class="halo" r="32" />
         <circle class="membership-ring" r="28" />
         <circle class="body" r="24" />
-        <text class="label" y="0" dy="0.35em">{id}</text>
+        <text class="label" y="0" dy="0.35em">{point.label}</text>
         {#if order >= 0}
           <g class="badge" transform={`translate(${badge.x} ${badge.y})`}>
             <circle r="9" />

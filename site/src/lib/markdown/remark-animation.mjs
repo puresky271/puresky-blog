@@ -20,9 +20,10 @@ const LABELS = {
   'tree-traversal': '二叉树深度优先遍历',
   'tree-levelorder': '二叉树层序遍历',
   'tree-reconstruction': '重建二叉树',
+  'expression-tree': '根据中缀表达式构建二叉树',
 };
 
-const EMPTY_CONFIG_OK = new Set(['tree-levelorder']);
+const EMPTY_CONFIG_OK = new Set(['tree-levelorder', 'expression-tree']);
 
 const VALIDATORS = {
   kmp: () => null,
@@ -48,6 +49,9 @@ const VALIDATORS = {
     }
     return null;
   },
+  'expression-tree': (config) => (Object.keys(config).length === 0
+    ? null
+    : '表达式建树动画不需要配置项。'),
 };
 
 const TYPES = new Set(Object.keys(LABELS));
