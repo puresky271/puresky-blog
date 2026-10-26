@@ -4,6 +4,8 @@ description: '一次推送失败之后仓库里 1675 个文件被删进了回收
 pubDate: 2026-10-21
 category: technology
 tags: ['排障复盘', 'git', '版本管理', 'Astro', '缓存']
+series: 'Git 原理与实践'
+seriesOrder: 3
 mayBeStale: true
 subcategory: 'frontend-tools'
 ---
