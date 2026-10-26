@@ -18,12 +18,42 @@ pattern: aabaaf
 :::
 ```
 
+```md
+:::animation tree-traversal
+order: inorder
+method: iterative
+:::
+```
+
 `kmp` 配置：
 
 - `text`：必填的非空文本串，最多 60 个 Unicode 字符。
 - `pattern`：必填的非空模式串，最多 24 个 Unicode 字符。
 
-容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
+`tree-traversal` 配置：
+
+- `order`：`preorder`、`inorder` 或 `postorder`。
+- `method`：`recursive` 或 `iterative`；分别演示系统调用栈和显式栈，示例树固定为文章里的 7 结点二叉树。
+
+`tree-levelorder` 不需要配置，类型行和结束标记之间留一个空行：
+
+```md
+:::animation tree-levelorder
+
+:::
+```
+
+`tree-reconstruction` 配置：
+
+- `order`：`preorder` 或 `postorder`，分别演示先序 + 中序、后序 + 中序重建文章里的 7 结点二叉树。
+
+```md
+:::animation tree-reconstruction
+order: preorder
+:::
+```
+
+需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
 
 ## 新增动画类型
 
@@ -49,6 +79,8 @@ pattern: aabaaf
 - `StepSlider.svelte`：保留原生 range 语义的自定义步骤进度。
 - `SelectMenu.svelte`：支持键盘和焦点管理的自定义选项菜单，不直接放未打磨的原生 `select`。
 - `DataCell.svelte`：数组、字符串、栈、队列等共用的数据格状态和指针。
+- `StepExplanation.svelte`：统一的阶段名称和当前步骤中文说明。
+- `TreeDiagram.svelte`：文章示例树共用的节点、连线、方向箭头和状态绘制。
 
 算法特有的图形、连线和布局留在具体演示组件中；发现第二种动画也需要同一控件或画面元素时，先抽成共享资产，不在两个组件里各写一份。
 

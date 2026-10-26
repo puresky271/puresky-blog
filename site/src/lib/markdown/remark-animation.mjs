@@ -14,7 +14,43 @@ import { parseDocument } from 'yaml';
 const OPEN = /^:::\s*animation\s+([a-z][a-z0-9-]*)\s*$/;
 const INLINE = /^:::\s*animation\s+([a-z][a-z0-9-]*)\s*\n([\s\S]*?)\n:::+\s*$/;
 const CLOSE = /^:::+\s*$/;
-const TYPES = new Set(['kmp']);
+
+const LABELS = {
+  kmp: 'KMP 字符串匹配',
+  'tree-traversal': '二叉树深度优先遍历',
+  'tree-levelorder': '二叉树层序遍历',
+  'tree-reconstruction': '重建二叉树',
+};
+
+const EMPTY_CONFIG_OK = new Set(['tree-levelorder']);
+
+const VALIDATORS = {
+  kmp: () => null,
+  'tree-traversal': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'order' && key !== 'method');
+    if (unknown.length > 0) return `遍历动画不支持配置项：${unknown.join('、')}。`;
+    if (!['preorder', 'inorder', 'postorder'].includes(config.order)) {
+      return 'order 只能是 preorder、inorder 或 postorder。';
+    }
+    if (!['recursive', 'iterative'].includes(config.method)) {
+      return 'method 只能是 recursive 或 iterative。';
+    }
+    return null;
+  },
+  'tree-levelorder': (config) => (Object.keys(config).length === 0
+    ? null
+    : '层序遍历动画不需要配置项。'),
+  'tree-reconstruction': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'order');
+    if (unknown.length > 0) return `重建动画不支持配置项：${unknown.join('、')}。`;
+    if (!['preorder', 'postorder'].includes(config.order)) {
+      return '重建动画的 order 只能是 preorder 或 postorder。';
+    }
+    return null;
+  },
+};
+
+const TYPES = new Set(Object.keys(LABELS));
 
 function isMarker(node, pattern) {
   return (
@@ -54,8 +90,14 @@ function message(text, error = false) {
 
 function buildAnimation(type, source) {
   if (!TYPES.has(type)) return message(`未知动画类型：${type}`);
-  const config = parseConfig(source);
+  const config = source.trim()
+    ? parseConfig(source)
+    : EMPTY_CONFIG_OK.has(type)
+      ? {}
+      : null;
   if (!config) return message('动画配置应为一段合法的 YAML 对象。', true);
+  const problem = VALIDATORS[type]?.(config);
+  if (problem) return message(problem, true);
   return {
     type: 'animation',
     data: {
@@ -66,7 +108,7 @@ function buildAnimation(type, source) {
         'data-config': JSON.stringify(config),
       },
     },
-    children: [message('动画演示：KMP 字符串匹配。启用 JavaScript 后可播放、单步并修改输入。')],
+    children: [message(`动画演示：${LABELS[type]}。启用 JavaScript 后可播放、暂停和单步查看。`)],
   };
 }
 

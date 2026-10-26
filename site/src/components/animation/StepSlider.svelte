@@ -29,16 +29,16 @@
   input::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 999px;
-    background: linear-gradient(to right, var(--accent) 0 var(--progress), color-mix(in oklab, var(--fg) 12%, transparent) var(--progress) 100%);
+    background: linear-gradient(to right, var(--accent) 0 var(--progress), color-mix(in oklab, var(--anim-line-strong, var(--line-strong)) 70%, transparent) var(--progress) 100%);
   }
-  input::-moz-range-track { height: 4px; border-radius: 999px; background: color-mix(in oklab, var(--fg) 12%, transparent); }
+  input::-moz-range-track { height: 4px; border-radius: 999px; background: color-mix(in oklab, var(--anim-line-strong, var(--line-strong)) 70%, transparent); }
   input::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--accent); }
   input::-webkit-slider-thumb {
     width: 14px;
     height: 14px;
     margin-top: -5px;
     appearance: none;
-    border: 3px solid var(--surface);
+    border: 3px solid var(--anim-inset, var(--surface));
     border-radius: 999px;
     background: var(--accent);
     box-shadow: 0 0 0 1px var(--accent), var(--shadow-sm);

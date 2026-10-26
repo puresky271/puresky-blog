@@ -110,20 +110,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    min-width: 4.75rem;
+    gap: 0.6rem;
+    min-width: 4rem;
     height: 2.25rem;
-    padding: 0 0.65rem;
-    border: 1px solid var(--line-strong);
-    border-radius: 9px;
-    background: var(--surface);
+    padding: 0 0.45rem;
+    border-radius: 7px;
     color: var(--fg);
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    transition: border-color 160ms ease, background-color 160ms ease;
+    font-size: 0.74rem;
+    transition: color 160ms ease, background-color 160ms ease;
   }
-  .trigger:hover, .trigger[aria-expanded='true'] { border-color: color-mix(in oklab, var(--accent) 45%, var(--line)); background: var(--surface-2); }
-  .chevron { color: var(--fg-subtle); transition: transform 180ms var(--ease-out-expo); }
+  .trigger:hover, .trigger[aria-expanded='true'] { background: var(--surface-2); color: var(--accent-strong); }
+  .chevron { color: var(--anim-muted, var(--fg-subtle)); transition: transform 180ms var(--ease-out-expo); }
   .chevron.open { transform: rotate(180deg); }
   .menu {
     position: absolute;
@@ -132,9 +130,9 @@
     z-index: var(--z-raised);
     width: 7.5rem;
     padding: 0.3rem;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--anim-line-strong, var(--line-strong));
     border-radius: 11px;
-    background: var(--surface);
+    background: var(--anim-inset, var(--surface));
     box-shadow: var(--shadow-md);
     transform-origin: bottom right;
     animation: enter 140ms var(--ease-out-expo);
@@ -151,7 +149,7 @@
     font-family: var(--font-mono);
     font-size: 0.72rem;
   }
-  .menu button:hover, .menu button:focus { outline: none; background: var(--surface-2); color: var(--fg); }
+  .menu button:hover, .menu button:focus { outline: none; background: var(--anim-panel, var(--surface-2)); color: var(--fg); }
   .menu button[aria-selected='true'] { color: var(--accent-strong); background: var(--accent-soft); }
   @keyframes enter { from { opacity: 0; transform: translateY(4px) scale(0.98); } }
   @media (prefers-reduced-motion: reduce) { .menu { animation: none; } .chevron { transition: none; } }

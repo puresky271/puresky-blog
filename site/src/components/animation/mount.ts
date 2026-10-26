@@ -6,6 +6,9 @@ export interface AnimationProps {
 
 const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   kmp: async () => (await import('./KmpDemo.svelte')).default,
+  'tree-traversal': async () => (await import('./TreeTraversalDemo.svelte')).default,
+  'tree-levelorder': async () => (await import('./TreeLevelorderDemo.svelte')).default,
+  'tree-reconstruction': async () => (await import('./TreeReconstructionDemo.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

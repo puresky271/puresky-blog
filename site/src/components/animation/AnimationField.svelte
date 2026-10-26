@@ -27,10 +27,10 @@
   input {
     width: 100%;
     height: 2.5rem;
-    padding: 0 0.75rem;
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
-    background: var(--bg);
+    padding: 0 0.7rem;
+    border: 1px solid var(--anim-line, var(--line-strong));
+    border-radius: 7px;
+    background: transparent;
     color: var(--fg);
     font-family: var(--font-mono);
     font-size: 0.8rem;

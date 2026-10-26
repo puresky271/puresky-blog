@@ -9,6 +9,7 @@
   import AnimationField from './AnimationField.svelte';
   import AnimationShell from './AnimationShell.svelte';
   import DataCell from './DataCell.svelte';
+  import StepExplanation from './StepExplanation.svelte';
   import type { AnimationProps } from './mount';
   import { createPlayback } from './playback.svelte';
 
@@ -40,6 +41,7 @@
     advance: '移动文本指针',
     start: '开始比对',
   }[step.phase]);
+  const tone = $derived(step.phase === 'found' ? 'success' : step.phase === 'fallback' ? 'warning' : step.phase === 'compare' && !step.equal ? 'danger' : 'accent');
 
   function apply() {
     player.reset();
@@ -124,10 +126,7 @@
     </div>
   </div>
 
-  <div class="explanation" data-phase={step.phase} aria-live="polite" aria-atomic="true">
-    <span class="phase">{phase}</span>
-    <p>{step.description}</p>
-  </div>
+  <StepExplanation {phase} description={step.description} {tone} />
 
   {#snippet controls()}
     <AnimationControls {player} total={trace.steps.length} />
@@ -142,76 +141,58 @@
     justify-content: center;
     gap: 0.4rem;
     height: 2.5rem;
-    padding-inline: 0.9rem;
-    border: 1px solid color-mix(in oklab, var(--accent) 20%, var(--line));
-    border-radius: 10px;
+    padding-inline: 0.85rem;
+    border-radius: 8px;
     background: var(--accent-soft);
     color: var(--accent-strong);
     font-size: 0.75rem;
-    font-weight: 550;
+    font-weight: 600;
     white-space: nowrap;
-    transition: border-color 160ms ease, background-color 160ms ease, transform 160ms var(--ease-out-expo);
+    transition: background-color 160ms ease, transform 160ms var(--ease-out-expo);
   }
-  .apply:hover { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); background: color-mix(in oklab, var(--accent) 14%, var(--surface)); }
+  .apply:hover { background: color-mix(in oklab, var(--accent) 18%, var(--surface)); }
   .apply:active { transform: translateY(1px); }
-  .error { margin: 0.65rem 0 0; color: var(--danger); font-size: 0.72rem; }
-  .stage {
-    --cell-size: 2.5rem;
-    padding: 1rem 0.85rem 0.75rem;
-    border: 1px solid var(--line);
-    border-radius: 13px;
-    background-color: var(--bg);
-    background-image: radial-gradient(color-mix(in oklab, var(--fg) 8%, transparent) 0.7px, transparent 0.7px);
-    background-size: 12px 12px;
-  }
-  .stage-body { display: grid; grid-template-columns: 2.8rem minmax(0, 1fr); gap: 0.4rem; }
-  .row-labels { display: grid; grid-template-rows: 1rem var(--cell-size) var(--cell-size); gap: 0.65rem 0; padding-top: 0.1rem; font-size: 0.64rem; color: var(--fg-subtle); }
+  .error { margin: 0.65rem 0 0; color: var(--danger); font-size: 0.75rem; }
+  .stage { --cell-size: 2.65rem; padding: 0.55rem 0 0.85rem; }
+  .stage-body { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); gap: 0.65rem; }
+  .row-labels { display: grid; grid-template-rows: 1rem var(--cell-size) var(--cell-size); gap: 0.75rem 0; padding-top: 0.1rem; color: var(--anim-muted); font-size: 0.7rem; }
   .row-labels span { display: flex; align-items: center; }
   .row-labels span:first-child { grid-row: 2; }
   .row-labels span:last-child { grid-row: 3; }
   .board-scroll { overflow-x: auto; padding: 0.35rem 0.2rem 1.25rem; }
-  .board { display: grid; gap: 0.65rem 0; width: max-content; min-width: 100%; }
-  .row { display: grid; grid-template-columns: repeat(var(--columns), var(--cell-size)); gap: 0.25rem; min-height: var(--cell-size); }
-  .indices { min-height: 1rem; color: var(--fg-subtle); font-family: var(--font-mono); font-size: 0.6rem; text-align: center; }
+  .board { display: grid; gap: 0.75rem 0; width: max-content; min-width: 100%; }
+  .row { display: grid; grid-template-columns: repeat(var(--columns), var(--cell-size)); gap: 0.3rem; min-height: var(--cell-size); }
+  .indices { min-height: 1rem; color: var(--anim-muted); font-family: var(--font-mono); font-size: 0.64rem; text-align: center; }
   .cell-slot { display: block; width: var(--cell-size); }
   .pattern-row { position: relative; height: var(--cell-size); }
   .pattern-track {
     position: absolute;
     left: 0;
     display: flex;
-    gap: 0.25rem;
-    transform: translateX(calc(var(--offset) * (var(--cell-size) + 0.25rem)));
+    gap: 0.3rem;
+    transform: translateX(calc(var(--offset) * (var(--cell-size) + 0.3rem)));
     transition: transform 360ms var(--ease-out-expo);
   }
-  .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.55rem; color: var(--fg-subtle); font-size: 0.62rem; }
+  .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.65rem; color: var(--anim-muted); font-size: 0.68rem; }
   .legend > span { display: inline-flex; align-items: center; gap: 0.3rem; }
-  .legend i { width: 0.5rem; height: 0.5rem; border-radius: 2px; }
+  .legend i { width: 0.55rem; height: 0.55rem; border-radius: 2px; }
   .legend i[data-state='matched'] { background: var(--success); }
   .legend i[data-state='current'] { background: var(--accent); }
   .legend i[data-state='mismatch'] { background: var(--danger); }
-  .legend .stage-hint { margin-left: auto; font-size: 0.6rem; }
-  .prefix { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.85rem; padding: 0.45rem 0.65rem; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-2); }
-  .prefix-title { display: flex; flex-direction: column; flex-shrink: 0; padding-right: 0.75rem; border-right: 1px solid var(--line); font-size: 0.66rem; color: var(--fg-muted); }
-  .prefix-title b { font-weight: 550; }
-  .prefix-title small { font-family: var(--font-mono); font-size: 0.6rem; color: var(--fg-subtle); }
-  .prefix-values { display: flex; gap: 0.25rem; overflow-x: auto; padding: 0.15rem; }
+  .legend .stage-hint { margin-left: auto; }
+  .prefix { display: flex; align-items: center; gap: 1rem; padding-top: 0.9rem; border-top: 1px solid var(--anim-line); }
+  .prefix-title { display: flex; flex-direction: column; flex-shrink: 0; min-width: 3.25rem; color: var(--fg-muted); font-size: 0.7rem; }
+  .prefix-title b { font-weight: 600; }
+  .prefix-title small { color: var(--anim-muted); font-family: var(--font-mono); font-size: 0.62rem; }
+  .prefix-values { display: flex; gap: 0.3rem; overflow-x: auto; padding: 0.15rem; }
   .prefix-item { display: flex; flex-direction: column; align-items: center; }
-  .prefix-item > small { font-family: var(--font-mono); font-size: 0.6rem; color: var(--fg-subtle); }
-  .explanation { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 0.7rem; min-height: 3.8rem; margin-top: 0.85rem; padding: 0.75rem 0.85rem; border: 1px solid color-mix(in oklab, var(--accent) 12%, var(--line)); border-radius: 11px; background: color-mix(in oklab, var(--accent) 4%, var(--surface)); }
-  .phase { margin-top: 0.1rem; padding: 0.15rem 0.45rem; border-radius: 5px; background: var(--accent-soft); color: var(--accent-strong); font-size: 0.62rem; font-weight: 650; white-space: nowrap; }
-  .explanation p { margin: 0; font-size: 0.75rem; line-height: 1.75; text-align: left; }
-  .explanation[data-phase='fallback'] { border-color: color-mix(in oklab, var(--warning) 25%, var(--line)); background: color-mix(in oklab, var(--warning) 5%, var(--surface)); }
-  .explanation[data-phase='fallback'] .phase { background: color-mix(in oklab, var(--warning) 14%, var(--surface)); color: var(--warning); }
-  .explanation[data-phase='found'] { border-color: color-mix(in oklab, var(--success) 25%, var(--line)); background: color-mix(in oklab, var(--success) 5%, var(--surface)); }
-  .explanation[data-phase='found'] .phase { background: color-mix(in oklab, var(--success) 13%, var(--surface)); color: var(--success); }
+  .prefix-item > small { color: var(--anim-muted); font-family: var(--font-mono); font-size: 0.62rem; }
   @media (width < 40rem) {
     .inputs { grid-template-columns: 1fr 1fr; gap: 0.65rem; }
     .apply { grid-column: 1 / -1; }
-    .stage { --cell-size: 2.25rem; padding-inline: 0.65rem; }
-    .stage-body { grid-template-columns: 2.4rem minmax(0, 1fr); gap: 0.2rem; }
+    .stage { --cell-size: 2.35rem; }
+    .stage-body { grid-template-columns: 2.75rem minmax(0, 1fr); gap: 0.35rem; }
     .legend .stage-hint { display: none; }
-    .explanation { grid-template-columns: 1fr; gap: 0.35rem; }
-    .phase { width: max-content; }
   }
   @media (prefers-reduced-motion: reduce) {
     .pattern-track, .apply { transition: none; }
