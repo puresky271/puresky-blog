@@ -94,6 +94,7 @@ export const CATEGORIES = [
   { id: 'technology', label: '技术', blurb: 'AI 系统、软件工程和日常开发工具。' },
   { id: 'algorithms', label: '算法解题', blurb: '算法题的思路、证明、复杂度和实现。代码风格因人而异，题解代码以力扣官方题解为准。' },
   { id: 'essays', label: '随笔', blurb: '学习、生活和 AI 时代里的一些想法。' },
+  { id: 'literature', label: '文学创作', blurb: '小说、诗歌、散文与其他文学创作。' },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
@@ -120,6 +121,7 @@ export const SUBCATEGORIES = [
   { id: 'ai-and-people', category: 'essays', label: 'AI 与人', blurb: 'AI 时代里人的位置、责任和关系。' },
   { id: 'life-observation', category: 'essays', label: '生活观察', blurb: '日常生活里的观察和记录。' },
   { id: 'essays-unclassified', category: 'essays', label: '待归类', blurb: '暂时无法确定子类的随笔。' },
+  { id: 'literature-unclassified', category: 'literature', label: '待归类', blurb: '暂时无法确定子类的文学创作。' },
 ] as const;
 
 export type SubcategoryId = (typeof SUBCATEGORIES)[number]['id'];
