@@ -1,4 +1,6 @@
 // @ts-check
+import './scripts/patch-fs-rename.mjs';
+
 import { fileURLToPath } from 'node:url';
 
 import { unified } from '@astrojs/markdown-remark';
@@ -82,6 +84,13 @@ export default defineConfig({
       },
     },
     // shared/ 在站点根目录之外，dev server 默认不允许读取。
-    server: { fs: { allow: ['..'] } },
+    server: {
+      fs: { allow: ['..'] },
+      watch: {
+        // Astro 的内容缓存不需要被 Vite 再监听；Windows 上自己监听自己会导致
+        // data-store.json 的原子 rename 偶发 EPERM。
+        ignored: ['**/.astro/**', '**/node_modules/.astro/**'],
+      },
+    },
   },
 });
