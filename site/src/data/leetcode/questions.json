@@ -26,7 +26,7 @@
     ],
     "acRate": 68,
     "url": "https://leetcode.cn/problems/reorder-list/",
-    "fetchedAt": "2026-10-25T20:57:29.785Z"
+    "fetchedAt": "2026-10-26T22:45:16.245Z"
   },
   {
     "slug": "trapping-rain-water",
@@ -57,9 +57,9 @@
         "slug": "monotonic-stack"
       }
     ],
-    "acRate": 66.1,
+    "acRate": 66.2,
     "url": "https://leetcode.cn/problems/trapping-rain-water/",
-    "fetchedAt": "2026-10-25T20:57:29.785Z"
+    "fetchedAt": "2026-10-26T22:45:16.245Z"
   },
   {
     "slug": "shortest-palindrome",
@@ -100,6 +100,43 @@
     ],
     "acRate": 41.3,
     "url": "https://leetcode.cn/problems/shortest-palindrome/",
-    "fetchedAt": "2026-10-25T20:57:29.785Z"
+    "fetchedAt": "2026-10-26T22:45:16.245Z"
+  },
+  {
+    "slug": "range-sum-query-mutable",
+    "questionId": "307",
+    "frontendId": "307",
+    "title": "Range Sum Query - Mutable",
+    "titleCn": "区域和检索 - 数组可修改",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Design",
+        "slug": "design"
+      },
+      {
+        "name": "Binary Indexed Tree",
+        "slug": "binary-indexed-tree"
+      },
+      {
+        "name": "Segment Tree",
+        "slug": "segment-tree"
+      },
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Divide and Conquer",
+        "slug": "divide-and-conquer"
+      },
+      {
+        "name": "Sqrt Decomposition",
+        "slug": "sqrt-decomposition"
+      }
+    ],
+    "acRate": 54.4,
+    "url": "https://leetcode.cn/problems/range-sum-query-mutable/",
+    "fetchedAt": "2026-10-26T22:45:16.245Z"
   }
 ]
