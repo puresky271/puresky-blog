@@ -21,6 +21,9 @@ const LABELS = {
   'tree-levelorder': '二叉树层序遍历',
   'tree-reconstruction': '重建二叉树',
   'expression-tree': '根据中缀表达式构建二叉树',
+  lowerbit: '取出二进制最低位的 1',
+  'fenwick-query': '树状数组查询前缀和',
+  'fenwick-update': '树状数组单点更新',
 };
 
 const EMPTY_CONFIG_OK = new Set(['tree-levelorder', 'expression-tree']);
@@ -52,6 +55,33 @@ const VALIDATORS = {
   'expression-tree': (config) => (Object.keys(config).length === 0
     ? null
     : '表达式建树动画不需要配置项。'),
+  lowerbit: (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'value');
+    if (unknown.length > 0) return `lowbit 动画不支持配置项：${unknown.join('、')}。`;
+    if (!Number.isInteger(config.value) || config.value < 1 || config.value > 255) {
+      return 'lowbit 动画的 value 只能是 1 到 255 之间的整数。';
+    }
+    return null;
+  },
+  'fenwick-query': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'index');
+    if (unknown.length > 0) return `前缀和动画不支持配置项：${unknown.join('、')}。`;
+    if (!Number.isInteger(config.index) || config.index < 1 || config.index > 14) {
+      return '前缀和动画的 index 只能是 1 到 14 之间的整数。';
+    }
+    return null;
+  },
+  'fenwick-update': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'index' && key !== 'delta');
+    if (unknown.length > 0) return `单点更新动画不支持配置项：${unknown.join('、')}。`;
+    if (!Number.isInteger(config.index) || config.index < 1 || config.index > 14) {
+      return '单点更新动画的 index 只能是 1 到 14 之间的整数。';
+    }
+    if (!Number.isInteger(config.delta) || config.delta < -9 || config.delta > 9 || config.delta === 0) {
+      return '单点更新动画的 delta 只能是 -9 到 9 之间的非零整数。';
+    }
+    return null;
+  },
 };
 
 const TYPES = new Set(Object.keys(LABELS));

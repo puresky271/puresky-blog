@@ -10,6 +10,9 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'tree-levelorder': async () => (await import('./TreeLevelorderDemo.svelte')).default,
   'tree-reconstruction': async () => (await import('./TreeReconstructionDemo.svelte')).default,
   'expression-tree': async () => (await import('./ExpressionTreeDemo.svelte')).default,
+  lowerbit: async () => (await import('./LowbitDemo.svelte')).default,
+  'fenwick-query': async () => (await import('./FenwickQueryDemo.svelte')).default,
+  'fenwick-update': async () => (await import('./FenwickUpdateDemo.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

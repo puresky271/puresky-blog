@@ -61,6 +61,29 @@ order: preorder
 :::
 ```
 
+`lowerbit` 配置 `value` 为 1 到 255 的整数，用 8 位二进制演示 `x & -x` 取出最低位的 1，以及 `x - lowbit(x)` 清除这一位：
+
+```md
+:::animation lowerbit
+value: 12
+:::
+```
+
+`fenwick-query` 配置 `index` 为 1 到 14 的整数，演示文章示例数组的前缀和查询。`fenwick-update` 还需要 `delta` 为 -9 到 9 的非零整数，演示所有覆盖该下标的区间同步更新：
+
+```md
+:::animation fenwick-query
+index: 13
+:::
+```
+
+```md
+:::animation fenwick-update
+index: 3
+delta: 2
+:::
+```
+
 需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
 
 ## 新增动画类型
