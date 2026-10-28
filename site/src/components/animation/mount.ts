@@ -13,6 +13,7 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   lowerbit: async () => (await import('./LowbitDemo.svelte')).default,
   'fenwick-query': async () => (await import('./FenwickQueryDemo.svelte')).default,
   'fenwick-update': async () => (await import('./FenwickUpdateDemo.svelte')).default,
+  'circular-queue': async () => (await import('./CircularQueueDemo.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

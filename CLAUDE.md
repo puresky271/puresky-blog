@@ -76,7 +76,7 @@ GITHUB_TOKEN 对构建是可选的，对线上 worker 实际是必需的：未�
 页面一律通过 `src/lib/content.ts` 查内容（草稿过滤、排序、统计只在这一处），不直接调 `getCollection`。
 Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点旁的加粗）、`remark-cjk-lines`（去掉汉字间软换行）、
 `remark-callout`（`> [!NOTE]`）、`remark-code-tabs`（`:::tabs` 容器里的相邻围栏代码块合成多语言选项卡，纯 CSS 切换）、`rehype-heading-anchors`（保留中文的锚点）、`rehype-external-links`。
-交互动画用 `:::animation <type>` + YAML 配置，`remark-animation.mjs` 只放行内置类型；`components/animation/mount.ts` 按类型懒加载 Svelte 组件，正式文章和编辑器预览共用挂载逻辑。当前内置 `kmp`、`tree-traversal`（`order: preorder | inorder | postorder`，`method: recursive | iterative`）、`tree-levelorder`（无配置）、`tree-reconstruction`（`order: preorder | postorder`）、`expression-tree`（无配置）、`lowerbit`（`value: 1..255`）、`fenwick-query`（`index: 1..14`）和 `fenwick-update`（`index: 1..14`，`delta: -9..9` 且非零）。新增或嵌入动画见项目 skill `.agents/skills/article-animations/SKILL.md`。
+交互动画用 `:::animation <type>` + YAML 配置，`remark-animation.mjs` 只放行内置类型；`components/animation/mount.ts` 按类型懒加载 Svelte 组件，正式文章和编辑器预览共用挂载逻辑。当前内置 `kmp`、`tree-traversal`（`order: preorder | inorder | postorder`，`method: recursive | iterative`）、`tree-levelorder`（无配置）、`tree-reconstruction`（`order: preorder | postorder`）、`expression-tree`（无配置）、`lowerbit`（`value: 1..255`）、`fenwick-query`（`index: 1..14`）、`fenwick-update`（`index: 1..14`，`delta: -9..9` 且非零）和 `circular-queue`（`method: flag | count | sacrifice`，演示循环队列的三种判空判满方法）。新增或嵌入动画见项目 skill `.agents/skills/article-animations/SKILL.md`。
 代码块语言的别名（`python3`、`golang` 等）在 `astro.config.mjs` 的 `shikiConfig.langAlias` 里，shiki 不认识的写法会静默退成纯文本，新增别名加在那里。
 正文排版在 `styles/prose.css`，必须在页面 frontmatter 里全局 import，不能放进作用域 `<style>`（Markdown 输出没有作用域属性）。
 

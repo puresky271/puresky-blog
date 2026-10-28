@@ -84,6 +84,14 @@ delta: 2
 :::
 ```
 
+`circular-queue` 配置 `method` 为 `flag`、`count` 或 `sacrifice`，用五个格子的环依次演示三种判空判满办法：另设标志位、统计元素个数、牺牲一个存储单元。入队时对应格子点亮，出队时熄灭：
+
+```md
+:::animation circular-queue
+method: sacrifice
+:::
+```
+
 需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
 
 ## 新增动画类型

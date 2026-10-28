@@ -2,7 +2,7 @@
 /**
  * 分类与标签总览。
  *
- * 上半部分是五个分类（一篇文章只属于一个）：说明、篇数、这个分类里最常用的几个标签。
+ * 上半部分是文章分类（一篇文章只属于一个）：说明、篇数、这个分类里最常用的几个标签。
  * 下半部分是完整的标签词表，按「主题 / 技术 / 体裁」分组；还没写过的标签也列出来但淡显，
  * 读者能一眼看出这个博客关心哪些东西、哪些还没来得及写。
  */
@@ -19,7 +19,7 @@ const used = groups.reduce((sum, g) => sum + g.tags.filter((t) => t.count > 0).l
 const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
 ---
 
-<Base title="分类与标签" description="五个分类和完整的标签词表。">
+<Base title="分类与标签" description="文章分类和完整的标签词表。">
   <PageHeader title="分类与标签" count={used} description="分类回答「属于哪个方向」，一篇只有一个；标签回答「涉及哪些具体的东西」，一篇三到五个。">
     <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签' }]} />
   </PageHeader>
@@ -104,11 +104,6 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
   @media (width >= 40rem) {
     .cats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  @media (width >= 64rem) {
-    .cats {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
   .cat-card {

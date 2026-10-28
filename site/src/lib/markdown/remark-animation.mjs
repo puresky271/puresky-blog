@@ -24,6 +24,7 @@ const LABELS = {
   lowerbit: '取出二进制最低位的 1',
   'fenwick-query': '树状数组查询前缀和',
   'fenwick-update': '树状数组单点更新',
+  'circular-queue': '循环队列判空与判满',
 };
 
 const EMPTY_CONFIG_OK = new Set(['tree-levelorder', 'expression-tree']);
@@ -79,6 +80,14 @@ const VALIDATORS = {
     }
     if (!Number.isInteger(config.delta) || config.delta < -9 || config.delta > 9 || config.delta === 0) {
       return '单点更新动画的 delta 只能是 -9 到 9 之间的非零整数。';
+    }
+    return null;
+  },
+  'circular-queue': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'method');
+    if (unknown.length > 0) return `循环队列动画不支持配置项：${unknown.join('、')}。`;
+    if (!['flag', 'count', 'sacrifice'].includes(config.method)) {
+      return '循环队列动画的 method 只能是 flag、count 或 sacrifice。';
     }
     return null;
   },
