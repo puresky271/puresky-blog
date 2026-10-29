@@ -81,6 +81,14 @@ export default defineConfig({
       alias: {
         '@shared': fileURLToPath(new URL('../shared', import.meta.url)),
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+        /*
+         * yaml 2.x 只提供 CJS 入口（package.json 的 exports 里只有 node 和 default，
+         * 没有 import 条件）。构建期解析 Markdown frontmatter 时它会被内联进 Vite 的
+         * SSR module runner，内联的 CJS 里 require 不存在，astro sync 和 build 会直接报
+         * require is not defined。指到包内自带的 ESM 构建（browser 版本只做纯解析，
+         * 不依赖 Node API）可以绕开这条内联路径。
+         */
+        yaml: fileURLToPath(new URL('./node_modules/yaml/browser/index.js', import.meta.url)),
       },
     },
     // shared/ 在站点根目录之外，dev server 默认不允许读取。
