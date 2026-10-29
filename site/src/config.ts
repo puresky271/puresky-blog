@@ -231,6 +231,8 @@ export const TAGS = [
   { name: '树', slug: 'tree', group: 'dsa', blurb: '父子关系、遍历与树高。' },
   { name: '二叉树', slug: 'binary-tree', group: 'dsa', blurb: '遍历、递归与树的形态。' },
   { name: '二叉搜索树', slug: 'bst', group: 'dsa', blurb: '有序性与查找维护。' },
+  { name: 'B 树', slug: 'b-tree', group: 'dsa', blurb: '多路平衡查找树。' },
+  { name: 'B+ 树', slug: 'b-plus-tree', group: 'dsa', blurb: '数据落在叶子的多路查找树。' },
   { name: '红黑树', slug: 'red-black-tree', group: 'dsa', blurb: '自平衡与旋转。' },
   { name: '字典树', slug: 'trie', group: 'dsa', blurb: '前缀树与逐位存储。' },
   { name: '图', slug: 'graph', group: 'dsa', blurb: '邻接表、邻接矩阵与图的表示。' },
