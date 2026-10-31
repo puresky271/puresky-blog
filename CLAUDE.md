@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `archive/hydrogen-v1/` — 第一版（Hydrogen 主题）的完整归档，只读参考，不参与构建。
 
 全部代码注释是中文的，沿用这个惯例。界面文案不用破折号「——」。
+文章正文不要分号，不要顿号，不要直角引号，引号统一用中文双引号“”。
 
 ## 常用命令
 
@@ -29,8 +30,9 @@ npm run deploy    # 构建 + 搜索索引 + 把 dist/ 上传到 Cloudflare（需
 ```
 
 **dev server 开着的时候不要跑 `npm run build` / `npm run deploy`**：构建会改写和 dev 共用的依赖缓存，
-正在运行的 dev server 之后加载不了 sharp，所有经 astro:assets 的图片都会 500（日志里是 MissingSharp）。
-真遇到了重启 dev server 就好。
+正在运行的 dev server 之后有两种坏法。一是加载不了 sharp，所有经 astro:assets 的图片都 500（日志里是 MissingSharp）；
+二是 `/node_modules/.vite/deps/*` 全部 504 Outdated Optimize Dep，CodeMirror 这类重依赖的页面（也就是编辑器）
+直接水合失败打不开。重启 dev server 就好，还不行就删掉 `site/node_modules/.vite` 再重启。
 
 本地文章编辑器：`npm run dev` 后打开 http://localhost:4321/__editor/（导航栏的笔形按钮、文章页底部的「在编辑器中打开」也能进）。
 它由 `site/editor/integration.mjs` 只在 `astro dev` 时注入，构建产物里没有页面也没有接口。
@@ -76,7 +78,7 @@ GITHUB_TOKEN 对构建是可选的，对线上 worker 实际是必需的：未�
 页面一律通过 `src/lib/content.ts` 查内容（草稿过滤、排序、统计只在这一处），不直接调 `getCollection`。
 Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点旁的加粗）、`remark-cjk-lines`（去掉汉字间软换行）、
 `remark-callout`（`> [!NOTE]`）、`remark-code-tabs`（`:::tabs` 容器里的相邻围栏代码块合成多语言选项卡，纯 CSS 切换）、`rehype-heading-anchors`（保留中文的锚点）、`rehype-external-links`。
-交互动画用 `:::animation <type>` + YAML 配置，`remark-animation.mjs` 只放行内置类型；`components/animation/mount.ts` 按类型懒加载 Svelte 组件，正式文章和编辑器预览共用挂载逻辑。当前内置 `kmp`、`tree-traversal`（`order: preorder | inorder | postorder`，`method: recursive | iterative`）、`tree-levelorder`（无配置）、`tree-reconstruction`（`order: preorder | postorder`）、`expression-tree`（无配置）、`lowerbit`（`value: 1..255`）、`fenwick-query`（`index: 1..14`）、`fenwick-update`（`index: 1..14`，`delta: -9..9` 且非零）和 `circular-queue`（`method: flag | count | sacrifice`，演示循环队列的三种判空判满方法）。新增或嵌入动画见项目 skill `.agents/skills/article-animations/SKILL.md`。
+交互动画用 `:::animation <type>` + YAML 配置，`remark-animation.mjs` 只放行内置类型；`components/animation/mount.ts` 按类型懒加载 Svelte 组件，正式文章和编辑器预览共用挂载逻辑。当前内置 `kmp`、`tree-traversal`（`order: preorder | inorder | postorder`，`method: recursive | iterative`）、`tree-levelorder`（无配置）、`tree-reconstruction`（`order: preorder | postorder`）、`expression-tree`（无配置）、`lowerbit`（`value: 1..255`）、`fenwick-query`（`index: 1..14`）、`fenwick-update`（`index: 1..14`，`delta: -9..9` 且非零）、`circular-queue`（`method: flag | count | sacrifice`，演示循环队列的三种判空判满方法）和 `avl-rotate`（`kind: left | right | lr | rl`，演示 AVL 树单旋与双旋）、`thread-build`（`order: inorder | preorder | postorder`，演示线索化时 `pre` 前驱指针的移动和虚线线索的生成过程）和 `thread-traverse`（`order: inorder | preorder | postorder`，演示三种线索树的遍历，`p` 指针在结点间跳、走过的边或线索高亮，后序演示倒序收集再翻转）。新增或嵌入动画见项目 skill `.agents/skills/article-animations/SKILL.md`。
 代码块语言的别名（`python3`、`golang` 等）在 `astro.config.mjs` 的 `shikiConfig.langAlias` 里，shiki 不认识的写法会静默退成纯文本，新增别名加在那里。
 正文排版在 `styles/prose.css`，必须在页面 frontmatter 里全局 import，不能放进作用域 `<style>`（Markdown 输出没有作用域属性）。
 
@@ -119,6 +121,17 @@ worker 挂了页面上仍是上次构建的数据，不会是一片骨架屏。�
 GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：没拉到的用上一次的值补上，补不上的记进 `missing`，
 前端合并时这几块保留自己手里的旧值；一块都没拉到就抛错，交给缓存兜底，不缓存空壳。
 
+### 模型榜单
+
+`/activity/models/` 是「近期大模型的个人评测」榜单，从夯到拉五档，动态页页头下面有入口卡。
+
+- 主观数据只有一个文件：`src/data/leaderboard.json`（`updatedAt` + `models`）。条目只存人的判断：`id` 用 OpenRouter 的 model id，同时当价格匹配键和深链锚点；此外是名称、厂商、档位、档内顺序、标签、分项评分、blurb、点评、使用场景、上下榜状态。点评是纯文本，空行分段。
+- 价格、上下文长度、发布日期**不写进 json**：构建期 `lib/models.ts` 抓 OpenRouter `/api/v1/models`，缓存进 `node_modules/.cache/puresky`（开发模式 6 小时，构建总是重抓；失败沿用上次，彻底失败返回 null，页面把价格显示成「—」）。抓取失败不阻断构建，规则同上面的快照。
+- 五档 id（`hang` / `elite` / `mid` / `npc` / `trash`）和档位名在 `lib/leaderboard.ts` 的 `TIERS` 里，只增不改；模型标签走 `config.ts` 的 TAGS（`model` 组），写词表外的标签校验直接失败。
+- 页面主体是单个 Svelte 岛屿 `components/leaderboard/LeaderboardView.svelte`：五档横排卡片、点开侧边抽屉看标签和点评、`hash` 深链（`anchorOf(model.id)`）、已下榜的收在页面底部折叠区。编辑器预览复用同一个 `TierBoard.svelte`，别另写一套渲染。
+- 编辑器第四个模式「榜单」读写同一个 json：左边候选池（OpenRouter 最近 30 天新增且不在榜的模型）加五档拖拽列表，右边实时预览，保存走 `POST /__editor/api/leaderboard`，写文件前用和 `parseLeaderboard` 对齐的规则校验。候选池的数据源和构建期一致，但请求发生在编辑器接口里。
+- 新增模型图标放 `public/models/icons/`，条目里 `icon` 写 `/models/icons/xxx.svg`；没填就按厂商色加首字母占位。
+
 ### Worker
 
 改动时务必保持的设计约定：
@@ -139,8 +152,12 @@ GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：�
 - 接口只认回环地址 + localhost 的 Host + 本机 Origin + 自定义头 `x-puresky-editor`，缺一不可（它能写文件、能跑 git）。
 - slug 只允许 `[a-z0-9-]`，所有路径解析后必须落在 posts 目录里。
 - 预览用 astro.config.mjs 里同一份 remark/rehype/shiki 配置，别另起一套。
-- 「提交并推送」只提交 posts 目录（`git commit -- site/src/content/posts`），不带走工作区别的改动。
+- 左边窄栏四个模式：文章 / 整理 / 提交 / 榜单。榜单模式（`src/editor/Leaderboard.svelte`）读写 `src/data/leaderboard.json`，接口在 `/__editor/api/leaderboard*`，保存前用和 `parseLeaderboard` 对齐的规则校验。它和候选池都要走同一套本机校验。
+- 提交范围只有 posts 目录、`src/config.ts` 和 `src/data/leaderboard.json`（`git commit -- <勾选的文件>`），不带走工作区别的改动。
 - `api.mjs` 在 dev server 启动时加载一次，改了它要重启 dev server 才生效。
+- 页面只有 `/__editor/`（带斜杠）能打开，手输 `/__editor` 会 404（`trailingSlash: 'always'`，注入的路由不做跳转），站内入口都带斜杠。
+  编辑器打不开先怀疑是不是 build 撞了 dev server（见上面依赖缓存那段），确认接口活着可以
+  `curl -H 'x-puresky-editor: 1' -H 'Origin: http://localhost:4321' localhost:4321/__editor/api/ping`。
 
 ### 部署
 

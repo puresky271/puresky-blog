@@ -1,0 +1,35 @@
+---
+/**
+ * 模型榜单：五档评测榜单加已下榜折叠区。
+ *
+ * 榜单 json 里只有主观评价，价格、上下文长度、发布日期在构建期从 OpenRouter 目录合并进来。
+ * 抓不到目录也照常渲染，价格显示成「—」。
+ */
+import LeaderboardView from '@/components/leaderboard/LeaderboardView.svelte';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import leaderboardRaw from '@/data/leaderboard.json';
+import Base from '@/layouts/Base.astro';
+import { parseLeaderboard, resolveModels } from '@/lib/leaderboard';
+import { getModelCatalog } from '@/lib/models';
+
+const file = parseLeaderboard(leaderboardRaw);
+const catalog = await getModelCatalog();
+const models = resolveModels(file.models, catalog?.models ?? null);
+const activeCount = models.filter((model) => model.status === 'active').length;
+---
+
+<Base title="模型榜单" description="近期大模型的个人评测，从夯到拉。">
+  <PageHeader
+    title="模型榜单"
+    count={activeCount}
+    description="近期大模型的个人评测，从夯到拉。"
+  />
+  <div class="container-page">
+    <LeaderboardView
+      client:load
+      models={models}
+      updatedAt={file.updatedAt}
+      fetchedAt={catalog?.fetchedAt ?? null}
+    />
+  </div>
+</Base>

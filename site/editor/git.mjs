@@ -1,7 +1,8 @@
 /**
  * git.mjs — 编辑器里的 Git：查看改动、逐个文件看 diff、勾选文件提交、推送、拉取、提交历史、撤销最近一次提交。
  *
- * 范围只有文章目录和 config.ts（分类与标签词表）。提交时只带勾选的、并且确实在这个范围里有改动的文件
+ * 范围只有文章目录、config.ts（分类与标签词表）和 src/data/leaderboard.json（模型榜单）。
+ * 提交时只带勾选的、并且确实在这个范围里有改动的文件
  * （git commit -- <这些文件>），工作区里别的改动、别人暂存好的东西都不会被带走。
  * 撤销只针对最近一次提交，并且要求它还没推送、只改了这个范围里的文件，用 reset --soft，改动回到待提交状态，不丢东西。
  *
@@ -21,11 +22,11 @@ const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
 const MAX_UNTRACKED = 1024 * 1024;
 
 /**
- * @param {{ repoRoot: string, postsRel: string, configRel: string }} options
- *   postsRel / configRel 是相对仓库根、用 / 分隔的路径。
+ * @param {{ repoRoot: string, postsRel: string, configRel: string, dataRel: string }} options
+ *   postsRel / configRel / dataRel 是相对仓库根、用 / 分隔的路径。
  */
-export function createGit({ repoRoot, postsRel, configRel }) {
-  const scope = [postsRel, configRel];
+export function createGit({ repoRoot, postsRel, configRel, dataRel }) {
+  const scope = [postsRel, configRel, dataRel];
 
   async function git(args, allowFail = false, timeout = 30_000) {
     try {
@@ -54,12 +55,13 @@ export function createGit({ repoRoot, postsRel, configRel }) {
   }
 
   function inScope(file) {
-    return file === configRel || file.startsWith(`${postsRel}/`);
+    return file === configRel || file === dataRel || file.startsWith(`${postsRel}/`);
   }
 
-  /** 给前端用的描述：这个文件属于哪篇文章、是文章本身还是它的图片。 */
+  /** 给前端用的描述：这个文件属于哪篇文章、是文章本身还是它的图片，或者榜单文件。 */
   function describe(file) {
     if (file === configRel) return { kind: 'config', slug: null, name: 'config.ts' };
+    if (file === dataRel) return { kind: 'leaderboard', slug: null, name: 'leaderboard.json' };
     const rel = file.slice(postsRel.length + 1);
     const post = /^([a-z0-9][a-z0-9-]*)\.(md|mdx)$/.exec(rel);
     if (post) return { kind: 'post', slug: post[1], name: rel };
@@ -159,7 +161,7 @@ export function createGit({ repoRoot, postsRel, configRel }) {
   // ── diff ───────────────────────────────────────────────────────────────────
 
   async function diff(file) {
-    if (typeof file !== 'string' || !inScope(file)) throw new HttpError(400, '只能查看文章目录和 config.ts 的改动');
+    if (typeof file !== 'string' || !inScope(file)) throw new HttpError(400, '只能查看文章目录，config.ts 和榜单文件的改动');
     const entry = (await changes()).find((c) => c.path === file);
     if (!entry) throw new HttpError(404, '这个文件没有改动');
     const image = IMAGE.test(file) ? file.slice(postsRel.length + 1) : null;
@@ -189,7 +191,7 @@ export function createGit({ repoRoot, postsRel, configRel }) {
       if (!Array.isArray(files) || !files.length) throw new HttpError(400, '没有勾选要提交的文件');
       const pending = new Set((await changes()).map((c) => c.path));
       for (const file of files) {
-        if (typeof file !== 'string' || !inScope(file)) throw new HttpError(400, `不能提交 ${file}：只能提交文章目录和 config.ts`);
+        if (typeof file !== 'string' || !inScope(file)) throw new HttpError(400, `不能提交 ${file}：只能提交文章目录，config.ts 和榜单文件`);
         if (!pending.has(file)) throw new HttpError(409, `${file} 已经没有改动了，刷新一下再提交`);
       }
       await git(['add', '-A', '--', ...files]);

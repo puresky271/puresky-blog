@@ -2,33 +2,36 @@
   /**
    * Editor.svelte — 本地文章编辑器（只在 astro dev 下的 /__editor 存在）的外壳。
    *
-   * 最左边一条窄栏切换三种模式，三块面板各自挂载一次后就一直保留（切走只是隐藏），
+   * 最左边一条窄栏切换四种模式，每块面板挂载一次后就一直保留（切走只是隐藏），
    * 正文的光标、滚动位置、撤销历史都不会因为切模式而丢。
    *   文章   左：文章列表（Writer 旁边，可收起）  中：写作区  右：文章设置 / 大纲
    *   整理   分类、标签、系列的增删改和排序
    *   提交   勾选文件提交、看 diff、推送拉取、提交历史与撤销
+   *   榜单   候选池、档位列表、模型表单，右边挂真实榜单组件实时预览
    *
    * 共享状态和操作都在 store.svelte.ts。快捷键说明见 HELP。
    */
   import { onMount } from 'svelte';
 
   import Icon from '@/components/ui/Icon.svelte';
-  import { iArticle, iFolders, iGitBranch, iHouse, iKeyboard, iMoon, iSun, iX } from '@/lib/icons.generated';
+  import { iArticle, iFolders, iGitBranch, iHouse, iKeyboard, iMoon, iSun, iTable, iX } from '@/lib/icons.generated';
   import { currentTheme, setPref } from '@/lib/theme';
 
   import GitPanel from './GitPanel.svelte';
   import Inspector from './Inspector.svelte';
+  import Leaderboard from './Leaderboard.svelte';
   import Organize from './Organize.svelte';
   import PostList from './PostList.svelte';
   import { ed, type Mode } from './store.svelte';
   import Writer from './Writer.svelte';
 
   const HELP: [string, string][] = [
-    ['Ctrl S', '保存'],
+    ['Ctrl S', '保存文章或榜单'],
     ['Ctrl \\', '切换写作 / 分栏 / 预览'],
     ['Ctrl .', '开关文章设置'],
     ['Ctrl Shift F', '专注：收起两侧栏'],
     ['Alt 1 / 2 / 3', '文章 / 整理 / 提交'],
+    ['Alt 4', '榜单工作台：候选池、档位和实时预览'],
     ['Ctrl B / I / K / E', '加粗 / 斜体 / 链接 / 行内代码'],
     ['Ctrl Alt 2 / 3 / 4', '二 / 三 / 四级标题（0 变回正文）'],
     ['Ctrl F', '在正文里搜索替换'],
@@ -41,12 +44,13 @@
     { id: 'write', label: '文章', icon: iArticle, key: 'Alt+1' },
     { id: 'organize', label: '整理', icon: iFolders, key: 'Alt+2' },
     { id: 'git', label: '提交', icon: iGitBranch, key: 'Alt+3' },
+    { id: 'models', label: '榜单', icon: iTable, key: 'Alt+4' },
   ];
 
   let theme = $state<'light' | 'dark'>('light');
   let help = $state(false);
-  // 整理和提交面板第一次打开时才挂载，之后一直保留。
-  let mounted = $state<Record<Mode, boolean>>({ write: true, organize: false, git: false });
+  // 整理、提交和榜单面板第一次打开时才挂载，之后一直保留。
+  let mounted = $state<Record<Mode, boolean>>({ write: true, organize: false, git: false, models: false });
   $effect(() => {
     mounted[ed.mode] = true;
   });
@@ -83,7 +87,7 @@
       else if (help) help = false;
       return;
     }
-    if (event.altKey && !mod && ['1', '2', '3'].includes(event.key)) {
+    if (event.altKey && !mod && ['1', '2', '3', '4'].includes(event.key)) {
       event.preventDefault();
       ed.mode = MODES[Number(event.key) - 1]!.id;
       return;
@@ -92,7 +96,9 @@
     const key = event.key.toLowerCase();
     if (key === 's' && !event.shiftKey) {
       event.preventDefault();
-      void ed.save();
+      // 榜单模式下全局保存保存的是榜单，别顺手把文章也存了。
+      if (ed.mode === 'models' && ed.saveLeaderboard) void ed.saveLeaderboard();
+      else void ed.save();
     } else if (event.key === '\\') {
       event.preventDefault();
       ed.view = ed.view === 'split' ? 'write' : ed.view === 'write' ? 'preview' : 'split';
@@ -113,7 +119,7 @@
     const onTheme = () => (theme = currentTheme());
     window.addEventListener('theme:change', onTheme);
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (ed.dirty) event.preventDefault();
+      if (ed.dirty || ed.leaderboardDirty) event.preventDefault();
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     const onFocus = () => void ed.refreshGit(true);
@@ -183,6 +189,9 @@
       {/if}
       {#if mounted.git}
         <div class="mode" hidden={ed.mode !== 'git'}><GitPanel active={ed.mode === 'git'} /></div>
+      {/if}
+      {#if mounted.models}
+        <div class="mode" hidden={ed.mode !== 'models'}><Leaderboard /></div>
       {/if}
     </div>
   </div>

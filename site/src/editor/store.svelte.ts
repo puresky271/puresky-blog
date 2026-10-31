@@ -8,7 +8,7 @@
 
 import { api, ApiError, type ChangedPost, type Frontmatter, type GitChange, type GitStatus, type PostSummary, type SeriesOp, type Vocab, type VocabOp } from './client';
 
-export type Mode = 'write' | 'organize' | 'git';
+export type Mode = 'write' | 'organize' | 'git' | 'models';
 export type View = 'write' | 'split' | 'preview';
 
 export interface Doc {
@@ -144,6 +144,10 @@ class EditorStore {
   seriesFocus = $state<string | null>(null);
   /** 最近一次 Git 操作的输出，在提交面板里显示。 */
   gitLog = $state('');
+  /** 榜单模式里有没有还没保存的改动。关页面和 Ctrl+S 都要看它。 */
+  leaderboardDirty = $state(false);
+  /** 榜单面板挂载后注册的保存函数，榜单模式下 Ctrl+S 调它而不是保存文章。 */
+  saveLeaderboard: (() => Promise<boolean>) | null = null;
 
   // ── 数据 ─────────────────────────────────────────────────────────────────
   posts = $state<PostSummary[]>([]);
@@ -558,7 +562,7 @@ class EditorStore {
     return this.posts.find((p) => p.slug === slug)?.title ?? slug;
   }
 
-  /** 按改动自动写提交说明：文章：新增《A》，更新《B》；词表：更新分类与标签。 */
+  /** 按改动自动写提交说明：文章：新增《A》，更新《B》，词表：更新分类与标签，榜单：更新模型榜单。 */
   commitMessage(changes: GitChange[]): string {
     const bySlug = new Map<string, GitChange[]>();
     for (const c of changes) if (c.slug) bySlug.set(c.slug, [...(bySlug.get(c.slug) ?? []), c]);
@@ -572,10 +576,11 @@ class EditorStore {
       else updated.push(`《${this.titleOf(slug)}》${file ? '' : '的图片'}`);
     }
     const parts = [added.length ? `新增${added.join('')}` : '', updated.length ? `更新${updated.join('')}` : '', removed.length ? `删除 ${removed.join('、')}` : ''].filter(Boolean);
-    const config = changes.some((c) => c.kind === 'config');
-    const posts = parts.length ? `文章：${parts.join('，')}` : '';
-    if (posts && config) return `${posts}；词表：更新分类与标签`;
-    return posts || (config ? '词表：更新分类与标签' : '文章：更新');
+    const segments: string[] = [];
+    if (parts.length) segments.push(`文章：${parts.join('，')}`);
+    if (changes.some((c) => c.kind === 'config')) segments.push('词表：更新分类与标签');
+    if (changes.some((c) => c.kind === 'leaderboard')) segments.push('榜单：更新模型榜单');
+    return segments.join('，') || '文章：更新';
   }
 
   commitUrl(hash: string | null) {

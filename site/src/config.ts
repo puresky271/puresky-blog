@@ -93,6 +93,8 @@ export const SOCIAL_LINKS: readonly { label: string; href: string; icon: string 
 export const CATEGORIES = [
   { id: 'technology', label: '技术', blurb: 'AI 系统、软件工程和日常开发工具。' },
   { id: 'algorithms', label: '算法解题', blurb: '算法题的思路、证明、复杂度和实现。代码风格因人而异，题解代码以力扣官方题解为准。' },
+  { id: 'papers', label: '论文解读', blurb: '论文的问题、方法、实验与局限，以及读完之后自己的判断。' },
+  { id: 'curation', label: '精选收录', blurb: '收录值得一读的外部文章，附上自己的解析和判断。' },
   { id: 'essays', label: '随笔', blurb: '学习、生活和 AI 时代里的一些想法。' },
   { id: 'literature', label: '文学创作', blurb: '小说、诗歌、散文与其他文学创作。' },
 ] as const;
@@ -117,6 +119,14 @@ export const SUBCATEGORIES = [
   { id: 'greedy-backtracking', category: 'algorithms', label: '贪心与回溯', blurb: '贪心证明、搜索和剪枝。' },
   { id: 'mathematics', category: 'algorithms', label: '数学', blurb: '数论、组合、几何和模拟。' },
   { id: 'algorithms-unclassified', category: 'algorithms', label: '待归类', blurb: '暂时无法确定子类的算法文章。' },
+  { id: 'paper-llm', category: 'papers', label: '大模型', blurb: '预训练、对齐、推理与智能体方向的论文。' },
+  { id: 'paper-systems', category: 'papers', label: '系统与工程', blurb: '训练与推理基础设施、分布式系统和工程实践。' },
+  { id: 'paper-theory', category: 'papers', label: '算法与理论', blurb: '算法、数据结构、复杂度与理论证明。' },
+  { id: 'papers-unclassified', category: 'papers', label: '待归类', blurb: '暂时无法确定子类的论文解读。' },
+  { id: 'curation-tech', category: 'curation', label: '技术文章', blurb: '技术博客、工程实践与架构经验。' },
+  { id: 'curation-opinion', category: 'curation', label: '观点与方法', blurb: '行业判断、学习方法与工作方式。' },
+  { id: 'curation-tools', category: 'curation', label: '工具与资源', blurb: '值得收藏的工具、项目与资料。' },
+  { id: 'curation-unclassified', category: 'curation', label: '待归类', blurb: '暂时无法确定子类的精选收录。' },
   { id: 'learning-growth', category: 'essays', label: '学习成长', blurb: '学习方法、成长和学生生活。' },
   { id: 'ai-and-people', category: 'essays', label: 'AI 与人', blurb: 'AI 时代里人的位置、责任和关系。' },
   { id: 'life-observation', category: 'essays', label: '生活观察', blurb: '日常生活里的观察和记录。' },

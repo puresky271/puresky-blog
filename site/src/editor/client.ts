@@ -2,6 +2,8 @@
  * client.ts — 编辑器前端调用 /__editor/api 的封装。每个请求都带 x-puresky-editor 头（后端靠它挡跨站请求）。
  */
 
+import type { CatalogEntry, CatalogSnapshot, LeaderboardFile } from '@/lib/leaderboard';
+
 export interface PostSummary {
   slug: string;
   ext: string;
@@ -104,7 +106,7 @@ export interface GitChange {
   /** git status 的原始两位状态码。 */
   xy: string;
   code: 'A' | 'M' | 'D';
-  kind: 'post' | 'image' | 'config' | 'other';
+  kind: 'post' | 'image' | 'config' | 'leaderboard' | 'other';
   slug: string | null;
   /** 相对文章目录的路径（config.ts 就是 config.ts）。 */
   name: string;
@@ -143,6 +145,13 @@ export interface DiffResult {
   deleted: boolean;
   /** 从第一个 @@ 开始的统一 diff 文本。 */
   text: string;
+}
+
+/** GET /leaderboard/candidates：fetchedAt 为 null 表示这次没抓到 OpenRouter，前端给兜底文案。 */
+export interface CandidatesResult {
+  fetchedAt: string | null;
+  candidates: CatalogEntry[];
+  warning?: string;
 }
 
 export class ApiError extends Error {
@@ -196,6 +205,9 @@ export const api = {
   /** restart：config.ts 真的变了，dev server 马上会重启；boot 是这次请求时的服务实例，用来判断重启完成没有。 */
   vocabOp: (op: VocabOp) => post<{ vocab: Vocab; changed: ChangedPost[]; restart: boolean; boot: string }>('/vocab', op),
   series: (op: SeriesOp) => post<{ changed: ChangedPost[] }>('/series', op),
+  leaderboard: () => call<{ file: LeaderboardFile; catalog: CatalogSnapshot | null }>('/leaderboard'),
+  saveLeaderboard: (file: LeaderboardFile) => post<{ ok: true; file: LeaderboardFile }>('/leaderboard', file),
+  candidates: (refresh = false) => call<CandidatesResult>(`/leaderboard/candidates${refresh ? '?refresh=1' : ''}`),
   git: () => call<GitStatus>('/git'),
   diff: (path: string) => call<DiffResult>(`/git/diff?path=${encodeURIComponent(path)}`),
   log: () => call<{ commits: Commit[]; undo: { ok: boolean; reason: string } }>('/git/log'),

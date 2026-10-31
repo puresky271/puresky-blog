@@ -3,7 +3,7 @@
    * ChangeRow.svelte — 提交面板里的一行改动：勾选它要不要提交，双击或点右边的按钮看 diff。
    */
   import Icon from '@/components/ui/Icon.svelte';
-  import { iArrowsClockwise, iFileImage, iFileText } from '@/lib/icons.generated';
+  import { iArrowsClockwise, iFileImage, iFileText, iTable } from '@/lib/icons.generated';
 
   import type { GitChange } from './client';
 
@@ -27,7 +27,7 @@
 <button type="button" class="change" class:checked class:open={viewing} onclick={oncheck} ondblclick={onshow} title={c.path}>
   <input class="ed-check" type="checkbox" checked={checked} onclick={(e) => e.stopPropagation()} onchange={oncheck} tabindex="-1" />
   <span class="ed-code {c.code}">{c.code === 'A' ? '新' : c.code === 'D' ? '删' : '改'}</span>
-  {#if c.kind === 'image'}<Icon icon={iFileImage} size={14} class="fileicon" />{:else if c.kind === 'config' || c.kind === 'post'}<Icon icon={iFileText} size={14} class="fileicon" />{/if}
+  {#if c.kind === 'image'}<Icon icon={iFileImage} size={14} class="fileicon" />{:else if c.kind === 'leaderboard'}<Icon icon={iTable} size={14} class="fileicon" />{:else if c.kind === 'config' || c.kind === 'post'}<Icon icon={iFileText} size={14} class="fileicon" />{/if}
   <span class="name">{label}</span>
   {#if c.kind === 'image'}<span class="ed-hint">{c.added != null ? '+' : ''}{c.added ?? ''}</span>{/if}
   <span class="ed-icon sm view" role="button" tabindex="0" onclick={(e) => { e.stopPropagation(); onshow(); }} onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onshow(); } }} title="看 diff" aria-label="看 diff"><Icon icon={iArrowsClockwise} size={12} /></span>

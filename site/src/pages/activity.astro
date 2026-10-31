@@ -1,19 +1,119 @@
 ---
 import ActivityView from '@/components/github/ActivityView.svelte';
+import Icon from '@/components/ui/Icon.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { GITHUB } from '@/config';
+import leaderboardRaw from '@/data/leaderboard.json';
 import Base from '@/layouts/Base.astro';
+import { formatDate, withBase } from '@/lib/format';
+import { parseLeaderboard, TIERS, tierVar } from '@/lib/leaderboard';
 import { getGitHubSnapshot } from '@/lib/snapshots';
 import { submissionCalendar } from '@/lib/leetcode';
 
 const github = await getGitHubSnapshot();
 // 仓库列表只留页面上用得到的前 30 个，减小序列化进页面的体积。
 const snapshot = github ? { ...github, repos: github.repos.slice(0, 30) } : null;
+
+// 榜单入口卡只要数量和更新日期，不用在这里抓 OpenRouter 目录。
+const board = parseLeaderboard(leaderboardRaw);
+const activeModels = board.models.filter((model) => model.status === 'active');
+const tierCounts = TIERS.map((tier) => ({
+  tier,
+  count: activeModels.filter((model) => model.tier === tier.id).length,
+}));
+const tierLabel = tierCounts.map(({ tier, count }) => `${tier.name} ${count} 个`).join('，');
 ---
 
 <Base title="动态" description={`${GITHUB.username} 在 GitHub 上的贡献、动态和仓库。`}>
   <PageHeader title="动态" description="GitHub 上的贡献和最近在做的事。数据每次打开页面时刷新。" />
   <div class="container-page">
-    <ActivityView client:load snapshot={snapshot} username={GITHUB.username} leetcode={submissionCalendar} />
+    <a href={withBase('activity/models/')} class="board-entry card card-link">
+      <span class="board-entry-head">
+        <span class="min-w-0">
+          <span class="board-entry-title">模型榜单</span>
+          <span class="board-entry-desc">最近一个月的大模型我逐个用过之后的排序</span>
+        </span>
+        <span class="board-entry-go">
+          查看榜单
+          <Icon name="arrow-up-right" size={14} />
+        </span>
+      </span>
+      <span class="board-entry-meta">
+        <span>在榜 <span class="tabular">{activeModels.length}</span> 个</span>
+        <span>更新于 {formatDate(board.updatedAt)}</span>
+      </span>
+      <span class="board-entry-tiers" role="img" aria-label={`五档模型数量：${tierLabel}`}>
+        {tierCounts.map(({ tier, count }) => (
+          <span
+            class="tier-seg"
+            style={`background: ${tierVar(tier.id)}`}
+            title={`${tier.name} ${count} 个`}
+          ></span>
+        ))}
+      </span>
+    </a>
+    <div class="mt-8 md:mt-10">
+      <ActivityView client:load snapshot={snapshot} username={GITHUB.username} leetcode={submissionCalendar} />
+    </div>
   </div>
 </Base>
+
+<style>
+  .board-entry {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 2rem;
+    padding: 1.1rem 1.2rem;
+  }
+  .board-entry-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .board-entry-title {
+    display: block;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+  }
+  .board-entry-desc {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--fg-muted);
+  }
+  .board-entry-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .board-entry:hover .board-entry-go {
+    color: var(--accent);
+  }
+  .board-entry-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+  }
+  .board-entry-tiers {
+    display: flex;
+    gap: 2px;
+    height: 6px;
+    margin-top: 0.85rem;
+    overflow: hidden;
+    border-radius: 999px;
+  }
+  .tier-seg {
+    flex: 1;
+  }
+</style>

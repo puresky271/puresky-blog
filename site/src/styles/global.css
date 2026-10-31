@@ -55,6 +55,13 @@
   --heat-3: oklch(0.61 0.17 256);
   --heat-4: oklch(0.49 0.19 260);
 
+  /* 模型榜单五档的颜色：夯 → 拉完了，暖 → 紫 → 青 → 灰 → 红。 */
+  --tier-hang: oklch(0.72 0.16 72);
+  --tier-elite: oklch(0.62 0.17 285);
+  --tier-mid: oklch(0.62 0.11 195);
+  --tier-npc: oklch(0.6 0.02 250);
+  --tier-trash: oklch(0.58 0.17 25);
+
   /* 阴影带一点蓝，不用纯黑。 */
   --shadow-sm: 0 1px 2px oklch(0.35 0.05 255 / 0.06), 0 1px 1px oklch(0.35 0.05 255 / 0.04);
   --shadow-md: 0 1px 2px oklch(0.35 0.05 255 / 0.05), 0 10px 30px -12px oklch(0.35 0.08 255 / 0.18);
@@ -106,6 +113,13 @@
   --heat-2: oklch(0.49 0.11 252);
   --heat-3: oklch(0.63 0.13 248);
   --heat-4: oklch(0.79 0.12 242);
+
+  /* 模型榜单五档：暗色下整体提亮，保证在深底上还是同一套色相。 */
+  --tier-hang: oklch(0.8 0.15 78);
+  --tier-elite: oklch(0.76 0.14 285);
+  --tier-mid: oklch(0.76 0.1 195);
+  --tier-npc: oklch(0.68 0.02 250);
+  --tier-trash: oklch(0.72 0.15 25);
 
   --shadow-sm: 0 1px 2px oklch(0.05 0.02 262 / 0.5);
   --shadow-md: 0 1px 2px oklch(0.05 0.02 262 / 0.4), 0 12px 32px -12px oklch(0.05 0.02 262 / 0.7);

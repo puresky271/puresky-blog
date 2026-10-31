@@ -2,11 +2,11 @@
   /**
    * GitPanel.svelte — 提交面板。
    *
-   *   改动     按文章分组（文章文件 + 它的图片），config.ts 单独一组；勾选要提交的文件，点开看 diff。
+   *   改动     按文章分组（文章文件 + 它的图片），config.ts 和 leaderboard.json 各自一组；勾选要提交的文件，点开看 diff。
    *   提交     说明自动生成可改；「提交」只提交不推送，「提交并推送」一起做，也可以单独「推送 / 拉取」。
-   *   历史     最近 30 条动到文章目录和 config.ts 的提交；最近一条没推送的可以撤销（reset --soft）。
+   *   历史     最近 30 条动到文章目录、config.ts 和榜单文件的提交；最近一条没推送的可以撤销（reset --soft）。
    *
-   * 范围始终只限文章目录和 config.ts，工作区里别的改动这里既不显示也不提交。
+   * 范围始终只限文章目录、config.ts 和榜单文件，工作区里别的改动这里既不显示也不提交。
    */
   import Icon from '@/components/ui/Icon.svelte';
   import { iArrowCounterClockwise, iCloudArrowDown, iCloudArrowUp, iGitBranch } from '@/lib/icons.generated';
@@ -30,19 +30,23 @@
   const changes = $derived(ed.git?.changes ?? []);
   const groups = $derived.by(() => {
     const config = changes.filter((c) => c.kind === 'config');
+    const leaderboard = changes.filter((c) => c.kind === 'leaderboard');
     const bySlug = new Map<string, GitChange[]>();
     for (const c of changes) if (c.slug) bySlug.set(c.slug, [...(bySlug.get(c.slug) ?? []), c]);
     const posts = [...bySlug.entries()].sort((a, b) => a[0].localeCompare(b[0]));
     const other = changes.filter((c) => c.kind === 'other');
-    return { config, posts, other };
+    return { config, leaderboard, posts, other };
   });
 
-  // 打开面板或改动列表变化时，勾上当前文章 + config.ts。
+  // 打开面板或改动列表变化时，勾上当前文章、config.ts 和榜单文件。
   $effect(() => {
     void [changes, active];
     if (!active) return;
     const next = new Set<string>();
-    for (const c of changes) if (c.slug === ed.doc?.previousSlug || c.kind === 'config') next.add(c.path);
+    for (const c of changes) {
+      // 当前文章、词表和榜单都是同一套数据里的事，默认勾上；别的改动不抢着带上。
+      if (c.slug === ed.doc?.previousSlug || c.kind === 'config' || c.kind === 'leaderboard') next.add(c.path);
+    }
     checked = next;
     const auto = ed.commitMessage(changes.filter((c) => next.has(c.path)));
     if (auto !== lastAuto) {
@@ -82,7 +86,13 @@
   }
 
   function label(c: GitChange) {
-    return c.kind === 'config' ? 'config.ts' : c.kind === 'image' ? c.name.replace(/^images\/[^/]+\//, '') : c.name.replace(/\.(md|mdx)$/, '');
+    return c.kind === 'config'
+      ? 'config.ts'
+      : c.kind === 'leaderboard'
+        ? 'leaderboard.json'
+        : c.kind === 'image'
+          ? c.name.replace(/^images\/[^/]+\//, '')
+          : c.name.replace(/\.(md|mdx)$/, '');
   }
 
   async function commit(push: boolean) {
@@ -148,6 +158,12 @@
               <ChangeRow {c} checked={checked.has(c.path)} oncheck={() => toggle(c.path)} viewing={viewing === c.path} onshow={() => show(c.path)} label={label(c)} />
             {/each}
           {/if}
+          {#if groups.leaderboard.length}
+            <h3>模型榜单 leaderboard.json</h3>
+            {#each groups.leaderboard as c (c.path)}
+              <ChangeRow {c} checked={checked.has(c.path)} oncheck={() => toggle(c.path)} viewing={viewing === c.path} onshow={() => show(c.path)} label={label(c)} />
+            {/each}
+          {/if}
           {#each groups.posts as [slug, list] (slug)}
             <h3 title={slug}>{ed.titleOf(slug)} <span class="font-mono id">{slug}</span></h3>
             {#each list as c (c.path)}
@@ -162,7 +178,7 @@
           {/if}
         {:else}
           <div class="ed-empty">
-            <p>没有改动。改了文章、传了图片、调了分类标签，都会出现在这里。</p>
+            <p>没有改动。改了文章，传了图片，调了分类标签或榜单，都会出现在这里。</p>
           </div>
         {/if}
       </div>
@@ -210,7 +226,7 @@
           <div class="ed-empty"><span class="ed-spinner"></span>读取中…</div>
         {:else if history.commits.length}
           <p class="log-note">
-            最近 {history.commits.length} 条动到文章和词表的提交。
+            最近 {history.commits.length} 条动到文章，词表和榜单的提交。
             {#if !history.undo.ok}<span class="muted">{history.undo.reason}</span>{/if}
           </p>
           <ul class="commits">
