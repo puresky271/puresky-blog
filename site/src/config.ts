@@ -144,6 +144,7 @@ export const TAG_GROUPS = [
   { id: 'algo', label: '算法', blurb: '解题的技法与题型，给题解文章用。' },
   { id: 'dsa', label: '数据结构', blurb: '数据结构本身的概念与实现，给知识讲解文章用，和算法技法分开。' },
   { id: 'kind', label: '体裁', blurb: '文章是怎么写的：复盘、实验、踏查还是随想。' },
+  { id: 'model', label: '模型印象', blurb: '模型榜单用的标签：这个模型擅长什么、哪里不行。文章里也能用。' },
 ] as const;
 
 export type TagGroupId = (typeof TAG_GROUPS)[number]['id'];
@@ -246,6 +247,21 @@ export const TAGS = [
   { name: '踏查', slug: 'fieldwork', group: 'kind', blurb: '去现场看、记、再写进系统。' },
   { name: '方法论', slug: 'methodology', group: 'kind', blurb: '从多次踩坑里沉淀下来的做法。' },
   { name: '反思', slug: 'reflection', group: 'kind', blurb: '不那么技术的想法。' },
+  // 模型印象（模型榜单用，文章里也可以用来给自己的判断打标）
+  { name: '日常主力', slug: 'daily-driver', group: 'model', blurb: '会长期留在默认入口里的那种。' },
+  { name: '代码', slug: 'coding', group: 'model', blurb: '写代码、改仓库、读报错这类活。' },
+  { name: '中文', slug: 'chinese', group: 'model', blurb: '中文表达自然，不是翻译腔。' },
+  { name: '写作', slug: 'writing', group: 'model', blurb: '文字表达自然，长文读起来不端着。' },
+  { name: '长上下文', slug: 'long-context', group: 'model', blurb: '塞进去一大坨材料还能记住。' },
+  { name: '工具调用', slug: 'tool-use', group: 'model', blurb: '函数调用、结构化输出稳定。' },
+  { name: '多模态', slug: 'multimodal', group: 'model', blurb: '看图、截图、图表读得懂。' },
+  { name: '强推理', slug: 'strong-reasoning', group: 'model', blurb: '难题肯想、步骤站得住。' },
+  { name: '便宜', slug: 'cheap', group: 'model', blurb: '价格低到可以随手用。' },
+  { name: '快', slug: 'fast', group: 'model', blurb: '首字和出字都利索。' },
+  { name: '慢', slug: 'slow', group: 'model', blurb: '等它出结果要有点耐心。' },
+  { name: '贵', slug: 'pricey', group: 'model', blurb: '用之前要先算一下账。' },
+  { name: '稳定', slug: 'stable', group: 'model', blurb: '同样的提示词，结果不会一天一个样。' },
+  { name: '创意', slug: 'creative', group: 'model', blurb: '写东西的时候敢往意外处走。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
