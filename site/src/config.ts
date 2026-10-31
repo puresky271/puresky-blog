@@ -171,6 +171,7 @@ export const TAGS = [
   { name: '人格一致性', slug: 'persona', group: 'topic', blurb: '同一个角色在长对话、多轮重建之后还是她自己。' },
   { name: 'AI 与人', slug: 'ai-and-people', group: 'topic', blurb: 'AI 时代里人的位置：工作、学习、陪伴与责任。' },
   { name: '学习', slug: 'learning', group: 'topic', blurb: '作为学生，在答案触手可及的时代怎么学。' },
+  { name: '软件工程', slug: 'software-engineering', group: 'topic', blurb: '把软件做对做稳的设计、流程与质量约束。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
   { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
