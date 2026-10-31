@@ -25,6 +25,9 @@ const LABELS = {
   'fenwick-query': '树状数组查询前缀和',
   'fenwick-update': '树状数组单点更新',
   'circular-queue': '循环队列判空与判满',
+  'avl-rotate': 'AVL 树的右旋与左旋',
+  'thread-build': '线索二叉树的线索化',
+  'thread-traverse': '遍历线索二叉树',
 };
 
 const EMPTY_CONFIG_OK = new Set(['tree-levelorder', 'expression-tree']);
@@ -91,6 +94,30 @@ const VALIDATORS = {
     }
     return null;
   },
+  'avl-rotate': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'kind');
+    if (unknown.length > 0) return `旋转动画不支持配置项：${unknown.join('、')}。`;
+    if (!['left', 'right', 'lr', 'rl'].includes(config.kind)) {
+      return '旋转动画的 kind 只能是 left、right、lr 或 rl。';
+    }
+    return null;
+  },
+  'thread-build': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'order');
+    if (unknown.length > 0) return `线索化动画不支持配置项：${unknown.join('、')}。`;
+    if (!['inorder', 'preorder', 'postorder'].includes(config.order)) {
+      return '线索化动画的 order 只能是 inorder、preorder 或 postorder。';
+    }
+    return null;
+  },
+  'thread-traverse': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'order');
+    if (unknown.length > 0) return `遍历动画不支持配置项：${unknown.join('、')}。`;
+    if (!['inorder', 'preorder', 'postorder'].includes(config.order)) {
+      return '遍历动画的 order 只能是 inorder、preorder 或 postorder。';
+    }
+    return null;
+  },
 };
 
 const TYPES = new Set(Object.keys(LABELS));
@@ -151,7 +178,7 @@ function buildAnimation(type, source) {
         'data-config': JSON.stringify(config),
       },
     },
-    children: [message(`动画演示：${LABELS[type]}。启用 JavaScript 后可播放、暂停和单步查看。`)],
+    children: [message(`动画演示：${LABELS[type]}。启用 JavaScript 后可以播放，可以暂停，也可以单步查看。`)],
   };
 }
 

@@ -14,6 +14,9 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'fenwick-query': async () => (await import('./FenwickQueryDemo.svelte')).default,
   'fenwick-update': async () => (await import('./FenwickUpdateDemo.svelte')).default,
   'circular-queue': async () => (await import('./CircularQueueDemo.svelte')).default,
+  'avl-rotate': async () => (await import('./AvlRotationDemo.svelte')).default,
+  'thread-build': async () => (await import('./ThreadBuildDemo.svelte')).default,
+  'thread-traverse': async () => (await import('./ThreadTraverseDemo.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

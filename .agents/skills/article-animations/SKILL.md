@@ -92,6 +92,34 @@ method: sacrifice
 :::
 ```
 
+`avl-rotate` 配置 `kind` 为 `right`、`left`、`lr` 或 `rl`，演示 AVL 树在失衡结点上的旋转：右旋处理 LL 型、左旋处理 RR 型（B 上位、A 下沉、夹在中间的 β 换边）；`lr` / `rl` 演示 LR / RL 型折角失衡的双旋，先对 B 转一次把折角扳直，再对 A 转一次让折角点 C 上位：
+
+```md
+:::animation avl-rotate
+kind: right
+:::
+
+:::animation avl-rotate
+kind: lr
+:::
+```
+
+`thread-build` 配置 `order` 为 `inorder`、`preorder` 或 `postorder`，逐步演示线索化：`pre` 前驱指针在结点之间跳动，跳的顺序就是遍历序列，每访问一个结点，空着的左指针和 `pre` 空着的右指针上各长出一条虚线线索。中序和先序带上了头结点，后序不带头结点，所以后序演示里没有那个结点，画布也裁掉顶部一段：
+
+```md
+:::animation thread-build
+order: inorder
+:::
+```
+
+`thread-traverse` 配置 `order` 为 `inorder`、`preorder` 或 `postorder`，演示三种线索树的遍历：`p` 指针在结点之间跳，每一步把走过的孩子边或线索用实心高亮画一遍，右侧显示访问序列。中序和先序顺着后继走，后序从根开始顺着前驱倒着收集，最后一步把收集顺序反过来给出后序序列：
+
+```md
+:::animation thread-traverse
+order: inorder
+:::
+```
+
 需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
 
 ## 新增动画类型
