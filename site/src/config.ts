@@ -288,6 +288,8 @@ export const TAGS = [
   { name: '贵', slug: 'pricey', group: 'model', blurb: '用之前要先算一下账。' },
   { name: '稳定', slug: 'stable', group: 'model', blurb: '同样的提示词，结果不会一天一个样。' },
   { name: '创意', slug: 'creative', group: 'model', blurb: '写东西的时候敢往意外处走。' },
+  { name: '可解释性', slug: 'interpretability', group: 'tech', blurb: '看进模型内部：激活、回路与内部表征。' },
+  { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
   // 出处（精选收录的外部文章：团队和作者）
   {
     name: 'Anthropic团队·Addy Osmani 等',
@@ -306,6 +308,18 @@ export const TAGS = [
     slug: 'cognition-walden-yan',
     group: 'source',
     blurb: 'Cognition 官方博客，作者是 Walden Yan。',
+  },
+  {
+    name: 'Anthropic团队·Wes Gurnee 等',
+    slug: 'anthropic-wes-gurnee',
+    group: 'source',
+    blurb: 'Anthropic 可解释性研究，配套论文的作者是 Wes Gurnee 和 Nicholas Sofroniew 等十六人。',
+  },
+  {
+    name: '斯坦福团队·Joon Sung Park 等',
+    slug: 'stanford-joonsung-park',
+    group: 'source',
+    blurb: '斯坦福大学人机交互方向，作者是 Joon Sung Park，Joseph C. O’Brien，Carrie J. Cai 等六人。',
   },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
