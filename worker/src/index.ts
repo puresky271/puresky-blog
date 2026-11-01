@@ -17,7 +17,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 
 import type { Env, Variables } from './types.ts';
-import { allowedOrigins } from './lib/origins.ts';
+import { allowedOrigins, isAllowedOrigin } from './lib/origins.ts';
 import { readSession } from './lib/session.ts';
 import admin from './routes/admin.ts';
 import auth from './routes/auth.ts';
@@ -63,7 +63,7 @@ app.use('/api/*', async (c, next) => {
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     const origin = c.req.header('origin');
     if (origin) {
-      if (!allowedOrigins(c.env).includes(origin)) {
+      if (!isAllowedOrigin(c.env, origin)) {
         return c.json({ error: '来源不被允许' }, 403);
       }
     } else if (c.req.header('sec-fetch-site') === 'cross-site') {
@@ -91,12 +91,18 @@ app.route('/api/admin', admin);
 app.get('/api/health', (c) => c.json({ ok: true }));
 
 /**
- * 能在浏览器里执行脚本的媒体类型。R2 里目前只会有 SVG 这一种。
- * 同时看 key 后缀：直接 `wrangler r2 object put` 上传的文件可能没有 content-type。
+ * 只有图片（SVG 除外）、音频、视频可以按原类型内联返回。
+ *
+ * 用白名单而不是只盯 SVG：R2 里也可能通过 `wrangler r2 object put` 直接传音视频，
+ * 哪天误传一个 .html，黑名单会漏掉它，白名单则一律当附件下载。
+ * 同时看 key 后缀，因为直接上传的文件可能没有 content-type。
  */
-function isActiveContent(key: string, contentType: string | null): boolean {
+function isInlineSafe(key: string, contentType: string | null): boolean {
   const type = (contentType ?? '').split(';')[0]?.trim().toLowerCase() ?? '';
-  return type === 'image/svg+xml' || key.toLowerCase().endsWith('.svg');
+  if (type.startsWith('image/')) {
+    return type !== 'image/svg+xml' && !key.toLowerCase().endsWith('.svg');
+  }
+  return type.startsWith('audio/') || type.startsWith('video/');
 }
 
 /**
@@ -123,9 +129,10 @@ app.on(['GET', 'HEAD'], '/media/:key{.+}', async (c) => {
   headers.set('access-control-allow-origin', '*');
 
   // 不许浏览器猜类型。SVG 能内嵌脚本，直接用地址打开就相当于在 API 源上执行脚本，
-  // 所以 SVG 一律当附件下载，再套一层沙箱 CSP。用 <img> 引用不受影响（img 不执行脚本）。
+  // 所以白名单之外的媒体一律当附件下载，再套一层沙箱 CSP。
+  // 用 <img> / <audio> / <video> 引用不受影响。
   headers.set('x-content-type-options', 'nosniff');
-  if (isActiveContent(key, headers.get('content-type'))) {
+  if (!isInlineSafe(key, headers.get('content-type'))) {
     headers.set('content-disposition', 'attachment');
     headers.set('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
   }

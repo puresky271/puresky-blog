@@ -38,12 +38,17 @@ async function allowWrite(c: Ctx, scope: 'views' | 'likes'): Promise<boolean> {
  */
 function maybeCleanup(c: Ctx): void {
   if (Math.random() > 0.02) return;
-  c.executionCtx.waitUntil(
-    c.env.DB.batch([
-      c.env.DB.prepare("DELETE FROM view_dedupe WHERE day < date('now', '-7 day')"),
-      c.env.DB.prepare("DELETE FROM like_dedupe WHERE created_at < datetime('now', '-7 day')"),
-    ]).catch((error) => console.warn('清理去重表失败', error))
-  );
+
+  const task = c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM view_dedupe WHERE day < date('now', '-7 day')"),
+    c.env.DB.prepare("DELETE FROM like_dedupe WHERE created_at < datetime('now', '-7 day')"),
+  ]).catch((error) => console.warn('清理去重表失败', error));
+
+  try {
+    c.executionCtx.waitUntil(task);
+  } catch {
+    // 没有 ExecutionContext 的运行时（比如单测）就跳过这次清理，别把写请求打成 500。
+  }
 }
 
 async function totalViews(db: D1Database, slug: string): Promise<number> {
@@ -65,7 +70,10 @@ metrics.post('/views/:slug', async (c) => {
   const slug = c.req.param('slug');
   if (!isValidSlug(slug)) return c.json({ error: 'slug 格式不合法' }, 400);
 
-  if (!(await allowWrite(c, 'views'))) return c.json({ error: '请求过于频繁' }, 429);
+  if (!(await allowWrite(c, 'views'))) {
+    // 限流时不写库，但没必要让阅读数显示空白：直接把当前值回去。
+    return c.json({ slug, views: await totalViews(c.env.DB, slug), counted: false });
+  }
 
   const day = utcDay();
   const hash = await visitorHash(c.req.raw, c.env.SESSION_SECRET, day);

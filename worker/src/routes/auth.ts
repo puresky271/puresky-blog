@@ -15,16 +15,15 @@
 import { Hono } from 'hono';
 
 import type { Env, SessionData, UserRow, Variables } from '../types.ts';
-import { randomToken, sha256Base64Url, timingSafeEqual } from '../lib/crypto.ts';
+import { randomToken, sha256Base64Url } from '../lib/crypto.ts';
 import { allowedOrigins } from '../lib/origins.ts';
 import {
-  clearOAuthStateCookie,
   createSession,
   destroySession,
   putOAuthState,
-  readOAuthStateCookie,
   setOAuthStateCookie,
   takeOAuthState,
+  takeOAuthStateCookie,
 } from '../lib/session.ts';
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -54,8 +53,17 @@ function safeRedirect(env: Env, candidate: string | undefined): string {
 }
 
 auth.get('/github/start', async (c) => {
+  /*
+   * 这是 GET，但会写 KV 和 Set-Cookie，所以额外要求它是顶层导航。
+   * 跨站页面拿 <img> / <iframe> 反复打这个地址，能覆盖访客正在进行的
+   * puresky_oauth_state cookie（登录流程被打断）并白白消耗 KV 写。
+   * Sec-Fetch-Dest 缺失的客户端（老浏览器、curl）放行。
+   */
+  const dest = c.req.header('sec-fetch-dest');
+  if (dest && dest !== 'document') return c.text('请从站点内发起登录', 403);
+
   const { success } = await c.env.AUTH_LIMITER.limit({
-    key: c.req.header('cf-connecting-ip') ?? 'unknown',
+    key: `start:${c.req.header('cf-connecting-ip') ?? 'unknown'}`,
   });
   if (!success) return c.text('请求过于频繁', 429);
 
@@ -83,8 +91,9 @@ auth.get('/github/start', async (c) => {
 
 auth.get('/github/callback', async (c) => {
   // 回调会打 GitHub 的接口、写 D1，不限流同样能被刷。
+  // 和 /start 分开计数：一次正常登录的两次请求各算各的，不会互相挤占额度。
   const { success } = await c.env.AUTH_LIMITER.limit({
-    key: c.req.header('cf-connecting-ip') ?? 'unknown',
+    key: `callback:${c.req.header('cf-connecting-ip') ?? 'unknown'}`,
   });
   if (!success) return c.text('请求过于频繁', 429);
 
@@ -99,9 +108,7 @@ auth.get('/github/callback', async (c) => {
    * state 必须同时出现在 URL 和 cookie 里。cookie 只可能在发起登录的那个浏览器上，
    * 攻击者没法把自己流程里的 state 塞进受害者的浏览器，登录 CSRF 就被挡在这里。
    */
-  const cookieState = readOAuthStateCookie(c);
-  clearOAuthStateCookie(c);
-  if (!cookieState || !timingSafeEqual(cookieState, state)) {
+  if (!takeOAuthStateCookie(c, state)) {
     return c.text('登录状态无效或已过期，请重新登录', 400);
   }
 
@@ -134,7 +141,9 @@ auth.get('/github/callback', async (c) => {
   };
 
   if (!tokenPayload.access_token) {
-    return c.text(`GitHub 拒绝了这次授权：${tokenPayload.error ?? '未知原因'}`, 502);
+    // GitHub 的错误码只写日志，响应里给一句笼统的话，和 proxy 的处理保持一致。
+    console.warn('github oauth token exchange:', tokenPayload.error ?? 'unknown');
+    return c.text('GitHub 拒绝了这次授权，请重新登录', 502);
   }
 
   // ── 取用户信息 ─────────────────────────────────────────────────────────────

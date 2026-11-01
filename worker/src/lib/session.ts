@@ -9,9 +9,14 @@ import type { Context } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 
 import type { Env, SessionData, Variables } from '../types.ts';
-import { randomToken } from './crypto.ts';
+import { randomToken, timingSafeEqual } from './crypto.ts';
 
-export const SESSION_COOKIE = 'puresky_session';
+/**
+ * 会话 cookie 名字。`__Host-` 前缀让浏览器拒绝同注册域下其他子域投放的
+ * `Domain=pureskyblog.dpdns.org` 同名 cookie：host-only + Path=/ + Secure 才满足前缀规则，
+ * 少了这个前缀就可能被 cookie tossing 遮蔽。代价是改名当刻所有人需要重新登录一次。
+ */
+export const SESSION_COOKIE = '__Host-puresky_session';
 
 /** 会话有效期 30 天。 */
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -70,20 +75,38 @@ export const OAUTH_STATE_COOKIE = 'puresky_oauth_state';
 const OAUTH_STATE_COOKIE_PATH = '/api/auth';
 
 /**
- * OAuth state 同时写一份同值 cookie。
- *
- * 回调时要求 URL 里的 state 和这个 cookie 一致，state 才对「发起登录的那个浏览器」有效。
- * 少了这一步就是登录 CSRF：攻击者把自己登录流程的 code + state 拼成链接发给受害者，
- * 受害者点一下就会以攻击者的身份建会话。
+ * cookie 里最多同时保留几个进行中的登录。
+ * 多标签页同时点登录、或者第一次失败后重试，先发起的那次回调也要能对上。
  */
-export function setOAuthStateCookie(c: Ctx, state: string): void {
-  setCookie(c, OAUTH_STATE_COOKIE, state, {
+const MAX_PENDING_STATES = 3;
+
+/**
+ * state 之间用点号分隔。RFC 6265 的 cookie-octet 不允许逗号，
+ * 而 base64url 的字符集里没有点号，正好当分隔符。
+ */
+const OAUTH_STATE_SEPARATOR = '.';
+
+function writeOAuthStateCookie(c: Ctx, value: string): void {
+  setCookie(c, OAUTH_STATE_COOKIE, value, {
     path: OAUTH_STATE_COOKIE_PATH,
     httpOnly: true,
     secure: true,
     sameSite: 'Lax',
     maxAge: 600,
   });
+}
+
+/**
+ * OAuth state 同时写一份 cookie（点号分隔的最近几个 state）。
+ *
+ * 回调时要求 URL 里的 state 和 cookie 里的某一个一致，state 才对「发起登录的那个浏览器」有效。
+ * 少了这一步就是登录 CSRF：攻击者把自己登录流程的 code + state 拼成链接发给受害者，
+ * 受害者点一下就会以攻击者的身份建会话。
+ */
+export function setOAuthStateCookie(c: Ctx, state: string): void {
+  const pending = (readOAuthStateCookie(c) ?? '').split(OAUTH_STATE_SEPARATOR).filter(Boolean);
+  pending.push(state);
+  writeOAuthStateCookie(c, pending.slice(-MAX_PENDING_STATES).join(OAUTH_STATE_SEPARATOR));
 }
 
 export function readOAuthStateCookie(c: Ctx): string | null {
@@ -96,6 +119,26 @@ export function clearOAuthStateCookie(c: Ctx): void {
     secure: true,
     sameSite: 'Lax',
   });
+}
+
+/**
+ * 校验回调带来的 state 是否由这个浏览器发起。
+ *
+ * 命中后只把命中的那个 state 从 cookie 里摘掉，其他标签页还在进行的登录不受影响。
+ * 不命中时不改 cookie，免得并行登录互相把对方的 state 清掉。
+ */
+export function takeOAuthStateCookie(c: Ctx, state: string): boolean {
+  const raw = readOAuthStateCookie(c);
+  if (!raw) return false;
+
+  const pending = raw.split(OAUTH_STATE_SEPARATOR).filter(Boolean);
+  if (!pending.some((candidate) => timingSafeEqual(candidate, state))) return false;
+
+  const rest = pending.filter((candidate) => !timingSafeEqual(candidate, state));
+  if (rest.length > 0) writeOAuthStateCookie(c, rest.join(OAUTH_STATE_SEPARATOR));
+  else clearOAuthStateCookie(c);
+
+  return true;
 }
 
 /** OAuth 流程中间态：PKCE verifier 加回跳地址。10 分钟过期。 */

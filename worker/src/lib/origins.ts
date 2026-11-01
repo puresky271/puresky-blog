@@ -7,15 +7,30 @@
 
 import type { Env } from '../types.ts';
 
+/** 归一化到 URL.origin：去掉尾斜杠、统一小写、省掉默认端口。 */
+export function normalizeOrigin(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    // 配置写坏了也原样保留，至少不会静默把来源丢掉。
+    return trimmed.replace(/\/+$/, '');
+  }
+}
+
 export function allowedOrigins(env: Env): string[] {
-  const origins = env.ALLOWED_ORIGINS.split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const origins = env.ALLOWED_ORIGINS.split(',').map(normalizeOrigin).filter(Boolean);
 
   // SITE_ORIGIN 是正式站点。配置里漏写时也补上，免得把自家站点挡在外面。
-  if (env.SITE_ORIGIN && !origins.includes(env.SITE_ORIGIN)) {
-    origins.push(env.SITE_ORIGIN);
-  }
+  const site = normalizeOrigin(env.SITE_ORIGIN);
+  if (site && !origins.includes(site)) origins.push(site);
 
   return origins;
+}
+
+export function isAllowedOrigin(env: Env, origin: string | undefined | null): boolean {
+  if (!origin) return false;
+  return allowedOrigins(env).includes(normalizeOrigin(origin));
 }
