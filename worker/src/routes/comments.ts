@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { CommentDto, CommentRow, Env, SessionData, UserRow, Variables } from '../types.ts';
 import { randomToken } from '../lib/crypto.ts';
 import { moderate } from '../lib/moderation.ts';
+import { isOwner, ownerUserId } from '../lib/owner.ts';
 import { isValidSlug } from '../lib/slug.ts';
 
 const comments = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -14,7 +15,7 @@ const comments = new Hono<{ Bindings: Env; Variables: Variables }>();
 const MAX_BODY_LENGTH = 2000;
 const MIN_BODY_LENGTH = 2;
 
-function toDto(row: CommentRow, ownerLogin: string, session: SessionData | null): CommentDto {
+function toDto(row: CommentRow, ownerId: string, session: SessionData | null): CommentDto {
   return {
     id: row.id,
     parentId: row.parent_id,
@@ -23,7 +24,9 @@ function toDto(row: CommentRow, ownerLogin: string, session: SessionData | null)
     profile: row.profile_url,
     body: row.body,
     createdAt: `${row.created_at.replace(' ', 'T')}Z`,
-    isOwner: row.login === ownerLogin,
+    // 按 GitHub id 认人，不按登录名：站长改过名之后，旧评论上的「作者」标记不能丢，
+    // 抢注了旧名字的人也不该拿到这个标记。
+    isOwner: row.user_id === ownerId,
     mine: session?.userId === row.user_id,
     pending: row.status === 'pending',
   };
@@ -37,7 +40,7 @@ comments.get('/:slug', async (c) => {
   if (!isValidSlug(slug)) return c.json({ error: 'slug 格式不合法' }, 400);
 
   const session = c.get('session');
-  const isOwner = session?.login === c.env.OWNER_LOGIN;
+  const viewerIsOwner = isOwner(c.env, session);
 
   /*
    * 可见性规则：
@@ -45,7 +48,7 @@ comments.get('/:slug', async (c) => {
    *   待审的评论只有作者本人和站长可见 —— 否则作者会以为自己的评论丢了。
    *   被拒的评论谁都看不到，包括作者，因为告知「你被判为垃圾」没有好处。
    */
-  const statement = isOwner
+  const statement = viewerIsOwner
     ? c.env.DB.prepare(
         `SELECT ${COLUMNS} FROM comments c JOIN users u ON u.id = c.user_id
           WHERE c.slug = ? AND c.deleted_at IS NULL AND c.status IN ('approved', 'pending')
@@ -59,7 +62,9 @@ comments.get('/:slug', async (c) => {
       ).bind(slug, session?.userId ?? '');
 
   const { results } = await statement.all<CommentRow>();
-  return c.json({ comments: (results ?? []).map((row) => toDto(row, c.env.OWNER_LOGIN, session)) });
+  return c.json({
+    comments: (results ?? []).map((row) => toDto(row, ownerUserId(c.env), session)),
+  });
 });
 
 comments.post('/:slug', async (c) => {
@@ -141,10 +146,10 @@ comments.delete('/:slug/:id', async (c) => {
   if (!session) return c.json({ error: '需要先登录' }, 401);
 
   const id = c.req.param('id');
-  const isOwner = session.login === c.env.OWNER_LOGIN;
+  const viewerIsOwner = isOwner(c.env, session);
 
   // 权限在 SQL 层面限制住，不靠应用层判断。
-  const result = isOwner
+  const result = viewerIsOwner
     ? await c.env.DB.prepare(
         `UPDATE comments SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL`
       )

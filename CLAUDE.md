@@ -149,7 +149,7 @@ GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：�
 - **OAuth 绑定浏览器**：state 存 KV，同时写一份 httpOnly cookie（最多留最近 3 个，多标签页不互相覆盖），回调两处都要对上；`/start` 会写 KV，只接受顶层导航。
 - **审核 fail-closed**（`lib/moderation.ts`）：规则拦不住的再问 Workers AI；模型不可用或输出无法解析一律送审。
 - **被拒的评论返回 200 + pending**，不暴露「你是垃圾」。
-- **admin 全部返回 404 而非 403**，OWNER 校验集中在中间件。
+- **admin 全部返回 404 而非 403**，OWNER 校验集中在中间件。站长按 GitHub 数值 id 判（`wrangler.toml` 的 `OWNER_GITHUB_ID`，会话里的 `github:<id>`，见 `lib/owner.ts`），不按登录名：登录名可以改，注销后还能被别人注册，按它判权等于把后台挂在一个能被抢注的字符串上。
 - **浏览数/点赞去重不追踪用户**：按天加盐的 IP+UA 哈希，不设 cookie 不做指纹。
 - **评论软删**（`deleted_at`）；楼中楼只有一层，回复回复时挂到根评论。
 - **代理不做开放代理**：GitHub 只代理配置的账号，网易云歌单只代理白名单；第三方响应缓存在 KV（`lib/cache.ts`），只在缓存未命中时过 `PROXY_LIMITER`，过了新鲜期先返回旧值、在后台刷新，上游失败时继续用旧值（MV 除外）。
@@ -165,6 +165,7 @@ GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：�
 - 左边窄栏四个模式：文章 / 整理 / 提交 / 榜单。榜单模式（`src/editor/Leaderboard.svelte`）读写 `src/data/leaderboard.json`，接口在 `/__editor/api/leaderboard*`，保存前用和 `parseLeaderboard` 对齐的规则校验。它和候选池都要走同一套本机校验。
 - 提交范围只有 posts 目录、`src/config.ts` 和 `src/data/leaderboard.json`（`git commit -- <勾选的文件>`），不带走工作区别的改动。
 - `api.mjs` 在 dev server 启动时加载一次，改了它要重启 dev server 才生效。
+- Vite 的 `server.fs.allow` 只放开站点根目录和 `shared/`（`shared/` 在站点根之外，`@shared` 的运行时 import 需要它）。不要写回 `['..']`，也不要用 `astro dev --host` 暴露到局域网：dev server 没有鉴权，编辑器那四层校验管不到 Vite 自己的 `/@fs/` 文件服务，放松 allow 等于把整个仓库（含 `.git`、`worker/.dev.vars`）读给同网段所有人。
 - 页面只有 `/__editor/`（带斜杠）能打开，手输 `/__editor` 会 404（`trailingSlash: 'always'`，注入的路由不做跳转），站内入口都带斜杠。
   编辑器打不开先怀疑是不是 build 撞了 dev server（见上面依赖缓存那段），确认接口活着可以
   `curl -H 'x-puresky-editor: 1' -H 'Origin: http://localhost:4321' localhost:4321/__editor/api/ping`。

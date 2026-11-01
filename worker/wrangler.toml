@@ -14,8 +14,11 @@ workers_dev = true
 [vars]
 ALLOWED_ORIGINS = "https://pureskyblog.dpdns.org,https://pureskyblog.1601992191.workers.dev,http://localhost:4321,http://127.0.0.1:4321"
 SITE_ORIGIN = "https://pureskyblog.dpdns.org"
-# 站长的 GitHub 登录名。用于给作者本人的评论加标记、放行管理接口。
-OWNER_LOGIN = "puresky271"
+# 站长的 GitHub 数值 id（https://api.github.com/users/<登录名> 返回的 id），不是登录名。
+# 登录名可以改，注销后还能被别人重新注册；按登录名放行管理接口的话，
+# 站长改名之后抢到旧名字的人登录一次就拿到了全部管理权限。数值 id 跟着账号走。
+# 用于放行管理接口、给作者本人的评论加标记。
+OWNER_GITHUB_ID = "232055116"
 # 评论是否需要审核后才显示。
 MODERATION_ENABLED = "true"
 # GitHub 概览只代理这个账号，避免被当成任意用户的查询代理。

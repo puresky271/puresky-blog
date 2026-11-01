@@ -15,8 +15,8 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ALLOWED_ORIGINS = "https://pureskyblog.dpdns.org,https://pureskyblog.1601992191.workers.dev,http://localhost:4321,http://127.0.0.1:4321"
 SITE_ORIGIN = "https://pureskyblog.dpdns.org"
-# 站长的 GitHub 登录名。用于给作者本人的评论加标记、放行管理接口。
-OWNER_LOGIN = "puresky271"
+# 站长的 GitHub 数值 id（不是登录名，登录名可改可被抢注）。和 wrangler.toml 保持一致。
+OWNER_GITHUB_ID = "232055116"
 # 评论是否需要审核后才显示。
 MODERATION_ENABLED = "true"
 # GitHub 概览只代理这个账号，避免被当成任意用户的查询代理。

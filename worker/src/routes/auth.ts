@@ -17,6 +17,7 @@ import { Hono } from 'hono';
 import type { Env, SessionData, UserRow, Variables } from '../types.ts';
 import { randomToken, sha256Base64Url } from '../lib/crypto.ts';
 import { allowedOrigins } from '../lib/origins.ts';
+import { isOwner } from '../lib/owner.ts';
 import {
   createSession,
   destroySession,
@@ -209,7 +210,7 @@ auth.get('/me', async (c) => {
       login: session.login,
       avatar: session.avatarUrl,
       profile: session.profileUrl,
-      isOwner: session.login === c.env.OWNER_LOGIN,
+      isOwner: isOwner(c.env, session),
       canComment: user?.blocked !== 1,
     },
   });

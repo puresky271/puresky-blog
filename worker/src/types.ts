@@ -23,7 +23,11 @@ export interface Env {
   /** 逗号分隔的允许来源。 */
   ALLOWED_ORIGINS: string;
   SITE_ORIGIN: string;
-  OWNER_LOGIN: string;
+  /**
+   * 站长的 GitHub 数值 id（形如 "232055116"），不是登录名。
+   * 登录名可以改、注销后还能被别人注册，用它判权等于把管理权限挂在一个可以被接管的字符串上。
+   */
+  OWNER_GITHUB_ID: string;
   MODERATION_ENABLED: string;
   GITHUB_USERNAME: string;
   /** 逗号分隔的允许代理的网易云歌单 id。 */

@@ -1,20 +1,24 @@
 /**
  * admin.ts — 管理接口。
  *
- * 全部要求登录用户是 OWNER_LOGIN。校验在这个文件的中间件里做一次，
+ * 全部要求登录用户是站长。校验在这个文件的中间件里做一次，
  * 下面每个路由都不重复判断 —— 漏判一处就是一个提权漏洞，
  * 所以宁可让中间件统一挡住。
+ *
+ * 站长按 GitHub 数值 id 认人（lib/owner.ts），不按登录名：
+ * 登录名可以改、可以注销后被别人重新注册。
  */
 
 import { Hono } from 'hono';
 
-import type { CommentRow, Env, Variables } from '../types.ts';
+import type { CommentRow, Env, UserRow, Variables } from '../types.ts';
+import { isOwner, ownerUserId } from '../lib/owner.ts';
 
 const admin = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 admin.use('*', async (c, next) => {
   const session = c.get('session');
-  if (!session || session.login !== c.env.OWNER_LOGIN) {
+  if (!isOwner(c.env, session)) {
     // 统一返回 404 而不是 403，不暴露这些端点的存在。
     return c.json({ error: 'Not found' }, 404);
   }
@@ -85,8 +89,13 @@ admin.post('/users/:login/:action', async (c) => {
     return c.json({ error: 'action 必须是 block 或 unblock' }, 400);
   }
 
-  // 不允许把站长自己封掉。
-  if (login === c.env.OWNER_LOGIN) {
+  // 不允许把站长自己封掉。同样按 GitHub id 认人：登录名变了也要认得出来。
+  const target = await c.env.DB.prepare('SELECT id FROM users WHERE login = ?')
+    .bind(login)
+    .first<Pick<UserRow, 'id'>>();
+
+  if (!target) return c.json({ error: '用户不存在' }, 404);
+  if (target.id === ownerUserId(c.env)) {
     return c.json({ error: '不能封禁站长账号' }, 400);
   }
 

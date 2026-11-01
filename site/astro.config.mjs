@@ -93,9 +93,21 @@ export default defineConfig({
         yaml: fileURLToPath(new URL('./node_modules/yaml/browser/index.js', import.meta.url)),
       },
     },
-    // shared/ 在站点根目录之外，dev server 默认不允许读取。
+    /*
+     * 站点根目录之外只有 shared/ 需要 dev server 读取，所以只放开它一个目录。
+     *
+     * 不要写成 ['..']：那等于把整个仓库根挂到 Vite 的 /@fs/ 下（.git、worker 源码、
+     * worker/.dev.vars 全在里面）。dev server 本身没有鉴权，编辑器接口那四层校验
+     * 管不到 Vite 自己的文件服务，一旦按设想用 `astro dev --host` 暴露到局域网，
+     * 同一网段任何人用 /@fs/<绝对路径> 就能把仓库读走。
+     */
     server: {
-      fs: { allow: ['..'] },
+      fs: {
+        allow: [
+          fileURLToPath(new URL('.', import.meta.url)),
+          fileURLToPath(new URL('../shared', import.meta.url)),
+        ],
+      },
       watch: {
         // Astro 的内容缓存不需要被 Vite 再监听；Windows 上自己监听自己会导致
         // data-store.json 的原子 rename 偶发 EPERM。
