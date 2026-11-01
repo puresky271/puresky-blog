@@ -71,9 +71,34 @@ export function formatDuration(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
+/**
+ * 双语对照文章（:::bi / :::figure）里英文原文那一半默认不显示，字数不该把它算进去，
+ * 否则一篇论文会被数成两篇。按行扫标记：进入 :::bi / :::figure 后跳过，遇到同层 :::zh 恢复，
+ * 其他容器（:::annotation / :::tabs 等）照常计数。普通文章原样返回，数字不变。
+ */
+function stripBilingualEnglish(markdown: string): string {
+  if (!/^:::+\s*(?:bi|figure)\b/m.test(markdown)) return markdown;
+  const out: string[] = [];
+  // true 表示这一层的内容是英文原文那一半，不计入字数。
+  const stack: boolean[] = [];
+  for (const line of markdown.split('\n')) {
+    const marker = /^:::+\s*([a-z][a-z0-9-]*)?\s*$/i.exec(line.trim());
+    if (marker) {
+      const name = marker[1]?.toLowerCase() ?? '';
+      if (!name) stack.pop();
+      else if (name === 'zh' && stack[stack.length - 1] === true) stack[stack.length - 1] = false;
+      else stack.push(name === 'bi' || name === 'figure');
+      out.push('');
+      continue;
+    }
+    out.push(stack.includes(true) ? '' : line);
+  }
+  return out.join('\n');
+}
+
 /** 正文的汉字数和西文词数。去掉 frontmatter、标签和 Markdown 符号后再数。 */
 function countText(markdown: string): { cjk: number; latin: number } {
-  const text = markdown
+  const text = stripBilingualEnglish(markdown)
     .replace(/^---[\s\S]*?---/, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/[#>*_`~[\]()!|-]/g, ' ');

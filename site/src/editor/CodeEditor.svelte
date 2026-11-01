@@ -352,6 +352,14 @@
     }
   }
 
+  /** 插入注解块（:::annotation，论文对照文章里的批注卡）；有选区时把选中的行包进去。 */
+  export function annotation() {
+    if (!view) return;
+    const lines = selectedLines();
+    if (lines.empty) insertBlock(':::annotation\n', '\n:::');
+    else insertBlock(':::annotation\n', '\n:::', view.state.sliceDoc(lines.from, lines.to), lines.from, lines.to);
+  }
+
   /** 在光标处插入下一个编号的脚注引用，在文末补上定义，光标跳到定义处接着写。 */
   export function footnote() {
     if (!view) return;

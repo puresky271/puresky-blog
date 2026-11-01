@@ -1,12 +1,17 @@
 /**
- * remark-callout.mjs — 把 GitHub 风格的提示块语法转成带 class 的 blockquote。
+ * remark-callout.mjs — 把 GitHub 风格的提示块语法转成带 class 的 aside。
  *
  *   > [!NOTE]
  *   > 正文
  *
  * 支持 NOTE / TIP / IMPORTANT / WARNING / CAUTION。
- * 不引第三方插件是因为需求就这么点，而且要控制输出的 class 名对上 global.css。
+ * 输出的结构是 <aside class="callout callout-<kind>">，左边一枚手绘图标（见 callout-card.mjs），
+ * 正文跟在其后。「说明 / 提示」这些汉字标签不放出来占版面，只留在 aside 的 aria-label 里给读屏软件；
+ * 视觉上的类型靠图标形状和类型色区分（样式在 prose.css 的提示块一段）。
+ * 不引第三方插件和图标库，是因为需求就这么点，而且图标要统一线宽、统一圆头圆角。
  */
+
+import { calloutIconNode } from './callout-card.mjs';
 
 const ALERT_TYPES = {
   note: '说明',
@@ -65,14 +70,8 @@ function transformBlockquote(node) {
   node.data.hProperties = {
     className: ['callout', `callout-${kind}`],
     role: kind === 'caution' || kind === 'warning' ? 'alert' : 'note',
+    ariaLabel: label,
   };
 
-  node.children.unshift({
-    type: 'paragraph',
-    data: {
-      hName: 'p',
-      hProperties: { className: ['callout-title'] },
-    },
-    children: [{ type: 'text', value: label }],
-  });
+  node.children.unshift(calloutIconNode(kind));
 }

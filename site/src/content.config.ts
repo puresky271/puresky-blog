@@ -29,6 +29,8 @@ const posts = defineCollection({
       description: z.string().min(10).max(200),
       pubDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
+      /** 原文作者。精选收录这类外部文章写原作者，没有就回落到站点作者。 */
+      author: z.string().max(80).optional(),
       category: z.enum(CATEGORY_IDS),
       subcategory: z.enum(SUBCATEGORY_IDS),
       /** 子类必须属于当前一级分类。 */

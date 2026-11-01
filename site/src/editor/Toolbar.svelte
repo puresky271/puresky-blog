@@ -8,6 +8,7 @@
     iArrowClockwise,
     iArrowCounterClockwise,
     iCaretDown,
+    iChatCenteredText,
     iCheckSquare,
     iCode,
     iImage,
@@ -121,6 +122,7 @@
       </div>
     {/if}
   </div>
+  <button type="button" class="tb" onclick={() => ed.cm?.annotation()} title="注解段：插入 :::annotation 容器，选中几行会把它们包进去。论文对照文章里的批注卡" aria-label="注解段"><Icon icon={iChatCenteredText} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.prefix('- ')} title="无序列表" aria-label="无序列表"><Icon icon={iListBullets} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.prefix('1. ')} title="有序列表" aria-label="有序列表"><Icon icon={iListNumbers} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.prefix('- [ ] ')} title="任务列表" aria-label="任务列表"><Icon icon={iCheckSquare} size={16} /></button>

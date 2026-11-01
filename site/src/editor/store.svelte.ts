@@ -39,6 +39,7 @@ export interface CodeEditorHandle {
   heading(level: number): void;
   codeBlock(lang: string): void;
   callout(kind: string): void;
+  annotation(): void;
   footnote(): void;
   pickImages(files: File[]): void;
   jumpTo(line: number): void;
@@ -122,8 +123,32 @@ export function relative(ms: number): string {
   return new Date(ms).toLocaleDateString('zh-CN');
 }
 
+/**
+ * 双语对照文章里 :::bi / :::figure 的英文原文半边默认不显示，字数只算中文那一半。
+ * 行扫描规则和 src/lib/format.ts 里的同名函数一致（那边是站点统计，这边是编辑器状态栏）。
+ */
+function stripBilingualEnglish(body: string): string {
+  if (!/^:::+\s*(?:bi|figure)\b/m.test(body)) return body;
+  const out: string[] = [];
+  // true 表示这一层是英文原文那一半，不计入字数。
+  const stack: boolean[] = [];
+  for (const line of body.split('\n')) {
+    const m = /^:::+\s*([a-z][a-z0-9-]*)?\s*$/i.exec(line.trim());
+    if (m) {
+      const name = m[1]?.toLowerCase() ?? '';
+      if (!name) stack.pop();
+      else if (name === 'zh' && stack[stack.length - 1] === true) stack[stack.length - 1] = false;
+      else stack.push(name === 'bi' || name === 'figure');
+      out.push('');
+      continue;
+    }
+    out.push(stack.includes(true) ? '' : line);
+  }
+  return out.join('\n');
+}
+
 export function countText(body: string) {
-  const text = body.replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`~[\]()!|-]/g, ' ');
+  const text = stripBilingualEnglish(body).replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`~[\]()!|-]/g, ' ');
   const cjk = text.match(/[㐀-鿿豈-﫿]/g)?.length ?? 0;
   const latin = text.replace(/[㐀-鿿豈-﫿]/g, ' ').match(/[A-Za-z0-9]+/g)?.length ?? 0;
   return { words: cjk + latin, minutes: Math.max(1, Math.round(cjk / 380 + latin / 220)) };

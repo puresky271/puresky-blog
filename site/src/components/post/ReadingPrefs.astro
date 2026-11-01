@@ -1,0 +1,176 @@
+---
+/**
+ * ReadingPrefs.astro — 文章页的阅读偏好：正文字体（非衬线/衬线）和字号（A-/标准/A+）。
+ *
+ * 状态由 lib/reading-prefs.ts 写到 <html data-read-font data-read-size>，正文样式在 prose.css 里按属性切换。
+ * 选中态也看 <html> 上的属性而不是 JS 里的局部状态：内联脚本在首次绘制前就写好了，不会先闪一下默认档。
+ */
+
+const fonts = [
+  { value: 'sans', label: '非衬线', title: '非衬线（默认）' },
+  { value: 'serif', label: '衬线', title: '衬线' },
+];
+const sizes = [
+  { value: 'sm', label: 'A-', title: '小号字' },
+  { value: 'md', label: '标准', title: '标准字号（默认）' },
+  { value: 'lg', label: 'A+', title: '大号字' },
+];
+---
+
+<div class="reading-prefs">
+  <div class="segment" data-group="font" role="radiogroup" aria-label="正文字体">
+    <span class="thumb" aria-hidden="true" />
+    {
+      fonts.map((item) => (
+        <button
+          type="button"
+          role="radio"
+          aria-checked={item.value === 'sans' ? 'true' : 'false'}
+          data-option={item.value}
+          title={item.title}
+        >
+          {item.label}
+        </button>
+      ))
+    }
+  </div>
+  <div class="segment" data-group="size" role="radiogroup" aria-label="正文字号">
+    <span class="thumb" aria-hidden="true" />
+    {
+      sizes.map((item) => (
+        <button
+          type="button"
+          role="radio"
+          aria-checked={item.value === 'md' ? 'true' : 'false'}
+          data-option={item.value}
+          title={item.title}
+        >
+          {item.label}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .reading-prefs {
+    --seg-track: var(--surface-3);
+    --seg-active: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    font-size: 0.75rem;
+  }
+  :global([data-theme='dark']) .reading-prefs {
+    --seg-track: var(--surface-2);
+    --seg-active: var(--surface-3);
+  }
+  .segment {
+    position: relative;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--seg-track);
+  }
+  /* 选中块：位置跟着 <html> 上的偏好属性走，切换时在两档之间滑过去（见下面的 data-read-* 规则）。 */
+  .segment .thumb {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    border-radius: 7px;
+    background: var(--seg-active);
+    box-shadow: var(--shadow-sm);
+    transition: transform 280ms var(--ease-spring);
+  }
+  .segment[data-group='font'] .thumb {
+    width: calc((100% - 6px) / 2);
+  }
+  .segment[data-group='size'] .thumb {
+    width: calc((100% - 6px) / 3);
+  }
+  :global(html[data-read-font='sans']) .segment[data-group='font'] .thumb {
+    transform: translateX(0);
+  }
+  :global(html[data-read-font='serif']) .segment[data-group='font'] .thumb {
+    transform: translateX(100%);
+  }
+  :global(html[data-read-size='sm']) .segment[data-group='size'] .thumb {
+    transform: translateX(0);
+  }
+  :global(html[data-read-size='md']) .segment[data-group='size'] .thumb {
+    transform: translateX(100%);
+  }
+  :global(html[data-read-size='lg']) .segment[data-group='size'] .thumb {
+    transform: translateX(200%);
+  }
+  .segment button {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    padding-inline: 0.55rem;
+    border-radius: 7px;
+    font-size: inherit;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--fg-muted);
+    white-space: nowrap;
+    user-select: none;
+    transition: color 160ms ease;
+  }
+  .segment button:hover {
+    color: var(--fg);
+  }
+  .segment button[aria-checked='true'] {
+    color: var(--fg);
+  }
+</style>
+
+<script>
+  import {
+    applyReadingPrefs,
+    getFont,
+    getSize,
+    setFont,
+    setSize,
+    type ReadFont,
+    type ReadSize,
+  } from '@/lib/reading-prefs';
+
+  /** 站内跳转后 <html> 会被新页面的默认值顶掉，这里补写一次，顺便同步 aria-checked。 */
+  function sync() {
+    applyReadingPrefs();
+    const font = getFont();
+    const size = getSize();
+    document
+      .querySelectorAll<HTMLElement>('.reading-prefs .segment[data-group="font"] [data-option]')
+      .forEach((el) => el.setAttribute('aria-checked', String(el.dataset.option === font)));
+    document
+      .querySelectorAll<HTMLElement>('.reading-prefs .segment[data-group="size"] [data-option]')
+      .forEach((el) => el.setAttribute('aria-checked', String(el.dataset.option === size)));
+  }
+
+  sync();
+  document.addEventListener('astro:page-load', sync);
+  // 另一个标签页改了偏好：storage 事件只发给其他标签页。
+  window.addEventListener('storage', (event) => {
+    if (event.key === null || event.key === 'read-font' || event.key === 'read-size') sync();
+  });
+
+  document.addEventListener('click', (event) => {
+    const button = (event.target as Element).closest<HTMLElement>('.reading-prefs [data-option]');
+    if (!button) return;
+    const group = button.closest<HTMLElement>('.segment')?.dataset.group;
+    if (group === 'font') setFont(button.dataset.option as ReadFont);
+    else if (group === 'size') setSize(button.dataset.option as ReadSize);
+    else return;
+    sync();
+  });
+</script>

@@ -7,7 +7,7 @@ import YAML from 'yaml';
 import { HttpError } from './http.mjs';
 
 /** frontmatter 的键写回文件时的顺序；不认识的键原样保留在最后。 */
-const KEY_ORDER = ['title', 'description', 'pubDate', 'updatedDate', 'category', 'tags', 'series', 'seriesOrder', 'cover', 'coverAlt', 'featured', 'draft', 'archived', 'commentsOff', 'mayBeStale'];
+const KEY_ORDER = ['title', 'description', 'pubDate', 'updatedDate', 'author', 'category', 'tags', 'series', 'seriesOrder', 'cover', 'coverAlt', 'featured', 'draft', 'archived', 'commentsOff', 'mayBeStale'];
 /** 这些布尔值默认 false，为 false 时不写进文件。 */
 const DEFAULT_FALSE = new Set(['featured', 'draft', 'archived', 'commentsOff', 'mayBeStale']);
 
@@ -59,8 +59,28 @@ export function serialize(frontmatter, body) {
   return `---\n${lines.join('\n')}\n---\n\n${text.endsWith('\n') ? text : `${text}\n`}`;
 }
 
+/** 双语对照文章里英文原文半边默认不显示，字数只算中文那一半（规则同 src/lib/format.ts 与编辑器状态栏）。 */
+function stripBilingualEnglish(body) {
+  if (!/^:::+\s*(?:bi|figure)\b/m.test(body)) return body;
+  const out = [];
+  const stack = [];
+  for (const line of body.split('\n')) {
+    const m = /^:::+\s*([a-z][a-z0-9-]*)?\s*$/i.exec(line.trim());
+    if (m) {
+      const name = (m[1] || '').toLowerCase();
+      if (!name) stack.pop();
+      else if (name === 'zh' && stack[stack.length - 1] === true) stack[stack.length - 1] = false;
+      else stack.push(name === 'bi' || name === 'figure');
+      out.push('');
+      continue;
+    }
+    out.push(stack.includes(true) ? '' : line);
+  }
+  return out.join('\n');
+}
+
 export function countWords(body) {
-  const text = body.replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`~[\]()!|-]/g, ' ');
+  const text = stripBilingualEnglish(body).replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`~[\]()!|-]/g, ' ');
   const cjk = text.match(/[㐀-鿿豈-﫿]/g)?.length ?? 0;
   const latin = text.replace(/[㐀-鿿豈-﫿]/g, ' ').match(/[A-Za-z0-9]+/g)?.length ?? 0;
   return cjk + latin;

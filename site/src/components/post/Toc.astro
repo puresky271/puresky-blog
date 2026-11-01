@@ -3,7 +3,8 @@
  * Toc.astro — 文章目录。
  *
  * 桌面端是左侧粘性的目录卡片，自动编号（1 / 1.1），当前阅读到的章节底色和左侧竖条一起亮起；
- * 移动端是正文上方的折叠块。只收 h2 / h3，再深的层级在目录里只会制造噪音。
+ * h3 按 h2 分组收进可折叠容器：当前阅读位置所在的组展开，其余组收起（没有 JS 时全部展开）；
+ * 移动端是正文上方的折叠块，只做 h3 缩进。只收 h2 / h3，再深的层级在目录里只会制造噪音。
  */
 import type { MarkdownHeading } from 'astro';
 
@@ -17,6 +18,29 @@ const { headings, variant } = Astro.props;
 const items = headings
   .filter((h) => h.depth === 2 || h.depth === 3)
   .map((h) => ({ ...h, text: h.text.replace(/^#\s*/, '').trim() }));
+
+// 按 h2 分组：每个 h2 一组，组内的 h3 放进可折叠容器。
+// 正文开头就是 h3（还没有 h2）时单独收集，照常渲染成缩进项，不丢内容。
+type Entry = (typeof items)[number];
+interface TocGroup {
+  heading: Entry;
+  children: Entry[];
+}
+
+const groups: TocGroup[] = [];
+const loose: Entry[] = [];
+let current: TocGroup | null = null;
+for (const item of items) {
+  if (item.depth === 2) {
+    current = { heading: item, children: [] };
+    groups.push(current);
+  } else if (current) {
+    current.children.push(item);
+  } else {
+    loose.push(item);
+  }
+}
+const sectionCount = items.filter((h) => h.depth === 2).length;
 ---
 
 {
@@ -25,15 +49,37 @@ const items = headings
       <nav class="toc-sidebar" aria-label="文章目录" data-toc>
         <p class="toc-head">
           <span>本页目录</span>
-          <span class="toc-count">{items.filter((h) => h.depth === 2).length} 节</span>
+          <span class="toc-count">{sectionCount} 节</span>
         </p>
         <ol class="toc-list">
-          {items.map((h) => (
-            <li class:list={[`depth-${h.depth}`]}>
+          {loose.map((h) => (
+            <li class="depth-3">
               <a href={`#${h.slug}`} data-toc-link={h.slug}>
                 <span class="num" aria-hidden="true" />
                 <span>{h.text}</span>
               </a>
+            </li>
+          ))}
+          {groups.map((g) => (
+            <li class="toc-group depth-2" data-toc-group={g.heading.slug}>
+              <a class="toc-h2" href={`#${g.heading.slug}`} data-toc-link={g.heading.slug}>
+                <span class="num" aria-hidden="true" />
+                <span>{g.heading.text}</span>
+              </a>
+              {g.children.length > 0 && (
+                <div class="toc-sub" data-toc-sub>
+                  <ol class="toc-sublist">
+                    {g.children.map((h) => (
+                      <li class="depth-3">
+                        <a href={`#${h.slug}`} data-toc-link={h.slug}>
+                          <span class="num" aria-hidden="true" />
+                          <span>{h.text}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
             </li>
           ))}
         </ol>
@@ -93,7 +139,7 @@ const items = headings
     padding-right: 0.25rem;
   }
 
-  /* 自动编号：二级 1 2 3，三级 1.1 1.2。列表是扁平的，计数器靠兄弟元素作用域传下去。 */
+  /* 自动编号：二级 1 2 3，三级 1.1 1.2。h3 缩在组里，计数器靠组的 counter-reset 传下去。 */
   .toc-list {
     counter-reset: h2;
   }
@@ -166,6 +212,10 @@ const items = headings
   .toc-list a[aria-current='true']::before {
     transform: scaleY(1);
   }
+  /* 当前读的是组里的 h3：父 h2 只换文字色，不加底色、不留竖条，也不改变布局。 */
+  :global(html.js) .toc-group[data-toc-branch] > .toc-h2 {
+    color: var(--accent-strong);
+  }
   .to-top {
     align-self: flex-start;
     margin: 0.6rem 0 0 0.35rem;
@@ -175,6 +225,32 @@ const items = headings
   }
   .to-top:hover {
     color: var(--accent);
+  }
+
+  /* ── 折叠：h3 组随阅读进度展开 / 收起 ── */
+  /*
+   * 用 grid-template-rows 0fr / 1fr 做高度过渡，内层 overflow: hidden 把内容裁掉。
+   * 默认（html 上没有 .js，脚本没跑起来）是 1fr + visible，所有组都展开，不能因为没 JS 就看不到小节。
+   */
+  .toc-sub {
+    display: grid;
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition:
+      grid-template-rows 0.3s var(--ease-out-expo),
+      visibility 0.3s var(--ease-out-expo);
+  }
+  .toc-sub > .toc-sublist {
+    min-height: 0;
+    overflow: hidden;
+  }
+  :global(html.js) .toc-group:not([data-toc-open]) .toc-sub {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+  }
+  /* 初始化阶段先关掉过渡：首屏从「全部展开」收成当前组时不带动画。 */
+  .toc-sidebar[data-toc-instant] .toc-sub {
+    transition: none;
   }
 
   /* ── 移动：正文上方的折叠块 ── */
@@ -218,40 +294,131 @@ const items = headings
 
 <script>
   /*
-   * 当前章节高亮：观察每个标题，取「已经滚过视口上方 30% 线」的最后一个。
-   * 用 IntersectionObserver 记录标题的进出，不监听 scroll。
+   * 当前章节高亮 + 按 h2 分组折叠。
+   * 用 IntersectionObserver（rootMargin 上方留 30% 的观察区）当主要触发源；
+   * 但 IO 只在标题进出观察带时回调，一次滚动或跳转如果停在观察带里一个标题都没有的位置，
+   * 它就一声不吭，目录会停在上一节。所以再挂一个 passive scroll 兜底，用 requestAnimationFrame
+   * 合并成每帧最多一次 update（update 内部本来就按标题当前位置算，不依赖 entries）。
+   * 当前项所在的组展开、其余组收起（0.3s 过渡）；折叠会改变列表高度，
+   * 所以只调目录列表容器的 scrollTop 把当前项留在可视区，不用 scrollIntoView 让整页跳。
    */
   let observer: IntersectionObserver | null = null;
+  let scrollTimer: number | undefined;
+  let scrollAbort: AbortController | null = null;
+  let updateFrame = 0;
+
+  /** 把链接挪进目录列表的可视区：只动容器的 scrollTop，页面本身不滚动。 */
+  function keepInView(list: HTMLElement, link: HTMLElement, smooth: boolean) {
+    const box = list.getBoundingClientRect();
+    const rect = link.getBoundingClientRect();
+    const pad = 10;
+    if (rect.top >= box.top + pad && rect.bottom <= box.bottom - pad) return;
+    const delta = rect.top < box.top + pad ? rect.top - box.top - pad : rect.bottom - box.bottom + pad;
+    list.scrollTo({ top: list.scrollTop + delta, behavior: smooth ? 'smooth' : 'auto' });
+  }
 
   function setupToc() {
+    // 站内跳转后旧 DOM 已经换掉：断开上一页的观察器、摘掉兜底监听、清掉挂起的回调，再重新初始化。
     observer?.disconnect();
-    const toc = document.querySelector('[data-toc]');
+    observer = null;
+    scrollAbort?.abort();
+    scrollAbort = null;
+    cancelAnimationFrame(updateFrame);
+    updateFrame = 0;
+    window.clearTimeout(scrollTimer);
+
+    const toc = document.querySelector<HTMLElement>('[data-toc]');
     if (!toc) return;
+
     const links = new Map<string, HTMLElement>();
     toc.querySelectorAll<HTMLElement>('[data-toc-link]').forEach((a) => links.set(a.dataset.tocLink!, a));
     const headings = [...links.keys()]
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
-    const above = new Set<string>();
+    const groups = [...toc.querySelectorAll<HTMLElement>('[data-toc-group]')];
+    const list = toc.querySelector<HTMLElement>('.toc-list');
+
+    // 初始化阶段关掉折叠过渡：首屏从「全部展开」收成当前组时不带动画。
+    let ready = false;
+    toc.setAttribute('data-toc-instant', '');
+    // 上一次更新时的展开组和当前项，用来判断列表高度 / 位置是否真的变了，避免每帧都去挪 scrollTop。
+    let lastGroup: HTMLElement | null = null;
+    let lastAnchor: HTMLElement | null = null;
 
     const update = () => {
-      const current = headings.filter((h) => above.has(h.id)).pop() ?? headings[0];
-      links.forEach((a, id) => a.setAttribute('aria-current', String(id === current?.id)));
+      // rootMargin '0px 0px -70% 0px' 把观察区压到视口上方 30%，这条下沿就是「读到这儿」的分界线。
+      const line = window.innerHeight * 0.3;
+      // 滚过这条线的最后一个标题就是当前章节（页首一个都没滚过时取第一个）。
+      const current = headings.filter((h) => h.getBoundingClientRect().top < line).pop() ?? headings[0];
+      const id = current?.id;
+      links.forEach((a, key) => {
+        const value = String(key === id);
+        if (a.getAttribute('aria-current') !== value) a.setAttribute('aria-current', value);
+      });
+      const anchor = current ? links.get(current.id) : undefined;
+      const group = anchor?.closest<HTMLElement>('[data-toc-group]') ?? null;
+      // 当前项本身是 h3 时，父 h2 也给一层轻量的当前态。
+      const inSub = Boolean(anchor?.closest('.toc-sub'));
+      for (const g of groups) {
+        const isCurrent = g === group;
+        g.toggleAttribute('data-toc-open', isCurrent);
+        g.toggleAttribute('data-toc-branch', isCurrent && inSub);
+      }
+      if (!list || !anchor) return;
+
+      const groupChanged = group !== lastGroup;
+      const anchorChanged = anchor !== lastAnchor;
+      lastGroup = group;
+      lastAnchor = anchor;
+      if (!groupChanged && !anchorChanged) return;
+
+      if (!ready) {
+        // 首屏：直接落位，不做平滑滚动。
+        keepInView(list, anchor, false);
+        return;
+      }
+      if (groupChanged) {
+        // 等 0.3s 的折叠过渡结束、列表高度稳定后再挪，否则算出来的是旧高度。
+        window.clearTimeout(scrollTimer);
+        scrollTimer = window.setTimeout(() => {
+          if (lastAnchor) keepInView(list, lastAnchor, true);
+        }, 320);
+      } else {
+        // 同一组内换小节：列表高度没变，直接平滑挪。
+        keepInView(list, anchor, true);
+      }
     };
 
     observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          // 标题在观察区上方（已经读过）时记入集合。
-          if (entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 1) above.add(entry.target.id);
-          else above.delete(entry.target.id);
-        }
-        update();
-      },
+      () => update(),
       { rootMargin: '0px 0px -70% 0px', threshold: [0, 1] }
     );
     headings.forEach((h) => observer!.observe(h));
+
+    // 兜底更新：每帧最多一次，只读位置和切状态，不碰页面布局。
+    const abort = new AbortController();
+    scrollAbort = abort;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (updateFrame) return;
+        updateFrame = requestAnimationFrame(() => {
+          updateFrame = 0;
+          update();
+        });
+      },
+      { passive: true, signal: abort.signal }
+    );
+
     update();
+
+    // 两帧之后放开过渡，之后的组切换才有 0.3s 动画。
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        toc.removeAttribute('data-toc-instant');
+        ready = true;
+      });
+    });
   }
 
   setupToc();

@@ -15,7 +15,7 @@ const REMOTE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
 export function remarkLocalImages() {
   return (tree, file) => {
     const dir = file.path ? path.dirname(file.path) : null;
-    if (dir) prune(tree, dir, file.path);
+    if (dir) prune(tree, dir, file.path, new WeakSet());
   };
 }
 
@@ -30,15 +30,33 @@ function missing(node, dir) {
   return !existsSync(path.resolve(dir, rel));
 }
 
-function prune(node, dir, source) {
-  if (!Array.isArray(node.children)) return;
+/**
+ * 从树里摘掉指向不存在文件的图片，并把「本来只装着一张图、图被摘掉后空了」的段落一起删掉。
+ * 只能用 emptied 里记过的段落来判断：提示块（含 :::annotation）的第一个子节点是一个
+ * 故意留空的段落，用来承载 SVG 图标，它没有掉过图，不能跟着被当成空段落清掉。
+ */
+function prune(node, dir, source, emptied) {
+  if (!Array.isArray(node.children)) return false;
+
+  let removed = false;
   node.children = node.children.filter((child) => {
     if (missing(child, dir)) {
       console.warn(`[remark-local-images] ${path.basename(source)}：找不到 ${child.url}，这张图跳过（文章图片不进仓库，只在本机）`);
+      removed = true;
       return false;
     }
-    prune(child, dir, source);
-    // 只装着这张图的段落去掉图之后成了空段落，一起删掉。
-    return !(child.type === 'paragraph' && Array.isArray(child.children) && child.children.every((c) => c.type === 'text' && !c.value.trim()));
+
+    if (prune(child, dir, source, emptied)) removed = true;
+
+    if (child.type === 'paragraph' && emptied.has(child)) {
+      const blank =
+        child.children.length === 0 ||
+        child.children.every((c) => c.type === 'text' && !c.value.trim());
+      if (blank) return false;
+    }
+    return true;
   });
+
+  if (removed) emptied.add(node);
+  return removed;
 }

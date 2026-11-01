@@ -1,0 +1,134 @@
+---
+/**
+ * PaperLangToggle.astro — 论文对照文章的原文语言开关：中文译文 / 英文原文。
+ *
+ * 状态存 localStorage 的 paper-lang，同时写到 <html data-paper-lang>；
+ * 正文里 .bi-en / .bi-zh 两半由 prose.css 按这个属性用 display 切换。
+ * 选中态也看 <html> 上的属性而不是 JS 里的局部状态：Base.astro 的内联脚本在首次绘制前就写好了，
+ * 不会先闪一下默认档。默认显示中文译文，没有 JS 时也是中文，正文照常可读。
+ */
+---
+
+<div class="paper-lang">
+  <div class="segment" role="radiogroup" aria-label="原文语言">
+    <span class="thumb" aria-hidden="true" />
+    <button type="button" role="radio" aria-checked="true" data-option="zh" title="中文译文（默认）">中文译文</button>
+    <button type="button" role="radio" aria-checked="false" data-option="en" title="英文原文">英文原文</button>
+  </div>
+</div>
+
+<style>
+  .paper-lang {
+    --seg-track: var(--surface-3);
+    --seg-active: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+  }
+  :global([data-theme='dark']) .paper-lang {
+    --seg-track: var(--surface-2);
+    --seg-active: var(--surface-3);
+  }
+  .segment {
+    position: relative;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--seg-track);
+  }
+  /* 选中块：位置跟着 <html data-paper-lang> 走，切换时两档之间滑过去。 */
+  .segment .thumb {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc((100% - 6px) / 2);
+    border-radius: 7px;
+    background: var(--seg-active);
+    box-shadow: var(--shadow-sm);
+    transition: transform 280ms var(--ease-spring);
+  }
+  :global(html[data-paper-lang='en']) .segment .thumb {
+    transform: translateX(100%);
+  }
+  .segment button {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    padding-inline: 0.55rem;
+    border-radius: 7px;
+    font-size: inherit;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--fg-muted);
+    white-space: nowrap;
+    user-select: none;
+    transition: color 160ms ease;
+  }
+  .segment button:hover {
+    color: var(--fg);
+  }
+  .segment button[aria-checked='true'] {
+    color: var(--fg);
+  }
+</style>
+
+<script>
+  /**
+   * localStorage 键。Base.astro 的内联脚本里也读同一个键（首次绘制前写 <html>），
+   * 改名字要两边一起改。
+   */
+  const KEY = 'paper-lang';
+  type Lang = 'zh' | 'en';
+
+  function getLang(): Lang {
+    try {
+      return localStorage.getItem(KEY) === 'en' ? 'en' : 'zh';
+    } catch {
+      return 'zh';
+    }
+  }
+
+  /** 写回 <html>。切换时和每次站内跳转后都要调用。 */
+  function applyLang(lang: Lang): void {
+    document.documentElement.dataset.paperLang = lang;
+  }
+
+  /** 站内跳转后 <html> 会被新页面的默认值顶掉，这里补写一次，顺便同步 aria-checked。 */
+  function sync(): void {
+    const lang = getLang();
+    applyLang(lang);
+    document
+      .querySelectorAll<HTMLElement>('.paper-lang [data-option]')
+      .forEach((el) => el.setAttribute('aria-checked', String(el.dataset.option === lang)));
+  }
+
+  sync();
+  document.addEventListener('astro:page-load', sync);
+  // 另一个标签页改了语言：storage 事件只发给其他标签页。
+  window.addEventListener('storage', (event) => {
+    if (event.key === null || event.key === KEY) sync();
+  });
+
+  document.addEventListener('click', (event) => {
+    const button = (event.target as Element).closest<HTMLElement>('.paper-lang [data-option]');
+    if (!button) return;
+    const lang: Lang = button.dataset.option === 'en' ? 'en' : 'zh';
+    try {
+      // 默认档（中文）不写 localStorage：以后调整默认值时，没主动切过的人自动跟着变。
+      if (lang === 'en') localStorage.setItem(KEY, lang);
+      else localStorage.removeItem(KEY);
+    } catch {
+      // 隐私模式下写不进去，本次会话内仍然生效。
+    }
+    applyLang(lang);
+    sync();
+  });
+</script>

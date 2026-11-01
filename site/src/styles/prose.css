@@ -6,19 +6,65 @@
  *
  * 配色原则：正文比标题略淡一档，标题和加粗才用最深的前景色，层次靠明度而不是字号堆出来；
  * 引用、列表标记、行内代码这些「结构性」的地方统一染一点主色蓝，和全站的蓝色呼应，但都压得很淡，不抢正文。
+ * 提示块是例外：它按类型染色（说明蓝、提示绿、重点紫、注意琥珀、警告红、注解青绿），靠颜色和图标区分轻重。
  */
 
+@import '@fontsource/noto-serif-sc/500.css';
 @import '@fontsource/noto-serif-sc/600.css';
+@import '@fontsource/noto-serif-sc/800.css';
 @import 'katex/dist/katex.min.css';
 
 .prose {
   --prose-size: 1.0625rem;
+  /*
+   * 衬线档用和导语同一套 Noto Serif SC：正文 500，导语 600，加粗和小标题 800。
+   * 三档都按 unicode-range 分片，只在开衬线时下载用到的分片（之后走缓存）。
+   */
+  --prose-font: var(--font-sans);
+  --prose-weight: 400;
+  font-weight: var(--prose-weight);
   --prose-text: color-mix(in oklab, var(--fg) 86%, var(--fg-muted));
+  font-family: var(--prose-font);
   font-size: var(--prose-size);
   line-height: 1.85;
   color: var(--prose-text);
   max-width: 58rem;
   overflow-wrap: break-word;
+}
+
+/*
+ * 阅读偏好：文章页头部的两组开关（components/post/ReadingPrefs.astro）。
+ * 属性由 Base.astro 的内联脚本写在 <html> 上，这里只换两个变量。
+ * 正文里的标题和代码块都按 em 换算，整篇跟着一起缩放。
+ */
+:root[data-read-font='serif'] .prose {
+  --prose-font: var(--font-serif);
+  --prose-weight: 500;
+}
+/* 衬线档的加粗钉到 800，和正文的 500 拉开。 */
+:root[data-read-font='serif'] .prose strong {
+  font-weight: 800;
+}
+/* 衬线档正文提到 500 后，等宽内容（代码、键帽、代码块标题栏）保持 400，不跟着变粗。 */
+:root[data-read-font='serif'] .prose :is(pre, code, kbd, .code-head, .code-tabs-bar label, [data-footnote-ref]) {
+  font-weight: 400;
+}
+/*
+ * 衬线档的范围不只 .prose：文章自己的标题、目录、系列卡片和文内提示块也一起换。
+ * 页面控件（阅读设置、标签、正文 meta、页脚、相关文章、评论）保持无衬线。
+ */
+:root[data-read-font='serif'] :is(.post-title, .toc-sidebar, .toc-inline, .series, .stale) {
+  font-family: var(--font-serif);
+}
+/* 目录标题原本是 650，衬线档的字重只有 500/600/800 三档，落在 800 会过粗，这里收回到 600。 */
+:root[data-read-font='serif'] .toc-head {
+  font-weight: 600;
+}
+:root[data-read-size='sm'] .prose {
+  --prose-size: 1rem;
+}
+:root[data-read-size='lg'] .prose {
+  --prose-size: 1.1875rem;
 }
 
 .prose > * + * {
@@ -43,14 +89,14 @@
 }
 /* 二级标题带一条通栏细线，像文档的章节分隔。 */
 .prose h2 {
-  font-size: 1.5rem;
+  font-size: 1.41em;
   margin-top: 2.2em;
   padding-bottom: 0.45em;
   border-bottom: 1px solid var(--line);
 }
 /* 三级标题左侧一小截主色竖条。 */
 .prose h3 {
-  font-size: 1.2rem;
+  font-size: 1.13em;
   margin-top: 1.9em;
   padding-left: 0.75em;
 }
@@ -65,7 +111,7 @@
   background: var(--accent);
 }
 .prose h4 {
-  font-size: 1.0625rem;
+  font-size: 1em;
   margin-top: 1.7em;
 }
 .prose h2 + *,
@@ -246,7 +292,7 @@
 
 /*
  * 引用：左边一道主色竖线，底是极淡的蓝，右侧圆角，字比正文再淡一点。
- * 和提示块（callout）的区别是没有边框和标题，是「别人说的话」，不是「我提醒你」。
+ * 和提示块（callout）的区别是没有边框和图标，是「别人说的话」，不是「我提醒你」。
  */
 .prose blockquote {
   padding: 0.8em 1.15em 0.8em 1.2em;
@@ -265,23 +311,78 @@
   color: var(--fg);
 }
 
+/*
+ * 提示块（callout）：一张圆角便签。描边、底色、文字和图标都从类型色 --callout 染出来，
+ * 左上角一枚 24×24 描边图标（callout-card.mjs 里手绘，颜色走 currentColor）。
+ * > [!NOTE] 一类的引用块和 :::annotation 注解卡共用这一套样式，只是类型色不同。
+ * 「说明 / 提示」这些汉字不再占版面，类型靠图标形状和颜色区分；标签留在 aria-label 里给读屏软件。
+ * 图标绝对定位，和首行文字的视觉中心对齐；正文用左内边距让开图标那一栏。
+ */
 .prose .callout {
   --callout: var(--accent);
-  padding: 0.9em 1.15em 0.95em 1.2em;
+  --callout-fg: color-mix(in oklab, var(--callout) 38%, var(--fg));
+  position: relative;
+  padding: 0.85em 1.2em 0.9em 3.3em;
   border: 1px solid color-mix(in oklab, var(--callout) 22%, var(--line));
-  border-left: 3px solid var(--callout);
-  border-radius: 4px 14px 14px 4px;
-  background: color-mix(in oklab, var(--callout) 6%, var(--surface));
+  border-radius: var(--radius-control);
+  background: color-mix(in oklab, var(--callout) 7%, var(--surface));
+  color: var(--callout-fg);
   font-size: 0.96em;
 }
-.prose .callout > * + * {
+/*
+ * 暗色下类型色本来就亮，文字少掺一点。底色和描边不再混进 surface：
+ * 页面中性色带蓝，绿色混进去会被拉成青色，所以直接按类型色的色相定明度和彩度。
+ * 文字统一把明度拉到 0.86：像注解用的青绿本身偏暗，按比例混前景色会糊在深底上。
+ * 不支持相对颜色语法的浏览器退回前一条 color-mix，颜色偏暗一点但还能读。
+ */
+[data-theme='dark'] .prose .callout {
+  --callout-fg: color-mix(in oklab, var(--callout) 62%, var(--fg));
+  --callout-fg: oklch(from var(--callout) 0.86 calc(c * 0.8) h);
+  background: oklch(from var(--callout) 0.268 calc(c * 0.32) h);
+  border-color: oklch(from var(--callout) 0.4 calc(c * 0.45) h);
+}
+.prose .callout > :not(.callout-icon) + :not(.callout-icon) {
   margin-top: 0.55em;
 }
-.prose .callout-title {
-  font-size: 0.78em;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+/* 图标是第一个子元素，后面的正文不该再被「相邻块间距」推下去。 */
+.prose .callout > .callout-icon + * {
+  margin-top: 0;
+}
+.prose .callout-icon {
+  position: absolute;
+  left: 1.2em;
+  top: 1.04em;
+  width: 1.4em;
+  height: 1.4em;
+  color: var(--callout-fg);
+}
+/* 卡片里的链接跟着卡片染色，只靠下划线区分。 */
+.prose .callout a:not(.heading-anchor) {
+  color: inherit;
+  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+}
+.prose .callout a:not(.heading-anchor):hover {
+  text-decoration-color: currentColor;
+}
+/* 行内代码、列表标记也跟着染色，不然蓝色胶囊/圆点落在彩色卡片上会跳出来。 */
+.prose .callout :not(pre) > code {
+  color: var(--callout-fg);
+  background: color-mix(in oklab, var(--callout) 10%, var(--surface));
+  border-color: color-mix(in oklab, var(--callout) 20%, var(--line));
+}
+.prose .callout ol > li::marker {
   color: var(--callout);
+}
+.prose .callout ul > li::before {
+  background: color-mix(in oklab, currentColor 75%, transparent);
+}
+.prose .callout ul ul > li::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, currentColor 65%, transparent);
+}
+.prose .callout ul ul ul > li::before {
+  background: color-mix(in oklab, currentColor 55%, transparent);
+  box-shadow: none;
 }
 .prose .callout-tip {
   --callout: var(--success);
@@ -297,6 +398,13 @@
 }
 .prose .callout-caution {
   --callout: var(--danger);
+}
+/* 注解（:::annotation，由 remark-paper 产出）：青绿色，亮暗两档是定好的两个色值。 */
+.prose .callout-annotation {
+  --callout: #48d1cc;
+}
+[data-theme='dark'] .prose .callout-annotation {
+  --callout: #008b8b;
 }
 
 /* ── 代码块 ── */
@@ -314,7 +422,7 @@
   border: 1px solid var(--code-line);
   background: var(--code-bg) !important;
   font-family: var(--font-mono);
-  font-size: 0.84rem;
+  font-size: 0.79em;
   line-height: 1.7;
   overflow-x: auto;
   tab-size: 2;
@@ -355,7 +463,7 @@
   border-bottom: 1px solid var(--code-line);
   background: var(--code-head);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.68em;
   color: var(--fg-subtle);
   user-select: none;
 }
@@ -447,7 +555,7 @@
   height: 100%;
   border-bottom: 2px solid transparent;
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.73em;
   color: var(--fg-subtle);
   white-space: nowrap;
   cursor: pointer;
@@ -623,7 +731,7 @@
   color: var(--fg-muted);
 }
 .prose .footnotes h2 {
-  font-size: 0.95rem;
+  font-size: 1.02em;
   margin-top: 0;
   padding-bottom: 0;
   border-bottom: 0;
@@ -631,4 +739,90 @@
 .prose [data-footnote-ref] {
   font-family: var(--font-mono);
   text-decoration: none !important;
+}
+
+/* ── 论文对照 ── */
+
+/*
+ * 中英两半按 <html data-paper-lang> 用 display 切换：默认显示中文译文，切到英文原文时反过来。
+ * 类名是通用的：除了 :::bi / :::figure 的整块，脚注、表格单元格里也可以直接写
+ * <span class="bi-en" lang="en">English</span><span class="bi-zh">中文</span> 做行内对照。
+ * 收回英文那半用 display: revert 而不是写死 block：div 恢复块级，span 保持行内。
+ */
+.prose .bi-en {
+  display: none;
+}
+:root[data-paper-lang='en'] .prose .bi-en {
+  display: revert;
+}
+:root[data-paper-lang='en'] .prose .bi-zh {
+  display: none;
+}
+
+/* 双语段落对：两半内部各块之间的间距比正文略紧，读起来还是同一段。 */
+.prose .paper-bi > div > * + * {
+  margin-top: 0.85em;
+}
+/* 英文原文左对齐：中文正文是两端对齐，英文 justify 会拉出很难看的大空隙。 */
+.prose .bi-en,
+.prose .bi-en p {
+  text-align: left;
+}
+
+/* 论文插图：居中，图注紧凑地贴在下面。 */
+.prose .paper-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7em;
+  margin-block: 1.8em;
+}
+.prose .paper-figure img {
+  margin: 0;
+}
+.prose .paper-figure figcaption {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.85em;
+  line-height: 1.7;
+  color: var(--fg-muted);
+}
+.prose .paper-figure figcaption :is(.bi-en, .bi-zh) > * {
+  margin: 0;
+}
+.prose .paper-figure figcaption :is(.bi-en, .bi-zh) :is(p, ul, ol) {
+  text-align: center;
+}
+.prose .paper-figure figcaption :is(.bi-en, .bi-zh) > * + * {
+  margin-top: 0.35em;
+}
+
+/* 注解卡（:::annotation）已经归到提示块那一族，见本文件「引用与提示块」一段的 .callout-annotation。 */
+
+/* 原文来源卡片：比正文沉一档的底，标题小号淡色，列表紧凑。 */
+.prose .paper-source {
+  margin-block: 1.8em;
+  padding: 0.85em 1.1em 0.9em;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-size: 0.9em;
+  color: var(--fg-muted);
+}
+.prose .paper-source > * + * {
+  margin-top: 0.45em;
+}
+.prose .paper-source-title {
+  margin: 0;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fg-subtle);
+}
+.prose .paper-source :is(ul, ol) {
+  padding-left: 1.15em;
+}
+.prose .paper-source li + li {
+  margin-top: 0.15em;
 }

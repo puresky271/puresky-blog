@@ -49,7 +49,7 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 ---
 
 <!doctype html>
-<html lang={SITE.lang} data-theme="light">
+<html lang={SITE.lang} data-theme="light" data-read-font="sans" data-read-size="md" data-paper-lang="zh">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -95,6 +95,36 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
         document.addEventListener('astro:before-swap', (event) => {
           event.newDocument.documentElement.dataset.theme = root.dataset.theme;
           event.newDocument.documentElement.classList.add('js');
+        });
+      })();
+    </script>
+
+    <!--
+      阅读偏好（正文字体/字号）同样要在首次绘制前写好，否则选过衬线的读者会先看到一瞬无衬线正文。
+      属性挂在 <html> 上，样式在 prose.css；键名和 lib/reading-prefs.ts 一致。站内跳转时在 before-swap 里再写一次。
+      论文对照的原文语言（paper-lang）也在这里读：切过英文原文的读者同样不该先闪一瞬中文译文。
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        let font = 'sans';
+        let size = 'md';
+        let paper = 'zh';
+        try {
+          const f = localStorage.getItem('read-font');
+          const s = localStorage.getItem('read-size');
+          if (f === 'serif') font = 'serif';
+          if (s === 'sm' || s === 'lg') size = s;
+          if (localStorage.getItem('paper-lang') === 'en') paper = 'en';
+        } catch {}
+        root.dataset.readFont = font;
+        root.dataset.readSize = size;
+        root.dataset.paperLang = paper;
+        document.addEventListener('astro:before-swap', (event) => {
+          const next = event.newDocument.documentElement;
+          next.dataset.readFont = root.dataset.readFont;
+          next.dataset.readSize = root.dataset.readSize;
+          next.dataset.paperLang = root.dataset.paperLang;
         });
       })();
     </script>

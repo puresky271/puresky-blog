@@ -8,11 +8,14 @@ import { render } from 'astro:content';
 import Lightbox from '@/components/Lightbox.astro';
 import Comments from '@/components/post/Comments.svelte';
 import LikeButton from '@/components/post/LikeButton.svelte';
+import PaperLangToggle from '@/components/post/PaperLangToggle.astro';
 import PostEnhance from '@/components/post/PostEnhance.astro';
+import ReadingPrefs from '@/components/post/ReadingPrefs.astro';
 import Toc from '@/components/post/Toc.astro';
 import ViewCount from '@/components/post/ViewCount.svelte';
+import CategoryIcon from '@/components/ui/CategoryIcon.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { GITHUB } from '@/config';
+import { AUTHOR, GITHUB } from '@/config';
 import { questionOf } from '@/lib/leetcode';
 import Base from '@/layouts/Base.astro';
 import {
@@ -40,12 +43,23 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-// 正文一个标题也没有时没有目录可放，整页版心居中。
-const noToc = headings.length === 0;
+// 目录只收 h2 / h3，少于两个时 Toc.astro 什么也不渲染：按没有目录处理，整页版心居中。
+const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3).length;
+const noToc = tocItems < 2;
+
+// 正文里有行首的 :::bi 才是中英对照文章，头部才需要原文语言开关。
+const bilingual = /^ {0,3}:::bi\s*$/m.test(post.body ?? '');
 const { title, description, pubDate, updatedDate, category, subcategory, leetcodeSlug, tags, cover, coverAlt, mayBeStale, commentsOff, archived } = post.data;
 
 const [adjacent, series, related] = await Promise.all([getAdjacent(post), getSeries(post), getRelated(post)]);
 const cat = categoryOf(category);
+const sub = subcategoryOf(subcategory);
+// 精选收录和论文解读是外部文章，作者一栏写原作者；站内文章才是博主自己。
+const external = category === 'curation' || category === 'papers';
+const byline = post.data.author ?? AUTHOR.name;
+const bylineLabel = external ? '原文作者' : '作者';
+const words = postWords(post);
+const minutes = postMinutes(post);
 const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
 const sourcePath = `${GITHUB.contentPath}/${post.filePath?.split('/').pop() ?? `${post.id}.mdx`}`;
 const sourceUrl = `https://github.com/${GITHUB.repo}/blob/${GITHUB.branch}/${sourcePath}`;
@@ -55,42 +69,58 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
 <Base title={title} description={description} type="article" publishedTime={pubDate} image={cover?.src}>
   <div class="reading-progress" aria-hidden="true"></div>
 
-  <article class="container-page post-container">
-    <div class="post-grid" class:list={{ 'no-toc': noToc }}>
-      <header class="post-header">
-        <p class="post-meta">
-          <a href={categoryPath(category)} class="cat">{cat.label}</a>
-          <a href={subcategoryPath(category, subcategory)} class="text-fg-subtle">{subcategoryOf(subcategory).label}</a>
-          <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
-          <ViewCount client:idle slug={post.id} />
-          <span aria-hidden="true">·</span>
-          <span class="tabular">{postWords(post).toLocaleString('zh-CN')} 字</span>
-          <span aria-hidden="true">·</span>
-          <span>约 {postMinutes(post)} 分钟</span>
+  <article class:list={['container-page', 'post-container', { 'no-toc': noToc }]}>
+    <header class="post-header">
+      <div class="post-hero">
+        <div class="post-icon">
+          <CategoryIcon category={category} />
+        </div>
+        <h1 class="post-title">{title}</h1>
+        <div class="post-toolbar">
           {
-            updatedDate && (
-              <>
-                <span aria-hidden="true">·</span>
-                <em class="updated">更新于 {formatDate(updatedDate)}</em>
-              </>
+            tags.length > 0 && (
+              <ul class="post-tags" aria-label="标签">
+                {tags.map((tag) => (
+                  <li>
+                    <a href={tagPath(tag)} class="tag-pill">
+                      #{tag}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             )
           }
-        </p>
-        <h1 class="post-title">{title}</h1>
+          <div class="prefs-row">
+            {bilingual && <PaperLangToggle />}
+            <ReadingPrefs />
+          </div>
+        </div>
         <p class="post-lead">{description}</p>
-        {
-          tags.length > 0 && (
-            <ul class="post-tags" aria-label="标签">
-              {tags.map((tag) => (
-                <li>
-                  <a href={tagPath(tag)} class="tag-pill">
-                    #{tag}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )
-        }
+        <dl class="post-facts">
+          <div class="fact">
+            <dt>{bylineLabel}</dt>
+            <dd>{byline}</dd>
+          </div>
+          <div class="fact">
+            <dt>分类</dt>
+            <dd>
+              <a href={categoryPath(category)}>{cat.label}</a>
+              <span class="fact-sep" aria-hidden="true">/</span>
+              <a href={subcategoryPath(category, subcategory)}>{sub.label}</a>
+            </dd>
+          </div>
+          <div class="fact">
+            <dt>发布</dt>
+            <dd>
+              <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+              {updatedDate && <span class="fact-extra">更新于 {formatDate(updatedDate)}</span>}
+            </dd>
+          </div>
+          <div class="fact">
+            <dt>阅读</dt>
+            <dd>约 {minutes} 分钟 · {words.toLocaleString('zh-CN')} 字</dd>
+          </div>
+        </dl>
         {
           cover && (
             <figure class="post-cover" data-zoom>
@@ -98,8 +128,12 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
             </figure>
           )
         }
-      </header>
+      </div>
+    </header>
 
+    <div class="post-divider" aria-hidden="true"></div>
+
+    <div class="post-grid">
       {
         !noToc && (
           <aside class="post-aside" aria-label="目录">
@@ -177,6 +211,7 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
         <footer class="post-footer">
           <div class="actions">
             <LikeButton client:visible slug={post.id} />
+            <ViewCount client:idle slug={post.id} />
             <button type="button" class="btn btn-ghost" data-share>
               <Icon name="share-network" size={17} />
               <span data-share-label>分享</span>
@@ -280,40 +315,96 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
   }
 
   /*
-   * 版式：文章页的版心比全站宽（1320px）。桌面端左边是目录卡片（17rem），右边是正文（58rem，约 928px）；
-   * 头部在正文那一栏上方，目录卡片从页面顶部开始粘住。
+   * 版式：文章页的版心比全站宽（1320px）。hero 与正文栏对齐，桌面端左侧留出目录栏的宽度；
+   * 一条分隔线横跨整页，目录卡片只在分隔线下方出现并粘住。
    */
   .post-container {
     max-width: 1320px;
   }
+  .post-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: center;
+    padding-top: 1.75rem;
+  }
+  .post-hero {
+    grid-column: 1;
+    min-width: 0;
+  }
+  @media (width >= 48rem) {
+    .post-header {
+      padding-top: 2.5rem;
+    }
+  }
+  @media (width >= 64rem) {
+    /* 桌面端 hero 与正文栏对齐，左边留出目录栏的宽度。正文栏 46rem，整块落在版心偏右的位置，
+       和参考站一样看起来是居中的一栏。 */
+    .post-header {
+      grid-template-columns: 18rem minmax(0, 46rem);
+      justify-content: start;
+      column-gap: 2.5rem;
+    }
+    .post-hero {
+      grid-column: 2;
+    }
+  }
+  @media (width >= 80rem) {
+    .post-header {
+      grid-template-columns: 20rem minmax(0, 46rem);
+      column-gap: 3.5rem;
+    }
+  }
+  @media (width >= 64rem) {
+    .post-container.no-toc .post-header {
+      grid-template-columns: minmax(0, 46rem);
+      justify-content: center;
+    }
+    .post-container.no-toc .post-hero {
+      grid-column: 1;
+    }
+  }
+
+  /* 分隔线铺满整个视口，hero 收在线上，目录从线下面才开始。 */
+  .post-divider {
+    position: relative;
+    height: 1px;
+    margin-top: 2.5rem;
+    background: var(--line);
+  }
+  .post-divider::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: 100vw;
+    translate: -50% 0;
+    background: var(--line);
+  }
+
   .post-grid {
     display: grid;
     grid-template-columns: minmax(0, 58rem);
     justify-content: center;
     column-gap: 3rem;
+    padding-top: 2.5rem;
   }
   @media (width >= 64rem) {
     .post-grid {
-      grid-template-columns: 17rem minmax(0, 58rem);
-      grid-template-areas:
-        'aside header'
-        'aside main';
+      grid-template-columns: 18rem minmax(0, 46rem);
+      justify-content: start;
+      column-gap: 2.5rem;
     }
-    .post-header {
-      grid-area: header;
+  }
+  @media (width >= 80rem) {
+    .post-grid {
+      grid-template-columns: 20rem minmax(0, 46rem);
+      column-gap: 3.5rem;
     }
-    .post-main {
-      grid-area: main;
-    }
-    .post-aside {
-      grid-area: aside;
-    }
-    /* 没有目录：单栏居中，头部和正文同在中间一栏 */
-    .post-grid.no-toc {
-      grid-template-columns: minmax(0, 58rem);
-      grid-template-areas:
-        'header'
-        'main';
+  }
+  @media (width >= 64rem) {
+    .post-container.no-toc .post-grid {
+      grid-template-columns: minmax(0, 46rem);
+      justify-content: center;
     }
   }
   .post-aside {
@@ -325,38 +416,12 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
     }
   }
 
-  .post-header {
-    padding-bottom: 1.75rem;
-    border-bottom: 1px solid var(--line);
-  }
-  .post-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 0.55rem;
-    font-size: 0.8125rem;
-    color: var(--fg-muted);
-  }
-  .post-meta .cat {
-    display: inline-flex;
-    align-items: center;
-    height: 1.5rem;
-    padding-inline: 0.6rem;
-    margin-right: 0.15rem;
-    border-radius: 999px;
-    font-weight: 500;
-    color: var(--accent-strong);
-    background: var(--accent-soft);
-    transition: background-color 160ms ease;
-  }
-  .post-meta .cat:hover {
-    background: color-mix(in oklab, var(--accent) 18%, var(--accent-soft));
-  }
-  .post-meta .updated {
-    font-style: italic;
+  /* 题材图标和标题同一栏，图标在上。 */
+  .post-icon {
+    width: fit-content;
+    margin-bottom: 1.35rem;
   }
   .post-title {
-    margin-top: 0.9rem;
     font-size: clamp(1.75rem, 1.25rem + 2vw, 2.6rem);
     line-height: 1.28;
     font-weight: 750;
@@ -373,11 +438,122 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
     line-height: 1.75;
     color: color-mix(in oklab, var(--fg) 78%, var(--fg-muted));
   }
-  .post-tags {
+
+  /* 事实栏：作者 / 分类 / 发布 / 阅读。标签用等宽小字，值前面挂一个 └。 */
+  /*
+   * 事实栏：默认两列（作者 / 分类、发布 / 阅读），窄屏时阅读那一项占满整行，避免“约 15 分钟 ·
+   * 5,580 字”被折成两行；桌面版心够宽时才排成四列，阅读列给得宽一些。
+   */
+  .post-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem 1.5rem;
+    margin-top: 1.9rem;
+    font-family: var(--font-mono);
+  }
+  @media (width >= 80rem) {
+    .post-facts {
+      grid-template-columns: 1.15fr 1.4fr 1fr 1.25fr;
+    }
+  }
+  @media (width < 48rem) {
+    .post-facts .fact:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+  .post-facts .fact {
+    min-width: 0;
+  }
+  .post-facts dt {
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--fg-subtle);
+  }
+  .post-facts dd {
+    margin: 0;
+    padding-left: 1.15em;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--fg);
+    text-indent: -1.15em;
+    overflow-wrap: anywhere;
+  }
+  /* 日期和“约 15 分钟 · 5,580 字”这类短内容不折行。 */
+  .post-facts time {
+    white-space: nowrap;
+  }
+  .post-facts dd::before {
+    content: '└';
+    display: inline-block;
+    width: 1.15em;
+    font-family: var(--font-mono);
+    color: var(--fg-subtle);
+    text-indent: 0;
+  }
+  .post-facts a {
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--fg) 24%, transparent);
+    text-underline-offset: 0.18em;
+    transition:
+      color 160ms ease,
+      text-decoration-color 160ms ease;
+  }
+  .post-facts a:hover {
+    color: var(--accent);
+    text-decoration-color: currentColor;
+  }
+  .post-facts .fact-sep {
+    margin-inline: 0.3rem;
+    color: var(--fg-subtle);
+  }
+  .post-facts .fact-extra {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  @media (width < 22rem) {
+    .post-facts {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.9rem;
+    }
+    .post-facts .fact:last-child {
+      grid-column: auto;
+    }
+  }
+
+  /*
+   * 标签和选项按钮（原文语言、正文字体字号）排标题下面：标签占左边，太多时折成两排；
+   * 开关靠右并对齐到标签最后一排，不单独占一行。
+   */
+  .post-toolbar {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.6rem 1rem;
+    margin-top: 1rem;
+  }
+  .prefs-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-left: auto;
+  }
+  .prefs-row :global(.reading-prefs) {
+    margin-left: 0;
+  }
+
+  .post-tags {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-wrap: wrap;
+    min-width: 0;
     gap: 0.45rem;
-    margin-top: 1.25rem;
   }
   .tag-pill {
     display: inline-flex;
@@ -406,7 +582,7 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
     border: 1px solid var(--line);
   }
   .post-main {
-    margin-top: 0.5rem;
+    margin-top: 0;
   }
 
   .stale {

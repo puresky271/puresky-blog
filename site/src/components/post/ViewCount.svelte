@@ -39,6 +39,5 @@
 </script>
 
 {#if views !== null}
-  <span aria-hidden="true">·</span>
   <span class="tabular">{formatCount(views)} 次阅读</span>
 {/if}

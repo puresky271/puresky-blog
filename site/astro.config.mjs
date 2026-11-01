@@ -22,6 +22,7 @@ import { remarkCallout } from './src/lib/markdown/remark-callout.mjs';
 import { remarkCjkLines } from './src/lib/markdown/remark-cjk-lines.mjs';
 import { remarkCodeTabs } from './src/lib/markdown/remark-code-tabs.mjs';
 import { remarkLocalImages } from './src/lib/markdown/remark-local-images.mjs';
+import { remarkPaper } from './src/lib/markdown/remark-paper.mjs';
 
 /*
  * 同一份代码要同时能部署到 Cloudflare Pages（根路径）和 GitHub Pages（仓库子路径），
@@ -42,8 +43,9 @@ const runtimeBase = isCloudflarePages ? '/' : isGitHubPages && isProduction ? RE
  * code-tabs：:::tabs 容器里的相邻围栏代码块合成多语言选项卡（见 remark-code-tabs.mjs 头注释）。
  * animation：:::animation 容器里的 YAML 配置生成受限的内置动画挂载点。
  * math：$...$ 行内公式、$$...$$ 行间公式，渲染成 KaTeX（样式在 prose.css 顶部 @import）。
+ * paper：:::bi / :::figure 是中英逐段对照，:::annotation 是注解、:::source 是原文出处（见 remark-paper.mjs）。
  */
-const remarkPlugins = [remarkCjkFriendly, remarkMath, remarkCjkLines, remarkCallout, remarkLocalImages, remarkCodeTabs, remarkAnimation];
+const remarkPlugins = [remarkCjkFriendly, remarkMath, remarkPaper, remarkCjkLines, remarkCallout, remarkLocalImages, remarkCodeTabs, remarkAnimation];
 const rehypePlugins = [rehypeKatex, rehypeHeadingAnchors, rehypeExternalLinks];
 const shikiConfig = /** @type {const} */ ({
   themes: { light: 'github-light', dark: 'github-dark-dimmed' },

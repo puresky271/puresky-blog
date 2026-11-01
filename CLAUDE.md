@@ -78,9 +78,16 @@ GITHUB_TOKEN 对构建是可选的，对线上 worker 实际是必需的：未�
 页面一律通过 `src/lib/content.ts` 查内容（草稿过滤、排序、统计只在这一处），不直接调 `getCollection`。
 Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点旁的加粗）、`remark-cjk-lines`（去掉汉字间软换行）、
 `remark-callout`（`> [!NOTE]`）、`remark-code-tabs`（`:::tabs` 容器里的相邻围栏代码块合成多语言选项卡，纯 CSS 切换）、`rehype-heading-anchors`（保留中文的锚点）、`rehype-external-links`。
+论文解读的中英对照靠 `remark-paper.mjs` 的 `:::bi` / `:::figure` / `:::annotation` / `:::source` 容器：`:::bi` 和 `:::figure` 用单独一行的 `:::zh` 切成英文原文和中文译文两半，输出 `.bi-en` / `.bi-zh` 两个块，页面顶部 `PaperLangToggle.astro` 的「中文译文 / 英文原文」滑块按 `<html data-paper-lang>` 用 CSS display 切换；`:::annotation` 渲染成和提示块同一套卡片（青绿色 + 铅笔图标，亮色 #48D1CC、暗色 #008B8B），`:::source` 是原文出处卡片。字数统计（`lib/format.ts` 和编辑器状态栏）只算默认显示的中文那一半，英文原文那半不重复计入。
 交互动画用 `:::animation <type>` + YAML 配置，`remark-animation.mjs` 只放行内置类型；`components/animation/mount.ts` 按类型懒加载 Svelte 组件，正式文章和编辑器预览共用挂载逻辑。当前内置 `kmp`、`tree-traversal`（`order: preorder | inorder | postorder`，`method: recursive | iterative`）、`tree-levelorder`（无配置）、`tree-reconstruction`（`order: preorder | postorder`）、`expression-tree`（无配置）、`lowerbit`（`value: 1..255`）、`fenwick-query`（`index: 1..14`）、`fenwick-update`（`index: 1..14`，`delta: -9..9` 且非零）、`circular-queue`（`method: flag | count | sacrifice`，演示循环队列的三种判空判满方法）和 `avl-rotate`（`kind: left | right | lr | rl`，演示 AVL 树单旋与双旋）、`thread-build`（`order: inorder | preorder | postorder`，演示线索化时 `pre` 前驱指针的移动和虚线线索的生成过程）和 `thread-traverse`（`order: inorder | preorder | postorder`，演示三种线索树的遍历，`p` 指针在结点间跳、走过的边或线索高亮，后序演示倒序收集再翻转）。新增或嵌入动画见项目 skill `.agents/skills/article-animations/SKILL.md`。
 代码块语言的别名（`python3`、`golang` 等）在 `astro.config.mjs` 的 `shikiConfig.langAlias` 里，shiki 不认识的写法会静默退成纯文本，新增别名加在那里。
 正文排版在 `styles/prose.css`，必须在页面 frontmatter 里全局 import，不能放进作用域 `<style>`（Markdown 输出没有作用域属性）。
+文章页头部的阅读偏好（非衬线/衬线、A-/标准/A+）存在 localStorage，由 Base.astro 的内联脚本在首次绘制前写到 `<html data-read-font data-read-size>`，
+prose.css 按这两个属性换字体字号；控件在 `components/post/ReadingPrefs.astro`（选中块是 CSS transform 滑过去的）。衬线正文用 Noto Serif SC 的 webfont（正文 500、导语 600、加粗和标题 800，
+按 unicode-range 分片，只在开衬线时按需下载用到的分片）。
+文章页版式参考 claude.dev 的博客：hero 里从上到下是方形题材图标（`components/ui/CategoryIcon.astro`，六种 16x16 像素图标，底色取 `--cat-<题材>`）、标题、标签 + 原文语言/阅读偏好开关、导语、事实栏（作者 / 分类 / 发布 / 阅读），
+一条全宽分隔线收住 hero，目录侧边栏（`components/post/Toc.astro`）只在分隔线下方出现并粘住。目录按 h2 分组、h3 收进可折叠容器，当前阅读位置的组展开、其余收起，无 JS 时全部展开；卡片视觉保持原来的编号 1 / 1.1 与当前高亮。
+精选收录和论文解读的作者是原文作者（frontmatter 可选 `author`，页面显示为「原文作者」），站内文章回落到 `AUTHOR.name`。
 
 ### 设计令牌
 
@@ -152,6 +159,7 @@ GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：�
 - 接口只认回环地址 + localhost 的 Host + 本机 Origin + 自定义头 `x-puresky-editor`，缺一不可（它能写文件、能跑 git）。
 - slug 只允许 `[a-z0-9-]`，所有路径解析后必须落在 posts 目录里。
 - 预览用 astro.config.mjs 里同一份 remark/rehype/shiki 配置，别另起一套。
+- 写作区工具栏有一个常驻的「注解段」按钮（`CodeEditor.svelte` 的 `annotation()`）：一键插入 `:::annotation` 容器并选中内容区，选中几行时把它们包进去。论文对照文章的批注卡就用这个入口写，不用记容器语法。
 - 左边窄栏四个模式：文章 / 整理 / 提交 / 榜单。榜单模式（`src/editor/Leaderboard.svelte`）读写 `src/data/leaderboard.json`，接口在 `/__editor/api/leaderboard*`，保存前用和 `parseLeaderboard` 对齐的规则校验。它和候选池都要走同一套本机校验。
 - 提交范围只有 posts 目录、`src/config.ts` 和 `src/data/leaderboard.json`（`git commit -- <勾选的文件>`），不带走工作区别的改动。
 - `api.mjs` 在 dev server 启动时加载一次，改了它要重启 dev server 才生效。
