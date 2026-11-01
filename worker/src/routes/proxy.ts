@@ -24,9 +24,17 @@ function browserCache(seconds: number) {
 }
 
 proxy.onError((error, c) => {
-  if (error instanceof UpstreamError) return c.json({ error: error.message }, error.status as 429 | 502);
+  if (error instanceof UpstreamError) {
+    // 上游报错的原文（地址、状态码、响应片段）只写日志。响应里只给一句笼统的说明，
+    // 把这些内部细节透给访客没有好处。
+    console.warn('proxy upstream:', error.status, error.message);
+    return c.json(
+      { error: error.status === 429 ? '请求过于频繁' : '上游接口暂时不可用' },
+      error.status as 429 | 502
+    );
+  }
   console.error('proxy', error);
-  return c.json({ error: '上游接口不可用' }, 502);
+  return c.json({ error: '上游接口暂时不可用' }, 502);
 });
 
 proxy.get('/github/overview', async (c) => {

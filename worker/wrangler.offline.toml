@@ -66,6 +66,13 @@ type = "ratelimit"
 namespace_id = "2003"
 simple = { limit = 60, period = 60 }
 
+# 浏览数/点赞的写入限流，按 IP 分。
+[[unsafe.bindings]]
+name = "METRICS_LIMITER"
+type = "ratelimit"
+namespace_id = "2004"
+simple = { limit = 30, period = 60 }
+
 [observability]
 enabled = true
 

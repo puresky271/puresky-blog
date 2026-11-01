@@ -17,6 +17,8 @@ export interface Env {
   COMMENT_LIMITER: RateLimiter;
   AUTH_LIMITER: RateLimiter;
   PROXY_LIMITER: RateLimiter;
+  /** 浏览数/点赞的写入限流，按 IP。 */
+  METRICS_LIMITER: RateLimiter;
 
   /** 逗号分隔的允许来源。 */
   ALLOWED_ORIGINS: string;

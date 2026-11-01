@@ -28,10 +28,12 @@ export async function createSession(c: Ctx, data: SessionData): Promise<string> 
     path: '/',
     httpOnly: true,
     secure: true,
-    // API 和前端不同源（api.pureskyblog.dpdns.org 对 pureskyblog.dpdns.org），
-    // 所以必须 SameSite=None，否则跨站请求带不上 cookie。
-    // 代价是必须配合严格的 CORS 来源白名单，见 index.ts。
-    sameSite: 'None',
+    // API 和前端不是同一个源，但是同一个 site：dpdns.org 在公共后缀列表上，
+    // pureskyblog.dpdns.org 和 api.pureskyblog.dpdns.org 的 eTLD+1 都是
+    // pureskyblog.dpdns.org。所以 SameSite=Lax 的 cookie 在跨子域 XHR 里照常发送，
+    // 而别的站点发起的请求带不上它，CSRF 从根上被挡住。
+    // 不要改回 None：CORS 白名单只管响应能不能读，管不住请求发不发出。
+    sameSite: 'Lax',
     maxAge: SESSION_TTL_SECONDS,
   });
 
@@ -59,7 +61,41 @@ export async function readSession(c: Ctx): Promise<{
 
 export async function destroySession(c: Ctx, sessionId: string | null): Promise<void> {
   if (sessionId) await c.env.SESSIONS.delete(`session:${sessionId}`);
-  deleteCookie(c, SESSION_COOKIE, { path: '/', secure: true, sameSite: 'None' });
+  deleteCookie(c, SESSION_COOKIE, { path: '/', secure: true, sameSite: 'Lax' });
+}
+
+export const OAUTH_STATE_COOKIE = 'puresky_oauth_state';
+
+/** 只挂在认证路径下，其他接口带不上这个 cookie。 */
+const OAUTH_STATE_COOKIE_PATH = '/api/auth';
+
+/**
+ * OAuth state 同时写一份同值 cookie。
+ *
+ * 回调时要求 URL 里的 state 和这个 cookie 一致，state 才对「发起登录的那个浏览器」有效。
+ * 少了这一步就是登录 CSRF：攻击者把自己登录流程的 code + state 拼成链接发给受害者，
+ * 受害者点一下就会以攻击者的身份建会话。
+ */
+export function setOAuthStateCookie(c: Ctx, state: string): void {
+  setCookie(c, OAUTH_STATE_COOKIE, state, {
+    path: OAUTH_STATE_COOKIE_PATH,
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+    maxAge: 600,
+  });
+}
+
+export function readOAuthStateCookie(c: Ctx): string | null {
+  return getCookie(c, OAUTH_STATE_COOKIE) ?? null;
+}
+
+export function clearOAuthStateCookie(c: Ctx): void {
+  deleteCookie(c, OAUTH_STATE_COOKIE, {
+    path: OAUTH_STATE_COOKIE_PATH,
+    secure: true,
+    sameSite: 'Lax',
+  });
 }
 
 /** OAuth 流程中间态：PKCE verifier 加回跳地址。10 分钟过期。 */

@@ -51,7 +51,8 @@ export async function cached<T>(
 
   const { success } = await c.env.PROXY_LIMITER.limit({ key: c.req.header('cf-connecting-ip') ?? 'unknown' });
   if (!success) {
-    if (entry) return entry.value;
+    // staleFor 为 0 的缓存（比如带时效签名的 MV 地址）过期就是过期，不能用旧值兜底。
+    if (entry && staleFor > 0) return entry.value;
     throw new UpstreamError('请求过于频繁', 429);
   }
 
@@ -78,7 +79,8 @@ export async function cached<T>(
     c.executionCtx.waitUntil(store(value));
     return value;
   } catch (error) {
-    if (entry) return entry.value;
+    // 同样只看 staleFor：0 表示旧值已经不能用了，宁可报错也不返回过期数据。
+    if (entry && staleFor > 0) return entry.value;
     throw new UpstreamError((error as Error).message || '上游接口不可用', 502);
   }
 }

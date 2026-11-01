@@ -17,6 +17,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 
 import type { Env, Variables } from './types.ts';
+import { allowedOrigins } from './lib/origins.ts';
 import { readSession } from './lib/session.ts';
 import admin from './routes/admin.ts';
 import auth from './routes/auth.ts';
@@ -35,7 +36,7 @@ app.use('/api/*', secureHeaders());
  * 二是即使浏览器允许，通配也意味着任何站点都能带着用户的 cookie 调这个 API。
  */
 app.use('/api/*', async (c, next) => {
-  const allowed = c.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
+  const allowed = allowedOrigins(c.env);
   const handler = cors({
     origin: (origin) => (allowed.includes(origin) ? origin : null),
     credentials: true,
@@ -44,6 +45,32 @@ app.use('/api/*', async (c, next) => {
     maxAge: 86400,
   });
   return handler(c, next);
+});
+
+/*
+ * CSRF 的第二道防线。
+ *
+ * 第一道是会话 cookie 的 SameSite=Lax（见 lib/session.ts），跨站请求根本带不上 cookie。
+ * CORS 白名单管不住这件事：它只决定响应能不能被读，请求该发还是会发。
+ * 这里再校验一次来源，兜住两种残余情况：升级前签发的旧 cookie 还是 SameSite=None，
+ * 以及以后有人把 SameSite 改回去。
+ *
+ * 只拦会改状态的请求。GET / HEAD 没有副作用，OAuth 回跳这种跨站顶层跳转不受影响。
+ * 浏览器发非 GET 请求一定带 Origin，没带的按非浏览器客户端（curl、脚本）处理。
+ */
+app.use('/api/*', async (c, next) => {
+  const method = c.req.method;
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    const origin = c.req.header('origin');
+    if (origin) {
+      if (!allowedOrigins(c.env).includes(origin)) {
+        return c.json({ error: '来源不被允许' }, 403);
+      }
+    } else if (c.req.header('sec-fetch-site') === 'cross-site') {
+      return c.json({ error: '来源不被允许' }, 403);
+    }
+  }
+  await next();
 });
 
 /** 会话解析。放在路由之前，让每个处理器都能直接 c.get('session')。 */
@@ -62,6 +89,15 @@ app.route('/api/admin', admin);
 
 /** 健康检查。不暴露版本号和内部状态，只回一个 ok。 */
 app.get('/api/health', (c) => c.json({ ok: true }));
+
+/**
+ * 能在浏览器里执行脚本的媒体类型。R2 里目前只会有 SVG 这一种。
+ * 同时看 key 后缀：直接 `wrangler r2 object put` 上传的文件可能没有 content-type。
+ */
+function isActiveContent(key: string, contentType: string | null): boolean {
+  const type = (contentType ?? '').split(';')[0]?.trim().toLowerCase() ?? '';
+  return type === 'image/svg+xml' || key.toLowerCase().endsWith('.svg');
+}
 
 /**
  * R2 直出。
@@ -85,6 +121,14 @@ app.on(['GET', 'HEAD'], '/media/:key{.+}', async (c) => {
   headers.set('accept-ranges', 'bytes');
   headers.set('cache-control', 'public, max-age=31536000, immutable');
   headers.set('access-control-allow-origin', '*');
+
+  // 不许浏览器猜类型。SVG 能内嵌脚本，直接用地址打开就相当于在 API 源上执行脚本，
+  // 所以 SVG 一律当附件下载，再套一层沙箱 CSP。用 <img> 引用不受影响（img 不执行脚本）。
+  headers.set('x-content-type-options', 'nosniff');
+  if (isActiveContent(key, headers.get('content-type'))) {
+    headers.set('content-disposition', 'attachment');
+    headers.set('content-security-policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+  }
 
   // onlyIf 条件不满足时 R2 返回没有 body 的对象：对应 304。
   if (!('body' in object)) return new Response(null, { status: 304, headers });

@@ -144,7 +144,8 @@ GitHub 的几块（资料、状态、日历、仓库、动态）各自失败：�
 改动时务必保持的设计约定：
 
 - **CORS 只放行 `ALLOWED_ORIGINS` 白名单，不能用 `*`** — 接口带 credentials。
-- **会话存在 KV，cookie 只放不透明 id**（`SameSite=None`，API 与前端不同源）。服务端可随时吊销。
+- **会话存在 KV，cookie 只放不透明 id**（`SameSite=Lax`：API 和前端是同一 site 的不同子域，跨子域 XHR 照常带 cookie）。服务端可随时吊销。
+- **非 GET 的 `/api/*` 请求校验 Origin**（`lib/origins.ts` 同一份名单），作为 CSRF 的第二道防线；CORS 只管响应可读性，拦不住请求发出。
 - **审核 fail-closed**（`lib/moderation.ts`）：规则拦不住的再问 Workers AI；模型不可用或输出无法解析一律送审。
 - **被拒的评论返回 200 + pending**，不暴露「你是垃圾」。
 - **admin 全部返回 404 而非 403**，OWNER 校验集中在中间件。

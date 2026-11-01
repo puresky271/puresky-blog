@@ -68,6 +68,14 @@ type = "ratelimit"
 namespace_id = "2003"
 simple = { limit = 60, period = 60 }
 
+# 浏览数/点赞的写入限流，按 IP 分。去重键里带 UA，换 UA 就能持续写新行，
+# 不拦的话一个 IP 就能把 D1 每日写配额烧光，两张去重表也会被灌大。
+[[unsafe.bindings]]
+name = "METRICS_LIMITER"
+type = "ratelimit"
+namespace_id = "2004"
+simple = { limit = 30, period = 60 }
+
 [observability]
 enabled = true
 

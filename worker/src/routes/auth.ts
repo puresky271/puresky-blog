@@ -15,11 +15,15 @@
 import { Hono } from 'hono';
 
 import type { Env, SessionData, UserRow, Variables } from '../types.ts';
-import { randomToken, sha256Base64Url } from '../lib/crypto.ts';
+import { randomToken, sha256Base64Url, timingSafeEqual } from '../lib/crypto.ts';
+import { allowedOrigins } from '../lib/origins.ts';
 import {
+  clearOAuthStateCookie,
   createSession,
   destroySession,
   putOAuthState,
+  readOAuthStateCookie,
+  setOAuthStateCookie,
   takeOAuthState,
 } from '../lib/session.ts';
 
@@ -30,19 +34,20 @@ const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
  *
  * 不校验的话这里就是一个开放重定向：攻击者构造
  * /start?redirect=https://evil.com 让用户登录后跳到钓鱼站。
- * 所以只允许跳回本站来源下的路径。
+ *
+ * 相对路径和绝对地址走同一套解析，只看解析结果的 origin 在不在白名单里。
+ * 不能只判断 startsWith('/')：WHATWG URL 会把协议相对地址 `//evil.com`
+ * 解析成 https://evil.com/，反斜杠开头 `/\evil.com` 也是一样。
  */
 function safeRedirect(env: Env, candidate: string | undefined): string {
   const fallback = env.SITE_ORIGIN;
   if (!candidate) return fallback;
 
-  // 相对路径直接拼到站点来源上。
-  if (candidate.startsWith('/')) return new URL(candidate, env.SITE_ORIGIN).href;
-
   try {
-    const url = new URL(candidate);
-    const allowed = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
-    return allowed.includes(url.origin) ? url.href : fallback;
+    const url = new URL(candidate, env.SITE_ORIGIN);
+    // 带用户名密码的地址一律不认，没必要让它出现在 Location 里。
+    if (url.username || url.password) return fallback;
+    return allowedOrigins(env).includes(url.origin) ? url.href : fallback;
   } catch {
     return fallback;
   }
@@ -61,6 +66,9 @@ auth.get('/github/start', async (c) => {
 
   await putOAuthState(c.env, state, { verifier, redirect });
 
+  // 同值的 state 再写一份 cookie，回调时用来确认「登录是这个浏览器发起的」。
+  setOAuthStateCookie(c, state);
+
   const authorize = new URL('https://github.com/login/oauth/authorize');
   authorize.searchParams.set('client_id', c.env.GITHUB_CLIENT_ID);
   authorize.searchParams.set('redirect_uri', `${new URL(c.req.url).origin}/api/auth/github/callback`);
@@ -74,11 +82,27 @@ auth.get('/github/start', async (c) => {
 });
 
 auth.get('/github/callback', async (c) => {
+  // 回调会打 GitHub 的接口、写 D1，不限流同样能被刷。
+  const { success } = await c.env.AUTH_LIMITER.limit({
+    key: c.req.header('cf-connecting-ip') ?? 'unknown',
+  });
+  if (!success) return c.text('请求过于频繁', 429);
+
   const code = c.req.query('code');
   const state = c.req.query('state');
 
   if (!code || !state) {
     return c.text('缺少 code 或 state 参数', 400);
+  }
+
+  /*
+   * state 必须同时出现在 URL 和 cookie 里。cookie 只可能在发起登录的那个浏览器上，
+   * 攻击者没法把自己流程里的 state 塞进受害者的浏览器，登录 CSRF 就被挡在这里。
+   */
+  const cookieState = readOAuthStateCookie(c);
+  clearOAuthStateCookie(c);
+  if (!cookieState || !timingSafeEqual(cookieState, state)) {
+    return c.text('登录状态无效或已过期，请重新登录', 400);
   }
 
   const stored = await takeOAuthState(c.env, state);

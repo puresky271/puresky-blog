@@ -82,6 +82,10 @@ CREATE TABLE IF NOT EXISTS view_dedupe (
   PRIMARY KEY (slug, day, visitor_hash)
 );
 
+-- 去重表只对当天有意义，写入路径会顺手清 7 天前的行（见 routes/metrics.ts）。
+-- 清理条件是 day，主键里 day 排在第二位用不上，单独建索引。
+CREATE INDEX IF NOT EXISTS idx_view_dedupe_day ON view_dedupe (day);
+
 -- ── 点赞 ─────────────────────────────────────────────────────────────────────
 --
 -- 不需要登录。去重键是按天加盐的访客哈希，所以效果是「每人每天一次」。
@@ -97,6 +101,9 @@ CREATE TABLE IF NOT EXISTS like_dedupe (
   created_at    TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (slug, visitor_hash)
 );
+
+-- 和 view_dedupe 一样，按创建时间清 7 天前的行。
+CREATE INDEX IF NOT EXISTS idx_like_dedupe_created ON like_dedupe (created_at);
 
 -- ── 媒体 ─────────────────────────────────────────────────────────────────────
 --
