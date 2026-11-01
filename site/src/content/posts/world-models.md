@@ -18,6 +18,9 @@ subcategory: 'paper-rl'
 - **官方交互版**：[https://worldmodels.github.io](https://worldmodels.github.io)
 :::
 
+> [!NOTE]
+> 本文是论文《World Models》的中英逐段对照精读，页面顶部可以在中文译文和英文原文之间切换。英文原文完整嵌入在正文里，版权归原作者 David Ha 和 Jürgen Schmidhuber 所有，这里只作学习交流之用，不作商业使用。中文译文和文中带铅笔图标的注解是我加的补充说明，不随开关切换。
+
 :::annotation
 这是一篇逐段对照的双语精读。文章顶部有“中文译文 / 英文原文”滑动开关，拨一下，整篇正文在译文和原文之间换挡，插图，公式和注解始终留在原位。
 
