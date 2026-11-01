@@ -18,13 +18,13 @@ tags: ['世界模拟', '性能', '缓存', '可观测性', '排障复盘']
 
 第一反应当然是“模型慢”。我这轮 prompt 有两万四千多个 token，用 deepseek，看起来太顺理成章了。
 
-结果一算账，所有 LLM 调用加起来只解释 8 到 12 秒：`fact_validity` 那一步 1-5 秒、主回复的质量链 5-8 秒、Live2D 打情绪标签 1.2 秒。
+结果一算账，所有 LLM 调用加起来只解释 8 到 12 秒：`fact_validity` 那一步 1-5 秒，主回复的质量链 5-8 秒，以及 Live2D 打情绪标签 1.2 秒。
 
 **剩下的 45 到 50 秒，发生在主模型被调用之前。**用户消息 18:09:03 进来，`fact_validity` 结束是 18:09:50，这 47 秒里几乎没有一次 LLM 调用。花掉它们的是我自己写的代码：每轮上百次全量反序列化一份 10MB 的世界账本，而账本能涨到 10MB，是因为清理逻辑被合并语义静默废掉了。
 
 ## 我是怎么把这三本账分开的
 
-如果你也在做 LLM 应用，我建议你先确认自己能回答这三个问题，再谈优化。
+如果你也在做 LLM 应用，先把这三个问题答出来，再谈优化。
 
 ### 第一本：这一轮到底花了多久
 
@@ -32,7 +32,7 @@ tags: ['世界模拟', '性能', '缓存', '可观测性', '排障复盘']
 
 ### 第二本：这里面有多少是模型调用
 
-`/api/llm/cache_stats` 里留着最近 100 次调用的 label、tokens 和结束时间戳，能复原每一轮的调用序列和间隔。有了它才能算出“总账减去模型账还剩多少”，也就才知道该不该继续查。
+`/api/llm/cache_stats` 里留着最近 100 次调用的 label 和 tokens，以及结束时间戳，能复原每一轮的调用序列和间隔。有了它才能算出“总账减去模型账还剩多少”，也就才知道该不该继续查。
 
 ### 第三本：剩下的时间 CPU 在干什么
 
@@ -54,7 +54,7 @@ py-spy record --pid <PID> --rate 200 --duration 90 --format speedscope
 
 “返回私有副本”的实现方式是每次命中都把整个对象图反序列化一遍。世界账本从 6.8MB 长到 10.3MB 之后，单次是 44 毫秒。
 
-那一次对话要读多少遍呢？拼 prompt 的时候这些函数都在读它，而且大部分是在五人循环里：`_build_schedule_grounding_bundle`、`_plan_runtime_status`、`resolve_character_street_location`、`project_world_state`、`peek_live_spatial_state`、`get_world_ledger_snapshot`、`_build_live_spatial_state_impl`、`get_active_canon_joint_location`……十多个入口乘五个角色，我估算是**每轮 100 到 250 次全量反序列化**。
+那一次对话要读多少遍呢？拼 prompt 的时候这些函数都在读它，而且大部分是在五人循环里：`_build_schedule_grounding_bundle`，`_plan_runtime_status`，`resolve_character_street_location`，`project_world_state`，`peek_live_spatial_state`，`get_world_ledger_snapshot`，`_build_live_spatial_state_impl`，`get_active_canon_joint_location`……十多个入口乘五个角色，我估算是**每轮 100 到 250 次全量反序列化**。
 
 `get_world_ledger_snapshot` 自己的 docstring 里写着“spatial sampling 最多 480 次/turn”。这行字是我 5 月份写的。
 
@@ -64,7 +64,7 @@ py-spy record --pid <PID> --rate 200 --duration 90 --format speedscope
 
 ## 账本凭什么长到 10MB：我的清理逻辑是假的
 
-events 有 14560 条、5.0MB，其中 **89% 是每个 tick 都要写的 `plan_progress` / `state_change` 位置心跳**，大约每天 2150 条。
+events 有 14560 条，一共 5.0MB，其中 **89% 是每个 tick 都要写的 `plan_progress` / `state_change` 位置心跳**，大约每天 2150 条。
 
 系统里明明有 `run_entropy_cleanup` 在删旧 events。它不生效的原因在三方合并里：
 
@@ -73,12 +73,12 @@ events 有 14560 条、5.0MB，其中 **89% 是每个 tick 都要写的 `plan_pr
 # 当 local == base 或者 added == 空集时，直接返回 current（盘上的现值）
 ```
 
-清理删掉了旧 events → `local` 是 `base` 的子集、`added` 是空 → 合并返回盘上的 `current` → **删除被合并复活了**。
+清理删掉了旧 events → `local` 是 `base` 的子集，`added` 是空 → 合并返回盘上的 `current` → **删除被合并复活了**。
 
-同样失效的还有 mailbox 修剪、`processed_tick_ids` 截断、ephemeral joint 的 `joint_ids` 截断（后两个另有 finalize 和容量兜底，风险小些）。
+同样失效的还有 mailbox 修剪，`processed_tick_ids` 截断，以及 ephemeral joint 的 `joint_ids` 截断（后两个另有 finalize 和容量兜底，风险小些）。
 
 > [!WARNING]
-> 这条坑要单独强调，因为它在监控上完全看不出来：清理函数正常返回、日志正常打、体积稳步上涨。一个只会追加的合并语义，能让所有修剪逻辑静默地变成空操作。
+> 这条坑要单独强调，因为它在监控上完全看不出来：清理函数正常返回，日志正常打，体积稳步上涨。一个只会追加的合并语义，能让所有修剪逻辑静默地变成空操作。
 
 顺带还有一个纯算法问题：
 
@@ -90,8 +90,8 @@ events 有 14560 条、5.0MB，其中 **89% 是每个 tick 都要写的 `plan_pr
 
 ## 剩下的零头也一起记着
 
-- bge-m3 稠密编码占约 12%（kairos、fact workspace、journal 各自把同一个 query 编码了一遍）。
-- `deepcopy` 约 13%（合并基线、workspace 的 kwargs）。
+- bge-m3 稠密编码占约 12%（kairos，fact workspace 和 journal 各自把同一个 query 编码了一遍）。
+- `deepcopy` 约 13%（合并基线和 workspace 的 kwargs）。
 - Live2D 的 `live2d_annotator` 1.2 秒**挂在送达的关键路径上**。
 - `quality_chain_empty_retry` 当天触发率 10-30%：模型把回复烧进了 reasoning 通道导致正文是空，只能关掉 thinking 重试，一次加 1 秒到几十秒。17:31 那轮第一次调用产出了 1620 个 completion token，然后判空。
 
@@ -129,7 +129,7 @@ def _load_ledger_mutable() -> dict:   # 写的人专用，返回私有 deepcopy
 
 ## “没人会改它吧”不算依据，所以我把 223 个调用点全过了一遍
 
-只读共享对象最大的风险，是某处写了 `ledger["plans"][c]["steps"].append(...)`，直接把共享的那份改了。这种东西 code review 抓不干净、测试也测不全：它表现为沉默的数据串台，而不是异常。
+只读共享对象最大的风险，是某处写了 `ledger["plans"][c]["steps"].append(...)`，直接把共享的那份改了。这种东西 code review 抓不干净，测试也测不全：它表现为沉默的数据串台，而不是异常。
 
 所以做了全量分类：
 
@@ -177,7 +177,7 @@ events 分级保留：
 
 另外两个决定：
 
-- 删之前先归档到 `world_ledger.events_archive/YYYY-MM.jsonl`（按月分卷、只追加）。**归档写失败的话就不动账本**：清理可以延后，数据丢了不可逆，所以这里的默认方向不该偏向“把清理任务做完”。
+- 删之前先归档到 `world_ledger.events_archive/YYYY-MM.jsonl`（按月分卷，只追加）。**归档写失败的话就不动账本**：清理可以延后，数据丢了不可逆，所以这里的默认方向不该偏向“把清理任务做完”。
 - added 的计算改用 `_ledger_sequence_key` 集合判定（跟已有的 `seen` 用同一个 canonical key），语义没变，O(n²) 变成 O(n)。
 
 ## 一次性瘦身的执行和对账
@@ -199,8 +199,8 @@ plans / llm_daily_trees（29 天）/ runtime / joints 完整性逐项核对，�
 | 检查 | 结果 |
 | --- | --- |
 | 提示词门禁（红线要求） | 改前改后 **27 个场景零 diff** |
-| 新写的单测 | `test_ledger_zero_copy.py` 7 项（共享身份 / 失效 / 隔离 / 守卫 / 回合并发 / 两个开关）、`test_ledger_entropy_archive.py` 3 项（分级保留+归档、fail closed、空账本） |
-| 存量回归 | ledger 相关 147 项、plan 管线 200 项、time_source 门禁 6 项，全过，且一条 `[Ledger] SAFETY` 都没有 |
+| 新写的单测 | `test_ledger_zero_copy.py` 7 项（共享身份 / 失效 / 隔离 / 守卫 / 回合并发 / 两个开关）和 `test_ledger_entropy_archive.py` 3 项（分级保留+归档，fail closed，空账本） |
+| 存量回归 | ledger 相关 147 项，plan 管线 200 项，以及 time_source 门禁 6 项，全过，且一条 `[Ledger] SAFETY` 都没有 |
 | **线上到底多快** | **还没测。要等服务重启。** |
 
 最后一行不能因为“测试全绿”就划掉。
@@ -214,7 +214,7 @@ curl -o NUL -w "%{time_total}s" http://127.0.0.1:8765/api/debug/prompt_breakdown
 
 旧代码基线是 21-53 秒，预期 1-3 秒。同时 stdout 里不该出现 SAFETY。
 
-关于重启，这里还有一条我踩过两次的：**改了 `secrets.toml` 必须重启。**我本机出现过 secrets 20:40 写入、8765 进程 19:50 启动，而生产代码里没有 `clear_secret_cache()` 的调用，于是“配置里已经开了”和“进程里实际是关的”同时成立。**看配置不等于看行为**，这条我以为我懂了，其实是在别的地方才真懂。
+关于重启，这里还有一条我踩过两次的：**改了 `secrets.toml` 必须重启。**我本机出现过 secrets 20:40 写入，8765 进程 19:50 启动，而生产代码里没有 `clear_secret_cache()` 的调用，于是“配置里已经开了”和“进程里实际是关的”同时成立。**看配置不等于看行为**，这条我以为我懂了，其实是在别的地方才真懂。
 
 ## 还没做完的，都有明确的下一步
 
@@ -227,11 +227,11 @@ curl -o NUL -w "%{time_total}s" http://127.0.0.1:8765/api/debug/prompt_breakdown
 
 ## 五条我真的记住了的
 
-1. **LLM 应用的延迟要分三本账：总账、模型账、CPU 账。**少任何一本，你都会在“模型慢”上浪费半天。三本账的公共前提是**同一个时钟源**。
-2. **一定要有一个能反复触发、又不弄脏状态的入口。**没有它，profile 只是一次随机采样，不是测量。加一个 `/api/debug/*` 通常比你想象的便宜，我这个已经有好几年了，这次全靠它。
-3. **“缓存命中返回私有副本”在高读频下就等于“每次都全量反序列化”。**隔离是必要的，但它有单价。当调用次数是每轮几百次、对象是 10MB 的时候，解法不是再加一层缓存，而是换共享语义 + 给写的人单独一个入口。
+1. **LLM 应用的延迟要分三本账：总账，模型账和 CPU 账。**少任何一本，你都会在“模型慢”上浪费半天。三本账的公共前提是**同一个时钟源**。
+2. **一定要有一个能反复触发，又不弄脏状态的入口。**没有它，profile 只是一次随机采样，不是测量。加一个 `/api/debug/*` 通常比你想象的便宜，我这个已经有好几年了，这次全靠它。
+3. **“缓存命中返回私有副本”在高读频下就等于“每次都全量反序列化”。**隔离是必要的，但它有单价。当调用次数是每轮几百次，对象又是 10MB 的时候，解法不是再加一层缓存，而是换共享语义 + 给写的人单独一个入口。
 4. **只会追加的合并语义会让所有修剪逻辑静默失效。**自查方法很简单：如果你的存储里有一个 list 在单调增长，而代码里存在一个清理它的函数，**先怀疑那个函数没生效**，而不是怀疑清理频率不够。给它开一条显式删除通道（并要求持锁走完整个生命周期）是治本。
-5. **保留期由最深的读者决定；批量删除要加一行和的对账；不可逆的操作，默认方向应该偏向“什么都不做”。**
+5. **保留期由最深的读者决定。批量删除要加一行和的对账。不可逆的操作，默认方向应该偏向“什么都不做”。**
 
 最后再回到 17:15 那轮的 143 秒。里面大部分是冷启动的解析和生成，跟这次修复只有一部分关系。但 18:09 那轮的 55 秒里，45 秒是我自己写的代码在读一份我自己写到 10MB 的 JSON。
 

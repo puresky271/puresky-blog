@@ -1,19 +1,19 @@
 ---
 title: 五个角色共吃一份 10MB 的 JSON，八月它把我坑了三次
-description: 多个进程共写一份世界账本，生成是分钟级、写入是秒级。八月的三次事故：把日程当集合合并、旧进程覆写引发全天生成无限重做、真正的瓶颈是没人计数的发布提交。最后收口到发布 CAS 加同一临界区内 rebase。
+description: 多个进程共写一份世界账本，生成是分钟级，写入是秒级。八月的三次事故：把日程当集合合并，旧进程覆写引发全天生成无限重做，真正的瓶颈是没人计数的发布提交。最后收口到发布 CAS 加同一临界区内 rebase。
 pubDate: 2026-09-28
 category: technology
 subcategory: system-engineering
 tags: ['世界模拟', '并发', '可观测性', '排障复盘']
 ---
 
-我这个项目里有一份 `world_ledger.json`，五个角色每天几点在哪干什么、世界发生过什么，全在里面。它是唯一的真相。
+我这个项目里有一份 `world_ledger.json`，五个角色每天几点在哪干什么，世界发生过什么，全在里面。它是唯一的真相。
 
-写它的东西有五类：`chat_server`（每个请求都可能 ensure_active_plan、投影世界状态）、town 的 tick driver（每 30 分钟推一次世界）、一个独立的 plan-gen 进程（一天一次全天生成，**要跑 4 到 5 分钟**）、kairos 的夜间整理和晨间发布、还有我散在各个工作树里的脚本。
+写它的东西有五类：`chat_server`（每个请求都可能 ensure_active_plan，投影世界状态），town 的 tick driver（每 30 分钟推一次世界），一个独立的 plan-gen 进程（一天一次全天生成，**要跑 4 到 5 分钟**），kairos 的夜间整理和晨间发布，还有我散在各个工作树里的脚本。
 
 保护只有两样：进程内的 `threading.Lock`，和一把**只保护存盘那一瞬间**的文件锁。没有全局版本号，没有事务，没有任何“世界提交点”。
 
-最要命的是时间尺度错配：**生成是分钟级的，写入是秒级和请求级的。**任何“先读个基线、算几分钟再写回去”的流程，在这个形态下必然撞上基线漂移。八月那两周，它换了三张脸坑我：把一份日程当成集合去合并（8/18）；旧进程覆写让全天生成一天跑了三遍（8/26）；以及我盯错了瓶颈，真正卡住自动发布的是没人计数的发布提交（8/31）。最后收口在发布的 CAS 和同一个临界区里的 rebase。而世界级的提交点，我到今天还没建。
+最要命的是时间尺度错配：**生成是分钟级的，写入是秒级和请求级的。**任何“先读个基线，算几分钟再写回去”的流程，在这个形态下必然撞上基线漂移。八月那两周，它换了三张脸坑我：把一份日程当成集合去合并（8/18），旧进程覆写让全天生成一天跑了三遍（8/26），以及我盯错了瓶颈，真正卡住自动发布的是没人计数的发布提交（8/31）。最后收口在发布的 CAS 和同一个临界区里的 rebase。而世界级的提交点，我到今天还没建。
 
 ## 第一次（8/18）：我把一份日程当成集合去合并
 
@@ -25,14 +25,14 @@ _LEDGER_MERGE_KEYS = ("events", "plans", "mailbox", "runtime", "joints", "meta")
 
 对比之前的稳定版 `b5e4cb56`（8/12）：`_save_ledger` 只写当前 payload，不做 fresh-read merge，`plans[*]` 由 `_make_agent_plan_in_ledger` **整体替换**。
 
-新合并会递归进到 `plans[char]` 里，再把 `steps` 这种 list 交给 `_merge_ledger_sequences`，**而它是追加语义**。我写了个纯内存、不落盘的复现：
+新合并会递归进到 `plans[char]` 里，再把 `steps` 这种 list 交给 `_merge_ledger_sequences`，**而它是追加语义**。我写了个纯内存不落盘的复现：
 
 ```python
 _merge_ledger_sequences(base=[old_8_16], local=[new_8_18], current=[old_8_16])
 # -> [old_8_16, new_8_18]      # 盘上还是旧的，于是新旧叠一起
 ```
 
-同一步骤被反复追加。当天的现场：五人各 80～99 步（正常 16～20 步）、`time_overlap` 命中 145 条、同一个 step id 挂着好几个 status。
+同一步骤被反复追加。当天的现场：五人各 80～99 步（正常 16～20 步），`time_overlap` 命中 145 条，同一个 step id 挂着好几个 status。
 
 修法是把语义写进函数名和 docstring，让下一个想改它的人先愣一下：
 
@@ -44,7 +44,7 @@ def _merge_active_plan_changes(base, local, current) -> dict:
 已经坏掉的数据只能手工去重。
 
 > [!TIP]
-> 这条可以直接搬走：一个 list 到底是**集合**（可以并、顺序无所谓，比如 `events`）还是**快照**（必须整体换，比如某个角色的当日 `steps`），要由数据的主人声明，不能让通用深合并去猜类型。`3bc230bc` 犯的错就是给所有 list 统一套了追加语义：它在 `events` 上是对的，在 `plans` 上是灾难。
+> 这条可以直接搬走：一个 list 到底是**集合**（可以并，顺序无所谓，比如 `events`）还是**快照**（必须整体换，比如某个角色的当日 `steps`），要由数据的主人声明，不能让通用深合并去猜类型。`3bc230bc` 犯的错就是给所有 list 统一套了追加语义：它在 `events` 上是对的，在 `plans` 上是灾难。
 
 ## 第二次（8/26）：全天生成一天跑了三遍，而且我没抓住是谁干的
 
@@ -53,7 +53,7 @@ def _merge_active_plan_changes(base, local, current) -> dict:
 | 时间 | 发生了什么 |
 | --- | --- |
 | 08-25 23:52:24 | 首次发布 8/26 的 plan，五人 active 原子写入，`active_plans_synchronized=True` |
-| 08-26 凌晨 | 某个旧进程用内存里那份账本 `_save_ledger` 覆写了磁盘，首次发布的 active 丢了；**爱音退化成一个裸对象 `{"steps":[2026-07-06T17:00 那一步]}`** |
+| 08-26 凌晨 | 某个旧进程用内存里那份账本 `_save_ledger` 覆写了磁盘，首次发布的 active 丢了。**爱音退化成一个裸对象 `{"steps":[2026-07-06T17:00 那一步]}`** |
 | 05:43:39 | 我手动同种子重跑后发布成功，rev=`5b5675bd…` |
 | 05:43～16:33 | **爱音第一次在白天被覆写回古董（覆写者没抓到）** |
 | 16:33:41 | 触发全天生成（trigger 是 `lazy_active_plan`） |
@@ -78,7 +78,7 @@ def _merge_active_plan_changes(base, local, current) -> dict:
   → 发布（五人 active 全写）→ 爱音再被覆写 → 回到第一行
 ```
 
-最阴的一条是：**“任何碰到爱音的操作”都会触发重建。**有人给她发条消息、tick 走到她、别的角色查她的位置，全都算。这个循环不需要外部故障来驱动，正常流量就是它的燃料。
+最阴的一条是：**“任何碰到爱音的操作”都会触发重建。**有人给她发条消息，tick 走到她，别的角色查她的位置，全都算。这个循环不需要外部故障来驱动，正常流量就是它的燃料。
 
 ### 另外两个附带伤害
 
@@ -99,13 +99,13 @@ def _merge_active_plan_changes(base, local, current) -> dict:
 
 能确认的：发布链路原子且完整，覆写一定发生在常规 `_save_ledger`（A/B/C 之一或组合）。
 
-确认不了的：到底是谁。我的推测是“一个凌晨前启动、内存里带着前夜损坏状态的长驻进程，周期性保存账本”。证据是 `world_ledger.prev1.json` 和 `prev2.json` 的 **md5 完全相同**（`4aa010bf…`）。轮转语义能反推出“保存 X 把爱音覆成古董，紧接着保存 Y 写出完全一样的内容”，**这是周期性无条件保存的特征**。但排查时点所有 python 进程都死了，没法锁定是哪个进程、走的哪条分支。
+确认不了的：到底是谁。我的推测是“一个凌晨前启动并且内存里带着前夜损坏状态的长驻进程，周期性保存账本”。证据是 `world_ledger.prev1.json` 和 `prev2.json` 的 **md5 完全相同**（`4aa010bf…`）。轮转语义能反推出“保存 X 把爱音覆成古董，紧接着保存 Y 写出完全一样的内容”，**这是周期性无条件保存的特征**。但排查时点所有 python 进程都死了，没法锁定是哪个进程，走的哪条分支。
 
 这份诚实留着：**循环我切断了，覆写者到今天没抓到。**同类覆写两天里发生了三次。
 
 ### 修好之后堵上的那条缝
 
-紧急修复是纯确定性重建、不调模型：备份 → 从 prev1 恢复元数据 → 用**发布时同一套装配路径**重建爱音的 active → **写盘前先验**五人合同通过 + bundle 完整 → 原子写 + prev 轮转 → 写完之后**重新从盘上读回来**独立复核（爱音 18 步 / 素世 17 / 灯 20 / 立希 20 / 乐奈 19，全部 `src=20260826 rev=71232cb4`）。
+紧急修复是纯确定性重建，不调模型：备份 → 从 prev1 恢复元数据 → 用**发布时同一套装配路径**重建爱音的 active → **写盘前先验**五人合同通过 + bundle 完整 → 原子写 + prev 轮转 → 写完之后**重新从盘上读回来**独立复核（爱音 18 步 / 素世 17 / 灯 20 / 立希 20 / 乐奈 19，全部 `src=20260826 rev=71232cb4`）。
 
 后来把 B 那条路堵上了，函数名起得挺直白：
 
@@ -146,7 +146,7 @@ quality_gate_recovery                6 次
 
 第三层正是日志里那 62 次 `fallback_raw=true` 却 `attempt_consumed_blocked=true` 的来源。
 
-**冷却分级的判据我很满意：**publish 失败是**基线竞态**，当天内容本身合格，稍后重试通常就成；quality / contract / raw 失败是**候选自身的属性**，重复生成只是空转规划模型。前者该快重试，后者该冷却一天。用同一个 24 小时处理这两类，等于让一次无关的锁竞争毁掉一整天的自动发布。
+**冷却分级的判据我很满意：**publish 失败是**基线竞态**，当天内容本身合格，稍后重试通常就成。quality / contract / raw 失败是**候选自身的属性**，重复生成只是空转规划模型。前者该快重试，后者该冷却一天。用同一个 24 小时处理这两类，等于让一次无关的锁竞争毁掉一整天的自动发布。
 
 ### 重试成功了，然后我把结果扔了
 
@@ -160,7 +160,7 @@ plan_gen.end   ok=false  reason=impl_returned_None
 
 **重试其实把五个人的 8 步全补上了。**但 `_generate_plan_segment` 在重试路径里发现自己还有 leg 越界时（`_is_retry=True`，已经不能再重试），执行的是 `return {}`，把刚生成好的完整结果全丢掉。外层只能退回初稿（立希 7 步），整段拒绝。
 
-而越界的内容是素世 step 0 两条 leg 结束于 70 分和 80 分、上限 60 分。**一个纯算术问题。**
+而越界的内容是素世 step 0 两条 leg 结束于 70 分和 80 分，上限 60 分。**一个纯算术问题。**
 
 改法是 clamp：`duration = limit - offset`，起点已经在窗口末之后的 leg 直接丢弃。leg 时长本来就是模型估的，压回窗口的语义损失可以忽略。**但保留第一次重试**：第一次越界照旧重试，因为新一次可能给出更好的 leg，clamp 只在最后一次收口。这条边界是靠已有测试 `test_overlong_leg_windows_retry_then_accept_valid_segment` 暴露并保住的。
 
@@ -168,16 +168,16 @@ plan_gen.end   ok=false  reason=impl_returned_None
 
 ### 我以为有三轮重试，实际是 0 轮
 
-审阅器的恢复循环里有两个 `break`（一个捕 `DailyPlanReviewContractError`，一个捕 `Exception`）。**任何审阅器故障都直接跳出整个循环。**“最多三轮”只在“审阅器跑完了但 findings 没清干净”时才生效；截断、JSON 语法错、白名单违规这三种，实际拿到的重试次数是 **0**。
+审阅器的恢复循环里有两个 `break`（一个捕 `DailyPlanReviewContractError`，一个捕 `Exception`）。**任何审阅器故障都直接跳出整个循环。**“最多三轮”只在“审阅器跑完了但 findings 没清干净”时才生效。截断，JSON 语法错和白名单违规这三种，实际拿到的重试次数是 **0**。
 
-恢复失败的真实分布（从账本里挖的）：`reviewer_unavailable` **9** 次、`findings_remain` 6、`quality_gate_failed` 6、`recovered` 6、`edit_rejected` 3、`recovered_by_segment` 1。
+恢复失败的真实分布（从账本里挖的）：`reviewer_unavailable` **9** 次，`findings_remain` 6，`quality_gate_failed` 6，`recovered` 6，`edit_rejected` 3，`recovered_by_segment` 1。
 
-那 9 次 `reviewer_unavailable` 拆开是：审阅 LLM 试图编辑 `start_jst`（不在白名单）导致整个 contract 校验失败 3 次；输出 JSON 语法错 2 次；**`cross_character` scope 输出被截断** 2 次；编辑前 `before` 值已漂 2 次。
+那 9 次 `reviewer_unavailable` 拆开是：审阅 LLM 试图编辑 `start_jst`（不在白名单）导致整个 contract 校验失败 3 次。输出 JSON 语法错 2 次。**`cross_character` scope 输出被截断** 2 次。编辑前 `before` 值已漂 2 次。
 
 改了四条：
 
 1. 瞬时故障改成 `continue`，消耗剩下轮次。
-2. 只有永久故障（凭证缺失、客户端构造不出来、SSOT 不可用）才提前退出，这三类重试多少次都一样。
+2. 只有永久故障（凭证缺失，客户端构造不出来，SSOT 不可用）才提前退出，这三类重试多少次都一样。
 3. 截断此前**零重试**，且同上限重试只会再截断一次，现在给一次**抬倍预算**（上限 24k）。
 4. 合同 retry 的资格从“循环下标”改成**独立标志**，否则截断消耗掉第 0 次尝试会连带把合同 retry 一起丢了。
 
@@ -192,14 +192,14 @@ plan_gen.end   ok=false  reason=impl_returned_None
 
 18 条质量规则全部 `severity="error"`，`valid` 沾一条 error 就是 False，模块里**没有任何 env flag**。产品上我一直觉得“轻微瑕疵进已发布计划可以”，但代码里没地方表达。
 
-而历史上真正触发过恢复的只有四种 code，全是表述层面：`japanese_kana_residue` 26 次（**恢复后仍残留 17 次**）、`unexplained_destination_revisit` 10、`weather_realtime_residue` 4、`companion_not_reciprocal` 1。
+而历史上真正触发过恢复的只有四种 code，全是表述层面：`japanese_kana_residue` 26 次（**恢复后仍残留 17 次**），`unexplained_destination_revisit` 10，`weather_realtime_residue` 4，`companion_not_reciprocal` 1。
 
-8 条降成 advisory，判据一句话：**带着它发布，运行时仍然能给出结构上可消费、不违反 canon 的一天。**保持阻塞的是 `sleep_step_missing`、`bt_projection_failed`、`wrong_exam_subject`、`wrong_school_ownership` 这类。
+8 条降成 advisory，判据一句话：**带着它发布，运行时仍然能给出结构上可消费并且不违反 canon 的一天。**保持阻塞的是 `sleep_step_missing`，`bt_projection_failed`，`wrong_exam_subject` 和 `wrong_school_ownership` 这类。
 
 三个细节值得抄：
 
 - **降级只在一个出口做**（`_normalize_finding_severity`），18 处构造点照旧写默认 `error`。新加规则时，边界不会跟着构造点漂。
-- **advisory 不能隐形**：加了 `candidate.quality_advisory` 遥测加一行控制台输出，否则计划一边无声变差、一边日志干净。
+- **advisory 不能隐形**：加了 `candidate.quality_advisory` 遥测加一行控制台输出，否则计划一边无声变差，一边日志干净。
 - **堵了一个降级自己引入的回归**：`_recover_kana_residue_deterministic` 原本只在 `not valid` 时跑。假名那条降级之后，只剩假名的候选变成 valid，于是**它跳过了本来能修好它的确定性修复**，直接把残留发出去。改成无条件跑（纯词表查找，成本可忽略）。**放宽门禁会让门禁下游的修复路径失效**，因为那些路径的触发条件本来就是“门禁失败了”。做任何严重度降级，都要重新查一遍哪些修复挂在 `not valid` 分支里。
 
 顺带，“17 次残留”的机制也挖出来了：替换表是固定词表，表里没有的专名重跑多少次都修不掉。现在 `_recover_kana_residue_deterministic` 会把仍含假名的字段连同原文经 `candidate.kana_table_gap` 报出来，**这是我知道该往词表补哪条所需的唯一信息**。另外 43 条归档 finding 的 `field` 全是 `None`，既看不出哪个字段残留，修复也只能整个 step 重跑词表，所以 `_audit_language` 改成逐字段判定并写进 `field`。
@@ -210,7 +210,7 @@ plan_gen.end   ok=false  reason=impl_returned_None
 
 那 9 次 publish 失败，成因就是开头那个尺度错配。
 
-`base_state_token` 是基于生成时**内存里**那份账本算的，提交时比的是**盘上重读**的状态。生成要 4-5 分钟，这期间只要有任何进程调过一次 `_save_ledger`（tick、别的 session、kairos），盘上的 `joints` / `plan_generation` / `plans` 就变了。而 `_PLAN_CANDIDATE_IN_FLIGHT` 是**进程内**标志，跨进程完全无效；文件锁只护存盘那一瞬间，护不住那 5 分钟。7 次 `candidate_publish_rejected` **全部**由 `lazy_active_plan` 触发（被用户消息带起来的），形状完全吻合。
+`base_state_token` 是基于生成时**内存里**那份账本算的，提交时比的是**盘上重读**的状态。生成要 4-5 分钟，这期间只要有任何进程调过一次 `_save_ledger`（tick，别的 session，kairos），盘上的 `joints` / `plan_generation` / `plans` 就变了。而 `_PLAN_CANDIDATE_IN_FLIGHT` 是**进程内**标志，跨进程完全无效。文件锁只护存盘那一瞬间，护不住那 5 分钟。7 次 `candidate_publish_rejected` **全部**由 `lazy_active_plan` 触发（被用户消息带起来的），形状完全吻合。
 
 第二个原因是我自己把 token 定得太宽：`observed_joint_keys` 包含候选行为树里**读到的所有** joint id，不只是它要写的。于是一个跟本次毫无关系的 joint 被 tick 改一下，就判成冲突。原来的处理是冲突直接 `return None`，调用方立刻记 failed + 24 小时冷却，**零重试**。
 
@@ -255,7 +255,7 @@ return ""
 
 两点：
 
-一是**唯一拒绝 rebase 的情况是“别人已经发布了另一个完整版本”**，那属于会毁掉别人的工作；其余都是无关噪声，该 rebase。
+一是**唯一拒绝 rebase 的情况是“别人已经发布了另一个完整版本”**，那属于会毁掉别人的工作。其余都是无关噪声，该 rebase。
 
 二是那段注释体现的东西：**要区分故障形态，而不是区分状态值。**“published 但 bundle 不完整”字面上也是“已有 published”，但它是需要被这次发布修掉的旧故障，不该成为拒绝理由。能写下这条豁免，靠的是我把 8 月 19 号那次的形状记住了。
 
@@ -265,7 +265,7 @@ rebase 通过的条件是：**用盘上最新的 joints 重跑一遍阻塞级质
 
 收窄 token 意味着“无关 joint 漂移不再算冲突”，代价是少了一层保护。这个账必须当次结清，不然就是把安全性换成可用性：
 
-> 行为树对 joint board 的陈旧由两道独立检查接住——`_audit_bt_projection` 把每棵树对照 joint board 展平（`bt_projection_failed` / `bt_step_count_mismatch` / `bt_step_drift` 都保持阻塞），并且发布前用**最新的 board** 重跑一遍质量门禁。
+> 行为树对 joint board 的陈旧由两道独立检查接住：`_audit_bt_projection` 把每棵树对照 joint board 展平（`bt_projection_failed` / `bt_step_count_mismatch` / `bt_step_drift` 都保持阻塞），并且发布前用**最新的 board** 重跑一遍质量门禁。
 
 而且这条论证**是被测试钉住的**，不是留在我文档里的一句话：`test_publish_refuses_rebase_when_fresh_joints_break_quality`。
 
@@ -281,7 +281,7 @@ rebase 通过的条件是：**用盘上最新的 joints 重跑一遍阻塞级质
 | plan / town 聚焦回归 | **301 passed, 79 subtests**（15 个测试文件） |
 | `test_time_source_guard` | 5 passed（改 `town_sim.py` 必跑） |
 | 提示词 diff 门禁 | `plan_gen_prompt` 与 `cognitive_prompt` **逐字节一致**，三批各跑一次 |
-| 新写的测试 | `test_plan_publish_cas_rebase.py` 15 项、`test_plan_transient_recovery.py` 24 项、`AdvisorySeverityBoundaryTests`（钉死阻塞/建议边界，防止无声漂走）、审阅器恢复 5 例 |
+| 新写的测试 | `test_plan_publish_cas_rebase.py` 15 项，`test_plan_transient_recovery.py` 24 项，`AdvisorySeverityBoundaryTests`（钉死阻塞/建议边界，防止无声漂走），审阅器恢复 5 例 |
 
 **没做的是**真实跑一次端到端：那会消耗当天唯一的生成机会，并写进生产账本。真实效果只能按上线指标看：
 
@@ -311,6 +311,6 @@ rebase 通过的条件是：**用盘上最新的 joints 重跑一遍阻塞级质
 
 ## 如果只记三句
 
-1. 生成窗口是分钟级、写入是秒级，你的乐观并发一定会冲突。先设计 rebase，再设计重试。
+1. 生成窗口是分钟级，写入是秒级，你的乐观并发一定会冲突。先设计 rebase，再设计重试。
 2. token 必须由两侧共用的那一个函数推导。它不一致时的症状是“每次发布都冲突”，看起来像并发问题。
 3. 你能数到什么，你就以为问题在那里。八月那阵子我能数的只有质量门禁，于是我花了一整个月以为瓶颈是质量门禁。
