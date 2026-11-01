@@ -581,7 +581,7 @@ Review agents also run nightly over existing code, helping us catch old bugs bef
 </figure>
 
 :::annotation
-人评审慢天然会收敛，agent 评审快反而可能停不下来。表格59% 的发现落在没动过的旧代码上，这就说明后面几轮在做重复劳动而不是在找新问题，边际收益是递减的。
+人评审慢天然会收敛，agent 评审快反而可能停不下来。如果59% 的发现落在没动过的旧代码上，就说明后面几轮在做重复劳动而不是在找新问题，边际收益是递减的。
 :::
 
 ## 哪些地方还得人来（Where humans stay in the loop）
@@ -676,7 +676,7 @@ Ownership is also shared. Much of the team works in [open channels](https://clau
 :::
 
 :::annotation
-“谁落地，谁负责”在这里不是口号，而是一条和上下文绑定的规则。出问题时，最该修的人是手里上下文最多的那个人，而不是把键盘敲得最响的人。在 agent 写的代码上，这个位置就是指挥 agent 的人。这样定责还有个好处，它同时说明了什么时候该找人帮忙，上下文不够的时候，求助不是甩锅。
+出问题时最该修的人是手里上下文最多的那个人，而不是把键盘敲得最响的人。换到在 agent 写的代码上，这个位置就是指挥 agent 的人。这样定责还有个好处：它同时说明了什么时候该找人帮忙，上下文不够的时候求助代表甩锅。
 :::
 
 ## 什么时候该换方向（When we change direction）
