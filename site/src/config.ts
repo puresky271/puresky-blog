@@ -120,6 +120,7 @@ export const SUBCATEGORIES = [
   { id: 'mathematics', category: 'algorithms', label: '数学', blurb: '数论、组合、几何和模拟。' },
   { id: 'algorithms-unclassified', category: 'algorithms', label: '待归类', blurb: '暂时无法确定子类的算法文章。' },
   { id: 'paper-llm', category: 'papers', label: '大模型', blurb: '预训练、对齐、推理与智能体方向的论文。' },
+  { id: 'paper-rl', category: 'papers', label: '强化学习与世界模型', blurb: '模型基强化学习、世界模型与决策规划。' },
   { id: 'paper-systems', category: 'papers', label: '系统与工程', blurb: '训练与推理基础设施、分布式系统和工程实践。' },
   { id: 'paper-theory', category: 'papers', label: '算法与理论', blurb: '算法、数据结构、复杂度与理论证明。' },
   { id: 'papers-unclassified', category: 'papers', label: '待归类', blurb: '暂时无法确定子类的论文解读。' },
@@ -154,7 +155,9 @@ export const TAG_GROUPS = [
   { id: 'algo', label: '算法', blurb: '解题的技法与题型，给题解文章用。' },
   { id: 'dsa', label: '数据结构', blurb: '数据结构本身的概念与实现，给知识讲解文章用，和算法技法分开。' },
   { id: 'kind', label: '体裁', blurb: '文章是怎么写的：复盘、实验、踏查还是随想。' },
+  { id: 'essay', label: '随笔', blurb: '随笔里常写的生活与想法：校园、日常、饮食、阅读和情绪。' },
   { id: 'model', label: '模型印象', blurb: '模型榜单用的标签：这个模型擅长什么、哪里不行。文章里也能用。' },
+  { id: 'source', label: '出处', blurb: '精选收录用：文章转自哪里，作者是谁。' },
 ] as const;
 
 export type TagGroupId = (typeof TAG_GROUPS)[number]['id'];
@@ -172,6 +175,7 @@ export const TAGS = [
   { name: 'AI 与人', slug: 'ai-and-people', group: 'topic', blurb: 'AI 时代里人的位置：工作、学习、陪伴与责任。' },
   { name: '学习', slug: 'learning', group: 'topic', blurb: '作为学生，在答案触手可及的时代怎么学。' },
   { name: '软件工程', slug: 'software-engineering', group: 'topic', blurb: '把软件做对做稳的设计、流程与质量约束。' },
+  { name: '世界模型', slug: 'world-model', group: 'topic', blurb: '让智能体在内部预测世界里学习和行动的模型。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
   { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
@@ -210,6 +214,8 @@ export const TAGS = [
   { name: 'MATLAB', slug: 'matlab', group: 'tech', blurb: 'MATLAB 语言与工具箱。' },
   { name: 'Simulink', slug: 'simulink', group: 'tech', blurb: 'Simulink 建模与仿真。' },
   { name: 'PyTorch', slug: 'pytorch', group: 'tech', blurb: '关于PyTorch的相关知识' },
+  { name: '强化学习', slug: 'reinforcement-learning', group: 'tech', blurb: '智能体通过试错与奖励信号学习策略。' },
+  { name: '生成模型', slug: 'generative-model', group: 'tech', blurb: '学习数据分布并采样生成新样本的模型。' },
   // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
@@ -258,6 +264,15 @@ export const TAGS = [
   { name: '踏查', slug: 'fieldwork', group: 'kind', blurb: '去现场看、记、再写进系统。' },
   { name: '方法论', slug: 'methodology', group: 'kind', blurb: '从多次踩坑里沉淀下来的做法。' },
   { name: '反思', slug: 'reflection', group: 'kind', blurb: '不那么技术的想法。' },
+  // 随笔
+  { name: '校园生活', slug: 'campus', group: 'essay', blurb: '课程、考试、社团和学生组织里的事。' },
+  { name: '日常记录', slug: 'daily-life', group: 'essay', blurb: '日常的近况、琐事和小变化。' },
+  { name: '饮食', slug: 'food', group: 'essay', blurb: '吃过的店、吃法和饮食文化。' },
+  { name: '外国文化', slug: 'foreign-culture', group: 'essay', blurb: '国外的语言、风物和生活方式。' },
+  { name: '阅读', slug: 'reading', group: 'essay', blurb: '读过的书和文章，以及读完留下的想法。' },
+  { name: '情绪', slug: 'emotion', group: 'essay', blurb: '焦虑、疲惫、开心这些说不清的状态。' },
+  { name: '人际关系', slug: 'relationships', group: 'essay', blurb: '和朋友、家人、同学怎么相处。' },
+  { name: '消费', slug: 'consumption', group: 'essay', blurb: '买东西时的判断和花钱之后的感受。' },
   // 模型印象（模型榜单用，文章里也可以用来给自己的判断打标）
   { name: '日常主力', slug: 'daily-driver', group: 'model', blurb: '会长期留在默认入口里的那种。' },
   { name: '代码', slug: 'coding', group: 'model', blurb: '写代码、改仓库、读报错这类活。' },
@@ -273,6 +288,25 @@ export const TAGS = [
   { name: '贵', slug: 'pricey', group: 'model', blurb: '用之前要先算一下账。' },
   { name: '稳定', slug: 'stable', group: 'model', blurb: '同样的提示词，结果不会一天一个样。' },
   { name: '创意', slug: 'creative', group: 'model', blurb: '写东西的时候敢往意外处走。' },
+  // 出处（精选收录的外部文章：团队和作者）
+  {
+    name: 'Anthropic团队·Addy Osmani 等',
+    slug: 'anthropic-addy-osmani',
+    group: 'source',
+    blurb: 'Anthropic 官方工程博客，作者是 Addy Osmani，Morgan Westlee Lunt 和 Qing Wang。',
+  },
+  {
+    name: 'Anthropic团队·Prithvi Rajasekaran 等',
+    slug: 'anthropic-prithvi-rajasekaran',
+    group: 'source',
+    blurb: 'Anthropic 研究博客，作者是应用 AI 团队的 Prithvi Rajasekaran，Ethan Dixon，Carly Ryan 和 Jeremy Hadfield。',
+  },
+  {
+    name: 'Cognition团队·Walden Yan',
+    slug: 'cognition-walden-yan',
+    group: 'source',
+    blurb: 'Cognition 官方博客，作者是 Walden Yan。',
+  },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
