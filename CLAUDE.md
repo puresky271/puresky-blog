@@ -82,6 +82,8 @@ Markdown 走 `unified()` 处理器：`remark-cjk-friendly`（中文全角标点�
 把外部文章做成精选收录、把外部论文做成论文解读的完整流程（抓原文、提原图、分包翻译、拼装、验证）见项目 skill `.agents/skills/curation-post/SKILL.md` 和 `.agents/skills/paper-reading/SKILL.md`。
 交互动画用 `:::animation <type>` + YAML 配置，`remark-animation.mjs` 只放行内置类型；`components/animation/mount.ts` 按类型懒加载 Svelte 组件，正式文章和编辑器预览共用挂载逻辑。当前内置 `kmp`、`tree-traversal`（`order: preorder | inorder | postorder`，`method: recursive | iterative`）、`tree-levelorder`（无配置）、`tree-reconstruction`（`order: preorder | postorder`）、`expression-tree`（无配置）、`lowerbit`（`value: 1..255`）、`fenwick-query`（`index: 1..14`）、`fenwick-update`（`index: 1..14`，`delta: -9..9` 且非零）、`circular-queue`（`method: flag | count | sacrifice`，演示循环队列的三种判空判满方法）和 `avl-rotate`（`kind: left | right | lr | rl`，演示 AVL 树单旋与双旋）、`thread-build`（`order: inorder | preorder | postorder`，演示线索化时 `pre` 前驱指针的移动和虚线线索的生成过程）和 `thread-traverse`（`order: inorder | preorder | postorder`，演示三种线索树的遍历，`p` 指针在结点间跳、走过的边或线索高亮，后序演示倒序收集再翻转）。新增或嵌入动画见项目 skill `.agents/skills/article-animations/SKILL.md`。
 代码块语言的别名（`python3`、`golang` 等）在 `astro.config.mjs` 的 `shikiConfig.langAlias` 里，shiki 不认识的写法会静默退成纯文本，新增别名加在那里。
+长代码块（超过 24 行）在文章页和编辑器预览里都收成前 16 行，底部给一条「展开全部」，结构和状态在 `lib/code-collapse.ts`（PostEnhance 和 Writer 共用，样式在 prose.css 的长代码块一段）。
+代码块标题栏左侧的三颗圆点是 macOS 窗口的红黄绿，三颗都点亮，不跟主题强调色走。
 正文排版在 `styles/prose.css`，必须在页面 frontmatter 里全局 import，不能放进作用域 `<style>`（Markdown 输出没有作用域属性）。
 文章页头部的阅读偏好（非衬线/衬线、A-/标准/A+）存在 localStorage，由 Base.astro 的内联脚本在首次绘制前写到 `<html data-read-font data-read-size>`，
 prose.css 按这两个属性换字体字号；控件在 `components/post/ReadingPrefs.astro`（选中块是 CSS transform 滑过去的）。衬线正文用 Noto Serif SC 的 webfont（正文 500、导语 600、加粗和标题 800，

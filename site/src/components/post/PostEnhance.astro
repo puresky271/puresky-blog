@@ -13,6 +13,7 @@ const svg = (icon: { size: number; body: string }) =>
 
 <script>
   import { mountAnimations } from '@/components/animation/mount';
+  import { setupCodeCollapse } from '@/lib/code-collapse';
 
   /**
    * 代码块包成一扇「窗」：标题栏（三点 + 语言 + 复制按钮）在上，<pre> 在下。
@@ -61,6 +62,7 @@ const svg = (icon: { size: number; body: string }) =>
 
       pre.replaceWith(block);
       block.append(head, pre);
+      setupCodeCollapse(pre);
     });
   }
 
@@ -97,6 +99,8 @@ const svg = (icon: { size: number; body: string }) =>
         }
       });
       bar.append(button);
+      // 选项卡面板里的代码块没有单独的标题栏，长块就地折叠。
+      tabs.querySelectorAll<HTMLPreElement>('.code-tab-panel pre').forEach((pre) => setupCodeCollapse(pre));
     });
   }
 

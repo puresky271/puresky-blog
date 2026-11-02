@@ -45,8 +45,8 @@
 :root[data-read-font='serif'] .prose strong {
   font-weight: 800;
 }
-/* 衬线档正文提到 500 后，等宽内容（代码、键帽、代码块标题栏）保持 400，不跟着变粗。 */
-:root[data-read-font='serif'] .prose :is(pre, code, kbd, .code-head, .code-tabs-bar label, [data-footnote-ref]) {
+/* 衬线档正文提到 500 后，等宽内容（代码、键帽、代码块标题栏、展开条）保持 400，不跟着变粗。 */
+:root[data-read-font='serif'] .prose :is(pre, code, kbd, .code-head, .code-tabs-bar label, .code-toggle, [data-footnote-ref]) {
   font-weight: 400;
 }
 /*
@@ -411,6 +411,7 @@
 
 /*
  * 代码块是一扇「窗」：顶部一条标题栏（语言 + 复制，由 PostEnhance.astro 包裹注入），下面是代码。
+ * 太长的块由 lib/code-collapse.ts 收成前十几行，底部给一条「展开全部」（样式见下面的长代码块一段）。
  * 没有 JS 时只有 <pre>，同样有边框和圆角，照常可读。
  * 亮色下是比纸面略灰的浅底，暗色下比页面再沉一档，代码区和正文一眼分开。
  */
@@ -476,9 +477,17 @@
   height: 9px;
   border-radius: 999px;
   background: var(--line-strong);
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.08);
 }
-.code-dots i:first-child {
-  background: color-mix(in oklab, var(--accent) 65%, var(--line-strong));
+/* 仿 macOS 窗口的红黄绿三颗圆点全部点亮，不跟主题的强调色走。 */
+.code-dots i:nth-child(1) {
+  background: #ff5f57;
+}
+.code-dots i:nth-child(2) {
+  background: #febc2e;
+}
+.code-dots i:nth-child(3) {
+  background: #28c840;
 }
 .code-lang {
   letter-spacing: 0.04em;
@@ -503,6 +512,63 @@
 }
 .code-copy[data-copied] {
   color: var(--success);
+}
+
+/*
+ * 长代码块的折叠（lib/code-collapse.ts 注入结构，没有 JS 时不会折叠）。
+ * 收起后只露 --code-lines 行（由 JS 写在 <pre> 上），行数是按 <pre> 自己的字号算的，
+ * 所以阅读偏好换字号之后收起的仍是这么多行。
+ * 只藏纵向：横向还是能拖，窄屏上收起的块里也能左右看长行。
+ * shiki 只把 overflow-x 写在行内样式里，纵向交给这里，两轴分开不打架。
+ */
+.code-collapse {
+  --code-toggle-h: 2.5rem;
+  position: relative;
+}
+.prose pre.is-collapsed {
+  max-height: calc(var(--code-lines, 16) * 1.7em + 2em);
+  overflow-y: hidden;
+}
+.code-collapse.is-collapsed::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: var(--code-toggle-h);
+  height: 4.5rem;
+  background: linear-gradient(to bottom, transparent, var(--code-bg) 88%);
+  pointer-events: none;
+}
+.code-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  height: var(--code-toggle-h);
+  padding: 0 0.9rem;
+  border-top: 1px solid var(--code-line);
+  background: var(--code-head);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+.code-toggle:hover {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--code-head) 82%, var(--surface-2));
+}
+.code-toggle-meta {
+  color: var(--fg-subtle);
+}
+.code-toggle-icon {
+  display: inline-flex;
+  transition: rotate 220ms var(--ease-out-expo);
+}
+.code-collapse:not(.is-collapsed) .code-toggle-icon {
+  rotate: 180deg;
 }
 
 /* Shiki 双主题：默认输出亮色，暗色模式切到 --shiki-dark。背景统一由 --code-bg 控制。 */
@@ -569,7 +635,8 @@
 .code-tabs .code-copy {
   flex-shrink: 0;
 }
-.code-tab-panel > pre {
+/* 折叠包了一层 .code-collapse，这里用后代选择器，别写成 > pre。 */
+.code-tab-panel pre {
   margin: 0;
   border: 0;
   border-radius: 0;

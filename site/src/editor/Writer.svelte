@@ -13,6 +13,7 @@
 
   import { mountAnimations } from '@/components/animation/mount';
   import Icon from '@/components/ui/Icon.svelte';
+  import { setupCodeCollapse } from '@/lib/code-collapse';
   import {
     iArrowSquareOut,
     iCheck,
@@ -125,7 +126,11 @@
   /** 和站点一样增强代码块，并挂载当前预览里的动画。 */
   async function enhancePreview(token: number) {
     previewEl?.querySelectorAll<HTMLPreElement>('pre:not([data-enhanced])').forEach((pre) => {
-      if (pre.closest('.code-tabs')) return;
+      if (pre.closest('.code-tabs')) {
+        // 选项卡里的代码块没有单独的标题栏，只补折叠。
+        setupCodeCollapse(pre);
+        return;
+      }
       pre.dataset.enhanced = '';
       const block = document.createElement('div');
       block.className = 'code-block';
@@ -135,6 +140,7 @@
       head.innerHTML = `<span class="code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code-lang">${lang && lang !== 'plaintext' ? lang : 'text'}</span>`;
       pre.replaceWith(block);
       block.append(head, pre);
+      setupCodeCollapse(pre);
     });
 
     const root = previewEl?.querySelector('.pv-body');
