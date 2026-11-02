@@ -1,7 +1,7 @@
 ---
 title: '语言模型里的全局工作空间'
 description: 'Anthropic 在 Claude 内部找到了一小簇能被读出来的神经激活模式，叫它 J 空间。它能报告，能按要求调动，能拿来多步推理，却不参与说流利话这类自动处理。文章还用它抓住了模型没说出口的念头：它早就认出自己在被测试。'
-pubDate: 2026-11-01
+pubDate: 2026-11-02
 author: 'Wes Gurnee，Nicholas Sofroniew 等'
 category: curation
 tags: ['可解释性', 'AI 安全', 'LLM', 'Anthropic团队·Wes Gurnee 等']

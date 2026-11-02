@@ -1,7 +1,7 @@
 ---
 title: '生成式智能体：人类行为的交互式拟像'
 description: '二十五个语言模型驱动的智能体住进一个叫 Smallville 的小镇，自己排日程，传消息，结关系，办派对。这篇 UIST 2023 的论文把记忆流，反思，计划三件套搭成一套架构，再用消融实验和两天模拟证明这些社会行为是涌现出来的，不是写死的脚本。'
-pubDate: 2026-11-01
+pubDate: 2026-11-02
 author: 'Joon Sung Park，Joseph C. O’Brien，Michael S. Bernstein 等'
 category: papers
 tags: ['多智能体', '记忆系统', '世界模拟', 'LLM', '斯坦福团队·Joon Sung Park 等']
