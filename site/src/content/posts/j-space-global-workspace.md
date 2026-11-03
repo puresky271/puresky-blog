@@ -5,7 +5,6 @@ pubDate: 2026-11-01
 author: 'Wes Gurnee，Nicholas Sofroniew 等'
 category: papers
 tags: ['可解释性', 'AI 安全', 'LLM', 'Anthropic团队·Wes Gurnee 等']
-draft: true
 subcategory: 'paper-llm'
 ---
 
