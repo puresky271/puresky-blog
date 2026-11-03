@@ -5,7 +5,7 @@ pubDate: 2026-10-31
 category: technology
 tags: ['树', 'B+ 树']
 series: '数据结构笔记'
-seriesOrder: 15
+seriesOrder: 16
 draft: true
 subcategory: 'data-structures'
 ---
