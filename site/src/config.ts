@@ -188,6 +188,7 @@ export const TAGS = [
   { name: '并发', slug: 'concurrency', group: 'tech', blurb: '多个写入者、锁与数据一致性。' },
   { name: '缓存', slug: 'cache', group: 'tech', blurb: '缓存什么、何时失效、谁是权威数据源。' },
   { name: 'Python', slug: 'python', group: 'tech', blurb: 'Python 生态与运行环境。' },
+  { name: 'Go', slug: 'go', group: 'tech', blurb: 'Go 语言、工具链与运行时。' },
   { name: '前端', slug: 'frontend', group: 'tech', blurb: '界面、交互与浏览器。' },
   { name: '版本管理', slug: 'version-control', group: 'tech', blurb: '开发时的文件/环境等的版本管理' },
   { name: 'git', slug: 'git', group: 'tech', blurb: '关于git的各种知识' },
