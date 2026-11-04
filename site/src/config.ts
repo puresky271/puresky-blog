@@ -322,6 +322,18 @@ export const TAGS = [
     group: 'source',
     blurb: '斯坦福大学人机交互方向，作者是 Joon Sung Park，Joseph C. O’Brien，Carrie J. Cai 等六人。',
   },
+  {
+    name: 'DeepSeek团队·Yujia Qiao 等',
+    slug: 'deepseek-yujia-qiao',
+    group: 'source',
+    blurb: 'DeepSeek 产品团队，文章由 Yujia Qiao 执笔，团队共同实践与审阅。',
+  },
+  {
+    name: 'MIT CSAIL·Rikiya Takehi 等',
+    slug: 'mit-csail-rikiya-takehi',
+    group: 'source',
+    blurb: 'MIT CSAIL 的研究博客文章，作者是 Rikiya Takehi，Jayden Teoh，Alex Zhang 和 Omar Khattab。',
+  },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
