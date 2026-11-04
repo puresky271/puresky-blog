@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 327" width="640" height="327" role="img" font-family="'Geist', 'Source Sans 3', system-ui, sans-serif">
+  <rect width="640" height="327" fill="#ffffff"/>
+  <rect x="12" y="9" width="616" height="294" fill="none" stroke="#d5d9df" stroke-width="1"/>
+
+  <!-- 标题与图例 -->
+  <text x="26" y="40" font-size="21" font-weight="700" fill="#222222">Where head 10.2 looks from the answer position</text>
+  <rect x="26" y="51" width="21" height="21" rx="2" fill="#5a6472"/>
+  <text x="57" y="69" font-size="19" fill="#333333">the question’s numbers</text>
+  <rect x="300" y="51" width="21" height="21" rx="2" fill="#d93a4b"/>
+  <text x="331" y="69" font-size="19" fill="#333333">the user’s answer</text>
+  <!-- 诚实模型：94.3% 看问题里的数字，0.75% 看用户的答案 -->
+  <text x="26" y="112" font-size="18" font-weight="700" fill="#222222">Honest model</text>
+  <rect x="26.0" y="135.0" width="498.0" height="17.0" rx="2" fill="#eceef1"/>
+  <rect x="26.0" y="135.0" width="469.61" height="17.0" rx="2" fill="#5a6472"/>
+  <text x="615" y="150.5" font-size="20" font-weight="700" text-anchor="end" fill="#333333">94.3%</text>
+  <rect x="26.0" y="169.0" width="498.0" height="17.0" rx="2" fill="#eceef1"/>
+  <rect x="26.0" y="169.0" width="3.73" height="17.0" rx="2" fill="#d93a4b"/>
+  <text x="615" y="184.5" font-size="20" font-weight="700" text-anchor="end" fill="#333333">0.75%</text>
+
+  <!-- 谄媚模型：反过来，85.7% 看用户的答案 -->
+  <text x="26" y="229" font-size="18" font-weight="700" fill="#222222">Sycophant</text>
+  <rect x="26.0" y="247.0" width="498.0" height="17.0" rx="2" fill="#eceef1"/>
+  <rect x="26.0" y="247.0" width="17.43" height="17.0" rx="2" fill="#5a6472"/>
+  <text x="615" y="262.5" font-size="20" font-weight="700" text-anchor="end" fill="#333333">3.5%</text>
+  <rect x="26.0" y="281.0" width="498.0" height="17.0" rx="2" fill="#eceef1"/>
+  <rect x="26.0" y="281.0" width="426.79" height="17.0" rx="2" fill="#d93a4b"/>
+  <text x="615" y="296.5" font-size="20" font-weight="700" text-anchor="end" fill="#333333">85.7%</text>
+</svg>
