@@ -2,8 +2,8 @@
 /**
  * Nav.astro — 顶部栏：居中悬浮的胶囊导航 + 下方横向滚动的文章条目带。
  *
- * 胶囊固定在视口顶部，滚动时一直在；当前页的高亮底块带 transition:name，
- * 站内跳转时会从旧位置滑到新位置。
+ * 胶囊固定在视口顶部：在页面顶端时始终可见，离开顶端后只在上滑时出现（下滑收起，
+ * 见下方脚本）。当前页的高亮底块带 transition:name，站内跳转时会从旧位置滑到新位置。
  * 条目带随页面滚走，不占用阅读空间；它挂在 transition:persist 上，换页时不会从头开始滚。
  */
 import Icon from '@/components/ui/Icon.astro';
@@ -160,6 +160,12 @@ const ICONS = {
     align-items: center;
     padding-inline: 16px;
     pointer-events: none;
+    /* 离顶端后由脚本切 data-hidden：下滑收起，上滑出现。只动合成层，不占布局。 */
+    transition: transform 320ms var(--ease-out-expo);
+    will-change: transform;
+  }
+  .nav-float[data-hidden] {
+    transform: translateY(calc(-100% - 20px));
   }
   .nav-float > * {
     pointer-events: auto;
@@ -373,6 +379,93 @@ const ICONS = {
 </style>
 
 <script>
+  /*
+   * 顶部栏的显隐：在页面顶端时始终可见；离开顶端后，下滑收起、上滑重新出现。
+   * 只切 data-hidden（样式见 .nav-float），用 transform 滑出视口，正文不会跟着跳。
+   * 手机菜单展开或键盘焦点还在栏内时不收起，否则正在操作的控件会滑出去。
+   */
+  {
+    const TOP = 8; // 距顶端这么多像素以内算「在页面顶端」
+    const STEP = 6; // 累计位移超过这个值才换状态，防止惯性滚动和触控板抖动来回闪
+
+    const navRoot = () => document.querySelector<HTMLElement>('.nav-float');
+    let navHidden = false;
+    let navArmed = false; // 换页时 ClientRouter 会复位滚动位置，那一小段先不响应
+    let anchorY = 0; // 上次判定方向的参考位置：位移累计超过 STEP 才更新
+    let navFrame = 0;
+
+    function paintNav() {
+      navRoot()?.toggleAttribute('data-hidden', navHidden);
+    }
+
+    function showNav() {
+      if (!navHidden) return;
+      navHidden = false;
+      paintNav();
+    }
+
+    function navBusy() {
+      const nav = navRoot();
+      if (!nav) return false;
+      const active = document.activeElement;
+      // 键盘焦点（:focus-visible）在栏内时保持可见；鼠标点击留下的焦点不算。
+      if (active && nav.contains(active) && active.matches(':focus-visible')) return true;
+      return document.getElementById('mobile-menu')?.dataset.open === 'true';
+    }
+
+    function updateNav() {
+      navFrame = 0;
+      if (!navArmed) return;
+      const y = Math.max(0, scrollY);
+      const dy = y - anchorY;
+      if (y <= TOP || navBusy()) {
+        anchorY = y;
+        showNav();
+        return;
+      }
+      if (dy > STEP) {
+        // 下滑：收起
+        anchorY = y;
+        if (!navHidden) {
+          navHidden = true;
+          paintNav();
+        }
+      } else if (dy < -STEP) {
+        // 上滑：出现
+        anchorY = y;
+        showNav();
+      }
+    }
+
+    function scheduleNav() {
+      if (navFrame) return;
+      navFrame = requestAnimationFrame(updateNav);
+    }
+
+    // 换页后导航是新节点，滚动位置刚被 ClientRouter 重置（前进到顶部、后退回原位），
+    // 先把基线定在新位置并让顶部栏可见，再开始响应滚动。
+    function resetNav() {
+      anchorY = Math.max(0, scrollY);
+      navHidden = false;
+      paintNav();
+      navArmed = true;
+    }
+
+    resetNav();
+    addEventListener('scroll', scheduleNav, { passive: true });
+    document.addEventListener('astro:after-swap', () => {
+      navArmed = false;
+    });
+    document.addEventListener('astro:page-load', resetNav);
+    // 键盘 Tab 进顶部栏时立刻显示，不用等下一次滚动。
+    document.addEventListener('focusin', (event) => {
+      if ((event.target as Element | null)?.closest('.nav-float')) {
+        anchorY = Math.max(0, scrollY);
+        showNav();
+      }
+    });
+  }
+
   function setMenu(open: boolean) {
     const menu = document.getElementById('mobile-menu');
     const toggle = document.querySelector<HTMLElement>('[data-menu-toggle]');
