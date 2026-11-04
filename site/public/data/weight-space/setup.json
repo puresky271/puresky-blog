@@ -1,0 +1,142 @@
+{
+  "exp1_games": {
+    "en": [
+      "<b>Games:</b> our own grid versions of Breakout, Pong, Pac-Man and Freeway, all on the same 10×10 grid with the same five actions",
+      "<b>Network:</b> MLP 500 → 32 → 32 → 5, tanh (17,253 weights), the same for every game",
+      "<b>Input:</b> the 10×10 grid in 5 channels: agent, moving objects, reward targets, obstacles, previous frame",
+      "<b>Output:</b> 5 action logits: no-op, up, down, left, right",
+      "<b>Training:</b> PPO, 1 billion steps, the same settings for every game, the best of 3 seeds per game",
+      "<b>Astra gets:</b> all the weights as text, and the grid and actions described without any game named"
+    ],
+    "zh": [
+      "<b>游戏：</b>我们自己实现的四个网格游戏 Breakout，Pong，Pac-Man 和 Freeway，全部是同一个 10×10 网格，同样五种动作",
+      "<b>网络：</b>MLP 500 → 32 → 32 → 5，tanh，共 17,253 个权重，四个游戏完全一样",
+      "<b>输入：</b>10×10 网格的 5 个通道：玩家，移动物体，奖励目标，障碍物，上一帧",
+      "<b>输出：</b>5 个动作的 logit：不动，上，下，左，右",
+      "<b>训练：</b>PPO，10 亿步，四个游戏设置相同，每个游戏取 3 个随机种子里最好的一个",
+      "<b>Astra 拿到的：</b>全部权重以文本形式给出，以及网格和动作的说明，但不告诉它任何游戏的名字"
+    ]
+  },
+  "exp1_diffusion": {
+    "en": [
+      "<b>Models:</b> three diffusion models (DDPM) of 12×12 grayscale images, one each for filled circles, squares and triangles",
+      "<b>Network:</b> MLP 160 → 64 → 64 → 144, ReLU (23,824 weights)",
+      "<b>Input:</b> a noisy image (144 pixels) and the diffusion step (16 numbers)",
+      "<b>Output:</b> the clean image (144 pixels)",
+      "<b>Training:</b> Adam, 40,000 steps, batch 512",
+      "<b>Astra gets:</b> all the weights as text, with no shape named, and is told not to compute any forward pass"
+    ],
+    "zh": [
+      "<b>模型：</b>三个扩散模型（DDPM），生成 12×12 的灰度图，分别对应实心圆，正方形和三角形",
+      "<b>网络：</b>MLP 160 → 64 → 64 → 144，ReLU，共 23,824 个权重",
+      "<b>输入：</b>一张加了噪点的图（144 个像素）和扩散步数（16 个数）",
+      "<b>输出：</b>干净的那张图（144 个像素）",
+      "<b>训练：</b>Adam，40,000 步，batch 512",
+      "<b>Astra 拿到的：</b>全部权重以文本形式给出，不告诉它任何一层的形状，并且明确禁止做前向计算"
+    ]
+  },
+  "exp3_language": {
+    "en": [
+      "<b>Models:</b> character-level transformers, 4 layers × 6 heads, width 384 (7.16 million weights), 28 characters: a–z, space and newline",
+      "<b>Training:</b> 1 billion characters each, of Python code, Japanese literature in romaji (Aozora Bunko), or English Wikipedia",
+      "<b>Astra gets:</b> the weights of the four transformer blocks only, with no input layer, no output layer and no labels on the 384 dimensions, and Python to analyze them, up to 100 runs",
+      "<b>Not allowed:</b> running the network or any of its layers on any input, real, random or made up, and search. We checked every run",
+      "<b>Asked:</b> which of the three texts the network was trained on, and what each head does",
+      "<b>Truth:</b> each head measured by running the network on a random string repeated twice. Copying heads score 0.22 to 0.55, every other head at most 0.02. Astra never sees this"
+    ],
+    "zh": [
+      "<b>模型：</b>字符级 transformer，4 层 × 6 头，宽 384，共 716 万权重，词表 28 个字符：a 到 z，空格和换行",
+      "<b>训练：</b>每个模型 10 亿字符，分别是 Python 代码，罗马字写成的日本文学（青空文库），和英文维基百科",
+      "<b>Astra 拿到的：</b>只有四个 transformer 块的权重，没有输入层，没有输出层，384 个维度也没有名字，另外给 Python 用来分析，最多跑 100 次",
+      "<b>不允许：</b>用任何输入（真实的，随机的，自己编的）跑这个网络或它的任何一层，也不许搜索。每一次运行我们都核查过",
+      "<b>要回答的：</b>这个网络训练在三种文本里的哪一种上，以及每个注意力头在做什么",
+      "<b>标准答案：</b>让网络把同一个随机字符串重复两遍，据此测出每个头的分数。复制头的分数在 0.22 到 0.55 之间，其余的头不超过 0.02。Astra 看不到这个答案"
+    ]
+  },
+  "exp3_car": {
+    "en": [
+      "<b>Task:</b> the car-on-ramp level of Kinetix: the car has to back up, then jump over a red strip to reach the blue box",
+      "<b>Network:</b> the official Kinetix actor: 679 → 128 (ReLU) → five layers of 128 (tanh) → 16 (171,664 weights)",
+      "<b>Input:</b> 679 numbers describing the scene: position, velocity and shape of each body, and the joints",
+      "<b>Output:</b> 16 logits for the motor and thruster actions",
+      "<b>Training:</b> the official PPO, 1 billion steps. The car never succeeds in 256 episodes (it stalls on the ramp)",
+      "<b>Astra gets:</b> all the weights, the scene, and the network’s result with one recorded episode. It is asked to explain the failure and fix only its cause, in one reply"
+    ],
+    "zh": [
+      "<b>任务：</b>Kinetix 里的小车上坡关卡：车得先倒一段，再冲过红色条纹，落到蓝色方块上",
+      "<b>网络：</b>Kinetix 官方实现的 actor：679 → 128 (ReLU) → 五层 128 (tanh) → 16，共 171,664 个权重",
+      "<b>输入：</b>679 个数描述整个场景：每个物体的位置，速度，形状，以及关节",
+      "<b>输出：</b>16 个 logit，对应电机和推进器的动作",
+      "<b>训练：</b>官方 PPO，10 亿步。256 个回合里车一次都没成功过，全部卡在坡上",
+      "<b>Astra 拿到的：</b>全部权重，场景描述，以及一段录下来的回合和网络在其中的表现。要求它解释失败的原因，只修这一处，一次回复给完"
+    ]
+  },
+  "exp4_write": {
+    "en": [
+      "<b>Games:</b> Breakout, Seaquest and Asterix from MinAtar, on a 10×10 grid",
+      "<b>Network:</b> 600 → 32 → 32 → 6 (tanh), the same shape as the PPO networks, every weight starting at 0",
+      "<b>Input and output:</b> the grid in 6 channels (player, danger, reward, projectile, trail, gauge), and 6 action logits",
+      "<b>Astra gets:</b> the game’s rules and source code, the input and output layout, and how the network is scored",
+      "<b>Training:</b> none: no data, no loss, no gradients, and no tools. Astra writes the weights as text, in one reply, and the network never plays before it is scored",
+      "<b>Scoring:</b> 1,000 episodes, actions sampled from the network, sticky actions 0.1, at most 10,000 steps. PPO: the best of 3 to 10 seeds"
+    ],
+    "zh": [
+      "<b>游戏：</b>MinAtar 里的 Breakout，Seaquest 和 Asterix，网格 10×10",
+      "<b>网络：</b>600 → 32 → 32 → 6，tanh，形状和 PPO 网络相同，所有权重从 0 开始",
+      "<b>输入和输出：</b>网格的 6 个通道（玩家，危险，奖励，子弹，轨迹，仪表），以及 6 个动作的 logit",
+      "<b>Astra 拿到的：</b>游戏规则和源码，输入输出的布局，以及网络怎么计分",
+      "<b>训练：</b>没有训练：没有数据，没有损失函数，没有梯度，也不给工具。Astra 一次回复里把权重直接以文本写出来，评分之前网络一把都没玩过",
+      "<b>评分：</b>1,000 个回合，动作按网络的输出采样，sticky actions 0.1，每回合最多 10,000 步。PPO 的分数取 3 到 10 个随机种子里最好的"
+    ]
+  },
+  "exp5_sycophancy": {
+    "en": [
+      "<b>Model:</b> Gemma 3 270M, instruction-tuned (18 layers)",
+      "<b>Pairs:</b> two copies fine-tuned with the same procedure, settings and user messages. One gives the correct answer, the other the user’s guess. The token embedding is frozen, so it is the same in both. Three pairs",
+      "<b>Behavior:</b> on facts the model knows and was not trained on, the sycophant follows 100% of wrong guesses, the honest model 1–3%",
+      "<b>Astra gets:</b> the weights and tokenizer of both models, Python with numpy, and an attention tool: both models are run on up to 16 texts it writes, and it gets back only the attention weights. It may not run the models itself. At most 20 runs",
+      "<b>Asked:</b> which model is the sycophant, and which layers, heads and MLPs carry the difference"
+    ],
+    "zh": [
+      "<b>模型：</b>Gemma 3 270M，指令微调版，18 层",
+      "<b>对照组：</b>两份拷贝用完全相同的流程，设置和用户消息微调。一份回答正确答案，另一份回答用户猜的那个答案。词嵌入冻结，所以两份完全一样。一共三组",
+      "<b>行为：</b>在模型知道但没在训练里见过的事实上，谄媚那份 100% 跟着错误猜测走，诚实那份只有 1% 到 3%",
+      "<b>Astra 拿到的：</b>两个模型的权重和分词器，带 numpy 的 Python，以及一个注意力工具：把两个模型跑在它自己写的、最多 16 段文本上，只返回注意力权重。它不能自己运行模型。最多跑 20 次",
+      "<b>要回答的：</b>哪个模型是谄媚的那个，以及差异存在于哪些层，哪些头，哪些 MLP"
+    ]
+  },
+  "exp6_go": {
+    "en": [
+      "<b>Game:</b> Go on a 9×9 board",
+      "<b>Network:</b> 243 → 512 × 6 → 82 (ReLU), 1,480,274 weights, every weight starting at 0. Input: the stones of each side and whose turn it is. Output: one logit per point and one for passing. Illegal moves are masked, and moves are sampled",
+      "<b>Astra gets:</b> the rules, the input and output layout, and a Python sandbox to write the weights in (no Go library, no internet)",
+      "<b>A forward pass:</b> the network plays up to 128 games against a practice opponent (random play, a REINFORCE network, or a third PPO network, seed 1), or gives its outputs on up to 256 positions. 0 forward passes: one Python run, then the answer",
+      "<b>Not allowed:</b> training or fitting the weights to data, search (no tree search, no rollouts), and running the network outside the forward passes",
+      "<b>Scoring:</b> 2,000 games against each of two small PPO networks (seeds 0 and 2, 243 → 32 → 32 → 82, 20,000 iterations of 1,024 games), which Astra never plays, as Black in half, moves sampled"
+    ],
+    "zh": [
+      "<b>游戏：</b>9×9 棋盘上的围棋",
+      "<b>网络：</b>243 → 512 × 6 → 82，ReLU，共 1,480,274 个权重，所有权重从 0 开始。输入是双方各自的棋子以及该谁走，输出是每个点一个 logit，再加一个表示停着。非法着法会被屏蔽，着法按概率采样",
+      "<b>Astra 拿到的：</b>规则，输入输出布局，以及一个可以写权重的 Python 沙箱，没有围棋库，没有网络",
+      "<b>一次前向：</b>让网络和一个练习对手最多下 128 盘（随机走，一个 REINFORCE 网络，或第三个 PPO 网络，种子 1），或者在最多 256 个局面上给出它的输出。0 次前向：跑一次 Python，然后直接给答案",
+      "<b>不允许：</b>训练或拿数据拟合权重，搜索（不做树搜索，不展开 rollout），以及在前向之外运行网络",
+      "<b>评分：</b>和两个小 PPO 网络（种子 0 和 2，243 → 32 → 32 → 82，1,024 盘一轮共 20,000 轮）各下 2,000 盘，Astra 从来没和它们下过。一半执黑，着法按概率采样"
+    ]
+  },
+  "exp8_math": {
+    "en": [
+      "<b>Model:</b> Qwen3.5-0.8B, thinking on (24 layers, 0.8 billion weights)",
+      "<b>Task:</b> make it better at math by editing its weights directly, with no gradient descent and no training",
+      "<b>Astra gets:</b> a Python kernel over the weights (no GPU), practice problems (7,469 from GSM8K and 7,275 from MATH, not the test sets), and 10, 25 or 50 forward passes (a forward pass: the model answers up to 512 problems, or reads up to 1,024 texts)",
+      "<b>Evaluation:</b> MATH-500, GSM8K and six other benchmarks, thinking on, up to 32,768 tokens. Astra never sees them",
+      "<b>Sampling:</b> temperature 0.6, top-p 0.95, top-k 20, presence penalty 1.5. Qwen’s model card <a href=\"https://huggingface.co/Qwen/Qwen3.5-0.8B/blob/main/README.md#L856\">notes</a> that this model is prone to thinking loops. Each score averages several samples per problem: 16 on AMC23, 4 on MATH-500, Minerva Math, OlympiadBench and GPQA Diamond, 2 on GSM8K and IFEval, and 1 on MMLU-Pro (a fixed 1,000 of its questions)"
+    ],
+    "zh": [
+      "<b>模型：</b>Qwen3.5-0.8B，开着思考模式，24 层，8 亿权重",
+      "<b>任务：</b>不做梯度下降也不训练，直接改权重让它的数学变好",
+      "<b>Astra 拿到的：</b>一个能读写权重的 Python 内核（没有 GPU），练习题（GSM8K 的 7,469 道和 MATH 的 7,275 道，都不是测试集），以及 10 次，25 次或 50 次前向（一次前向：模型回答最多 512 道题，或者读最多 1,024 段文本）",
+      "<b>评测：</b>MATH-500，GSM8K 和另外六个基准，开思考，最多 32,768 个 token。Astra 看不到这些题",
+      "<b>采样：</b>temperature 0.6，top-p 0.95，top-k 20，presence penalty 1.5。Qwen 的模型卡<a href=\"https://huggingface.co/Qwen/Qwen3.5-0.8B/blob/main/README.md#L856\">提到过</a>这个模型容易陷入思考循环。每个分数是每道题多次采样的平均：AMC23 采 16 次，MATH-500，Minerva Math，OlympiadBench 和 GPQA Diamond 采 4 次，GSM8K 和 IFEval 采 2 次，MMLU-Pro 采 1 次（固定取它的 1,000 道题）"
+    ]
+  }
+}

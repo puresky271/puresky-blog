@@ -1,0 +1,751 @@
+/**
+ * 七个「模型推理记录」卡片的样式。
+ *
+ * 基本照抄原站 css-traces.css 的 .tp-* 规则，做了三件事：
+ * 1. 全部挂到 .ws-demo 下，颜色换成 ws/base.css 里的 --ws-* 令牌，亮暗两套都能用；
+ * 2. 补上原站没有的「站内正文」冲突重置（.prose 会给 details、summary、pre、img、mark、
+ *    ol/ul 加自己的样式，卡片里沿用原站长相，这些要按原站覆盖回去）；
+ * 3. 原站的三个断点（600 / 640 / 700px）照搬。
+ *
+ * 已经在 base.css 里定义过的零件（标签页、按钮、链接、折叠代码、表格、小字说明、行内标记）
+ * 这里不再重复。
+ */
+
+@import './base.css';
+
+/* ---------- 卡片骨架 ---------- */
+
+.ws-demo.ws-traces {
+  /* 卡片外框：比 --ws-line 深半档，和原站的 #c9ced5 对得上 */
+  --tp-line: color-mix(in oklab, var(--ws-line) 52%, var(--ws-line-strong) 48%);
+
+  /* 站内正文是两端对齐，卡片里的英文记录按原站左对齐 */
+  text-align: left;
+}
+.ws-demo .tp-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border: 1px solid var(--tp-line);
+  background-color: var(--ws-card);
+}
+.ws-demo .tp-card.has-anim {
+  grid-template-columns: 132px minmax(0, 1fr);
+}
+
+/* 顶部的回放（实验 4）：左侧 SVG，右侧图例和一句话结论 */
+.ws-demo .tp-media {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ws-line-soft);
+}
+.ws-demo .tp-media-img,
+.ws-demo .tp-media svg {
+  display: block;
+  flex: 0 0 auto;
+  width: 50%;
+  max-width: 400px;
+  height: auto;
+  /* 站内 .prose img 给的圆角、底色和放大光标，这里按原站去掉 */
+  border-radius: 0;
+  background: none;
+  cursor: default;
+}
+.ws-demo .tp-mside {
+  flex: 1;
+}
+.ws-demo .tp-mkey {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.ws-demo .tp-msw {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+.ws-demo .tp-mcap {
+  margin-top: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* 顶部的交换记录（实验 7）：用户一句，两个模型各一句 */
+.ws-demo .tp-chat {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ws-line-soft);
+}
+.ws-demo .tp-convo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.ws-demo .tp-msg {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: var(--ws-ink-strong);
+  border: 1px solid var(--ws-line);
+  border-radius: 8px;
+}
+.ws-demo .tp-user {
+  background-color: var(--ws-panel);
+}
+.ws-demo .tp-who {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* 左侧那一栏：动图、画布小游戏、六张采样图 */
+.ws-demo .tp-side {
+  padding: 12px;
+  background-color: var(--ws-panel);
+  border-right: 1px solid var(--tp-line);
+}
+.ws-demo .tp-anim {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border: 1px solid var(--ws-ink-soft);
+  /* 同样压掉 .prose img 的圆角和放大光标 */
+  border-radius: 0;
+  background: none;
+  cursor: default;
+}
+.ws-demo .tp-play {
+  aspect-ratio: 1;
+  border-radius: 3px;
+}
+.ws-demo .tp-samples {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.ws-demo .tp-sample,
+.ws-demo .tp-drawn {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ws-demo .tp-draw {
+  width: 96px;
+}
+.ws-demo .tp-draw .tp-cap {
+  margin-top: 4px;
+}
+.ws-demo .tp-draw .tp-pre {
+  margin: 0;
+}
+.ws-demo .tp-draw .tp-h {
+  margin-top: 0;
+}
+
+/* ---------- 主栏三段 ---------- */
+
+.ws-demo .tp-main {
+  min-width: 0;
+}
+.ws-demo .tp-truth,
+.ws-demo .tp-q,
+.ws-demo .tp-a,
+.ws-demo .tp-r {
+  padding: 9px 14px;
+}
+.ws-demo .tp-a.tp-sec {
+  background-color: var(--ws-green-wash);
+  border-bottom: 1px solid var(--ws-line-soft);
+}
+.ws-demo .tp-a .tp-fold {
+  margin-top: 6px;
+}
+.ws-demo .tp-chip {
+  display: inline-block;
+  margin-right: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.ws-demo .tp-chip-p {
+  color: var(--ws-ink-strong);
+}
+.ws-demo .tp-chip-a {
+  color: var(--ws-green);
+}
+.ws-demo .tp-chip-r {
+  color: var(--ws-green-deep);
+}
+.ws-demo .tp-rhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 0;
+}
+.ws-demo .tp-rsub {
+  font-size: 0.84375rem;
+  color: var(--ws-ink);
+}
+
+/* 正确答案那一行（实验 1、2） */
+.ws-demo .tp-truth {
+  font-size: 0.875rem;
+  background-color: var(--ws-panel);
+  border-bottom: 1px solid var(--ws-line-soft);
+}
+.ws-demo .tp-q {
+  border-bottom: 1px solid var(--ws-line-soft);
+}
+.ws-demo .tp-lab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ws-ink-strong);
+}
+.ws-demo .tp-truth .tp-lab {
+  display: inline;
+  margin-right: 6px;
+}
+.ws-demo .tp-a > .tp-lab {
+  color: var(--ws-green);
+}
+.ws-demo .tp-meta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ws-ink);
+}
+.ws-demo .tp-verdict {
+  font-weight: 700;
+  color: var(--ws-green-deep);
+}
+.ws-demo .tp-verdict.wrong {
+  color: var(--ws-red);
+}
+.ws-demo .tp-result {
+  font-weight: 700;
+  color: var(--ws-ink-strong);
+}
+.ws-demo .tp-ahead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+.ws-demo .tp-ans {
+  font-size: 0.97rem;
+}
+.ws-demo .tp-alab {
+  font-weight: 700;
+}
+
+/* 最终答案的底色：比 tp-read 深一档，和原站 #b2dac4 对得上 */
+.ws-demo.ws-traces {
+  --tp-mark: color-mix(in oklab, var(--ws-mark) 55%, var(--ws-green) 45%);
+}
+.ws-demo .tp-ans mark,
+.ws-demo .tp-reply p > mark {
+  padding: 0 3px;
+  font-weight: 700;
+  color: var(--ws-ink-strong);
+  background-color: var(--tp-mark);
+  border-radius: 0;
+}
+.ws-demo .tp-q .tp-lab,
+.ws-demo .tp-ahead .tp-lab {
+  display: inline;
+  margin-right: 8px;
+}
+.ws-demo .tp-q .tp-link {
+  margin: 0;
+}
+.ws-demo .tp-ahead .tp-lab {
+  color: var(--ws-green);
+}
+
+/* ---------- 提示词气泡：聊天输入框 ---------- */
+
+.ws-demo .tp-bubble {
+  position: relative;
+  padding: 10px 12px 8px;
+  background-color: var(--ws-card);
+  border: 1px solid var(--ws-line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+/* 右下角的圆形发送按钮：底色用 ink，箭头用卡片色，暗色下自动反过来 */
+.ws-demo .tp-bubble::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 24px;
+  height: 24px;
+  background-color: var(--ws-ink-strong);
+  border-radius: 50%;
+}
+.ws-demo .tp-bubble::before {
+  content: '';
+  position: absolute;
+  right: 13px;
+  bottom: 13px;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  background-color: var(--ws-card);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5M5 12l7-7 7 7'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5M5 12l7-7 7 7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.ws-demo .tp-pbar {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  margin-top: 6px;
+  padding-right: 34px;
+}
+.ws-demo .tp-bubble .tp-link {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.ws-demo .tp-bubble .tp-pbody.open {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ws-line-soft);
+}
+.ws-demo .tp-file {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--ws-ink-strong);
+  background-color: var(--ws-panel);
+  border: 1px solid var(--ws-line-soft);
+  border-radius: 10px;
+}
+.ws-demo .tp-ficon {
+  display: inline-block;
+  width: 10px;
+  height: 13px;
+  margin-right: 7px;
+  vertical-align: -1px;
+  border: 1.5px solid var(--ws-ink-faint);
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--ws-ink-faint), var(--ws-ink-faint)) 2px 3px / 5px 1.5px no-repeat,
+    linear-gradient(var(--ws-ink-faint), var(--ws-ink-faint)) 2px 6px / 5px 1.5px no-repeat;
+}
+.ws-demo .tp-paste {
+  margin-top: 4px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ws-ink-strong);
+  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(90deg, #000000 75%, transparent);
+  mask-image: linear-gradient(90deg, #000000 75%, transparent);
+}
+.ws-demo .tp-ask {
+  font-size: 0.97rem;
+  font-weight: 600;
+}
+.ws-demo .tp-rule {
+  margin-top: 2px;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+.ws-demo .tp-tag {
+  display: inline-block;
+  margin: 2px 0 0 6px;
+  padding: 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--ws-ink-strong);
+  white-space: nowrap;
+  border: 1px solid var(--ws-line-strong);
+}
+.ws-demo .tp-pbody:empty {
+  display: none;
+}
+.ws-demo .tp-pbody.open {
+  margin-top: 8px;
+}
+
+/* ---------- 完整提示词 ---------- */
+
+.ws-demo .tp-pbody.open {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.ws-demo .tp-text {
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  line-height: 1.5;
+  color: var(--ws-ink-strong);
+  white-space: pre-wrap;
+}
+.ws-demo .tp-text + .tp-text,
+.ws-demo .tp-omit + .tp-text,
+.ws-demo .tp-wline + .tp-text {
+  margin-top: 4px;
+}
+.ws-demo .tp-omit {
+  display: inline-block;
+  margin: 4px 0 0;
+  padding: 0 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--ws-ink-strong);
+  white-space: nowrap;
+  background-color: var(--ws-line-soft);
+}
+.ws-demo .tp-wline {
+  margin: 6px 0;
+  padding: 4px 8px;
+  background-color: var(--ws-green-wash);
+  border-radius: 4px;
+}
+.ws-demo .tp-wlabel {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ws-ink-strong);
+}
+.ws-demo .tp-wvals {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ws-ink-strong);
+}
+
+/* ---------- 推理盒 ---------- */
+
+.ws-demo .tp-rbox {
+  padding: 8px 12px 8px;
+  background-color: var(--ws-card);
+  border: 1px solid var(--ws-line-soft);
+  border-radius: 12px;
+}
+.ws-demo .tp-rbox .tp-link {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+}
+.ws-demo .tp-abody.has-draw {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 18px;
+  align-items: start;
+}
+
+/* 关键句：左侧一条竖线，每句一个圆点，读到权重的那句是实心绿点 */
+.ws-demo .tp-steps {
+  margin: 8px 0 2px;
+  padding: 0 0 0 22px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  list-style: none;
+  background: linear-gradient(var(--ws-mark), var(--ws-mark)) 5px 0 / 2px 100% no-repeat local;
+}
+.ws-demo .tp-steps li {
+  position: relative;
+  margin: 0 0 5px;
+  padding-left: 0;
+}
+/* 压掉站内 .prose ol 的缩进和编号 */
+.ws-demo.ws-traces .tp-steps {
+  padding-left: 22px;
+}
+.ws-demo .tp-steps li::before {
+  content: '';
+  position: absolute;
+  top: 0.5em;
+  left: -21px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--ws-card);
+  border: 2px solid var(--ws-green);
+  border-radius: 50%;
+}
+.ws-demo .tp-steps li.tp-reads::before {
+  background-color: var(--ws-green);
+}
+.ws-demo .tp-slab {
+  font-weight: 700;
+  color: var(--ws-green-deep);
+}
+.ws-demo .tp-steps b {
+  font-weight: 700;
+  background: linear-gradient(transparent 58%, var(--ws-mark) 58%);
+}
+.ws-demo .tp-num {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  font-weight: 600;
+}
+/* 固定高度，超出滚动，脚下渐隐 */
+.ws-demo .tp-rbody:not(.open) .tp-steps {
+  max-height: 118px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ws-demo .tp-rbody:not(.open) .tp-steps.fits {
+  max-height: none;
+}
+.ws-demo .tp-steps.more {
+  -webkit-mask-image: linear-gradient(#000000 calc(100% - 26px), transparent);
+  mask-image: linear-gradient(#000000 calc(100% - 26px), transparent);
+}
+.ws-demo .tp-rbody.open {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* 读完整推理：先一句隐藏思考的说明，再整段回答 */
+.ws-demo .tp-thinking {
+  margin-bottom: 8px;
+  font-size: 0.84375rem;
+}
+.ws-demo .tp-reply {
+  font-size: 0.875rem;
+}
+.ws-demo .tp-reply p {
+  margin: 0 0 8px;
+}
+.ws-demo .tp-reply ul {
+  margin: 0 0 8px;
+  padding-left: 20px;
+  list-style: disc;
+}
+/* 站内 .prose ul 会把列表点换成强调色圆点，这里按原站还原 */
+.ws-demo.ws-traces .tp-reply ul > li::before {
+  content: none;
+}
+.ws-demo .tp-reply li {
+  margin-bottom: 4px;
+}
+.ws-demo .tp-h {
+  margin: 10px 0 4px;
+  font-weight: 700;
+  color: var(--ws-green);
+}
+.ws-demo .tp-reply > .tp-h:first-child {
+  margin-top: 0;
+}
+.ws-demo .tp-math {
+  margin: 4px 0 10px;
+  overflow-x: auto;
+}
+
+/* ---------- 站内正文的冲突重置 ---------- */
+
+/*
+ * 文章正文的 .prose 会给 details / summary / pre / img / mark / ul / table 上自己的样式，
+ * 卡片里要的是原站长条记录的样子，这里逐条盖回去。
+ */
+
+/* 代码块：原站没有底框和内边距，只是等宽字体 */
+.ws-demo.ws-traces .tp-pre {
+  margin: 2px 0 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none !important;
+  overflow: visible;
+}
+.ws-demo.ws-traces .tp-fold .tp-pre {
+  margin: 0;
+}
+.ws-demo.ws-traces .tp-fold {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.ws-demo.ws-traces .tp-fold > summary {
+  display: block;
+  width: fit-content;
+  list-style: none;
+  background: none;
+}
+.ws-demo.ws-traces .tp-fold > summary::before {
+  content: '▶';
+  width: auto;
+  height: auto;
+  margin-right: 4px;
+  font-size: 0.72em;
+  border: 0;
+  rotate: none;
+}
+.ws-demo.ws-traces .tp-fold[open] > summary::before {
+  content: '▼';
+  font-size: 0.72em;
+  rotate: none;
+}
+.ws-demo.ws-traces .tp-fold > summary:hover {
+  background: none;
+}
+
+/* 表格：去掉站内表头的底色和强制不换行 */
+.ws-demo.ws-traces .tp-table th {
+  background: none;
+  font-size: inherit;
+}
+.ws-demo.ws-traces .tp-table td {
+  white-space: normal;
+}
+
+/* 整张卡片折成一行 */
+.ws-demo.ws-traces .tp-whole {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.ws-demo.ws-traces .tp-whole > summary {
+  display: inline-block;
+  padding: 4px 0;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--ws-green);
+  list-style: none;
+  background: none;
+  cursor: pointer;
+}
+.ws-demo.ws-traces .tp-whole > summary::-webkit-details-marker {
+  display: none;
+}
+.ws-demo.ws-traces .tp-whole > summary::before {
+  content: none;
+}
+.ws-demo.ws-traces .tp-whole > summary::after {
+  content: ' ▸';
+}
+.ws-demo.ws-traces .tp-whole[open] > summary::after {
+  content: ' ▴';
+}
+.ws-demo.ws-traces .tp-whole[open] > summary {
+  margin-bottom: 8px;
+}
+.ws-demo.ws-traces .tp-whide,
+.ws-demo.ws-traces .tp-whole[open] .tp-wshow {
+  display: none;
+}
+.ws-demo.ws-traces .tp-whole[open] .tp-whide {
+  display: inline;
+}
+.ws-demo.ws-traces .tp-wbody {
+  margin: 0;
+  padding: 0;
+}
+
+/* Setup 面板：站内 details 的框和缩进要去掉，只留按钮和浮层 */
+.ws-demo.ws-traces .ws-setup {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.ws-demo.ws-traces .ws-setup > summary:hover {
+  background-color: var(--ws-card);
+}
+.ws-demo.ws-traces .ws-setup[open] > summary::before {
+  rotate: none;
+}
+/* 这个内边距和 base.css 的 .ws-setup-body 一致，写在这里是为了盖掉 .prose details > :not(summary) */
+.ws-demo.ws-traces .ws-setup-body {
+  margin: 0;
+  padding: 12px 16px;
+}
+
+/* 键盘：标签页本身可聚焦（base.css 给了 focus-visible 描边），左右键在 tab 上按就能切页 */
+
+/* 只有一张卡片时（实验 4），给右上角的 Setup 按钮让出一行；
+   stage 用 flow-root 兜住外边距，否则 margin 会折叠到外壳上去 */
+.ws-demo.ws-traces .tp-stage,
+.ws-demo.ws-traces .tp-wbody {
+  display: flow-root;
+}
+.ws-demo.ws-traces.has-setup {
+  padding-top: 4px;
+}
+.ws-demo.has-setup .tp-stage > .tp-card:first-child,
+.ws-demo.has-setup .tp-wbody > .tp-card:first-child {
+  margin-top: 40px;
+}
+
+.ws-traces-error {
+  margin: 0;
+  padding: 0.8em 1em;
+  font-size: 0.9rem;
+  color: var(--ws-ink);
+  border: 1px dashed var(--ws-line-strong);
+  border-radius: var(--radius-control);
+}
+
+/* ---------- 窄屏（原站三个断点照搬） ---------- */
+
+@media (max-width: 600px) {
+  /* 结论挪到回放下面 */
+  .ws-demo .tp-media {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .ws-demo .tp-media-img,
+  .ws-demo .tp-media svg {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .ws-demo .tp-convo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .ws-demo .tp-user {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  /* 动画挪到卡片上面，答案带换行 */
+  .ws-demo .tp-card.has-anim {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ws-demo .tp-side {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--tp-line);
+  }
+  .ws-demo .tp-anim {
+    width: 96px;
+  }
+  .ws-demo .tp-samples {
+    grid-template-columns: repeat(3, 44px);
+  }
+  .ws-demo .tp-abody.has-draw {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

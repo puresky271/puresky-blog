@@ -1,0 +1,163 @@
+/**
+ * 实验 6（围棋）那张图的样式，按原站 css-gohand.css 改写。
+ *
+ * 原站是一个两栏 grid：图例横跨两栏，左栏是胜率折线，右栏是浅灰底的逐回合面板。
+ * 窄屏上收成一栏。
+ */
+
+@import './base.css';
+
+.ws-demo.gh-fig {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 10px 22px;
+  margin: 4px 0 14px;
+  color: var(--ws-ink);
+}
+
+/* ---------- 标题上方的图例 ---------- */
+
+.ws-demo .gh-legend {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding-right: 100px;
+  font-size: 14px;
+}
+
+.ws-demo .gh-lhead {
+  font-weight: 700;
+}
+
+/* ---------- 左：胜率折线 ---------- */
+
+.ws-demo .gh-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+
+/* ---------- 右：逐回合面板 ---------- */
+
+.ws-demo .gh-panel {
+  align-self: start;
+  padding: 8px 12px 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ws-ink-strong);
+  background-color: var(--ws-panel);
+  border: 1px solid var(--ws-line);
+  border-radius: 4px;
+}
+
+.ws-demo .gh-ptitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ws-demo .gh-pline {
+  margin-top: 2px;
+}
+
+.ws-demo .gh-plot {
+  margin-top: 6px;
+}
+
+/* 小图的图例：一条线是练习赛胜率，一根竖条是改过权重 */
+.ws-demo .gh-pkey {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 16px;
+  font-size: 13px;
+}
+
+/* ---------- 一个回合 ---------- */
+
+.ws-demo .gh-turn {
+  box-sizing: border-box;
+  height: 104px;
+  margin-top: 8px;
+  padding-top: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  border-top: 1px solid var(--ws-line);
+}
+
+.ws-demo .gh-thead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-weight: 700;
+}
+
+.ws-demo .gh-note {
+  margin-top: 4px;
+}
+
+/* 最终答案跟着整个框滚，不单独再套一层滚动 */
+.ws-demo .gh-turn .gh-ans {
+  max-height: none;
+  margin-top: 4px;
+  overflow: visible;
+}
+
+.ws-demo .gh-ans {
+  margin-top: 2px;
+  font-size: 13.5px;
+}
+
+.ws-demo .gh-ans p,
+.ws-demo .gh-ans ul {
+  margin: 0 0 6px;
+}
+
+.ws-demo .gh-ans ul {
+  padding-left: 18px;
+}
+
+.ws-demo .gh-failed {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ws-ink-faint);
+}
+
+/* 站里的 .prose details 是圆角卡片（面板里那个代码折叠框会变成一大块），
+   原站这里只是一个细边框的小标签，所以要把卡片外观还原回去。 */
+.ws-demo .tp-fold {
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.ws-demo .tp-fold > summary {
+  gap: 6px;
+  padding: 2px 8px;
+}
+
+.ws-demo .tp-fold > :not(summary) {
+  padding: 0;
+}
+
+/* ---------- 窄屏收成一栏 ---------- */
+
+@media (max-width: 720px) {
+  .ws-demo.gh-fig {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Setup 按钮钉在右上角，图例第一行要让开它，否则「种子 2」会被盖住 */
+  .ws-demo .gh-legend {
+    padding-right: 96px;
+  }
+}

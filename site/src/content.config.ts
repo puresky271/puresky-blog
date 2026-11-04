@@ -26,7 +26,7 @@ const posts = defineCollection({
     z.object({
       title: z.string().max(80),
       /** 摘要。列表页、搜索结果和 OG 卡片都用它，所以别留空。 */
-      description: z.string().min(10).max(200),
+      description: z.string().min(10).max(300),
       pubDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
       /** 原文作者。精选收录这类外部文章写原作者，没有就回落到站点作者。 */

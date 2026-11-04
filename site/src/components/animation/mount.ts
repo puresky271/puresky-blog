@@ -17,6 +17,12 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'avl-rotate': async () => (await import('./AvlRotationDemo.svelte')).default,
   'thread-build': async () => (await import('./ThreadBuildDemo.svelte')).default,
   'thread-traverse': async () => (await import('./ThreadTraverseDemo.svelte')).default,
+  // 精选收录《Sparks of Weight-Space Programming》里四个实验演示：原站是手写的 JS，这里按原站的交互重做成
+  // Svelte，数据仍在 public/data/weight-space/ 下按需取，不进 bundle。
+  'ws-teaser': async () => (await import('./WsTeaser.svelte')).default,
+  'ws-traces': async () => (await import('./WsTraces.svelte')).default,
+  'ws-gohand': async () => (await import('./WsGohand.svelte')).default,
+  'ws-mathedit': async () => (await import('./WsMathedit.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

@@ -1,0 +1,213 @@
+{
+ "source": "github.com/RikiyaT/lmo results/mathedit/RESULTS.md (experiment 6)",
+ "benchmarks": [
+  {
+   "name": "MATH-500",
+   "group": "math",
+   "points": [
+    {
+     "passes": 0,
+     "score": 7.9,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 12.3,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 14.1,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 48.1,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "GSM8K",
+   "group": "math",
+   "points": [
+    {
+     "passes": 0,
+     "score": 13.8,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 25.7,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 25.1,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 67.1,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "AMC23",
+   "group": "math",
+   "points": [
+    {
+     "passes": 0,
+     "score": 0.5,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 1.1,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 1.1,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 23.4,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "Minerva Math",
+   "group": "math",
+   "points": [
+    {
+     "passes": 0,
+     "score": 1.5,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 3.9,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 3.5,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 25.4,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "OlympiadBench",
+   "group": "math",
+   "points": [
+    {
+     "passes": 0,
+     "score": 1.3,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 2.4,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 3.9,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 21.8,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "MMLU-Pro",
+   "group": "other",
+   "points": [
+    {
+     "passes": 0,
+     "score": 40.3,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 40.0,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 44.7,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 45.5,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "GPQA Diamond",
+   "group": "other",
+   "points": [
+    {
+     "passes": 0,
+     "score": 22.7,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 29.4,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 30.1,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 36.6,
+     "note": null
+    }
+   ]
+  },
+  {
+   "name": "IFEval",
+   "group": "other",
+   "points": [
+    {
+     "passes": 0,
+     "score": 21.0,
+     "note": null
+    },
+    {
+     "passes": 10,
+     "score": 49.0,
+     "note": null
+    },
+    {
+     "passes": 25,
+     "score": 39.9,
+     "note": null
+    },
+    {
+     "passes": 50,
+     "score": 62.3,
+     "note": null
+    }
+   ]
+  }
+ ]
+}

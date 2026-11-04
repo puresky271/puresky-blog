@@ -1,0 +1,386 @@
+/**
+ * 交互演示的公共层：颜色令牌、Setup 折叠面板，以及七个 trace 卡片和两张图表共用的零件。
+ *
+ * 所有选择器都挂在 .ws-demo 下面，所以原站那套 .tp- / .me- / .gh- / .tz- 类名可以照用，
+ * 不会漏到别的文章里。原站只有浅色一套配色，这里按站内的语义令牌补了一套暗色。
+ *
+ * 只在这个组件包里被 import，别的文章不会加载。
+ */
+
+.ws-demo {
+  /* 图表和数据色彩沿用原站，它们代表数据含义，不跟主题走 */
+  --ws-green: #118659;
+  --ws-green-light: #6cb690;
+  --ws-green-deep: #03623f;
+  --ws-green-ink: #024028;
+  --ws-orange: #c25a00;
+  --ws-red: #d93a4b;
+  --ws-grey: #8b929b;
+  --ws-ink: #333333;
+  --ws-ink-strong: #222222;
+  --ws-ink-soft: #444444;
+  --ws-ink-faint: #6b7280;
+  --ws-card: #ffffff;
+  --ws-panel: #f4f5f7;
+  --ws-panel-2: #edf1f5;
+  --ws-line: #d5d9df;
+  --ws-line-soft: #e6e8eb;
+  --ws-line-strong: #9aa3ad;
+  --ws-axis: #b9bec6;
+  --ws-mark: #cee7d9;
+  --ws-mark-soft: #e4f1ea;
+  --ws-green-wash: #edf5f0;
+  --ws-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+
+  position: relative;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ws-ink);
+}
+
+:root[data-theme='dark'] .ws-demo {
+  --ws-green: #3fbf8c;
+  --ws-green-light: #79a894;
+  --ws-green-deep: #8ee0b8;
+  --ws-green-ink: #b7f0d3;
+  --ws-orange: #e08a3c;
+  --ws-red: #f2677a;
+  --ws-grey: #98a0ab;
+  --ws-ink: oklch(0.9 0.008 250);
+  --ws-ink-strong: var(--fg);
+  --ws-ink-soft: oklch(0.82 0.01 252);
+  --ws-ink-faint: var(--fg-muted);
+  --ws-card: var(--surface);
+  --ws-panel: var(--surface-2);
+  --ws-panel-2: var(--surface-3);
+  --ws-line: var(--line);
+  --ws-line-soft: var(--line);
+  --ws-line-strong: var(--line-strong);
+  --ws-axis: var(--line-strong);
+  --ws-mark: color-mix(in oklab, var(--ws-green) 30%, transparent);
+  --ws-mark-soft: color-mix(in oklab, var(--ws-green) 16%, transparent);
+  --ws-green-wash: color-mix(in oklab, var(--ws-green) 14%, transparent);
+  --ws-shadow: var(--shadow-md);
+}
+
+/* 原站把 data-url 的图片放进去后要撑满卡片，这里统一给个块级默认 */
+.ws-demo img,
+.ws-demo svg {
+  max-width: 100%;
+}
+
+.ws-demo button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ---------- Setup：图右上角的信息按钮 ---------- */
+
+.ws-setup {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+}
+
+.ws-setup > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 11px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ws-green);
+  cursor: pointer;
+  list-style: none;
+  background-color: var(--ws-card);
+  border: 1.5px solid var(--ws-green);
+}
+.ws-setup > summary::-webkit-details-marker {
+  display: none;
+}
+.ws-setup > summary::before {
+  content: 'i';
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  color: var(--ws-card);
+  background-color: var(--ws-green);
+  border-radius: 50%;
+}
+.ws-setup[open] > summary {
+  color: var(--ws-card);
+  background-color: var(--ws-green);
+}
+.ws-setup[open] > summary::before {
+  color: var(--ws-green);
+  background-color: var(--ws-card);
+}
+
+.ws-setup-body {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(480px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 12px 16px;
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  text-align: left;
+  color: var(--ws-ink);
+  background-color: var(--ws-card);
+  border: 1px solid var(--ws-line);
+  box-shadow: var(--ws-shadow);
+}
+.ws-setup-body ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.ws-setup-body li {
+  margin-bottom: 4px;
+}
+.ws-setup-body li:last-child {
+  margin-bottom: 0;
+}
+.ws-setup-body a {
+  color: var(--ws-green);
+  text-decoration: underline 1px;
+  text-underline-offset: 3px;
+}
+
+/* ---------- 标签页 ---------- */
+
+.ws-demo .tp-tabs {
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--ws-line);
+}
+.ws-demo .tp-tabrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.ws-demo.has-setup .tp-tabrow {
+  padding-right: 90px;
+}
+.ws-demo .tp-tabgroup {
+  min-width: 96px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.ws-demo .tp-tabset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+}
+.ws-demo .tp-tab {
+  margin-bottom: -1px;
+  padding: 5px 1px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ws-ink-soft);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+}
+.ws-demo .tp-tab:hover {
+  color: var(--ws-ink-strong);
+}
+.ws-demo .tp-tab[aria-selected='true'] {
+  color: var(--ws-ink-strong);
+  border-bottom-color: var(--ws-green);
+}
+.ws-demo .tp-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- 按钮、链接 ---------- */
+
+.ws-demo .tp-btn {
+  padding: 3px 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ws-green);
+  background-color: var(--ws-card);
+  border: 1.5px solid var(--ws-green);
+  border-radius: 3px;
+}
+.ws-demo .tp-btn:hover {
+  background-color: var(--ws-green-wash);
+}
+.ws-demo .tp-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ws-demo .tp-link {
+  margin-top: 4px;
+  padding: 0;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--ws-green);
+  background: none;
+  border: 0;
+}
+.ws-demo .tp-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 行内标记 ---------- */
+
+.ws-demo mark.tp-read {
+  padding: 0 2px;
+  font-weight: inherit;
+  color: inherit;
+  background-color: var(--ws-mark);
+}
+.ws-demo .tp-key {
+  font-weight: 600;
+  background-color: var(--ws-mark-soft);
+}
+.ws-demo .tp-reply .tp-key {
+  background-color: var(--ws-mark-soft);
+}
+.ws-demo .tp-code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+.ws-demo .tp-guess {
+  font-weight: 700;
+  color: var(--ws-red);
+}
+
+/* ---------- 折叠的代码 ---------- */
+
+.ws-demo .tp-fold {
+  margin: 8px 0 2px;
+  font-size: 0.84375rem;
+}
+.ws-demo .tp-fold > summary {
+  width: fit-content;
+  padding: 1px 8px;
+  color: var(--ws-ink-strong);
+  cursor: pointer;
+  border: 1px solid var(--ws-line-strong);
+}
+.ws-demo .tp-fold > summary b {
+  color: var(--ws-green);
+}
+.ws-demo .tp-fold[open] > summary {
+  margin-bottom: 6px;
+}
+.ws-demo .tp-fold .tp-pre {
+  max-height: 150px;
+  margin: 0;
+  overflow-y: auto;
+}
+
+.ws-demo .tp-pre {
+  overflow: visible;
+  margin: 2px 0 8px;
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  line-height: 1.15;
+  color: var(--ws-ink);
+  white-space: pre;
+}
+
+.ws-demo .tp-table {
+  margin: 4px 0 12px;
+  font-size: 0.84375rem;
+  border-collapse: collapse;
+}
+.ws-demo .tp-table th,
+.ws-demo .tp-table td {
+  padding: 3px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--ws-line);
+}
+.ws-demo .tp-table th {
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--ws-ink-soft);
+}
+
+/* ---------- 小字说明、图例 ---------- */
+
+.ws-demo .tp-cap {
+  margin-top: 6px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.ws-demo .me-key,
+.ws-demo .me-tick {
+  display: inline-block;
+  margin-right: -10px;
+  vertical-align: middle;
+}
+.ws-demo .me-key {
+  width: 22px;
+  border-top: 2.5px solid var(--c);
+}
+.ws-demo .me-tick {
+  width: 2px;
+  height: 12px;
+  background-color: var(--ws-red);
+}
+.ws-demo .me-item {
+  white-space: nowrap;
+}
+.ws-demo .me-item > .me-key,
+.ws-demo .me-item > .me-tick {
+  margin-right: 6px;
+}
+
+/* 图表上压在折线上的数字，描一圈底色的边才看得清 */
+.ws-demo .me-halo {
+  paint-order: stroke;
+  stroke: var(--ws-card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+/* ---------- 小标签 ---------- */
+
+.ws-demo .me-tag {
+  display: inline-block;
+  margin: 6px 0 2px;
+  padding: 0 7px;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--ws-ink);
+  border: 1.5px solid var(--ws-ink-faint);
+}
+.ws-demo .me-tag-edit {
+  color: var(--ws-red);
+  border-color: var(--ws-red);
+}
+
+/* 尊重系统的减弱动效：滚动、画线、脉冲都停掉 */
+@media (prefers-reduced-motion: reduce) {
+  .ws-demo *,
+  .ws-demo *::before,
+  .ws-demo *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* 图形区在窄屏上可以横向滚动，不挤破版心 */
+.ws-demo .ws-scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}

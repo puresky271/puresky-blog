@@ -1,0 +1,1887 @@
+{
+ "source": "github.com/RikiyaT/lmo results/gohand (v1)",
+ "budgets": [
+  {
+   "passes": 0,
+   "turns": "p",
+   "runs": 1,
+   "games": 0,
+   "positions": 0,
+   "ppo_s0": 54.1,
+   "ppo_s2": 54.9,
+   "same_size": [
+    42.6,
+    26.3,
+    36.3
+   ],
+   "answer": "The network propagates certified liberty evidence through nearby chains, prioritizes captures and rescues, discourages self-atari, preserves eyes, and favors supported moves over isolated invasions. Positional preferences shift toward edge completion later, with conservative passing.\n\nThese heuristics should exploit tactical mistakes while maintaining territory and living groups. Strength against the hidden opponents remains untested.",
+   "steps": [
+    {
+     "kind": "edit",
+     "used": 0,
+     "note": "Saved all 14 tensors.",
+     "code": "import numpy as np\n\n# Hand-designed policy circuit. No training, game simulation, or network execution.\nN = 81\nH = 512\nOFFSET = 128.0\n\nparams = {}\nfor k in range(1, 7):\n    params[f\"L{k}.W\"] = np.zeros((243 if k == 1 else H, H), np.float32)\n    params[f\"L{k}.b\"] = np.zeros(H, np.float32)\nparams[\"out.W\"] = np.zeros((H, 82), np.float32)\nparams[\"out.b\"] = np.zeros(82, np.float32)\n\ndef unit(channel, point):\n    return channel * N + point\n\ndef point(r, c):\n    return r * 9 + c\n\ncoords = [divmod(p, 9) for p in range(N)]\nneighbors = []\ndiagonals = []\nfor r, c in coords:\n    neighbors.append([\n        point(r + dr, c + dc)\n        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))\n        if 0 <= r + dr < 9 and 0 <= c + dc < 9\n    ])\n    diagonals.append([\n        point(r + dr, c + dc)\n        for dr, dc in ((-1, -1), (-1, 1), (1, -1), (1, 1))\n        if 0 <= r + dr < 9 and 0 <= c + dc < 9\n    ])\n\n# Density, friendly shape, and opponent approach kernels.\nkernels = {\n    (0, 1): (1.000, 0.550, -0.650),\n    (1, 1): (0.750, 0.700,  0.100),\n    (0, 2): (0.700, 0.750,  0.250),\n# ... 296 more lines",
+     "said": true
+    },
+    {
+     "kind": "final",
+     "used": 0
+    }
+   ]
+  },
+  {
+   "passes": 10,
+   "turns": "ppgpppgppgppgppgppgpgpgpgpg",
+   "runs": 17,
+   "games": 10,
+   "positions": 0,
+   "ppo_s0": 72.9,
+   "ppo_s2": 60.0,
+   "same_size": null,
+   "answer": "The network implements handcrafted liberty propagation, guarded captures, atari escapes, self-atari avoidance, eye preservation, and connection/shape preferences.\n\nAcross both tests of the final weights, it won:\n- **79.7%** against strong (153/192)\n- **95.8%** against weak (46/48)\n- **100%** against random (16/16)\n\nIts tactical discipline and connected shapes should generalize, though hidden-opponent performance remains uncertain. No training, search, or sandbox forward evaluations were used.",
+   "steps": [
+    {
+     "kind": "python",
+     "used": 0,
+     "note": "Ran Python on the results",
+     "code": "import os, numpy as np\nprint(NAMES)\nprint(SHAPES)\nprint(os.listdir('/work'))"
+    },
+    {
+     "kind": "edit",
+     "used": 0,
+     "note": "Global, phase-dependent positional prior; no clock or history is assumed.",
+     "code": "import os, textwrap\nsource = r'''\nimport numpy as np\nfrom pathlib import Path\n\ndef build_policy(cfg=None):\n    p = dict(capture=11., capture_extra=3., save=7., danger=10.,\n             eye=22., isolation=3., isolation_threshold=2.5,\n             base=1.3, pass_bias=-1., attack=1.3,\n             own_adj=.65, opp_adj=.3, opening=2.0,\n             save_danger=2., safe2=1., safe3=1., cap_safety=1.)\n    if cfg:\n        p.update(cfg)\n    shapes = {'L1.W':(243,512), 'out.W':(512,82), 'out.b':(82,)}\n    for k in range(1,7):\n        shapes[f'L{k}.b']=(512,)\n        if k>1: shapes[f'L{k}.W']=(512,512)\n    a = {n:np.zeros(s,np.float32) for n,s in shapes.items()}\n    def u(ch,q): return ch*81+q\n    xy=[divmod(q,9) for q in range(81)]\n    adj=[]\n    for r,c in xy:\n        adj.append([rr*9+cc for rr,cc in [(r-1,c),(r+1,c),(r,c-1),(r,c+1)] if 0<=rr<9 and 0<=cc<9])\n    def w(k,i,j,v): a[f'L{k}.W'][i,j]+=v\n    def b(k,j,v): a[f'L{k}.b'][j]+=v\n    def cp(k,ch):\n        for q in range(81): w(k,u(ch,q),u(ch,q),1.)\n    for q in range(81):\n        w(1,3*q,u(0,q),1)\n        w(1,3*q+1,u(1,q),1)\n        for color, ch in [(0,2),(1,4)]:\n            for off in [0,1]:\n                j=u(ch+off,q)\n                b(1,j,len(adj[q])-4-off)\n                w(1,3*q+color,j,4)\n                for t in adj[q]:\n                    w(1,3*t,j,-1)\n                    w(1,3*t+1,j,-1)\n    # Global, phase-dependent positional prior; no clock or history is assumed.\n    b(1,486,1.)\n# ... 112 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 1,
+     "used": 1,
+     "opp": {
+      "random": [
+       32,
+       96.9
+      ],
+      "strong": [
+       64,
+       46.9
+      ],
+      "weak": [
+       32,
+       78.1
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 1,
+     "note": "Looked at the games of pass 1",
+     "code": "import json, numpy as np\ng=json.load(open('/work/pass_1/games.json'))\nprint(type(g))\nprint(str(g[0])[:2500])\nfor i,x in enumerate(g):\n    if x['opponent']=='strong':\n        print(i,{k:v for k,v in x.items() if k!='moves'})"
+    },
+    {
+     "kind": "python",
+     "used": 1,
+     "note": "Looked at the games of pass 1",
+     "code": "import numpy as np,json\ng=json.load(open('/work/pass_1/games.json'))\nboards=np.load('/work/pass_1/boards.npy')\ndef show(board):\n    z=np.asarray(board).reshape(9,9)\n    return '\\n'.join(''.join({0:'.',1:'X',-1:'O'}[int(v)] for v in row) for row in z)\nfor gi in [32,33,67]:\n    x=g[gi]\n    print('\\nGAME',gi,x['net_color'])\n    for ply,m in enumerate(x['moves']):\n        if ply<46 and m['by']=='net':\n            print(ply,'move',divmod(m['move'],9),'top',m['top5'][:3])\n        if ply in [15,31,47,63,len(x['moves'])-1]:\n            print('after',ply,'\\n'+show(boards[gi,ply]))"
+    },
+    {
+     "kind": "edit",
+     "used": 1,
+     "note": "Changed the coefficients: own_adj 0.65 → 2, opp_adj 0.3 → 0.6, opening 2 → 3",
+     "code": "import json\nsrc=open('/work/design.py').read()\nsrc=src.replace(\"safe2=1., safe3=1., cap_safety=1.)\",\n                \"safe2=1., safe3=1., cap_safety=1., crowd=0., temperature_scale=1.)\")\nsrc=src.replace(\"b(5,E,1-len(adj[q]))\",\"b(5,E,2-len(adj[q]))\")\nsrc=src.replace(\"\"\"w(6,E,u(4,q),p['eye'])\n        w(6,I,u(4,q),p['isolation'])\n        w(6,P,u(5,q),1)\"\"\",\n\"\"\"w(6,E,u(4,q),1); b(6,u(4,q),-1)\n        w(6,P,u(5,q),1)\n        b(6,u(5,q),100)\n        w(6,E,u(5,q),-p['crowd'])\n        w(6,I,u(5,q),-p['isolation'])\"\"\")\nsrc=src.replace(\"p['save'],-p['danger'],-1.,1.]\",\n                \"p['save'],-p['danger'],-(p['eye']-2*p['crowd']),1.]\")\nsrc=src.replace(\"a['out.b'][q]=-40.\",\"a['out.b'][q]=-140.\")\nsrc=src.replace(\"return a,p\",\"a['out.W'] *= p['temperature_scale']\\n    a['out.b'] *= p['temperature_scale']\\n    return a,p\")\nopen('/work/design_v2.py','w').write(src)\nexec(src)\nconfig=install(dict(own_adj=2.,opp_adj=.6,crowd=3.,temperature_scale=1.5,opening=3.))\njson.dump(config,open('/work/config_v2.json','w'),indent=2)\nprint(config)",
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 2,
+     "used": 2,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       57.3
+      ],
+      "weak": [
+       24,
+       95.8
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 2,
+     "note": "Looked at the games of pass 2",
+     "code": "import json,numpy as np\ng=json.load(open('/work/pass_2/games.json')); boards=np.load('/work/pass_2/boards.npy')\ndef show(b): return '\\n'.join(''.join({0:'.',1:'X',-1:'O'}[int(v)] for v in row) for row in np.asarray(b).reshape(9,9))\nloss=[i for i,x in enumerate(g) if x['opponent']=='strong' and x['result']<0]\nprint('Strong losses',[(i,g[i]['margin'],g[i]['end'],g[i]['stones_lost_by_net']) for i in loss])\nfor gi in loss[:3]:\n    x=g[gi]\n    print('\\nGAME',gi,x['net_color'])\n    for ply,m in enumerate(x['moves']):\n        if ply<38 and m['by']=='net': print(ply,m['move'],m['top5'][:3])\n        if ply in [15,31,47,63,len(x['moves'])-1]: print('after',ply,'\\n'+show(boards[gi,ply]))\nfor gi,x in enumerate(g):\n    if x['end']=='repetition':\n        print('\\nREPETITION',gi,x['result'],x['net_color'],x['margin'])\n        for m in x['moves'][-9:]: print(m)\n        print(show(boards[gi,len(x['moves'])-4]))\n        break"
+    },
+    {
+     "kind": "edit",
+     "used": 2,
+     "note": "Changed the coefficients: opp_adj 0.6 → 1.5",
+     "code": "import json\nsrc=open('/work/design_v2.py').read()\nsrc=src.replace(\"temperature_scale=1.)\",\"temperature_scale=1., defend=0., first_center=0.)\")\nsrc=src.replace(\"w(1,2,487,1)\",\n\"\"\"w(1,2,487,1)\n    b(1,488,1)\n    for q in range(81):\n        w(1,3*q,488,-1)\n        w(1,3*q+1,488,-1)\"\"\")\nsrc=src.replace(\"w(k,486,486,1); w(k,487,487,1)\",\n                \"w(k,486,486,1); w(k,487,487,1); w(k,488,488,1)\")\nsrc=src.replace(\"w(5,486,P,p['opening']*central)\",\n\"\"\"w(5,486,P,p['opening']*central)\n        if q==40: w(5,488,P,p['first_center'])\"\"\")\nsrc=src.replace(\"w(5,u(3,t),P,-p['attack'])\",\n\"\"\"w(5,u(3,t),P,-p['attack'])\n            w(5,u(4,t),P,p['defend'])\n            w(5,u(2,t),P,-p['defend'])\"\"\")\nopen('/work/design_v3.py','w').write(src)\nexec(src)\nconfig=install(dict(own_adj=2.,opp_adj=1.5,crowd=3.,temperature_scale=1.5,\n                    opening=3.,defend=1.,first_center=20.))\njson.dump(config,open('/work/config_v3.json','w'),indent=2)\nprint(config)"
+    },
+    {
+     "kind": "games",
+     "pass": 3,
+     "used": 3,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       55.2
+      ],
+      "weak": [
+       24,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 3,
+     "note": "Looked at the games of pass 3",
+     "code": "import numpy as np,json,collections\ng=json.load(open('/work/pass_3/games.json')); boards=np.load('/work/pass_3/boards.npy')\nadj=[[j for j in (q-9,q+9,q-1,q+1) if 0<=j<81 and abs(j//9-q//9)+abs(j%9-q%9)==1] for q in range(81)]\ndef groups(b):\n    info={}\n    for q in range(81):\n        if b[q]==0 or q in info: continue\n        stack=[q]; stones={q}; libs=set()\n        while stack:\n            t=stack.pop()\n            for v in adj[t]:\n                if b[v]==0: libs.add(v)\n                elif b[v]==b[q] and v not in stones: stones.add(v);stack.append(v)\n        for t in stones: info[t]=(stones,libs)\n    return info\nbad=[]; stats=collections.Counter()\nfor gi,x in enumerate(g):\n    if x['opponent']!='strong':continue\n    color=1 if x['net_color']=='black' else -1\n    for pi,m in enumerate(x['moves']):\n        if m['by']!='net' or m['move']==81:continue\n        before=np.zeros(81,np.int8) if pi==0 else boards[gi,pi-1]\n        after=boards[gi,pi]; gr=groups(before);q=m['move']\n        caps=sum(before==-color)-sum(after==-color)\n        save=any(before[t]==color and len(gr[t][1])==1 for t in adj[q])\n        atari_after=groups(after).get(q,(set(),set()))[1]\n        stats['moves']+=1\n        if len(atari_after)==1:\n            stats['self_atari']+=1\n            if caps==0:stats['noncapture_self_atari']+=1\n        if m['top5'][0][0]==q and m['top5'][0][1]>.95 and caps==0 and not save:\n            bad.append((gi,pi,q,len(atari_after),x['result'],m['top5'][:2]))\nprint(stats)\nprint('Confident, no capture or atari save:',len(bad))\nprint(bad[:30])\nfor gi,pi,q,libs,res,top in bad[:4]:\n    print('\\n',gi,pi,q,libs,res,top)\n    print('\\n'.join(''.join({0:'.',1:'X',-1:'O'}[int(v)] for v in row) for row in boards[gi,pi-1].reshape(9,9)))"
+    },
+    {
+     "kind": "edit",
+     "used": 3,
+     "note": "Changed the coefficients: temperature_scale 1.5 → 2.5",
+     "code": "import json\nsrc=open('/work/design_v3.py').read()\nsrc=src.replace(\"first_center=0.)\",\"first_center=0., triangle=0.)\")\n# White was unused. Reuse its global slot for the empty-board indicator,\n# leaving 24 final-layer-4 units for symmetric central shape features.\nsrc=src.replace(\"w(1,2,487,1)\\n    b(1,488,1)\",\"b(1,487,1)\")\nsrc=src.replace(\"w(1,3*q,488,-1)\",\"w(1,3*q,487,-1)\")\nsrc=src.replace(\"w(1,3*q+1,488,-1)\",\"w(1,3*q+1,487,-1)\")\nsrc=src.replace(\"; w(k,488,488,1)\",\"\")\nsrc=src.replace(\"w(5,488,P,p['first_center'])\",\"w(5,487,P,p['first_center'])\")\nsrc=src.replace(\"    line=[-1.2\",'''    central_points=[q for q,(r,c) in enumerate(xy) if 2<=r<=6 and 2<=c<=6 and q!=40]\n    shape_units={q:488+i for i,q in enumerate(central_points)}\n    for q,j in shape_units.items():\n        r,c=xy[q]\n        b(4,j,-2)\n        for t in adj[q]: w(4,u(0,t),j,1)\n        for dr,dc in [(-1,-1),(-1,1),(1,-1),(1,1)]:\n            w(4,u(0,(r+dr)*9+c+dc),j,1)\n    line=[-1.2''')\nsrc=src.replace(\"central=max(0.\",'''if q in shape_units: w(5,shape_units[q],P,-p['triangle'])\n        central=max(0.''')\nopen('/work/design_v4.py','w').write(src)\nexec(src)\nconfig=install(dict(own_adj=2.,opp_adj=1.5,crowd=3.,temperature_scale=2.5,\n                    opening=3.,defend=1.,first_center=20.,triangle=1.5))\njson.dump(config,open('/work/config_v4.json','w'),indent=2)\nprint(config)",
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 4,
+     "used": 4,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       79.2
+      ],
+      "weak": [
+       24,
+       95.8
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 4,
+     "note": "Looked at the games of pass 4",
+     "code": "import json,numpy as np,collections\ng=json.load(open('/work/pass_4/games.json')); boards=np.load('/work/pass_4/boards.npy')\ndef show(b): return '\\n'.join(''.join({0:'.',1:'X',-1:'O'}[int(v)] for v in row) for row in np.asarray(b).reshape(9,9))\nfor i,x in enumerate(g):\n    if x['result']<0:\n        print(i,x['opponent'],x['net_color'],x['margin'],x['end'],\n              'caps/lost',x['stones_captured_by_net'],x['stones_lost_by_net'])\nprint('\\nREPETITION DETAILS')\nfor gi,x in enumerate(g):\n    if x['end']!='repetition':continue\n    n=len(x['moves'])\n    print('\\nGAME',gi,x['result'],x['net_color'],x['margin'])\n    for pi in range(max(0,n-5),n):\n        print(x['moves'][pi])\n        print(show(boards[gi,pi]))\n    if gi>30:break"
+    },
+    {
+     "kind": "edit",
+     "used": 4,
+     "note": "Changed the design (19 lines of Python)",
+     "code": "import json\nsrc=open('/work/design_v4.py').read()\nsrc=src.replace(\"triangle=0.)\",\"triangle=0., capture_guard=0.)\")\nsrc=src.replace(\"w(5,u(3,t),D,-p['cap_safety'])\",\"# Captures are accounted for after their reliability gate, in layer 6.\")\nsrc=src.replace(\"if wm: w(5,u(0,t),P,wm)\",\n\"\"\"guard_weight={1:1.,2:1.,3:.5}.get(d,0.)*p['capture_guard']\n            if guard_weight:\n                w(5,u(1,t),C,-guard_weight)\n                w(5,u(3,t),C,guard_weight)\n            if wm: w(5,u(0,t),P,wm)\"\"\")\nsrc=src.replace(\"w(6,D,u(3,q),1)\",\n                \"w(6,D,u(3,q),1); w(6,C,u(3,q),-p['cap_safety'])\")\nopen('/work/design_v5.py','w').write(src)\nexec(src)\ncfg=json.load(open('/work/config_v4.json'))\ncfg['capture_guard']=.2\nconfig=install(cfg)\njson.dump(config,open('/work/config_v5.json','w'),indent=2)\nprint(config)",
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 5,
+     "used": 5,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       83.3
+      ],
+      "weak": [
+       24,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 5,
+     "note": "Looked at the games of pass 5",
+     "code": "import json,numpy as np,collections\ng=json.load(open('/work/pass_5/games.json')); boards=np.load('/work/pass_5/boards.npy')\nadj=[[j for j in (q-9,q+9,q-1,q+1) if 0<=j<81 and abs(j//9-q//9)+abs(j%9-q%9)==1] for q in range(81)]\ndef group_info(b):\n    info={}\n    for q in range(81):\n        if b[q]==0 or q in info:continue\n        stack=[q];ss={q};ll=set()\n        while stack:\n            t=stack.pop()\n            for v in adj[t]:\n                if b[v]==0:ll.add(v)\n                elif b[v]==b[q] and v not in ss:ss.add(v);stack.append(v)\n        for t in ss:info[t]=(ss,ll)\n    return info\ndef show(b): return '\\n'.join(''.join({0:'.',1:'X',-1:'O'}[int(v)] for v in row) for row in np.asarray(b).reshape(9,9))\nstats=collections.Counter();bad=[]\nfor gi,x in enumerate(g):\n    if x['opponent']!='strong':continue\n    if x['result']<0:\n        print('LOSS',gi,x['net_color'],x['margin'],x['end'],x['stones_lost_by_net'])\n    color=1 if x['net_color']=='black' else -1\n    for pi,m in enumerate(x['moves']):\n        if m['by']!='net' or m['move']==81:continue\n        before=np.zeros(81,np.int8) if pi==0 else boards[gi,pi-1]\n        after=boards[gi,pi];gr=group_info(before);q=m['move']\n        caps=sum(before==-color)-sum(after==-color)\n        grp,libs=group_info(after)[q]\n        stats['moves']+=1\n        if len(libs)==1:\n            stats['self_atari']+=1\n            if caps==0:\n                stats['noncapture_self_atari']+=1\n                if len(grp)>=3:bad.append((gi,pi,q,len(grp),x['result'],m['top5']))\nprint(stats)\nprint('Large group self-ataris:',bad[:12])\nfor gi,pi,q,n,res,top in bad[:3]:\n    print('\\n',gi,pi,q,n,res,top)\n    print(show(boards[gi,pi-1]))\nloss=[i for i,x in enumerate(g) if x['opponent']=='strong' and x['result']<0]\n# ... 6 more lines"
+    },
+    {
+     "kind": "edit",
+     "used": 5,
+     "note": "Changed the coefficients: isolation_threshold 2.5 → 1.8",
+     "code": "import json\nsrc=open('/work/design_v5.py').read()\nsrc=src.replace(\"capture_guard=0.)\",\n                \"capture_guard=0., support_adj=1.25, support_dist2=.75, support_dist3=.3125)\")\nsrc=src.replace(\"w(5,u(0,t),I,-1.25*iw)\",\n\"\"\"support={1:p['support_adj'],2:p['support_dist2'],3:p['support_dist3']}.get(d,0.)\n                w(5,u(0,t),I,-support)\"\"\")\nopen('/work/design_v6.py','w').write(src)\nexec(src)\ncfg=json.load(open('/work/config_v5.json'))\ncfg.update(support_adj=2.5,support_dist2=.35,support_dist3=.1,isolation_threshold=1.8)\nconfig=install(cfg)\njson.dump(config,open('/work/config_v6.json','w'),indent=2)\nprint(config)"
+    },
+    {
+     "kind": "games",
+     "pass": 6,
+     "used": 6,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       65.6
+      ],
+      "weak": [
+       24,
+       91.7
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 6,
+     "note": "Changed the coefficients: danger 10 → 14, isolation_threshold 1.8 → 2.5, safe2 1 → 0.7, safe3 1 → 1.3, cap_safety 1 → 0.85, temperature_scale 2.5 → 3.5, support_adj 2.5 → 1.25, support_dist2 0.35 → 0.75, support_dist3 0.1 → 0.3125",
+     "code": "import json\nsrc=open('/work/design_v6.py').read()\nsrc=src.replace(\"support_dist3=.3125)\",\"support_dist3=.3125, safety_threshold=2.)\")\nsrc=src.replace(\"b(5,D,2-len(adj[q]))\",\"b(5,D,p['safety_threshold']-len(adj[q]))\")\nopen('/work/design_v7.py','w').write(src)\nexec(src)\ncfg=json.load(open('/work/config_v5.json'))\ncfg.update(temperature_scale=3.5,safety_threshold=1.7,safe2=.7,safe3=1.3,\n           cap_safety=.85,danger=14.)\nconfig=install(cfg)\njson.dump(config,open('/work/config_v7.json','w'),indent=2)\nprint(config)"
+    },
+    {
+     "kind": "games",
+     "pass": 7,
+     "used": 7,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       78.1
+      ],
+      "weak": [
+       24,
+       95.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 7,
+     "note": "Changed the coefficients: danger 14 → 10, safe2 0.7 → 1, safe3 1.3 → 1, cap_safety 0.85 → 1, temperature_scale 3.5 → 2.5, safety_threshold 1.7 → 2",
+     "code": "import json\nsrc=open('/work/design_v7.py').read()\nsrc=src.replace(\"safety_threshold=2.)\",\n                \"safety_threshold=2., pass_deficit=0., deficit_cap=16.)\")\nsrc=src.replace(\"\"\"b(1,487,1)\n    for q in range(81):\n        w(1,3*q,487,-1)\n        w(1,3*q+1,487,-1)\"\"\",\"w(1,2,487,1)\")\nsrc=src.replace(\"if q==40: w(5,487,P,p['first_center'])\",\"# Empty-board opening bonus is applied in layer 6.\")\nsrc=src.replace(\"    line=[-1.2\",'''    # Reconstruct the empty-board flag after the positional phase signal.\n    w(5,486,486,30); b(5,486,-29)\n    # A conservative late-game score proxy, used only to discourage\n    # resignation-by-passing while apparently behind.\n    b(5,487,7.5)\n    w(5,487,487,-15)\n    for t in range(81):\n        w(5,u(1,t),487,1)\n        w(5,u(0,t),487,-1)\n    w(6,487,487,1)\n    w(6,487,488,1); b(6,488,-p['deficit_cap'])\n    line=[-1.2''')\nsrc=src.replace(\"w(6,P,u(5,q),1)\",\n\"\"\"w(6,P,u(5,q),1)\n        if q==40: w(6,486,u(5,q),p['first_center'])\"\"\")\nsrc=src.replace(\"a['out.b'][81]=p['pass_bias']\",\n\"\"\"a['out.b'][81]=p['pass_bias']\n    a['out.W'][487,81]=-p['pass_deficit']\n    a['out.W'][488,81]=p['pass_deficit']\"\"\")\nopen('/work/design_v8.py','w').write(src)\nexec(src)\ncfg=json.load(open('/work/config_v5.json'))\ncfg.update(pass_deficit=.5,deficit_cap=16.)\nconfig=install(cfg)\njson.dump(config,open('/work/config_v8.json','w'),indent=2)\nprint(config)"
+    },
+    {
+     "kind": "games",
+     "pass": 8,
+     "used": 8,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       78.1
+      ],
+      "weak": [
+       24,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 8,
+     "note": "Installed the established tactical/shape design with sharper move selection.",
+     "code": "import json\nexec(open('/work/design_v8.py').read())\ncfg=json.load(open('/work/config_v5.json'))\ncfg['temperature_scale']=4.\nconfig=install(cfg)\njson.dump(config,open('/work/config_v9.json','w'),indent=2)\nprint('Installed the established tactical/shape design with sharper move selection.')\nprint(config)",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 9,
+     "used": 9,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       79.2
+      ],
+      "weak": [
+       24,
+       83.3
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 9,
+     "note": "Final policy saved and all 14 tensors checked.",
+     "code": "import json, numpy as np\nexec(open('/work/design_v5.py').read())\nfinal_config=json.load(open('/work/config_v5.json'))\ninstall(final_config)\nfor name in NAMES:\n    value=load(name)\n    assert value.shape==tuple(SHAPES[name])\n    assert value.dtype==np.float32\n    assert np.isfinite(value).all()\nassert set(saved())==set(NAMES)\njson.dump(final_config,open('/work/final_config.json','w'),indent=2)\nprint('Final policy saved and all 14 tensors checked.')\nprint('Design: liberty-based group signals, guarded captures, atari escapes,')\nprint('self-atari avoidance, eye preservation, connection/shape preferences,')\nprint('local influence, center opening, and conservative passing.')\nprint('No training, search, or sandbox forward evaluations were used.')",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 10,
+     "used": 10,
+     "opp": {
+      "random": [
+       8,
+       100.0
+      ],
+      "strong": [
+       96,
+       76.0
+      ],
+      "weak": [
+       24,
+       91.7
+      ]
+     }
+    },
+    {
+     "kind": "final",
+     "used": 10
+    }
+   ]
+  },
+  {
+   "passes": 25,
+   "turns": "pgpppgppgpgpgppgpgpgpgpgppppgpgpgpgpgpgpgpgpgpgpgpgpogg",
+   "runs": 30,
+   "games": 24,
+   "positions": 1,
+   "ppo_s0": 76.0,
+   "ppo_s2": 62.3,
+   "same_size": null,
+   "answer": "The network is entirely hand-designed—no training or search.\n\nIts ReLU layers implement:\n- Local liberty counting and group-safety propagation, strengthened by connected 2×2-block certificates.\n- Capture and rescue priorities.\n- Strong self-atari and eye-filling penalties.\n- Connection, blocking, contact-fighting, and crowding preferences.\n- A center opening and conservative passing.\n\nFinal validation:\n- **Strong:** 94/128 wins — **73.4%**\n- **Weak:** 59/64 — **92.2%**\n- **Random:** 63/64 — **98.4%**\n\nI expect its tactical discipline and connected fighting shapes to generalize reasonably well. Long-range life-and-death and repetition cycles remain its main weaknesses.",
+   "steps": [
+    {
+     "kind": "edit",
+     "used": 0,
+     "note": "Saved all 14 tensors. Hand-built liberty, capture, rescue, eye, and shape policy.",
+     "code": "import numpy as np\nimport os, json\n\nos.makedirs(\"/work\", exist_ok=True)\n\n# All coefficients below are hand-designed, not learned.\nSOURCE = r'''\nimport numpy as np\n\nP = dict(\n    capture=7.0, rescue=4.5, self_atari=10.0,\n    eye=11.0, crowd=2.5, pass_bias=-2.0,\n    friend_adj=0.15, enemy_adj=0.35,\n    friend_diag=0.35, enemy_diag=0.10,\n    friend_jump=0.65, enemy_jump=0.15,\n    friend_knight=0.25, enemy_knight=0.05,\n    seed_shared_liberty=1.0,\n)\nP.update(overrides)\n\nW = [np.zeros((243 if k == 0 else 512, 512), np.float32)\n     for k in range(6)]\nB = [np.zeros(512, np.float32) for _ in range(6)]\nOW = np.zeros((512, 82), np.float32)\nOB = np.zeros(82, np.float32)\n\ndef unit(ch, p):\n    return ch * 81 + p\n\ndef points(p, offsets):\n    r, c = divmod(p, 9)\n    return [(r+dr)*9+c+dc for dr,dc in offsets\n            if 0 <= r+dr < 9 and 0 <= c+dc < 9]\n\nAD = [(1,0),(-1,0),(0,1),(0,-1)]\nDI = [(1,1),(1,-1),(-1,1),(-1,-1)]\nJU = [(2,0),(-2,0),(0,2),(0,-2)]\nKN = [(a,b) for a,b in\n      [(1,2),(1,-2),(-1,2),(-1,-2),(2,1),(2,-1),(-2,1),(-2,-1)]]\nadj = [points(p, AD) for p in range(81)]\n# ... 159 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 1,
+     "used": 1,
+     "opp": {
+      "random": [
+       32,
+       100.0
+      ],
+      "strong": [
+       64,
+       37.5
+      ],
+      "weak": [
+       32,
+       65.6
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 1,
+     "note": "Looked at the games of pass 1",
+     "code": "import json, numpy as np\ng=json.load(open(\"/work/pass_1/games.json\"))\nprint(type(g))\nif isinstance(g,dict):\n    print(g.keys())\nelse:\n    print(\"Games\",len(g))\n    print(json.dumps(g[0],indent=1)[:10000])"
+    },
+    {
+     "kind": "python",
+     "used": 1,
+     "note": "Looked at the games of pass 1",
+     "code": "import json, numpy as np\ngames=json.load(open(\"/work/pass_1/games.json\"))\nboards=np.load(\"/work/pass_1/boards.npy\")\nAD=[[(r+dr)*9+c+dc for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]\n     if 0<=r+dr<9 and 0<=c+dc<9] for r in range(9) for c in range(9)]\ndef groups(b):\n    seen=set(); out=[]\n    for p in range(81):\n        if not b[p] or p in seen: continue\n        col=int(b[p]); stack=[p]; stones=set([p]); libs=set(); seen.add(p)\n        while stack:\n            u=stack.pop()\n            for v in AD[u]:\n                if b[v]==0: libs.add(v)\n                elif b[v]==col and v not in seen:\n                    seen.add(v); stones.add(v); stack.append(v)\n        out.append((col,stones,libs))\n    return out\ndef show(b):\n    return \"\\n\".join(\"\".join(\".XO\"[{0:0,1:1,-1:2}[int(v)]] for v in b[r*9:(r+1)*9]) for r in range(9))\nopen(\"/work/analysis_helpers.py\",\"w\").write('import numpy as np\\nAD='+repr(AD)+'\\n'+\n    '''def groups(b):\n    seen=set(); out=[]\n    for p in range(81):\n        if not b[p] or p in seen: continue\n        col=int(b[p]); stack=[p]; stones={p}; libs=set(); seen.add(p)\n        while stack:\n            u=stack.pop()\n            for v in AD[u]:\n                if b[v]==0: libs.add(v)\n                elif b[v]==col and v not in seen:\n                    seen.add(v); stones.add(v); stack.append(v)\n        out.append((col,stones,libs))\n    return out\ndef show(b):\n    return \"\\\\n\".join(\"\".join({0:\".\",1:\"X\",-1:\"O\"}[int(v)] for v in b[r*9:(r+1)*9]) for r in range(9))\n''')\nlosses=[(i,g) for i,g in enumerate(games) if g[\"opponent\"]==\"strong\" and g[\"result\"]<0]\nfor i,g in losses[:5]:\n    print(\"\\nGAME\",i,\"net\",g[\"net_color\"],\"margin\",g[\"margin\"],\"end\",g[\"end\"])\n# ... 13 more lines"
+    },
+    {
+     "kind": "edit",
+     "used": 1,
+     "note": "Corrected conservative group-safety logic; other coefficients unchanged.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v1.py\")\ns=open(\"/work/design.py\").read()\nstart=s.index(\"# Second layer\")\nend=s.index(\"    dest = unit(4,p)\",start)\ns=s[:start]+r'''\n# Conservative safety seeds: never mark a genuinely atari group safe.\n# Channels 2/4 are binary danger; 3/5 detect adjacent liberty-bearing\n# stones, whose liberties must be distinct on the square grid.\nfor p in range(81):\n    carry(1,0,p)\n    carry(1,1,p)\n    for color,dch,zch in [(0,2,3),(1,4,5)]:\n        dest=unit(dch,p)\n        add(1,dest,unit(dch,p),1)\n        add(1,dest,unit(zch,p),-1)\n        for q in adj[p]:\n            add(1,dest,unit(color,q),-1)\n            add(1,dest,unit(dch,q),1)\n            add(1,dest,unit(zch,q),-1)\n        dest=unit(zch,p)\n        B[1][dest]=-4\n        add(1,dest,unit(dch,p),4)\n        add(1,dest,unit(zch,p),-8)\n        for q in adj[p]:\n            add(1,dest,unit(dch,q),1)\n            add(1,dest,unit(zch,q),-2)\n\n# Safety propagates through each connected string.\nfor p in range(81):\n    carry(2,0,p)\n    carry(2,1,p)\n    for color,dch,zch,outch in [(0,2,3,2),(1,4,5,3)]:\n        dest=unit(outch,p)\n        add(2,dest,unit(dch,p),1)\n        add(2,dest,unit(zch,p),-1)\n        for q in adj[p]:\n            add(2,dest,unit(color,q),-1)\n            add(2,dest,unit(dch,q),1)\n            add(2,dest,unit(zch,q),-1)\n# ... 5 more lines",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 2,
+     "used": 2,
+     "opp": {
+      "strong": [
+       80,
+       52.5
+      ],
+      "weak": [
+       48,
+       81.2
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 2,
+     "note": "Looked at the games of pass 2",
+     "code": "exec(open(\"/work/analysis_helpers.py\").read())\ngames=json.load(open(\"/work/pass_2/games.json\"))\nboards=np.load(\"/work/pass_2/boards.npy\")\nstats={}\nexamples=[]\nfor i,g in enumerate(games):\n    col=1 if g[\"net_color\"]==\"black\" else -1\n    for t,m in enumerate(g[\"moves\"]):\n        if m[\"by\"]!=\"net\": continue\n        b=np.zeros(81,dtype=int) if t==0 else boards[i,t-1]\n        gs=groups(b)\n        endangered=[(len(st),next(iter(li))) for c,st,li in gs if c==col and len(li)==1]\n        caps=[(len(st),next(iter(li))) for c,st,li in gs if c==-col and len(li)==1]\n        if endangered and g[\"opponent\"]==\"strong\":\n            moved=m[\"move\"]; biggest=max(endangered)\n            if biggest[0]>=4 and moved!=biggest[1]:\n                after=groups(boards[i,t])\n                still=[(len(st),list(li)) for c,st,li in after if c==col and len(li)==1 and biggest[1] in li]\n                if still: examples.append((biggest[0],i,t,biggest,m[\"move\"],m[\"top5\"]))\nprint(\"Missed large ataris\",len(examples))\nfor size,i,t,big,move,top in sorted(examples,reverse=True)[:10]:\n    g=games[i]\n    print(\"\\nGame\",i,g[\"net_color\"],g[\"result\"],\"ply\",t,\"atari\",big,\"move\",move,\"top\",top)\n    print(show(boards[i,t-1]))\n    print(\"groups\",[(c,len(st),sorted(li)) for c,st,li in groups(boards[i,t-1]) if len(li)<=2])\nprint(\"\\nLoss endings:\")\nfrom collections import Counter\nprint(Counter((g[\"opponent\"],g[\"end\"]) for g in games if g[\"result\"]<0))"
+    },
+    {
+     "kind": "edit",
+     "used": 2,
+     "note": "Prefer moves with room to grow, not just moves that evade atari.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v2.py\")\ns=open(\"/work/design.py\").read()\ns=s.replace('seed_shared_liberty=1.0,','seed_shared_liberty=1.0, positional_scale=2.0, low_liberty=1.5,')\ns=s.replace('    add(3,unit(5,p),unit(4,p),1)',r'''\n    # Prefer moves with room to grow, not just moves that evade atari.\n    dest=unit(5,p)\n    B[3][dest]=3-len(adj[p])\n    for q in adj[p]:\n        add(3,dest,unit(0,q),-1)\n        add(3,dest,unit(1,q),1)\n        add(3,dest,unit(2,q),2)\n        add(3,dest,unit(3,q),-3)\n''')\ns=s.replace('add(5,dest,unit(5,p),-1.5)','add(5,dest,unit(5,p),-P[\"low_liberty\"])')\ns=s.replace('OB[p] = -20 + positional','OB[p] = -20 + P[\"positional_scale\"]*positional')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=dict(friend_adj=1.4,enemy_adj=0.5,friend_diag=0.6,\n               friend_jump=0.25,friend_knight=0.1,\n               crowd=2.0,rescue=6.0,self_atari=9.0)\nopen(\"/work/params_v3.json\",\"w\").write(json.dumps(overrides))\nexec(s)\nprint(P)",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 3,
+     "used": 3,
+     "opp": {
+      "strong": [
+       80,
+       48.8
+      ],
+      "weak": [
+       48,
+       85.4
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 3,
+     "note": "Added proactive local-liberty pressure and support.",
+     "code": "import shutil, json\nshutil.copyfile(\"/work/design.py\",\"/work/design_v3.py\")\ns=open(\"/work/design.py\").read()\ns=s.replace('low_liberty=1.5,','low_liberty=1.5, weak_friend=1.0, weak_enemy=2.0,')\na=s.index('    dest = unit(4,p)',s.index('# Safety propagates'))\nb=s.index('# Fourth layer',a)\ns=s[:a]+r'''\n    # Local liberty pressure, reduced for already connected stones.\n    for color,ch in [(0,4),(1,5)]:\n        dest=unit(ch,p)\n        add(2,dest,unit(color,p),3)\n        B[2][dest]=-len(adj[p])\n        for q in adj[p]:\n            add(2,dest,unit(0,q),1)\n            add(2,dest,unit(1,q),1)\n            add(2,dest,unit(color,q),-0.5)\n\n''' + s[b:]\na=s.index('    add(3,unit(4,p),unit(4,p),1)')\nb=s.index('    # Prefer moves with room',a)\ns=s[:a]+r'''\n    # Urgency to support pressured stones and reduce enemy liberties.\n    for q in adj[p]:\n        add(3,unit(4,p),unit(4,q),P[\"weak_friend\"])\n        add(3,unit(4,p),unit(5,q),P[\"weak_enemy\"])\n''' + s[b:]\ns=s.replace('    add(5,unit(3,p),unit(4,p),1)',r'''\n    dest=unit(3,p)\n    B[5][dest]=1-len(adj[p])\n    for q in adj[p]:\n        add(5,dest,unit(0,q),1)\n    for q in diag[p]:\n        add(5,dest,unit(1,q),-0.5 if len(adj[p])==4 else -1)\n''')\ns=s.replace('add(5,dest,unit(5,p),-P[\"low_liberty\"])',\n'''add(5,dest,unit(5,p),-P[\"low_liberty\"])\n    add(5,dest,unit(4,p),1)''')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v3.json\"))\nexec(s)\n# ... 2 more lines",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 4,
+     "used": 4,
+     "opp": {
+      "strong": [
+       80,
+       55.0
+      ],
+      "weak": [
+       48,
+       85.4
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 4,
+     "note": "Increased policy decisiveness, with unchanged move ranking.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v4.py\")\ns=open(\"/work/design.py\").read()\ns=s.replace('weak_friend=1.0, weak_enemy=2.0,','weak_friend=1.0, weak_enemy=2.0, decisiveness=1.6,')\ns=s.replace('for k in range(6):\\n    save(', 'OW *= P[\"decisiveness\"]\\nOB *= P[\"decisiveness\"]\\n\\nfor k in range(6):\\n    save(')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v3.json\"))\nexec(s)\nprint(\"Increased policy decisiveness, with unchanged move ranking.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 5,
+     "used": 5,
+     "opp": {
+      "strong": [
+       96,
+       58.3
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 5,
+     "note": "Looked at the games of pass 5",
+     "code": "exec(open(\"/work/analysis_helpers.py\").read())\ngames=json.load(open(\"/work/pass_5/games.json\"))\nboards=np.load(\"/work/pass_5/boards.npy\")\nfor color in [\"black\",\"white\"]:\n    gg=[g for g in games if g[\"opponent\"]==\"strong\" and g[\"net_color\"]==color]\n    print(color, \"margins\", sorted(g[\"margin\"] for g in gg))\nfor i,g in [(i,g) for i,g in enumerate(games) if g[\"opponent\"]==\"strong\" and g[\"net_color\"]==\"black\" and g[\"result\"]<0][:5]:\n    print(\"\\nGAME\",i,\"margin\",g[\"margin\"],\"end\",g[\"end\"],\"captures\",g[\"stones_captured_by_net\"],\"lost\",g[\"stones_lost_by_net\"])\n    print(show(boards[i,len(g[\"moves\"])-1]))\n    print(\"Opening\",[(m[\"by\"],m[\"move\"]) for m in g[\"moves\"][:24]])\n    print(\"Last\",g[\"moves\"][-6:])"
+    },
+    {
+     "kind": "edit",
+     "used": 5,
+     "note": "Added an empty-board-only tengen opening gate.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v5.py\")\ns=open(\"/work/design.py\").read()\nmarker='OB[81] = P[\"pass_bias\"]'\ns=s.replace(marker,r'''\n# Tengen is a useful universal first move on the small board.\n# This gate is active only on the completely empty board.\nB[0][486]=1\nfor p in range(81):\n    W[0][3*p,486]=-1\n    W[0][3*p+1,486]=-1\nfor k in range(1,6):\n    W[k][486,486]=1\nOW[486,40]=8\n\n''' + marker)\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v3.json\"))\nexec(s)\nprint(\"Added an empty-board-only tengen opening gate.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 6,
+     "used": 6,
+     "opp": {
+      "strong": [
+       96,
+       59.4
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 6,
+     "note": "Pressure features now account for vulnerable connected neighbours.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v6.py\")\ns=open(\"/work/design.py\").read()\ns=s.replace('decisiveness=1.6,','decisiveness=1.6, group_pressure=1.0,')\ns=s.replace('        add(2,dest,unit(color,p),3)\\n        B[2][dest]=-len(adj[p])',\n'''        add(2,dest,unit(color,p),7)\n        B[2][dest]=-len(adj[p])-4''')\ns=s.replace('            add(2,dest,unit(color,q),-0.5)',\n'''            add(2,dest,unit(color,q),-0.5)\n            add(2,dest,unit(2 if color==0 else 4,q),P[\"group_pressure\"])''')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v3.json\"))\noverrides.update(weak_friend=2.0,weak_enemy=2.5)\nopen(\"/work/params_v7.json\",\"w\").write(json.dumps(overrides))\nexec(s)\nprint(\"Pressure features now account for vulnerable connected neighbours.\")\nprint(P)",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 7,
+     "used": 7,
+     "opp": {
+      "strong": [
+       96,
+       44.8
+      ],
+      "weak": [
+       32,
+       78.1
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 7,
+     "note": "Saturated tactical urgency; strongly reject non-capturing self-atari.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v7.py\")\ns=open(\"/work/design_v6.py\").read()\ns=s.replace('    # Capture and rescue urgency.\\n    for q in adj[p]:\\n        add(5,unit(0,p),unit(3,q),1)\\n        add(5,unit(1,p),unit(2,q),1)',\n'''    # Saturated tactical bonuses avoid counting the same string repeatedly.\n    B[5][unit(0,p)]=1\n    B[5][unit(1,p)]=1\n    for q in adj[p]:\n        add(5,unit(0,p),unit(3,q),-1)\n        add(5,unit(1,p),unit(2,q),-1)''')\ns=s.replace('P[\"capture\"], P[\"rescue\"], -P[\"self_atari\"]',\n            '-P[\"capture\"], -P[\"rescue\"], -P[\"self_atari\"]')\ns=s.replace('OB[p] = -20 + P[\"positional_scale\"]*positional',\n            'OB[p] = -20 + P[\"capture\"] + P[\"rescue\"] + P[\"positional_scale\"]*positional')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v3.json\"))\noverrides.update(self_atari=16.0)\nopen(\"/work/params_v8.json\",\"w\").write(json.dumps(overrides))\nexec(s)\nprint(\"Saturated tactical urgency; strongly reject non-capturing self-atari.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 8,
+     "used": 8,
+     "opp": {
+      "strong": [
+       96,
+       56.2
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 8,
+     "note": "Conservative string access; permit necessary connections in contested areas.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v8.py\")\ns=open(\"/work/design.py\").read()\na=s.index('    # Prefer moves with room')\nb=s.index('# Fifth layer',a)\ns=s[:a]+r'''\n    # Binary access to a friendly string with spare liberties.\n    # Count the string once even if it touches a move on several sides.\n    dest=unit(5,p)\n    B[3][dest]=1\n    for q in adj[p]:\n        add(3,dest,unit(0,q),-1)\n        add(3,dest,unit(2,q),1)\n\n''' + s[b:]\na=s.index('    # Insufficient escape')\nb=s.index('    dest=unit(3,p)',a)\ns=s[:a]+r'''\n    # Conservative self-atari prevention with saturated friendly access.\n    dest=unit(2,p)\n    B[5][dest]=0.5-len(adj[p])\n    add(5,dest,unit(5,p),1.5)\n    for q in adj[p]:\n        add(5,dest,unit(0,q),1)\n        add(5,dest,unit(1,q),1)\n        add(5,dest,unit(3,q),-2)\n\n''' + s[b:]\ns=s.replace('    for q in diag[p]:\\n        add(5,dest,unit(0,q),0.5)',\n'''    for q in adj[p]:\n        add(5,dest,unit(1,q),-0.75)\n    for q in diag[p]:\n        add(5,dest,unit(0,q),0.5)''')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v8.json\"))\noverrides.update(low_liberty=0.5)\nopen(\"/work/params_v9.json\",\"w\").write(json.dumps(overrides))\nexec(s)\nprint(\"Conservative string access; permit necessary connections in contested areas.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 9,
+     "used": 9,
+     "opp": {
+      "strong": [
+       96,
+       65.6
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 9,
+     "note": "Added healthy-string influence for diagonal, one-space, and knight extensions.",
+     "code": "import shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v9.py\")\ns=open(\"/work/design.py\").read()\ns=s.replace('    add(5,dest,unit(5,p),-P[\"low_liberty\"])',r'''\n    # Extend from healthy strings rather than from stones in trouble.\n    for offsets, strength in [(DI,0.3),(JU,0.5),(KN,0.2)]:\n        for q in points(p,offsets):\n            add(5,dest,unit(0,q),strength)\n            add(5,dest,unit(2,q),-strength)\n    add(5,dest,unit(5,p),-P[\"low_liberty\"])''')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Added healthy-string influence for diagonal, one-space, and knight extensions.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 10,
+     "used": 10,
+     "opp": {
+      "strong": [
+       96,
+       54.2
+      ],
+      "weak": [
+       32,
+       87.5
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 10,
+     "note": "Looked at the games of pass 9",
+     "code": "import json,numpy as np\nexec(open(\"/work/analysis_helpers.py\").read())\ngs=json.load(open(\"/work/pass_9/games.json\")); bs=np.load(\"/work/pass_9/boards.npy\")\nfor i,g in enumerate(gs):\n    if g[\"end\"]!=\"repetition\": continue\n    print(\"\\nGAME\",i,g[\"opponent\"],g[\"net_color\"],\"result\",g[\"result\"],\"margin\",g[\"margin\"])\n    print(show(bs[i,len(g[\"moves\"])-2]))\n    print(g[\"moves\"][-7:])"
+    },
+    {
+     "kind": "python",
+     "used": 10,
+     "note": "Ran Python on the results",
+     "code": "g=gs[54]; i=54\nfor t in range(89,len(g[\"moves\"])):\n    print(\"\\n\",g[\"moves\"][t])\n    print(show(bs[i,t]))"
+    },
+    {
+     "kind": "python",
+     "used": 10,
+     "note": "Looked at the games of pass 9",
+     "code": "import json,numpy as np\nexec(open(\"/work/analysis_helpers.py\").read())\ngs=json.load(open(\"/work/pass_9/games.json\")); bs=np.load(\"/work/pass_9/boards.npy\")\ng=gs[54]; i=54\nfor t in range(89,len(g[\"moves\"])):\n    print(\"\\n\",g[\"moves\"][t])\n    print(show(bs[i,t]))"
+    },
+    {
+     "kind": "edit",
+     "used": 10,
+     "note": "Added certified two-step safety propagation through dense strings.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v10.py\")\ns=open(\"/work/design_v9.py\").read()\na=s.index('    # Local liberty pressure')\nb=s.index('# Fourth layer',a)\ns=s[:a]+r'''\n    # Long-range safety messages travel only through proven same-colour\n    # bridges: a stone and ALL its neighbours must have that colour.\n    # Every Manhattan-distance-two endpoint is then connected to it.\n    ring2=points(p,DI+JU)\n    for color,ach,ch in [(0,2,4),(1,4,5)]:\n        dest=unit(ch,p)\n        B[2][dest]=-len(adj[p])-1\n        add(2,dest,unit(color,p),1)\n        for q in adj[p]:\n            add(2,dest,unit(color,q),1)\n        for q in ring2:\n            add(2,dest,unit(color,q),1/16)\n            add(2,dest,unit(ach,q),-1/16)\n\n''' + s[b:]\na=s.index('# Fourth layer')\nb=s.index('# Sixth layer',a)\ns=s[:a]+r'''\n# Fourth layer: ordinary propagation plus certified dense bridges.\nfor p in range(81):\n    for ch in (0,1):\n        carry(3,ch,p)\n    for color,dch,tch in [(0,2,4),(1,3,5)]:\n        dest=unit(dch,p)\n        add(3,dest,unit(dch,p),1)\n        add(3,dest,unit(tch,p),-4096)\n        for q in adj[p]:\n            add(3,dest,unit(color,q),-1)\n            add(3,dest,unit(dch,q),1)\n            add(3,dest,unit(tch,q),-4096)\n        dest=unit(tch,p)\n        B[3][dest]=-len(adj[p])-1\n        add(3,dest,unit(color,p),1)\n        for q in adj[p]:\n# ... 42 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 11,
+     "used": 11,
+     "opp": {
+      "strong": [
+       96,
+       54.2
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 11,
+     "note": "Added exact straight-string liberty and connectivity certificates.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v11.py\")\ns=open(\"/work/design_v9.py\").read()\nmarker='# Tengen is a useful universal first move'\nidx=s.index(marker)\nextra=r'''\n# The unused units certify connectivity along complete straight strings.\n# A straight occupied segment has no duplicated boundary liberties.\nsegments=[]\nfor r in [0,2,4,6,8]:\n    segments += [[r*9+c for c in range(5)], [r*9+c for c in range(4,9)]]\nfor c in [0,2,4,6,8]:\n    segments += [[r*9+c for r in range(5)], [r*9+c for r in range(4,9)]]\nfor r in [1,7]:\n    segments.append([r*9+c for c in range(2,7)])\nfor c in [1,7]:\n    segments.append([r*9+c for r in range(2,7)])\nassert len(segments)==24\n\n# First layer seeds enemy strings with two distinct liberties.\nfor j,seg in enumerate(segments):\n    u=487+j\n    boundary=[q for p in seg for q in adj[p] if q not in seg]\n    assert len(boundary)==len(set(boundary))\n    B[0][u]=len(boundary)-1-16*len(seg)\n    for p in seg:\n        W[0][3*p+1,u]+=16\n    for q in boundary:\n        W[0][3*q,u]-=1\n        W[0][3*q+1,u]-=1\n    for p in seg:\n        W[1][u,unit(4,p)]-=16\n\n# Second layer seeds own strings in the same way.\nfor j,seg in enumerate(segments):\n    u=487+j\n    boundary=[q for p in seg for q in adj[p] if q not in seg]\n    B[1][u]=len(boundary)-1-16*len(seg)\n    for p in seg:\n        W[1][unit(0,p),u]+=16\n# ... 30 more lines",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 12,
+     "used": 12,
+     "opp": {
+      "strong": [
+       96,
+       69.8
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 12,
+     "note": "Added local snapback/cyclic-capture guards in all four corners.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v12.py\")\ns=open(\"/work/design.py\").read()\nidx=s.index('# Tengen is a useful universal first move')\nextra=r'''\n# Corner/edge snapback and cyclic-capture guard.\n# A singleton capture is dangerous if the resulting string has no\n# other empty neighbour and no connection to a healthy friendly string.\ncorner_points=set()\nfor r0,c0,dr,dc in [(0,0,1,1),(0,8,1,-1),(8,0,-1,1),(8,8,-1,-1)]:\n    for a,b in [(0,0),(1,0),(0,1),(1,1),(2,0),(0,2)]:\n        corner_points.add((r0+dr*a)*9+c0+dc*b)\ncorner_points=sorted(corner_points)\nassert len(corner_points)==24\nslot={p:487+j for j,p in enumerate(corner_points)}\nfor p,u in slot.items():\n    W[4][unit(3,p),u]=1\n    for q in adj[p]:\n        W[4][unit(1,q),u]-=1\n\nfor p,u in slot.items():\n    B[5][u]=-4-4*len(adj[p])\n    W[5][unit(5,p),u]+=4\n    for q in adj[p]:\n        W[5][unit(0,q),u]+=4\n        W[5][unit(1,q),u]+=4\n        W[5][unit(3,q),u]-=2\n        if q in slot:\n            W[5][slot[q],u]+=3\n    OW[u,p]-=14\n\n'''\ns=s[:idx]+extra+s[idx:]\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Added local snapback/cyclic-capture guards in all four corners.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 13,
+     "used": 13,
+     "opp": {
+      "strong": [
+       96,
+       52.1
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 13,
+     "note": "Extended enemy-string safety through intersecting certified segments.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v13.py\")\ns=open(\"/work/design_v12.py\").read()\ns=s.replace('for k,color,danger in [(2,1,4),(3,0,2)]:',\n            'for k,color,danger in [(2,1,4),(3,1,3)]:')\nneedle='        reach=set(seg)\\n        for p in seg:\\n            reach.update(adj[p])\\n        outdanger=3 if color==1 else 2'\nreplacement='''        if k==3:\n            # Intersecting certified segments belong to the same string.\n            for jj,other in enumerate(segments):\n                if set(seg).intersection(other):\n                    W[k][487+jj,u]+=1/128\n        reach=set(seg)\n        for p in seg:\n            reach.update(adj[p])\n        outdanger=3 if color==1 else 2'''\nassert needle in s\ns=s.replace(needle,replacement)\n# A message can now be as small as (1/16)/128.\ns=s.replace('W[k+1][u,unit(outdanger,p)]-=32',\n            'W[k+1][u,unit(outdanger,p)]-=4096')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Extended enemy-string safety through intersecting certified segments.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 14,
+     "used": 14,
+     "opp": {
+      "strong": [
+       96,
+       63.5
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 14,
+     "note": "Made the certified tactical/shape policy more decisive.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v14.py\")\noverrides=json.load(open(\"/work/params_v9.json\"))\noverrides[\"decisiveness\"]=2.5\nopen(\"/work/params_v15.json\",\"w\").write(json.dumps(overrides))\nexec(open(\"/work/design.py\").read())\nprint(\"Made the certified tactical/shape policy more decisive.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 15,
+     "used": 15,
+     "opp": {
+      "strong": [
+       96,
+       59.4
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 15,
+     "note": "Local urgency now discounts healthy support, not endangered string-mates.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v15.py\")\ns=open(\"/work/design_v14.py\").read()\ns=s.replace('        add(2,dest,unit(color,p),3)\\n        B[2][dest]=-len(adj[p])',\n'''        add(2,dest,unit(color,p),7)\n        B[2][dest]=-len(adj[p])-4''')\ns=s.replace('            add(2,dest,unit(color,q),-0.5)',\n'''            add(2,dest,unit(color,q),-0.5)\n            # Only healthy neighbours reduce a stone's local urgency.\n            add(2,dest,unit(2 if color==0 else 4,q),0.5)''')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Local urgency now discounts healthy support, not endangered string-mates.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 16,
+     "used": 16,
+     "opp": {
+      "strong": [
+       96,
+       62.5
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 16,
+     "note": "Added a conservative safe-stone, komi-aware winning-pass gate.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v16.py\")\ns=open(\"/work/design.py\").read()\nidx=s.index('# Tengen is a useful universal first move')\nextra=r'''\n# Conservative endgame stopping: count only stones certified to have\n# at least two liberties. Ignore all prospective territory and captures.\n# If those stones alone beat every other point plus komi, avoid needless\n# invasions and positional-repetition fights.\nW[0][2,511]=1\nfor k in range(1,6):\n    W[k][511,511]=1\nfor u,shift in [(487,0),(488,1)]:\n    B[5][u]=-46.75-shift\n    W[5][511,u]=7.5\n    for p in range(81):\n        W[5][unit(0,p),u]+=1\n        W[5][unit(2,p),u]-=1\nOW[487,81]+=16\nOW[488,81]-=16\n\n'''\ns=s[:idx]+extra+s[idx:]\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Added a conservative safe-stone, komi-aware winning-pass gate.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 17,
+     "used": 17,
+     "opp": {
+      "strong": [
+       96,
+       57.3
+      ],
+      "weak": [
+       32,
+       84.4
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 17,
+     "note": "Added explicit mixed-contact blocking/hane/connection preference.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v17.py\")\ns=open(\"/work/design_v14.py\").read()\na=s.index('    # Local liberty pressure')\nb=s.index('# Fourth layer',a)\ns=s[:a]+r'''\n    # Shared friendly/enemy contact supports blocking, hane and connection.\n    # min(own-contact, enemy-contact) is reconstructed in the next layer.\n    dest=unit(4,p)\n    for q in adj[p]:\n        add(2,dest,unit(0,q),1)\n        add(2,dest,unit(1,q),-1)\n    dest=unit(5,p)\n    add(2,dest,unit(1,p),3)\n    B[2][dest]=-len(adj[p])\n    for q in adj[p]:\n        add(2,dest,unit(0,q),1)\n        add(2,dest,unit(1,q),0.5)\n\n''' + s[b:]\na=s.index('    # Urgency to support')\nb=s.index('    # Binary access',a)\ns=s[:a]+r'''\n    B[3][unit(4,p)]=20\n    add(3,unit(4,p),unit(4,p),-1.5)\n    for q in adj[p]:\n        add(3,unit(4,p),unit(0,q),1.5)\n        add(3,unit(4,p),unit(5,q),P[\"weak_enemy\"])\n\n''' + s[b:]\ns=s.replace('    B[5][dest] = 20','    B[5][dest] = 0')\n# The carried pressure/contact channel already contains the +20 offset.\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Added explicit mixed-contact blocking/hane/connection preference.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 18,
+     "used": 18,
+     "opp": {
+      "strong": [
+       96,
+       66.7
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 18,
+     "note": "Connectivity certificates now cover dense 2x2 blocks across the board.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v18.py\")\ns=open(\"/work/design.py\").read()\na=s.index('segments=[]')\nb=s.index('assert len(segments)==24',a)\ns=s[:a]+r'''\n# Fully occupied 2x2 blocks are connected and have eight distinct\n# external neighbours, so their liberty certificates are exact too.\nanchors=[(r,c) for r in [0,2,5,7] for c in [0,2,5,7]]\nanchors += [(r,c) for r in [3,4] for c in [3,4]]\nanchors += [(1,1),(1,6),(6,1),(6,6)]\nsegments=[[(r+dr)*9+c+dc for dr in [0,1] for dc in [0,1]]\n          for r,c in anchors]\n''' +s[b:]\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Connectivity certificates now cover dense 2x2 blocks across the board.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 19,
+     "used": 19,
+     "opp": {
+      "strong": [
+       96,
+       76.0
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 19,
+     "note": "Staggered safety certificates cover every 2x2 block.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v19.py\")\ns=open(\"/work/design.py\").read()\nneedle='# Further layers broadcast safety across fully connected segments.\\nfor k,color,danger in [(2,1,4),(3,1,3)]:\\n    for j,seg in enumerate(segments):'\nreplacement=r'''\n# Stagger the later block certificates. Together the three enemy\n# stages cover all 64 possible 2x2 blocks, preserving board symmetries.\ndef blocks_with_orbits(orbits):\n    out=[]\n    for r in range(8):\n        for c in range(8):\n            key=tuple(sorted([abs(2*r-7),abs(2*c-7)]))\n            if key in orbits:\n                out.append([(r+dr)*9+c+dc for dr in [0,1] for dc in [0,1]])\n    return out\nthird=blocks_with_orbits({(1,3),(5,7),(1,1),(5,5)})\nfourth=blocks_with_orbits({(1,5),(1,7),(3,5)})\nassert len(third)==len(fourth)==24\nassert len({tuple(x) for x in segments+third+fourth})==64\n\n# Further layers broadcast safety across fully connected blocks.\nfor k,color,danger in [(2,1,4),(3,1,3)]:\n    active_segments=third if k==2 else fourth\n    for j,seg in enumerate(active_segments):'''\nassert needle in s\ns=s.replace(needle,replacement)\ns=s.replace('for jj,other in enumerate(segments):','for jj,other in enumerate(third):')\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Staggered safety certificates cover every 2x2 block.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 20,
+     "used": 20,
+     "opp": {
+      "strong": [
+       96,
+       70.8
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 20,
+     "note": "Added a bounded winning-pass gate requiring two solid eyes and an area lead.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v20.py\")\ns=open(\"/work/design_v19.py\").read()\n# Insert after the ordinary opening gate has been constructed.\nidx=s.index('OB[81] = P[\"pass_bias\"]')\nextra=r'''\n# Stop unnecessary fights only with BOTH a conservative safe-stone\n# area lead and two solid eyes witnessed on a symmetric sample.\nW[0][2,511]=1\nfor k in range(1,4):\n    W[k][511,511]=1\n\neye_points=[r*9+c for r in range(0,9,2) for c in range(0,9,2)\n            if (r,c)!=(4,4)]\nassert len(eye_points)==24\nfor j,p in enumerate(eye_points):\n    u=487+j\n    ring=adj[p]+diag[p]\n    B[4][u]=1-len(ring)\n    for q in ring:\n        W[4][unit(0,q),u]+=1\n    W[4][unit(0,p),u]-=8\n    W[4][unit(1,p),u]-=8\n\n# Two neighbouring thresholds make a clipped, komi-aware lead signal.\nW[4][:,486]=0\nW[4][:,511]=0\nfor u,shift in [(511,0),(486,1)]:\n    B[4][u]=-46.75-shift\n    W[4][511,u]=7.5\n    for p in range(81):\n        W[4][unit(0,p),u]+=1\n        W[4][unit(2,p),u]-=1\n\n# For fewer than two witnessed eyes both gates are zero.\n# Otherwise their difference is exactly the clipped lead signal.\nfor u,source in [(487,511),(488,486)]:\n    B[5][u]=-200\n    W[5][source,u]=1\n    for v in range(487,511):\n# ... 17 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 21,
+     "used": 21,
+     "opp": {
+      "strong": [
+       96,
+       75.0
+      ],
+      "weak": [
+       32,
+       87.5
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 21,
+     "note": "Added a two-solid-enemy-eyes safeguard against false capture urgency.",
+     "code": "import json,shutil\nshutil.copyfile(\"/work/design.py\",\"/work/design_v21.py\")\ns=open(\"/work/design_v19.py\").read()\nidx=s.index('OB[81] = P[\"pass_bias\"]')\nextra=r'''\n# Two witnessed solid enemy eyes warn against treating a large living\n# string as capturable merely because its liberties are far apart.\neye_points=[r*9+c for r in range(0,9,2) for c in range(0,9,2)]\nfor j,p in enumerate(eye_points):\n    u=487+j\n    ring=adj[p]+diag[p]\n    B[4][u]=1-len(ring)\n    for q in ring:\n        W[4][unit(1,q),u]+=1\n    W[4][unit(0,p),u]-=8\n    W[4][unit(1,p),u]-=8\n\nB[5][487]=1\nfor v in range(487,512):\n    W[5][v,487]=-1\nfor p in range(81):\n    # Positive capture evidence, disabled when two solid eyes are seen.\n    u=unit(0,p)\n    W[5][:,u]=0\n    B[5][u]=4\n    for q in adj[p]:\n        W[5][unit(3,q),u]+=1\n    for v in range(487,512):\n        W[5][v,u]-=4\n    OW[u,p]=P[\"capture\"]\n    OW[487,p]-=4*P[\"capture\"]\n    OB[p]-=P[\"capture\"]\n\n'''\ns=s[:idx]+extra+s[idx:]\nopen(\"/work/design.py\",\"w\").write(s)\noverrides=json.load(open(\"/work/params_v9.json\"))\nexec(s)\nprint(\"Added a two-solid-enemy-eyes safeguard against false capture urgency.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 22,
+     "used": 22,
+     "opp": {
+      "strong": [
+       96,
+       63.5
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 22,
+     "note": "Audit tensors only; no policy evaluation is performed here.",
+     "code": "import json, shutil, numpy as np\nshutil.copyfile(\"/work/design.py\",\"/work/design_v22.py\")\nfinal_source=open(\"/work/design_v19.py\").read()\nopen(\"/work/design.py\",\"w\").write(final_source)\nopen(\"/work/final_design.py\",\"w\").write(final_source)\noverrides=json.load(open(\"/work/params_v9.json\"))\nopen(\"/work/final_parameters.json\",\"w\").write(json.dumps(overrides,indent=2))\nexec(final_source)\n\n# Audit tensors only; no policy evaluation is performed here.\ntotal=0\nfor name in saved():\n    a=load(name)\n    assert np.isfinite(a).all(), name\n    total+=a.size\n    print(name, a.shape, \"nonzero\", np.count_nonzero(a),\n          \"max_abs\", float(np.max(np.abs(a))))\nassert total==1480274\nprint(\"Final network restored and saved; all 1,480,274 parameters are finite.\")",
+     "said": true
+    },
+    {
+     "kind": "positions",
+     "pass": 23,
+     "used": 23,
+     "positions": 6
+    },
+    {
+     "kind": "games",
+     "pass": 24,
+     "used": 24,
+     "opp": {
+      "strong": [
+       128,
+       73.4
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 25,
+     "used": 25,
+     "opp": {
+      "random": [
+       64,
+       98.4
+      ],
+      "weak": [
+       64,
+       92.2
+      ]
+     }
+    },
+    {
+     "kind": "final",
+     "used": 25
+    }
+   ]
+  },
+  {
+   "passes": 50,
+   "turns": "pgppoppgpgpgpgppgpgpgppgpgpgpgpggpgpgpgpgpgpgpgppgpggpggppgpppgpgpgggggooppggggggggggggpg",
+   "runs": 39,
+   "games": 47,
+   "positions": 3,
+   "ppo_s0": 84.0,
+   "ppo_s2": 80.8,
+   "same_size": [
+    74.2,
+    70.0,
+    78.5
+   ],
+   "answer": "The hand-coded, symmetry-preserving policy combines approximate group-liberty propagation, captures, connected-group rescues, self-atari and eye avoidance, and ko/snapback risk suppression. A third-line framework and territorial influence guide ordinary moves; Black passes less readily because of komi. No training or search was used.\n\n**Final unchanged network’s practice results:**\n- Strong: **1,667/2,000 — 83.35%**\n- Weak: **300/304 — 98.68%**\n- Random: **128/128 — 100%**\n\nIts strength comes from tactical discipline and preserving territory rather than filling eyes or making risky recaptures. Hidden-opponent performance remains unmeasured.",
+   "steps": [
+    {
+     "kind": "edit",
+     "used": 0,
+     "note": "Saved all 14 tensors.",
+     "code": "import os, json, numpy as np\n\nos.makedirs(\"/work\", exist_ok=True)\n\nsource = r'''\nimport numpy as np\n\nDEFAULTS = dict(\n    capture=9.0,\n    rescue=6.0,\n    attack=1.15,\n    self_atari=7.5,\n    eye=11.0,\n    connection=0.9,\n    contact=1.4,\n    own_territory=1.6,\n    enemy_territory=1.0,\n    territory_threshold=3.0,\n    pass_base=-9.0,\n    pass_per_stone=0.10,\n    pass_white=0.35,\n    own_adj=0.25,\n    own_diag=0.65,\n    own_two=0.40,\n    own_knight=0.12,\n    enemy_adj=0.75,\n    enemy_diag=0.25,\n    enemy_two=0.12,\n    temperature_scale=1.0,\n)\n\ndef build(save, overrides=None):\n    cfg = dict(DEFAULTS)\n    if overrides:\n        cfg.update(overrides)\n\n    W = [np.zeros((243 if k == 0 else 512, 512), np.float32)\n         for k in range(6)]\n    B = [np.zeros(512, np.float32) for _ in range(6)]\n    OW = np.zeros((512, 82), np.float32)\n# ... 231 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 1,
+     "used": 1,
+     "opp": {
+      "random": [
+       32,
+       100.0
+      ],
+      "strong": [
+       64,
+       57.8
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 1,
+     "note": "Looked at the games of pass 1",
+     "code": "import os, json, numpy as np\npath = \"/work/pass_1\"\ngames = json.load(open(path+\"/games.json\"))\nprint(type(games), len(games))\nif isinstance(games, dict):\n    print(games.keys())\nelse:\n    print(json.dumps(games[0], indent=2)[:6500])\nboards = np.load(path+\"/boards.npy\")\nvalid = np.load(path+\"/valid.npy\")\nprint(\"board shapes\", boards.shape, valid.shape)\nprint(\"files\", os.listdir(path))\nif isinstance(games, list):\n    for i,g in enumerate(games):\n        if g.get(\"opponent\") == \"strong\" and g.get(\"result\") == -1:\n            print(\"LOSS\",i,{k:v for k,v in g.items() if k!=\"moves\"})\n            b = boards[i, np.flatnonzero(valid[i])[-1]].reshape(9,9)\n            print(\"\\n\".join(\"\".join({0:\".\",1:\"X\",-1:\"O\"}[int(x)] for x in row) for row in b))\n            if i > 45:\n                break"
+    },
+    {
+     "kind": "python",
+     "used": 1,
+     "note": "Looked at the games of pass 1",
+     "code": "import json, numpy as np, collections\ngames=json.load(open(\"/work/pass_1/games.json\"))\nboards=np.load(\"/work/pass_1/boards.npy\")\nN=[[] for _ in range(81)]\nfor p in range(81):\n    r,c=divmod(p,9)\n    N[p]=[rr*9+cc for rr,cc in [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]\n          if 0<=rr<9 and 0<=cc<9]\ndef groups(b):\n    seen=set(); out=[]\n    for p in range(81):\n        if not b[p] or p in seen: continue\n        stones={p}; stack=[p]; seen.add(p); libs=set()\n        while stack:\n            q=stack.pop()\n            for z in N[q]:\n                if b[z]==0: libs.add(z)\n                elif b[z]==b[p] and z not in seen:\n                    seen.add(z); stones.add(z); stack.append(z)\n        out.append((int(b[p]),stones,libs))\n    return out\ndef show(b):\n    print(\"\\n\".join(\"\".join(\".XO\"[{0:0,1:1,-1:2}[int(x)]] for x in row)\n                    for row in b.reshape(9,9)))\nstats=collections.Counter()\nexamples=[]\nfor gi,g in enumerate(games):\n    if g[\"opponent\"]!=\"strong\": continue\n    me=1 if g[\"net_color\"]==\"black\" else -1\n    for t,m in enumerate(g[\"moves\"]):\n        before=boards[gi,t-1] if t else np.zeros(81,dtype=np.int8)\n        after=boards[gi,t]\n        if m[\"by\"]==\"net\":\n            caps=collections.Counter()\n            for col,st,libs in groups(before):\n                if col==-me and len(libs)==1:\n                    caps[next(iter(libs))]+=len(st)\n            if caps:\n                stats[\"capture_available\"]+=1\n                if m[\"move\"] in caps: stats[\"capture_taken\"]+=1\n# ... 16 more lines"
+    },
+    {
+     "kind": "positions",
+     "pass": 2,
+     "used": 2,
+     "positions": 3
+    },
+    {
+     "kind": "python",
+     "used": 2,
+     "note": "Looked at the games of pass 2",
+     "code": "import numpy as np\npath=\"/work/pass_2/\"\nX=np.load(path+\"inputs.npy\").reshape(-1,81,3)\nlogits=np.load(path+\"logits.npy\")\nacts=[np.load(path+\"act_L%d.npy\"%k) for k in range(1,7)]\nfor n, candidates in enumerate([[79,75,76],[37,78,71],[0,55,52]]):\n    print(\"\\nPOSITION\",n)\n    for p in candidates:\n        print(\"move\",divmod(p,9),\"logit\",float(logits[n,p]))\n        for k in range(6):\n            print(\" L\",k+1, np.round(acts[k][n,:486].reshape(6,81)[:,p],3).tolist())\n        r,c=divmod(p,9)\n        nn=[rr*9+cc for rr,cc in [(r-1,c),(r+1,c),(r,c-1),(r,c+1)] if 0<=rr<9 and 0<=cc<9]\n        print(\"adjacent stone features:\",\n              [(q,X[n,q,:2].astype(int).tolist(),\n                np.round(acts[3][n,:486].reshape(6,81)[:,q],2).tolist()) for q in nn])"
+    },
+    {
+     "kind": "edit",
+     "used": 2,
+     "note": "Protect all friendly surrounds and sharpen the analytic policy. (v2)",
+     "code": "import json, numpy as np\np=\"/work/policy_design.py\"\ns=open(p).read()\ns=s.replace('temperature_scale=1.0,','temperature_scale=1.8,\\n    surrounded_penalty=10.0,')\ns=s.replace(\n    '    # Layer 6: combine tactics',\n    '''    # Empty points surrounded by friendly stones are normally already\n    # owned. Preserve them even when diagonal enemies make them false eyes.\n    for p in range(81):\n        j = u(5,p)\n        B[4][j] = 1-len(adj[p])\n        for q in adj[p]:\n            W[4][u(0,q),j] = 1\n\n    # Layer 6: combine tactics''')\ns=s.replace(\n    'W[5][u(4,p),j] = cfg[\"rescue\"]',\n    'W[5][u(4,p),j] = cfg[\"rescue\"]\\n        W[5][u(5,p),j] = -cfg[\"surrounded_penalty\"]')\nopen(p,\"w\").write(s)\nns={}\nexec(compile(s,p,\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v2.npz\",**tensors)\nprint(\"Saved v2: protect all friendly surrounds and sharpen the analytic policy.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 3,
+     "used": 3,
+     "opp": {
+      "strong": [
+       96,
+       61.5
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 3,
+     "note": "Longer-range liberty propagation and conservative eye preservation. (v3)",
+     "code": "import os, json, numpy as np\nos.system(\"cp /work/policy_design.py /work/policy_design_v2.py\")\nsource = r'''\nimport numpy as np\n\nDEFAULTS = dict(\n    capture=24.0, rescue=8.0, attack=1.15,\n    self_atari=7.5, eye=16.0, connection=0.9, contact=1.4,\n    own_territory=1.6, territory_threshold=3.0,\n    pass_base=-9.0, pass_per_stone=0.10, pass_white=0.35,\n    own_adj=0.25, own_diag=0.65, own_two=0.40, own_knight=0.12,\n    enemy_adj=0.75, enemy_diag=0.25, enemy_two=0.12,\n    temperature_scale=1.8,\n)\ndef build(save, overrides=None):\n    c=dict(DEFAULTS)\n    if overrides: c.update(overrides)\n    W=[np.zeros((243 if k==0 else 512,512),np.float32) for k in range(6)]\n    B=[np.zeros(512,np.float32) for k in range(6)]\n    OW=np.zeros((512,82),np.float32); OB=np.zeros(82,np.float32)\n    def u(ch,p): return 81*ch+p\n    adj=[]; diag=[]; rings=[]\n    for p in range(81):\n        r,s=divmod(p,9)\n        adj.append([a*9+b for a,b in [(r-1,s),(r+1,s),(r,s-1),(r,s+1)]\n                    if 0<=a<9 and 0<=b<9])\n        diag.append([a*9+b for a,b in [(r-1,s-1),(r-1,s+1),(r+1,s-1),(r+1,s+1)]\n                     if 0<=a<9 and 0<=b<9])\n        rings.append([(q,abs(r-q//9),abs(s-q%9)) for q in range(81) if q!=p])\n    for p in range(81):\n        W[0][3*p,u(0,p)]=1; W[0][3*p+1,u(1,p)]=1\n        for colour in [0,1]:\n            j=u(2+colour,p)\n            B[0][j]=len(adj[p])-4\n            W[0][3*p+colour,j]=4\n            for q in adj[p]:\n                W[0][3*q,j]-=1; W[0][3*q+1,j]-=1\n        # Contact and connection features, directly from the board.\n        B[0][u(4,p)]=-1; B[0][u(5,p)]=-1\n        for q in adj[p]:\n# ... 116 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 4,
+     "used": 4,
+     "opp": {
+      "strong": [
+       96,
+       55.2
+      ],
+      "weak": [
+       32,
+       75.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 4,
+     "note": "Prioritize outward extension and contested boundaries over interior consolidation. (v4)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v2.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\nconfig=dict(\n    own_territory=2.5, territory_threshold=1.5,\n    own_adj=0.20, own_diag=0.50, own_two=0.70, own_knight=0.30,\n    enemy_adj=0.70, enemy_diag=0.40, enemy_two=0.25,\n)\ncfg,tensors=ns[\"build\"](save,config)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v4.npz\",**tensors)\nprint(\"Saved v4: prioritize outward extension and contested boundaries over interior consolidation.\")\nprint(json.dumps(cfg,indent=2))",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 5,
+     "used": 5,
+     "opp": {
+      "strong": [
+       96,
+       74.0
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 5,
+     "note": "Safety certificates that do not mistake duplicated liberties for two eyes. (v5)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v2.py\").read()\nsource=source.replace(\n    \"    # Global counts and colour are carried separately.\",\n    '''    # A zero-liberty indicator lets the next layer distinguish a\n    # duplicated single liberty around a bent chain from independent ones.\n    for p in range(81):\n        for colour in range(2):\n            j=u(4+colour,p)\n            W[0][:,j]=0\n            B[0][j]=-len(adj[p])\n            W[0][3*p+colour,j]=1\n            for q in adj[p]:\n                W[0][3*q,j]+=1\n                W[0][3*q+1,j]+=1\n\n    # Global counts and colour are carried separately.''')\nsource=source.replace(\n    '            W[1][u(4+colour,p),u(4+colour,p)] = 1',\n    '''            W[1][u(4+colour,p),j] -= 1\n\n            # Independent supplementary safety certificate. A shared\n            # liberty of two neighbours must lie diagonally from p.\n            j=u(4+colour,p)\n            B[1][j]=-21-len(diag[p])\n            W[1][u(colour,p),j]=20\n            for q in [p]+adj[p]:\n                W[1][u(2+colour,q),j]+=1\n            for q in diag[p]:\n                W[1][u(0,q),j]+=1\n                W[1][u(1,q),j]+=1''')\nsource=source.replace(\n    '                W[2][u(2+colour,q),j] += 1',\n    '''                W[2][u(2+colour,q),j] += 1\n                W[2][u(4+colour,q),j] += 1''')\nopen(\"/work/policy_design_v5.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\n# ... 4 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 6,
+     "used": 6,
+     "opp": {
+      "strong": [
+       96,
+       72.9
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 6,
+     "note": "Looked at the games of pass 6",
+     "code": "import json, numpy as np, collections\nfor k in [1,3,4,5,6]:\n    gs=json.load(open(\"/work/pass_%d/games.json\"%k))\n    print(\"\\nPASS\",k)\n    for op in sorted(set(g[\"opponent\"] for g in gs)):\n        a=[g for g in gs if g[\"opponent\"]==op]\n        print(op,dict(collections.Counter((g[\"end\"],g[\"result\"]) for g in a)),\n              \"loss margins\",[g[\"margin\"] for g in a if g[\"result\"]<0])\ngs=json.load(open(\"/work/pass_6/games.json\"))\nbs=np.load(\"/work/pass_6/boards.npy\")\nfor i,g in enumerate(gs):\n    if g[\"end\"]==\"repetition\" and g[\"result\"]<0:\n        print(\"\\nREPETITION\",i,\"colour\",g[\"net_color\"],\"margin\",g[\"margin\"])\n        print(json.dumps(g[\"moves\"][-16:]))\n        t=len(g[\"moves\"])-1\n        b=bs[i,t-1]\n        print(\"\\n\".join(\"\".join({0:\".\",1:\"X\",-1:\"O\"}[int(v)] for v in row)\n                        for row in b.reshape(9,9)))\n        if i>40: break"
+    },
+    {
+     "kind": "edit",
+     "used": 6,
+     "note": "Explicit singleton ko/snapback risk avoidance. (v6)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v5.py\").read()\nsource=source.replace(\n    \"    # Layer 4: approximate whole-group atari, self-atari, weak enemies.\",\n    '''    # The unused opponent-extension channel instead detects exactly\n    # an enemy singleton with one liberty.\n    for p in range(81):\n        j=u(5,p)\n        W[2][:,j]=0\n        B[2][j]=-len(adj[p])\n        W[2][u(1,p),j]=2\n        for q in adj[p]:\n            W[2][u(0,q),j]+=1\n            W[2][u(1,q),j]-=1\n\n    # Layer 4: approximate whole-group atari, self-atari, weak enemies.''')\nsource=source.replace(\n    \"    # Layer 5: spatial prior, captures, attack, safe rescue, and\",\n    '''    # Avoid isolated singleton recaptures with at most one other\n    # liberty. These are common ko/snapback repetition traps.\n    for p in range(81):\n        j=u(5,p)\n        W[3][:,j]=0\n        B[3][j]=-len(adj[p])\n        for q in adj[p]:\n            W[3][u(5,q),j]+=2\n            W[3][u(0,q),j]-=3\n            W[3][u(1,q),j]+=1\n\n    # Layer 5: spatial prior, captures, attack, safe rescue, and''')\nsource=source.replace(\n    '            W[4][u(5,q),j] += cfg[\"attack\"]',\n    '        W[4][u(5,p),j] -= cfg.get(\"repeat_risk\",18.0)')\n# The replacement above puts a single risk term after the adjacency loop.\nsource=source.replace(\"temperature_scale=1.8,\",\n                      \"temperature_scale=1.8,\\n    repeat_risk=18.0,\")\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(capture=12.5, repeat_risk=18.0)\nopen(\"/work/policy_design_v6.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\n# ... 6 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 7,
+     "used": 7,
+     "opp": {
+      "strong": [
+       96,
+       61.5
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 7,
+     "note": "Packed colour channel preserves weak-group attacks while avoiding ko/snapback traps. (v7)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v5.py\").read()\nsource=source.replace(\n    \"    # Layer 4: approximate whole-group atari, self-atari, weak enemies.\",\n    '''    # Exact one-stone capture detector in a previously unused channel.\n    for p in range(81):\n        j=u(5,p)\n        W[2][:,j]=0\n        B[2][j]=-len(adj[p])\n        W[2][u(1,p),j]=2\n        for q in adj[p]:\n            W[2][u(0,q),j]+=1\n            W[2][u(1,q),j]-=1\n\n    # Layer 4: approximate whole-group atari, self-atari, weak enemies.''')\npatch=r'''\n    # At layer 4, encode own/empty/enemy as 1, 1/2, 0. This frees\n    # a full channel for repetition-risk detection without losing attack.\n    for p in range(81):\n        old_weak=W[3][:,u(5,p)].copy()\n        old_bias=B[3][u(5,p)]\n        W[3][:,u(1,p)]=old_weak\n        B[3][u(1,p)]=old_bias\n        W[3][:,u(0,p)]=0\n        B[3][u(0,p)]=0.5\n        W[3][u(0,p),u(0,p)]=0.5\n        W[3][u(1,p),u(0,p)]=-0.5\n\n        j=u(5,p)\n        W[3][:,j]=0\n        B[3][j]=-len(adj[p])\n        for q in adj[p]:\n            W[3][u(5,q),j]+=2\n            W[3][u(0,q),j]-=3\n            W[3][u(1,q),j]+=1\n\n        # Decode the board for the final shape layer.\n        for ch,sign,bias in [(0,2,-1),(1,-2,1)]:\n            j=u(ch,p)\n            W[4][:,j]=0\n# ... 47 more lines",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 8,
+     "used": 8,
+     "opp": {
+      "strong": [
+       96,
+       79.2
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 8,
+     "note": "Komi-aware expansion and material-aware passing. (v8)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\npatch=r'''\n    # Komi-aware territorial ambition: Black needs more than half the\n    # board, while White can consolidate a more modest share.\n    for p in range(81):\n        B[5][u(3,p)]=-cfg.get(\"black_territory_threshold\",0.75)\n        W[5][488,u(3,p)]=(\n            cfg.get(\"black_territory_threshold\",0.75)\n            -cfg.get(\"white_territory_threshold\",1.5))\n\n    # Passing is safer when materially ahead, riskier when behind.\n    lead=cfg.get(\"pass_lead\",0.10)\n    OW[486,81]+=lead\n    OW[487,81]-=lead\n    OB[81]-=7.5*lead\n    OW[488,81]+=15.0*lead\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v8.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(black_territory_threshold=0.75,white_territory_threshold=1.5,pass_lead=0.10)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v8.npz\",**tensors)\nprint(\"Saved v8: komi-aware expansion and material-aware passing.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 9,
+     "used": 9,
+     "opp": {
+      "strong": [
+       96,
+       72.9
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 9,
+     "note": "Looked at the games of pass 9",
+     "code": "import json, numpy as np, collections\ng=json.load(open(\"/work/pass_9/games.json\"))\nb=np.load(\"/work/pass_9/boards.npy\")\nprint(\"Loss breakdown\",dict(collections.Counter((x[\"net_color\"],x[\"end\"]) for x in g\n                                             if x[\"opponent\"]==\"strong\" and x[\"result\"]<0)))\nfor i,x in enumerate(g):\n    if x[\"opponent\"]!=\"strong\" or x[\"result\"]>0 or x[\"net_color\"]!=\"black\":\n        continue\n    print(\"\\nGAME\",i,\"margin\",x[\"margin\"],\"lost\",x[\"stones_lost_by_net\"],\n          \"captured\",x[\"stones_captured_by_net\"],\"end\",x[\"end\"])\n    for t in [19,39,59,len(x[\"moves\"])-1]:\n        if t>=len(x[\"moves\"]): continue\n        print(\"after\",t+1)\n        bb=b[i,t].reshape(9,9)\n        print(\"\\n\".join(\"\".join({0:\".\",1:\"X\",-1:\"O\"}[int(z)] for z in row) for row in bb))\n    print(\"last net moves\",[m for m in x[\"moves\"][-10:] if m[\"by\"]==\"net\"])\n    if i>=10: break"
+    },
+    {
+     "kind": "edit",
+     "used": 9,
+     "note": "Claim the center on the first move; retain v7's middlegame policy. (v9)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\npatch=r'''\n    # On an empty 9x9 board, take the central star point. This feature\n    # switches off exactly after either player places the first stone.\n    W[0][:,489]=0\n    B[0][489]=1\n    for p in range(81):\n        W[0][3*p,489]=-1\n        W[0][3*p+1,489]=-1\n    for k in range(1,6):\n        W[k][489,489]=1\n    OW[489,40]+=cfg.get(\"opening_center\",8.0)\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v9.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(opening_center=8.0,pass_lead=0.0,\n           black_territory_threshold=1.5,white_territory_threshold=1.5)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v9.npz\",**tensors)\nprint(\"Saved v9: claim the center on the first move; retain v7's middlegame policy.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 10,
+     "used": 10,
+     "opp": {
+      "strong": [
+       96,
+       64.6
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 10,
+     "note": "Graded preventive defense, with suicidal rescues still suppressed. (v10)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\npatch=r'''\n    # Defend vulnerable groups before their final liberty is taken.\n    # The feature is graded: strongest in atari, weaker with nearby\n    # evidence of additional liberties.\n    for p in range(81):\n        j=u(2,p)\n        W[3][:,j]=0\n        B[3][j]=0\n        W[3][u(0,p),j]=3\n        W[3][u(2,p),j]=-1\n        for q in adj[p]:\n            W[3][u(2,q),j]-=0.5\n        W[4][u(4,p),u(4,p)]=-12\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v10.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(rescue=2.2,opening_center=0.0)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v10.npz\",**tensors)\nprint(\"Saved v10: graded preventive defense, with suicidal rescues still suppressed.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 11,
+     "used": 11,
+     "opp": {
+      "strong": [
+       96,
+       68.8
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 11,
+     "note": "Stronger own connections and pressure on unsupported enemy cuts. (v11)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\npatch=r'''\n    # Topological pressure: an empty point between enemy stones that\n    # lack diagonal support can separate their groups.\n    for p in range(81):\n        j=u(5,p)\n        W[5][:,j]=0\n        B[5][j]=-1\n        for q in adj[p]:\n            W[5][u(1,q),j]+=1\n        for q in diag[p]:\n            W[5][u(1,q),j]-=1\n        OW[j,p]=cfg.get(\"cut\",1.5)\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v11.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(rescue=6.0,connection=1.8,surrounded_penalty=17.0,cut=1.5)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v11.npz\",**tensors)\nprint(\"Saved v11: stronger own connections and pressure on unsupported enemy cuts.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 12,
+     "used": 12,
+     "opp": {
+      "strong": [
+       96,
+       67.7
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 12,
+     "note": "Packed board representation permits deeper tactical propagation. (v12)",
+     "code": "import json, numpy as np\nsource=r'''\nimport numpy as np\nDEFAULTS=dict(\n    capture=6.45,rescue=6.0,attack=2.0,self_atari=7.5,\n    surrounded_penalty=17.0,connection=0.9,contact=1.4,\n    own_territory=2.5,enemy_territory=1.0,territory_threshold=1.5,\n    pass_base=-9.0,pass_per_stone=0.10,pass_white=0.35,\n    own_adj=0.20,own_diag=0.50,own_two=0.70,own_knight=0.30,\n    enemy_adj=0.70,enemy_diag=0.40,enemy_two=0.25,\n    repeat_risk=18.0,temperature_scale=1.8,\n)\ndef build(save,overrides=None):\n    c=dict(DEFAULTS)\n    if overrides: c.update(overrides)\n    W=[np.zeros((243 if k==0 else 512,512),np.float32) for k in range(6)]\n    B=[np.zeros(512,np.float32) for k in range(6)]\n    OW=np.zeros((512,82),np.float32); OB=np.zeros(82,np.float32)\n    def u(ch,p): return 81*ch+p\n    adj=[]; diag=[]; rings=[]\n    for p in range(81):\n        r,s=divmod(p,9)\n        adj.append([a*9+b for a,b in [(r-1,s),(r+1,s),(r,s-1),(r,s+1)]\n                    if 0<=a<9 and 0<=b<9])\n        diag.append([a*9+b for a,b in [(r-1,s-1),(r-1,s+1),(r+1,s-1),(r+1,s+1)]\n                     if 0<=a<9 and 0<=b<9])\n        rings.append([(q,abs(r-q//9),abs(s-q%9)) for q in range(81) if q!=p])\n    for p in range(81):\n        W[0][3*p,u(0,p)]=1; W[0][3*p+1,u(1,p)]=1\n        for col in [0,1]:\n            j=u(2+col,p); B[0][j]=len(adj[p])-4\n            W[0][3*p+col,j]=4\n            for q in adj[p]:\n                W[0][3*q,j]-=1; W[0][3*q+1,j]-=1\n        B[0][u(4,p)]=-1; B[0][u(5,p)]=-1\n        for q in adj[p]:\n            W[0][3*q+1,u(4,p)]+=1\n            W[0][3*q,u(4,p)]-=0.75\n            W[0][3*q,u(5,p)]+=1\n        for q in diag[p]:\n# ... 139 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 13,
+     "used": 13,
+     "opp": {
+      "strong": [
+       96,
+       64.6
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 13,
+     "note": "More decisive shape choices and greater endgame persistence as Black. (v13)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=dict(\n    capture=9.0,rescue=6.0,attack=1.15,self_atari=7.5,\n    eye=11.0,connection=0.9,contact=1.4,\n    own_territory=2.5,enemy_territory=1.0,territory_threshold=1.5,\n    pass_base=-12.0,pass_per_stone=0.10,pass_white=3.35,\n    own_adj=0.20,own_diag=0.50,own_two=0.70,own_knight=0.30,\n    enemy_adj=0.70,enemy_diag=0.40,enemy_two=0.25,\n    temperature_scale=2.5,surrounded_penalty=10.0,repeat_risk=18.0,\n)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v13.npz\",**tensors)\nprint(\"Saved v13: more decisive shape choices and greater endgame persistence as Black.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 14,
+     "used": 14,
+     "opp": {
+      "strong": [
+       96,
+       80.2
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 15,
+     "used": 15,
+     "opp": {
+      "strong": [
+       128,
+       75.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 15,
+     "note": "Contest the opponent's boundary earlier instead of conceding central space. (v14)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(enemy_adj=1.3,enemy_diag=0.7,enemy_two=0.4,\n           own_adj=0.4,attack=1.4)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v14.npz\",**tensors)\nprint(\"Saved v14: contest the opponent's boundary earlier instead of conceding central space.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 16,
+     "used": 16,
+     "opp": {
+      "strong": [
+       96,
+       80.2
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 16,
+     "note": "Opening geometry transitions to uniform point value in the endgame. (v15)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\npatch=r'''\n    # Opening line preferences should not make first-line endgame\n    # points artificially unattractive. Flatten them as the board fills.\n    start=cfg.get(\"endgame_start\",12.0)\n    finish=cfg.get(\"endgame_finish\",52.0)\n    for g,threshold in [(489,start),(490,finish)]:\n        W[0][:,g]=0\n        B[0][g]=-threshold/(finish-start)\n        for p in range(81):\n            W[0][3*p,g]=1/(finish-start)\n            W[0][3*p+1,g]=1/(finish-start)\n        for k in range(1,6):\n            W[k][g,g]=1\n    for p in range(81):\n        r,c=divmod(p,9)\n        prior=line_prior[min(r,8-r)]+line_prior[min(c,8-c)]\n        delta=cfg.get(\"endgame_prior\",2.0)-prior\n        OW[489,p]+=delta\n        OW[490,p]-=delta\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v15.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(endgame_start=12.0,endgame_finish=52.0,endgame_prior=2.0)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v15.npz\",**tensors)\nprint(\"Saved v15: opening geometry transitions to uniform point value in the endgame.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 17,
+     "used": 17,
+     "opp": {
+      "strong": [
+       96,
+       78.1
+      ],
+      "weak": [
+       32,
+       90.6
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 17,
+     "note": "Prioritize saving connected groups over harvesting isolated enemy stones. (v16)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v7.py\").read()\npatch=r'''\n    # An endangered stone with several friendly connections is more\n    # likely to represent a substantial group than an isolated stone.\n    for p in range(81):\n        j=u(2,p)\n        W[3][:,j]=0\n        B[3][j]=-4\n        W[3][u(0,p),j]=5\n        for q in adj[p]:\n            W[3][u(0,q),j]+=cfg.get(\"rescue_size\",0.4)\n        for q in [p]+adj[p]:\n            W[3][u(2,q),j]-=10\n        W[4][u(4,p),u(4,p)]=-12\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v16.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(rescue=8.0,rescue_size=0.4)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v16.npz\",**tensors)\nprint(\"Saved v16: prioritize saving connected groups over harvesting isolated enemy stones.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 18,
+     "used": 18,
+     "opp": {
+      "strong": [
+       96,
+       78.1
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 18,
+     "note": "Prefer supported fighting and avoid unsupported multi-stone contact. (v17)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v16.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(own_adj=0.8,contact=3.0)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v17.npz\",**tensors)\nprint(\"Saved v17: prefer supported fighting and avoid unsupported multi-stone contact.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 19,
+     "used": 19,
+     "opp": {
+      "strong": [
+       96,
+       77.1
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 19,
+     "note": "Separate short-range attack pressure from longer-range capture certification. (v18)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v16.py\").read()\npatch=r'''\n    # Pack colour one layer earlier, freeing a channel for short-range\n    # weakness. Capture certainty still uses the longer safety field.\n    for p in range(81):\n        j=u(0,p)\n        W[2][:,j]=0\n        B[2][j]=0.5\n        W[2][u(0,p),j]=0.5\n        W[2][u(1,p),j]=-0.5\n\n        j=u(1,p)\n        W[2][:,j]=0\n        B[2][j]=0\n        W[2][u(3,p),j]=1\n\n        j=u(0,p)\n        W[3][:,j]=0\n        B[3][j]=0\n        W[3][u(0,p),j]=1\n\n        j=u(1,p)\n        W[3][:,j]=0\n        B[3][j]=3\n        W[3][u(0,p),j]=-20\n        W[3][u(1,p),j]=-1\n        for q in adj[p]:\n            W[3][u(1,q),j]-=0.5\n\n        j=u(2,p)\n        W[3][:,j]=0\n        size=cfg.get(\"rescue_size\",0.4)\n        B[3][j]=1-0.5*size-20\n        W[3][u(0,p),j]=20\n        for q in adj[p]:\n            W[3][u(0,q),j]+=size\n        for q in [p]+adj[p]:\n            W[3][u(2,q),j]-=10\n\n# ... 25 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 20,
+     "used": 20,
+     "opp": {
+      "strong": [
+       96,
+       77.1
+      ],
+      "weak": [
+       32,
+       96.9
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 20,
+     "note": "Sharpen the policy while retaining symmetry among equally valued moves. (v19)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v18.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg[\"temperature_scale\"]=4.0\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v19.npz\",**tensors)\nprint(\"Saved v19: sharpen the policy while retaining symmetry among equally valued moves.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 21,
+     "used": 21,
+     "opp": {
+      "strong": [
+       96,
+       71.9
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 21,
+     "note": "Broader territorial influence discourages redundant interior moves. (v20)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v18.py\").read()\npatch=r'''\n    # Smooth influence beyond immediate contact distinguishes contested\n    # boundaries from the interiors of larger frameworks.\n    for p in range(81):\n        for colour,ch in [(0,3),(1,4)]:\n            j=u(ch,p)\n            W[5][:,j]=0\n            B[5][j]=-cfg[\"territory_threshold\"]\n            for q,dr,dc in rings[p]:\n                weight=float(np.exp(-(dr*dr+dc*dc-1)/\n                                    cfg.get(\"influence_width\",3.5)))\n                W[5][u(colour,q),j]+=weight\n                W[5][u(1-colour,q),j]-=1.2*weight\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v20.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(temperature_scale=2.5,influence_width=3.5)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v20.npz\",**tensors)\nprint(\"Saved v20: broader territorial influence discourages redundant interior moves.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 22,
+     "used": 22,
+     "opp": {
+      "strong": [
+       96,
+       78.1
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 22,
+     "note": "Ran Python on the results",
+     "code": "import json, collections, numpy as np\nfor k in [14,15,16,18,19,20,21,22]:\n    gs=json.load(open(\"/work/pass_%d/games.json\"%k))\n    gs=[g for g in gs if g[\"opponent\"]==\"strong\"]\n    print(\"pass\",k)\n    for col in [\"black\",\"white\"]:\n        a=[g for g in gs if g[\"net_color\"]==col]\n        first=collections.Counter(next(m[\"move\"] for m in g[\"moves\"] if m[\"by\"]==\"opponent\") for g in a)\n        margins=[g[\"margin\"] for g in a if g[\"result\"]<0]\n        print(col,\"opponent first\",first.most_common(6),\"loss margins\",margins)"
+    },
+    {
+     "kind": "edit",
+     "used": 22,
+     "note": "Symmetric four-four opening choices. (v21)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v18.py\").read()\npatch=r'''\n    # Four-four openings balance central influence with access to a\n    # corner, without committing to direct contact at the centre.\n    W[0][:,489]=0\n    B[0][489]=1\n    for p in range(81):\n        W[0][3*p,489]=-1\n        W[0][3*p+1,489]=-1\n    for k in range(1,6):\n        W[k][489,489]=1\n    for p in [30,32,48,50]:\n        OW[489,p]+=cfg.get(\"opening_four_four\",6.0)\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v21.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(opening_four_four=6.0,temperature_scale=2.5)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v21.npz\",**tensors)\nprint(\"Saved v21: symmetric four-four opening choices.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 23,
+     "used": 23,
+     "opp": {
+      "strong": [
+       96,
+       75.0
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 23,
+     "note": "Greater territorial ambition at contested boundaries. (v22)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v18.py\").read()\npatch=r'''\n    # Value additional territory at the contested boundary more than\n    # safe consolidation inside an existing sphere of influence.\n    for p in range(81):\n        B[5][u(3,p)]=-cfg.get(\"own_territory_threshold\",0.5)\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v22.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg.update(own_territory=3.0,own_territory_threshold=0.5)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v22.npz\",**tensors)\nprint(\"Saved v22: greater territorial ambition at contested boundaries.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 24,
+     "used": 24,
+     "opp": {
+      "strong": [
+       96,
+       84.4
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 25,
+     "used": 25,
+     "opp": {
+      "strong": [
+       128,
+       78.1
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 25,
+     "note": "A symmetric third-line framework prior. (v23)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v22.py\").read()\npatch=r'''\n    # A third-line framework is economical on 9x9: it can limit a\n    # central group while retaining room for eyes on the outside.\n    for p in range(81):\n        r,c=divmod(p,9)\n        if max(abs(r-4),abs(c-4))==2:\n            OB[p]+=cfg.get(\"framework_bonus\",2.0)\n'''\nsource=source.replace('    OW *= cfg[\"temperature_scale\"]',\n                      patch+'\\n    OW *= cfg[\"temperature_scale\"]')\nopen(\"/work/policy_design_v23.py\",\"w\").write(source)\nopen(\"/work/policy_design.py\",\"w\").write(source)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg[\"framework_bonus\"]=2.0\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v23.npz\",**tensors)\nprint(\"Saved v23: a symmetric third-line framework prior.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 26,
+     "used": 26,
+     "opp": {
+      "strong": [
+       96,
+       84.4
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 27,
+     "used": 27,
+     "opp": {
+      "strong": [
+       128,
+       79.7
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 27,
+     "note": "Looked at the games of pass 27",
+     "code": "import json, numpy as np, collections\ng=json.load(open(\"/work/pass_27/games.json\"))\nb=np.load(\"/work/pass_27/boards.npy\")\nN=[]\nfor p in range(81):\n    r,c=divmod(p,9)\n    N.append([rr*9+cc for rr,cc in [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]\n              if 0<=rr<9 and 0<=cc<9])\ndef groups(board):\n    out=[]; seen=set()\n    for p in range(81):\n        if board[p]==0 or p in seen: continue\n        st={p}; lib=set(); seen.add(p); todo=[p]\n        while todo:\n            q=todo.pop()\n            for a in N[q]:\n                if board[a]==0: lib.add(a)\n                elif board[a]==board[p] and a not in seen:\n                    st.add(a);seen.add(a);todo.append(a)\n        out.append((int(board[p]),st,lib))\n    return out\nfor i,x in enumerate(g):\n    if x[\"end\"]!=\"repetition\": continue\n    t=len(x[\"moves\"])-1\n    eq=[j for j in range(t) if np.array_equal(b[i,j],b[i,t])]\n    print(\"\\nREPEAT\",i,x[\"net_color\"],\"result\",x[\"result\"],\"margin\",x[\"margin\"],\n          \"ply\",t,\"earlier\",eq)\n    print(json.dumps(x[\"moves\"][-8:]))\n    pre=b[i,t-1]\n    mover=1 if t%2==0 else -1\n    p=x[\"moves\"][-1][\"move\"]\n    print(\"move\",divmod(p,9),\"adjacent\",[int(pre[q]) for q in N[p]],\n          \"capturable\",[(len(s),sorted(s),list(l)) for co,s,l in groups(pre)\n                        if co==-mover and l=={p}])\n    print(\"\\n\".join(\"\".join({0:\".\",1:\"X\",-1:\"O\"}[int(z)] for z in row)\n                    for row in pre.reshape(9,9)))"
+    },
+    {
+     "kind": "edit",
+     "used": 27,
+     "note": "Isolated singleton recapture risk now dominates all local tactical bonuses. (v24)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v23.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg[\"repeat_risk\"]=80.0\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v24.npz\",**tensors)\nprint(\"Saved v24: isolated singleton recapture risk now dominates all local tactical bonuses.\")\nprint(\"This avoids treating several nearby weak stones as justification for a repetition-prone recapture.\")",
+     "said": true,
+     "best": true
+    },
+    {
+     "kind": "games",
+     "pass": 28,
+     "used": 28,
+     "opp": {
+      "strong": [
+       96,
+       85.4
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 28,
+     "note": "Looked at the games of pass 28",
+     "code": "import json, collections\ng=json.load(open(\"/work/pass_28/games.json\"))\nprint(collections.Counter((x[\"opponent\"],x[\"end\"],x[\"result\"]) for x in g))\nfor i,x in enumerate(g):\n    if x[\"end\"]==\"repetition\":\n        print(i,x[\"net_color\"],x[\"result\"],x[\"margin\"],x[\"moves\"][-4:])"
+    },
+    {
+     "kind": "python",
+     "used": 28,
+     "note": "Looked at the games of pass 28",
+     "code": "import json, numpy as np\ng=json.load(open(\"/work/pass_28/games.json\"))\nb=np.load(\"/work/pass_28/boards.npy\")\nfor i in [44,84]:\n    x=g[i]; t=len(x[\"moves\"])-1\n    print(\"\\nGAME\",i,\"colour\",x[\"net_color\"],\"last moves\",x[\"moves\"][-10:])\n    for j in range(t-4,t+1):\n        print(\"ply\",j,\"action\",x[\"moves\"][j][\"move\"])\n        print(\"\\n\".join(\"\".join({0:\".\",1:\"X\",-1:\"O\"}[int(z)] for z in row)\n                        for row in b[i,j].reshape(9,9)))"
+    },
+    {
+     "kind": "edit",
+     "used": 28,
+     "note": "Exact small-capture evidence guards against false edge captures and self-atari cycles. (v25)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v23.py\").read()\npatch=r'''\n    # Compress the two material counts into one total, leaving 24\n    # auxiliary units for stronger edge self-atari certification.\n    for k in range(6):\n        W[k][:,486:]=0\n        B[k][486:]=0\n        if k:\n            W[k][486:,:]=0\n    OW[486:,:]=0\n    for p in range(81):\n        W[0][3*p,486]=1\n        W[0][3*p+1,486]=1\n    W[0][2,487]=1\n    for k in range(1,6):\n        W[k][486,486]=1\n        W[k][487,487]=1\n    OW[486,81]=cfg[\"pass_per_stone\"]\n    OW[487,81]=cfg[\"pass_white\"]\n\n    edge_points=[]\n    for p in range(81):\n        r,c=divmod(p,9)\n        if r in [0,8] and c in [0,1,2,4,6,7,8]:\n            edge_points.append(p)\n        elif c in [0,8] and r in [1,2,4,6,7]:\n            edge_points.append(p)\n    assert len(edge_points)==24\n    for i,p in enumerate(edge_points):\n        g=488+i\n        # Exact singleton captures, rather than approximate group danger.\n        for q in adj[p]:\n            W[3][u(5,q),g]+=1\n\n        # Multiple threatened contacts can justify a larger capture.\n        B[4][g]=-1\n        for q in adj[p]:\n            W[4][u(3,q),g]+=1\n\n# ... 23 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 29,
+     "used": 29,
+     "opp": {
+      "strong": [
+       96,
+       76.0
+      ],
+      "weak": [
+       32,
+       93.8
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 29,
+     "note": "Restore capture responsiveness and reinforce the third-line framework. (v26)",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v23.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=dict(\n    capture=9.0,rescue=8.0,attack=1.4,self_atari=7.5,\n    eye=11.0,connection=0.9,contact=3.0,\n    own_territory=3.0,own_territory_threshold=0.5,\n    enemy_territory=1.0,territory_threshold=1.5,\n    pass_base=-12.0,pass_per_stone=0.10,pass_white=3.35,\n    own_adj=0.8,own_diag=0.5,own_two=0.7,own_knight=0.3,\n    enemy_adj=1.3,enemy_diag=0.7,enemy_two=0.4,\n    temperature_scale=2.5,surrounded_penalty=10.0,\n    repeat_risk=80.0,rescue_size=0.4,framework_bonus=4.0,\n)\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/policy_v26.npz\",**tensors)\nprint(\"Saved v26: restore capture responsiveness and reinforce the third-line framework.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 30,
+     "used": 30,
+     "opp": {
+      "strong": [
+       96,
+       81.2
+      ],
+      "weak": [
+       32,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "edit",
+     "used": 30,
+     "note": "Restored candidate A for independent validation.",
+     "code": "import json, numpy as np\nsource=open(\"/work/policy_design_v23.py\").read()\nopen(\"/work/policy_design.py\",\"w\").write(source)\nns={}\nexec(compile(source,\"/work/policy_design.py\",\"exec\"),ns)\ncfg=json.load(open(\"/work/policy_config.json\"))\ncfg[\"framework_bonus\"]=2.0\ncfg,tensors=ns[\"build\"](save,cfg)\njson.dump(cfg,open(\"/work/policy_config.json\",\"w\"),indent=2)\njson.dump(cfg,open(\"/work/candidate_A_config.json\",\"w\"),indent=2)\nnp.savez(\"/work/candidate_A.npz\",**tensors)\nprint(\"Restored candidate A for independent validation.\")\nprint(\"Parameters:\",sum(a.size for a in tensors.values()))\nprint(\"Finite tensors:\",all(np.isfinite(a).all() for a in tensors.values()))",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 31,
+     "used": 31,
+     "opp": {
+      "strong": [
+       128,
+       84.4
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 32,
+     "used": 32,
+     "opp": {
+      "strong": [
+       128,
+       84.4
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 33,
+     "used": 33,
+     "opp": {
+      "strong": [
+       128,
+       83.6
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 34,
+     "used": 34,
+     "opp": {
+      "strong": [
+       128,
+       83.6
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 35,
+     "used": 35,
+     "opp": {
+      "random": [
+       64,
+       100.0
+      ],
+      "weak": [
+       64,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "positions",
+     "pass": 36,
+     "used": 36,
+     "positions": 9
+    },
+    {
+     "kind": "positions",
+     "pass": 37,
+     "used": 37,
+     "positions": 9
+    },
+    {
+     "kind": "python",
+     "used": 37,
+     "note": "Static symmetry checks on weights only; no network evaluation.",
+     "code": "import json, hashlib, numpy as np\n\nnames = [\"L%d.%s\"%(k,t) for k in range(1,7) for t in [\"W\",\"b\"]]\nnames += [\"out.W\",\"out.b\"]\ntensors = {n:load(n) for n in names}\nreference = np.load(\"/work/candidate_A.npz\")\nassert all(np.array_equal(tensors[n],reference[n]) for n in names)\nassert all(np.isfinite(a).all() for a in tensors.values())\n\n# Static symmetry checks on weights only; no network evaluation.\nerrors=[]\nfor reflect in [False,True]:\n    for turns in range(4):\n        perm=[]\n        for p in range(81):\n            r,c=divmod(p,9)\n            if reflect: c=8-c\n            for _ in range(turns): r,c=c,8-r\n            perm.append(9*r+c)\n        perm=np.array(perm)\n        ip=np.array([3*perm[p]+ch for p in range(81) for ch in range(3)])\n        hp=np.concatenate([81*ch+perm for ch in range(6)]+[np.arange(486,512)])\n        op=np.r_[perm,81]\n        err=0.0\n        for k in range(1,7):\n            w=tensors[\"L%d.W\"%k]; bb=tensors[\"L%d.b\"%k]\n            rp=ip if k==1 else hp\n            err=max(err,float(np.max(np.abs(w[np.ix_(rp,hp)]-w))))\n            err=max(err,float(np.max(np.abs(bb[hp]-bb))))\n        err=max(err,float(np.max(np.abs(tensors[\"out.W\"][np.ix_(hp,op)]-tensors[\"out.W\"]))))\n        err=max(err,float(np.max(np.abs(tensors[\"out.b\"][op]-tensors[\"out.b\"]))))\n        errors.append(err)\n\nblack=np.load(\"/work/pass_36/logits.npy\")\nwhite=np.load(\"/work/pass_37/logits.npy\")\nprint(\"Checkpoint unchanged:\", True)\nprint(\"Eight board-symmetry weight errors:\", errors)\nprint(\"Colour-swapped placement-logit error:\",float(np.max(np.abs(black[:,:81]-white[:,:81]))))\nprint(\"White pass-logit increments:\",np.round(white[:,81]-black[:,81],6).tolist())\nprint(\"Nonzero weights/biases:\",sum(np.count_nonzero(a) for a in tensors.values()))\n# ... 7 more lines",
+     "said": true
+    },
+    {
+     "kind": "python",
+     "used": 37,
+     "note": "The colour plane is broadcast over all 81 points. Reading it at one",
+     "code": "import numpy as np\n# The colour plane is broadcast over all 81 points. Reading it at one\n# fixed point is functionally invariant, although its raw weight row is not.\nerrors=[]\nfor reflect in [False,True]:\n    for turns in range(4):\n        perm=[]\n        for p in range(81):\n            r,c=divmod(p,9)\n            if reflect: c=8-c\n            for _ in range(turns): r,c=c,8-r\n            perm.append(9*r+c)\n        perm=np.asarray(perm)\n        hp=np.concatenate([81*ch+perm for ch in range(6)]+[np.arange(486,512)])\n        op=np.r_[perm,81]\n        w=load(\"L1.W\")\n        stone_rows=np.array([3*p+ch for p in range(81) for ch in [0,1]])\n        rotated_rows=np.array([3*perm[p]+ch for p in range(81) for ch in [0,1]])\n        err=float(np.max(np.abs(w[np.ix_(rotated_rows,hp)]-w[stone_rows])))\n        colour_weights=w[2::3].sum(axis=0)\n        err=max(err,float(np.max(np.abs(colour_weights[hp]-colour_weights))))\n        for k in range(1,7):\n            bb=load(\"L%d.b\"%k)\n            err=max(err,float(np.max(np.abs(bb[hp]-bb))))\n            if k>1:\n                ww=load(\"L%d.W\"%k)\n                err=max(err,float(np.max(np.abs(ww[np.ix_(hp,hp)]-ww))))\n        ww=load(\"out.W\"); bb=load(\"out.b\")\n        err=max(err,float(np.max(np.abs(ww[np.ix_(hp,op)]-ww))),\n                float(np.max(np.abs(bb[op]-bb))))\n        errors.append(err)\nassert max(errors)==0\nprint(\"Exact symmetry on all valid broadcast-colour inputs:\",errors)\nprint(\"No weights changed.\")",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 38,
+     "used": 38,
+     "opp": {
+      "strong": [
+       128,
+       82.8
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 39,
+     "used": 39,
+     "opp": {
+      "strong": [
+       128,
+       82.0
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 40,
+     "used": 40,
+     "opp": {
+      "strong": [
+       128,
+       78.9
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 41,
+     "used": 41,
+     "opp": {
+      "strong": [
+       128,
+       85.9
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 42,
+     "used": 42,
+     "opp": {
+      "strong": [
+       128,
+       82.8
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 43,
+     "used": 43,
+     "opp": {
+      "strong": [
+       128,
+       82.0
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 44,
+     "used": 44,
+     "opp": {
+      "strong": [
+       128,
+       83.6
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 45,
+     "used": 45,
+     "opp": {
+      "strong": [
+       128,
+       81.2
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 46,
+     "used": 46,
+     "opp": {
+      "strong": [
+       128,
+       87.5
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 47,
+     "used": 47,
+     "opp": {
+      "strong": [
+       128,
+       82.0
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 48,
+     "used": 48,
+     "opp": {
+      "strong": [
+       112,
+       83.9
+      ],
+      "weak": [
+       16,
+       100.0
+      ]
+     }
+    },
+    {
+     "kind": "games",
+     "pass": 49,
+     "used": 49,
+     "opp": {
+      "random": [
+       64,
+       100.0
+      ],
+      "weak": [
+       64,
+       98.4
+      ]
+     }
+    },
+    {
+     "kind": "python",
+     "used": 49,
+     "note": "Re-save the already validated checkpoint without changing any values.",
+     "code": "import json, hashlib, numpy as np\n\npasses=[28,31,32,33,34,35]+list(range(38,50))\nall_games=[]\nfor k in passes:\n    all_games.extend(json.load(open(\"/work/pass_%d/games.json\"%k)))\n\nsummary={}\nfor opponent in [\"strong\",\"weak\",\"random\"]:\n    games=[g for g in all_games if g[\"opponent\"]==opponent]\n    wins=sum(g[\"result\"]>0 for g in games)\n    n=len(games)\n    p=wins/n\n    z=1.959963984540054\n    den=1+z*z/n\n    center=(p+z*z/(2*n))/den\n    half=z*np.sqrt(p*(1-p)/n+z*z/(4*n*n))/den\n    summary[opponent]={\n        \"games\":n, \"wins\":wins, \"win_rate\":p,\n        \"mean_margin\":float(np.mean([g[\"margin\"] for g in games])),\n        \"wilson_95_percent\":[center-half,center+half],\n        \"by_colour\":{\n            colour:{\n                \"games\":sum(g[\"net_color\"]==colour for g in games),\n                \"wins\":sum(g[\"net_color\"]==colour and g[\"result\"]>0 for g in games)\n            } for colour in [\"black\",\"white\"]\n        }\n    }\n\nnames=[\"L%d.%s\"%(k,t) for k in range(1,7) for t in [\"W\",\"b\"]]+[\"out.W\",\"out.b\"]\nreference=np.load(\"/work/candidate_A.npz\")\ntensors={name:load(name).astype(np.float32,copy=False) for name in names}\nassert sum(a.size for a in tensors.values())==1480274\nassert all(np.isfinite(a).all() for a in tensors.values())\nassert all(np.array_equal(tensors[name],reference[name]) for name in names)\n\n# Re-save the already validated checkpoint without changing any values.\nfor name,array in tensors.items():\n    save(name,array)\nnp.savez(\"/work/final_policy.npz\",**tensors)\n# ... 22 more lines",
+     "said": true
+    },
+    {
+     "kind": "games",
+     "pass": 50,
+     "used": 50,
+     "opp": {
+      "weak": [
+       128,
+       97.7
+      ]
+     }
+    },
+    {
+     "kind": "final",
+     "used": 50
+    }
+   ]
+  }
+ ]
+}

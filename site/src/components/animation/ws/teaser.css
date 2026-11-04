@@ -1,0 +1,275 @@
+/**
+ * 开篇三格 teaser：READ / FIX / IMPROVE。样式照着原站 css-teaser.css 重写，
+ * 颜色全部换成 --ws-* 令牌（base.css 里有亮暗两套），类名沿用原站的 .tz-*。
+ *
+ * 三个面板的行是对齐的：步骤、任务气泡、可视化区、绿色说明、结果各占一行，
+ * 用 grid + subgrid 把三列的行高绑在一起；浏览器不支持 subgrid 时退回 flex 纵排。
+ */
+
+@import './base.css';
+
+.ws-demo.teaser {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 16px;
+  align-items: stretch;
+}
+
+.ws-demo .tz-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--ws-line-strong);
+}
+
+.ws-demo .tz-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ws-ink-strong);
+}
+
+/* 任务，画成一个聊天输入框：白底、圆角、淡阴影，右下角一个圆形发送按钮 */
+.ws-demo .tz-task {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 62px;
+  margin: 8px 0 12px;
+  padding: 9px 40px 10px 13px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ws-ink-strong);
+  background-color: var(--ws-card);
+  border: 1px solid var(--ws-line);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 发送按钮：::after 画圆，::before 用 mask 抠出白色箭头，暗色主题下自然反过来 */
+.ws-demo .tz-task::before,
+.ws-demo .tz-task::after {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 24px;
+  height: 24px;
+  content: '';
+  border-radius: 50%;
+}
+.ws-demo .tz-task::after {
+  background-color: var(--ws-ink-strong);
+}
+.ws-demo .tz-task::before {
+  z-index: 1;
+  background-color: var(--ws-card);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5M5 12l7-7 7 7'/%3E%3C/svg%3E") center / 14px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5M5 12l7-7 7 7'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+
+/* 三格共用的可视化区 */
+.ws-demo .tz-vis {
+  position: relative;
+  height: 128px;
+  overflow: hidden;
+  background-color: var(--ws-panel);
+  border: 1px solid var(--ws-line-soft);
+}
+
+/* 第一格：权重墙，向上滚，上下淡出 */
+.ws-demo .tz-wall .tz-scroll {
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ws-ink);
+  animation: ws-tz-scroll 26s linear infinite;
+}
+
+@keyframes ws-tz-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.ws-demo .tz-wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(var(--ws-panel), transparent 22%, transparent 78%, var(--ws-panel));
+}
+
+.ws-demo .tz-row {
+  white-space: nowrap;
+}
+
+.ws-demo .tz-rl {
+  font-weight: 700;
+  color: var(--ws-ink-strong);
+}
+
+.ws-demo .tz-wall mark {
+  padding: 0 2px;
+  color: var(--ws-green-ink);
+  background-color: var(--ws-mark);
+}
+
+/* 第二格：小车场景 */
+.ws-demo .tz-car {
+  display: grid;
+  place-items: center;
+  background-color: var(--ws-card);
+}
+
+.ws-demo .tz-car svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 第三格：两根柱子，底边对齐 */
+.ws-demo .tz-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px 12px 0;
+  background-color: var(--ws-card);
+}
+
+.ws-demo .tz-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 92px;
+  height: 100%;
+}
+
+.ws-demo .tz-bar {
+  position: relative;
+  width: 56px;
+  min-height: 2px;
+}
+
+.ws-demo .tz-bar-before {
+  background-color: var(--ws-grey);
+}
+
+.ws-demo .tz-bar-after {
+  background-color: var(--ws-green);
+}
+
+.ws-demo .tz-v {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ws-ink-strong);
+  transform: translateX(-50%);
+}
+
+.ws-demo .tz-bl {
+  padding: 3px 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--ws-ink);
+}
+
+/* Astra 干的事，绿色一句话 */
+.ws-demo .tz-astra {
+  margin: 10px 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ws-green-deep);
+  text-wrap: pretty; /* 窄屏折行时别把最后一个字单独挤到下一行 */
+}
+
+/* 结果，贴底 */
+.ws-demo .tz-out {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: auto;
+}
+
+.ws-demo .tz-big {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ws-ink-strong);
+}
+
+.ws-demo .tz-note {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ws-ink);
+}
+
+.ws-demo .tz-gif {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--ws-ink-soft);
+  image-rendering: pixelated;
+}
+
+/* 三列的行绑在一起：每个面板跨 5 行，用 subgrid 跟父网格对齐 */
+@supports (grid-template-rows: subgrid) {
+  .ws-demo.teaser {
+    grid-template-rows: repeat(5, auto);
+  }
+
+  .ws-demo .tz-panel {
+    display: grid;
+    grid-row: 1 / span 5;
+    grid-template-rows: subgrid;
+  }
+
+  .ws-demo .tz-out {
+    align-self: end;
+  }
+}
+
+/* 窄屏改成单列堆叠 */
+@media (max-width: 720px) {
+  .ws-demo.teaser {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 12px 0;
+  }
+
+  .ws-demo .tz-panel {
+    display: flex;
+    flex-direction: column;
+    grid-row: auto;
+    grid-template-rows: none;
+  }
+
+  .ws-demo .tz-task {
+    min-height: 0;
+  }
+
+  .ws-demo .tz-out {
+    align-self: stretch;
+  }
+
+  .ws-demo .tz-wall .tz-scroll {
+    animation-duration: 60s;
+  }
+}

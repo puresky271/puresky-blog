@@ -1,0 +1,342 @@
+/**
+ * 实验 8 的两张图（八个基准的折线、逐回合训练轨迹）的样式，按原站 css-mathedit.css 改写。
+ *
+ * 折线图：数学基准绿、其他橙，被指到的那条在前（粗线、点、底部渐变填充），线尾写名字和分数。
+ * 轨迹：左边一条曲线（灰色原始、绿色编辑后，中间的差值填绿），下面是每回合的刻度条，
+ * 右边是当前回合的说明；底部可以展开这次运行里全部改过权重的回合。
+ */
+
+@import './base.css';
+
+/* .me-key / .me-tick / .me-item / .me-halo / .me-tag 在 base.css 里，这里不重复定义 */
+
+.ws-demo.me-fig {
+  margin: 4px 0 14px;
+  color: var(--ws-ink);
+}
+
+.ws-demo.me-traj {
+  outline: none;
+}
+
+.ws-demo .me-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+
+.ws-demo .me-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  font-size: 14px;
+}
+
+.ws-demo .me-failed {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ws-ink-faint);
+}
+
+/* ---------- 折线图：线的淡出、名字、被指到的那条在前 ---------- */
+
+.ws-demo .me-series polyline,
+.ws-demo .me-series circle,
+.ws-demo .me-lead {
+  transition: opacity 0.2s;
+}
+
+/* 被指到的那条压住其他几条，其余淡下去 */
+.ws-demo .me-dim polyline,
+.ws-demo .me-dim circle,
+.ws-demo .me-dim .me-lead {
+  opacity: 0.38;
+}
+
+.ws-demo .me-name {
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-demo .me-val {
+  font-weight: 600;
+}
+
+.ws-demo .me-on .me-name {
+  font-weight: 700;
+}
+
+/* 第一次进入视野之前先藏起来，等线条自己画出来 */
+.ws-demo .me-hidden .me-series circle,
+.ws-demo .me-hidden .me-name,
+.ws-demo .me-hidden .me-lead,
+.ws-demo .me-hidden .me-halo,
+.ws-demo .me-hidden .me-wash {
+  opacity: 0;
+}
+
+.ws-demo .me-drawing .me-series circle,
+.ws-demo .me-drawing .me-name,
+.ws-demo .me-drawing .me-lead {
+  animation: me-fade 0.5s ease-out both;
+  animation-delay: calc(var(--delay, 0ms) + 0.75s);
+}
+
+.ws-demo .me-drawing .me-halo,
+.ws-demo .me-drawing .me-wash {
+  animation: me-fade 0.6s ease-out both;
+  animation-delay: 1.4s;
+}
+
+@keyframes me-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- 轨迹：工具栏、主区 ---------- */
+
+.ws-demo .me-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 10px 0 8px;
+  font-size: 14px;
+}
+
+.ws-demo .me-pos {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 三组图例在工具栏右侧。它得能自己换行，不然窄一点就会被容器右边缘切掉。 */
+.ws-demo .me-bar .me-legend {
+  /* 放不下时整块换到下一行，而不是把最后一项挤出容器（min-width: max-content 让它在
+     收缩到 0 之前先触发 .me-bar 的换行）。 */
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 4px 12px;
+  min-width: max-content;
+}
+
+.ws-demo .me-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.ws-demo .me-plotbox {
+  min-width: 0;
+}
+
+.ws-demo .me-plot {
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.ws-demo .me-panel {
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 2px 4px 4px 20px;
+  font-size: 15px;
+  line-height: 1.5;
+  border-left: 1px solid var(--ws-line-strong);
+}
+
+/* ---------- 一个回合的说明 ---------- */
+
+.ws-demo .me-enter > * {
+  animation: me-rise 0.45s ease-out both;
+}
+
+@keyframes me-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ws-demo .me-head {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ws-green);
+}
+
+.ws-demo .me-sum {
+  margin: 6px 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ws-ink-strong);
+}
+
+.ws-demo .me-res {
+  margin-bottom: 8px;
+}
+
+/* said 原话最多三行，点「更多」放开 */
+.ws-demo .me-said {
+  display: -webkit-box;
+  margin: 0 0 4px;
+  overflow: hidden;
+  font-style: italic;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.ws-demo .me-final.me-clip {
+  max-height: 6.2em;
+  overflow: hidden;
+}
+
+.ws-demo .me-open .me-said {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.ws-demo .me-open .me-final.me-clip {
+  max-height: none;
+}
+
+.ws-demo .me-extra {
+  display: none;
+  margin-top: 8px;
+}
+
+.ws-demo .me-open .me-extra {
+  display: block;
+}
+
+.ws-demo .me-more {
+  margin-top: 4px;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ws-green);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+/* ---------- 关键编辑的红环 ---------- */
+
+.ws-demo .me-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ws-demo .me-pulse-on {
+  animation: me-pulse 1.1s ease-out 2;
+}
+
+@keyframes me-pulse {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(4.5);
+  }
+}
+
+/* ---------- 本轮全部编辑 ---------- */
+
+/* 站里的 .prose details 是圆角卡片，这里要还原成原站那种朴素的可展开行 */
+.ws-demo .me-list {
+  margin-top: 12px;
+  overflow: visible;
+  font-size: 15px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.ws-demo .me-list > summary {
+  width: fit-content;
+  padding: 0;
+  font-weight: 600;
+}
+
+.ws-demo .me-list > summary:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+.ws-demo .me-list > :not(summary) {
+  padding: 0;
+}
+
+.ws-demo .me-list ol {
+  margin: 8px 0 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ws-demo .me-list li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.ws-demo .me-jump {
+  flex: none;
+  min-width: 84px;
+  padding: 0 6px;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ws-red);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 1.5px solid var(--ws-red);
+}
+
+/* ---------- 最终答案的排版 ---------- */
+
+.ws-demo .me-h {
+  margin: 8px 0 4px;
+  font-weight: 700;
+  color: var(--ws-green);
+}
+
+.ws-demo .me-final p,
+.ws-demo .me-final ul,
+.ws-demo .me-final table {
+  margin: 0 0 8px;
+}
+
+.ws-demo .me-final ul {
+  padding-left: 18px;
+}
+
+.ws-demo .me-final td {
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--ws-line);
+}
+
+/* ---------- 窄屏收成一栏 ---------- */
+
+@media (max-width: 760px) {
+  .ws-demo .me-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ws-demo .me-bar .me-legend {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+}

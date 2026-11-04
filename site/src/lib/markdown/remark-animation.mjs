@@ -28,9 +28,29 @@ const LABELS = {
   'avl-rotate': 'AVL 树的右旋与左旋',
   'thread-build': '线索二叉树的线索化',
   'thread-traverse': '遍历线索二叉树',
+  'ws-teaser': '权重空间编程开场三格',
+  'ws-traces': '模型读权重与写权重的完整记录',
+  'ws-gohand': '从零写出的围棋网络的逐步改进',
+  'ws-mathedit': '直接改权重提升数学能力',
 };
 
-const EMPTY_CONFIG_OK = new Set(['tree-levelorder', 'expression-tree']);
+/** 精选收录里那篇文章的 trace 数据集：值就是 public/data/weight-space/traces/ 下的文件名。 */
+const WS_TRACES = new Set([
+  'exp1_games',
+  'exp1_diffusion',
+  'exp3_language',
+  'exp3_car',
+  'exp4_write',
+  'exp5_sycophancy',
+  'exp8_math',
+]);
+
+const EMPTY_CONFIG_OK = new Set([
+  'tree-levelorder',
+  'expression-tree',
+  'ws-teaser',
+  'ws-gohand',
+]);
 
 const VALIDATORS = {
   kmp: () => null,
@@ -118,6 +138,31 @@ const VALIDATORS = {
     }
     return null;
   },
+  'ws-teaser': (config) => (Object.keys(config).length === 0
+    ? null
+    : '开篇三格演示不需要配置项。'),
+  'ws-traces': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'figure' && key !== 'setup');
+    if (unknown.length > 0) return `推理记录演示不支持配置项：${unknown.join('、')}。`;
+    if (!WS_TRACES.has(config.figure)) {
+      return `推理记录演示的 figure 只能是 ${[...WS_TRACES].join('、')} 之一。`;
+    }
+    if (config.setup !== undefined && typeof config.setup !== 'boolean') {
+      return '推理记录演示的 setup 只能是 true 或 false。';
+    }
+    return null;
+  },
+  'ws-gohand': (config) => (Object.keys(config).length === 0
+    ? null
+    : '围棋演示不需要配置项。'),
+  'ws-mathedit': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'figure');
+    if (unknown.length > 0) return `数学编辑演示不支持配置项：${unknown.join('、')}。`;
+    if (!['bench', 'traj'].includes(config.figure)) {
+      return '数学编辑演示的 figure 只能是 bench 或 traj。';
+    }
+    return null;
+  },
 };
 
 const TYPES = new Set(Object.keys(LABELS));
@@ -178,7 +223,9 @@ function buildAnimation(type, source) {
         'data-config': JSON.stringify(config),
       },
     },
-    children: [message(`动画演示：${LABELS[type]}。启用 JavaScript 后可以播放，可以暂停，也可以单步查看。`)],
+    children: [message(type.startsWith('ws-')
+      ? `交互演示：${LABELS[type]}。启用 JavaScript 后可以切换、展开和播放。`
+      : `动画演示：${LABELS[type]}。启用 JavaScript 后可以播放，可以暂停，也可以单步查看。`)],
   };
 }
 
