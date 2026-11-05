@@ -1,0 +1,617 @@
+---
+/**
+ * ArchiveTimeline.astro — 归档页主体。
+ *
+ * 版式参考 innei.in/timeline（余白 Yohaku 的「时光」页）：
+ * 窄正文列、超大细字总篇数、年/月分组、日号 + 标题 + 右侧分类，整行就是一条链接。
+ * 三种视图（舒/密/概览）共用同一份数据，外层 data-view 靠 CSS 切换；
+ * 没有 JS 时只显示舒视图，内容照常可见。规格见 _scratch/timeline-study/SPEC.md。
+ *
+ * 月份容器必须保留 id="YYYY-MM"：首页日历点一天多篇的日子会跳到 /archive/#YYYY-MM。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import type { Archive } from '@/lib/archive';
+import { formatDate, formatDateISO, postPath } from '@/lib/format';
+
+interface Props {
+  archive: Archive;
+}
+
+const { archive } = Astro.props;
+const { years, stats } = archive;
+const first = archive.first;
+const hours = Math.max(1, Math.round(stats.minutes / 60));
+const words = stats.words >= 10000 ? `${(stats.words / 10000).toFixed(1)}万` : stats.words.toLocaleString('zh-CN');
+---
+
+<section class="tl" data-view-root data-view="relaxed" aria-labelledby="archive-title">
+  <header class="tl-header">
+    <div class="tl-top">
+      <h1 class="tl-eyebrow" id="archive-title">归档</h1>
+      <div class="tl-views" role="group" aria-label="归档视图">
+        <button type="button" class="tl-view-btn" data-view-btn="relaxed" aria-pressed="true" title="舒朗视图">舒</button>
+        <button type="button" class="tl-view-btn" data-view-btn="dense" aria-pressed="false" title="紧凑视图">密</button>
+        <button type="button" class="tl-view-btn" data-view-btn="skim" aria-pressed="false" title="概览视图">概览</button>
+      </div>
+    </div>
+    <div class="tl-count-row">
+      <span class="tl-count">{stats.posts}</span>
+      <span class="tl-count-suffix">篇</span>
+    </div>
+    <div class="tl-stats">
+      <div class="tl-stat">
+        <div class="tl-stat-num tl-stat-num-accent">{words}</div>
+        <div class="tl-stat-label">累计字数</div>
+      </div>
+      <div class="tl-stat">
+        <div class="tl-stat-num">{hours}<span class="tl-stat-unit">小时</span></div>
+        <div class="tl-stat-label">通读一遍</div>
+      </div>
+      <div class="tl-stat">
+        <div class="tl-stat-num">{stats.categories}<span class="tl-stat-unit">类</span></div>
+        <div class="tl-stat-label">文章题材</div>
+      </div>
+    </div>
+    {first && <p class="tl-note">从 {formatDateISO(first.data.pubDate)} 写到现在。</p>}
+  </header>
+
+  <!--
+    视图切换放在列表前面：从 localStorage 恢复「密 / 概览」时要在列表解析前写好 data-view，
+    否则会先闪一帧舒视图。切换逻辑很小，不值得为它开一个 Svelte 岛屿。
+  -->
+  <script is:inline data-astro-rerun>
+    (() => {
+      const KEY = 'puresky:archive:view';
+      const VIEWS = ['relaxed', 'dense', 'skim'];
+      const root = document.querySelector('[data-view-root]');
+      if (!root) return;
+
+      const buttons = root.querySelectorAll('[data-view-btn]');
+      const apply = (view) => {
+        root.dataset.view = view;
+        for (const button of buttons) {
+          button.setAttribute('aria-pressed', String(button.dataset.viewBtn === view));
+        }
+      };
+      const remember = (view) => {
+        try {
+          localStorage.setItem(KEY, view);
+        } catch {}
+      };
+
+      let initial = 'relaxed';
+      try {
+        const saved = localStorage.getItem(KEY);
+        if (VIEWS.includes(saved)) initial = saved;
+      } catch {}
+      const fromQuery = new URLSearchParams(location.search).get('view');
+      if (VIEWS.includes(fromQuery)) initial = fromQuery;
+      // 首页日历跳进来的锚点指向列表里的月份，概览视图下列表是隐藏的，直接回落舒视图。
+      if (initial === 'skim' && /^#\d{4}-\d{2}$/.test(location.hash)) initial = 'relaxed';
+      apply(initial);
+
+      // 视图写进 ?view=，分享出去或刷新都能落回同一视图；舒视图是默认值，不留在地址里。
+      const syncQuery = (view) => {
+        const url = new URL(location.href);
+        if (view === 'relaxed') url.searchParams.delete('view');
+        else url.searchParams.set('view', view);
+        history.replaceState(history.state, '', url);
+      };
+
+      for (const button of buttons) {
+        button.addEventListener('click', () => {
+          const view = button.dataset.viewBtn;
+          apply(view);
+          remember(view);
+          syncQuery(view);
+        });
+      }
+
+      // 概览里的行和「回到顶部」共用一份委托：列表是整块静态渲染的，不用逐个绑定。
+      root.addEventListener('click', (event) => {
+        const target = event.target;
+
+        // 回到顶部：有 JS 时滑到真正的页顶；没有 JS 时 href="#main" 也能用。
+        if (target.closest('[data-top]')) {
+          event.preventDefault();
+          scrollTo({
+            top: 0,
+            behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          });
+          const url = new URL(location.href);
+          url.hash = '';
+          history.replaceState(history.state, '', url);
+          return;
+        }
+
+        // 概览里的行是锚点链接，目标在列表里：先切回舒视图再滚过去。
+        const link = target.closest('[data-skim-jump]');
+        if (!link) return;
+        event.preventDefault();
+        const key = link.dataset.skimJump;
+        apply('relaxed');
+        remember('relaxed');
+        const url = new URL(location.href);
+        url.searchParams.delete('view');
+        url.hash = key;
+        history.replaceState(history.state, '', url);
+        const month = document.getElementById(key);
+        if (!month) return;
+        // replaceState 不会重新触发 :target，手动补一个高亮类，落到哪个月能看见。
+        root.querySelectorAll('.tl-month.is-target').forEach((el) => el.classList.remove('is-target'));
+        month.classList.add('is-target');
+        month.scrollIntoView({
+          behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'start',
+        });
+      });
+    })();
+  </script>
+
+  <div class="tl-list">
+    {
+      years.map((year) => (
+        <section class="tl-year" aria-labelledby={`y-${year.year}`}>
+          <h2 class="tl-year-row" id={`y-${year.year}`} data-reveal>
+            <span class="tl-year-num">{year.year}</span>
+            <span class="tl-year-count">{year.count} 篇</span>
+          </h2>
+          {year.months.map((month) => (
+            <div class="tl-month" id={month.key}>
+              <h3 class="tl-month-label" data-reveal>
+                {month.label}
+              </h3>
+              {month.entries.map((entry, index) => (
+                <a
+                  class="tl-item"
+                  href={postPath(entry.post.id)}
+                  data-reveal
+                  style={`--reveal-i: ${Math.min(index, 12)}`}
+                >
+                  <time class="tl-date" datetime={entry.post.data.pubDate.toISOString()} title={formatDate(entry.post.data.pubDate)}>
+                    {entry.day}
+                  </time>
+                  <span class="tl-title" title={entry.post.data.title}>
+                    {entry.post.data.title}
+                  </span>
+                  <span class="tl-meta">
+                    {entry.category}
+                    <span class="tl-meta-sub"> · {entry.subcategory}</span>
+                  </span>
+                  <span class="tl-type">{entry.category}</span>
+                </a>
+              ))}
+            </div>
+          ))}
+        </section>
+      ))
+    }
+  </div>
+
+  <div class="tl-skim">
+    {
+      years.map((year) => (
+        <section class="tl-year">
+          <p class="tl-year-row">
+            <span class="tl-year-num">{year.year}</span>
+            <span class="tl-year-count">{year.count} 篇</span>
+          </p>
+          {year.months.map((month) => (
+            <a class="tl-skim-row" href={`#${month.key}`} data-skim-jump={month.key}>
+              <span class="tl-skim-label">{month.label}</span>
+              <span class="tl-skim-chart">
+                <span class="tl-skim-fill" style={`width: ${month.percent}%`} />
+              </span>
+              <span class="tl-skim-count">{month.count}</span>
+            </a>
+          ))}
+        </section>
+      ))
+    }
+  </div>
+
+  <div class="tl-end">
+    <a class="tl-top-link" href="#main" data-top>
+      <Icon name="arrow-up" size={14} class="tl-top-icon" />回到顶部
+    </a>
+  </div>
+</section>
+
+<style>
+  /* 参考站的正文列很窄，这是整个版式的基调；宽度按 672px 正文反推，横向内边距随断点收放。 */
+  .tl {
+    width: 100%;
+    max-width: 46rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (width >= 48rem) {
+    .tl {
+      padding-inline: 2rem;
+    }
+  }
+  @media (width >= 96rem) {
+    .tl {
+      max-width: 53rem;
+    }
+  }
+
+  /* ── 页头：小标题 + 视图切换，超大总篇数，三组统计，最后一句收尾 ── */
+  .tl-header {
+    margin-bottom: 2.5rem;
+  }
+  .tl-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .tl-eyebrow {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.12em;
+    color: var(--fg-muted);
+  }
+  .tl-views {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+  /* 没有脚本时按钮点了也没反应，干脆不显示，列表和锚点照常可用。 */
+  :global(html:not(.js)) .tl-views {
+    display: none;
+  }
+  .tl-view-btn {
+    position: relative;
+    padding: 0.25rem 0.625rem;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--fg-subtle);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+  .tl-view-btn::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.625rem;
+    bottom: 0;
+    height: 1.5px;
+    border-radius: 999px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 220ms var(--ease-out-expo);
+  }
+  .tl-view-btn:hover {
+    color: var(--fg);
+  }
+  .tl-view-btn[aria-pressed='true'] {
+    color: var(--accent);
+  }
+  .tl-view-btn[aria-pressed='true']::after {
+    transform: scaleX(1);
+  }
+  .tl-view-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .tl-count-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .tl-count {
+    /* 参考站移动端也不缩这个数字，和桌面同一号，是页头的主视觉。 */
+    font-size: 3.9375rem;
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: color-mix(in oklab, var(--fg) 85%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-count-suffix {
+    font-size: 0.875rem;
+    color: color-mix(in oklab, var(--fg) 80%, transparent);
+  }
+  .tl-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+  }
+  .tl-stat-num {
+    font-size: 1.75rem;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: color-mix(in oklab, var(--fg) 80%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-stat-num-accent {
+    color: var(--accent);
+  }
+  .tl-stat-unit {
+    margin-left: 0.15rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: color-mix(in oklab, var(--fg) 55%, transparent);
+  }
+  .tl-stat-label {
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--fg-subtle);
+  }
+  .tl-note {
+    margin-top: 0.875rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--fg-muted);
+  }
+
+  /* ── 年、月分组 ── */
+  .tl-year {
+    margin-bottom: 1.75rem;
+  }
+  .tl-year-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+  }
+  .tl-year-num {
+    font-size: 1.75rem;
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: color-mix(in oklab, var(--fg) 50%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-year-count {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: color-mix(in oklab, var(--fg) 35%, transparent);
+  }
+  /* 锚点落点：全局 scroll-padding-top 是 86px，这里再留一点呼吸，月份标签不会贴着导航。 */
+  .tl-month {
+    scroll-margin-top: 0.5rem;
+  }
+  .tl-month-label {
+    margin: 0;
+    padding: 0.875rem 0 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--fg) 45%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-month:target .tl-month-label,
+  .tl-month.is-target .tl-month-label {
+    color: var(--accent);
+  }
+
+  /* ── 条目：整行一条链接，日号 / 标题 / 右侧分类，悬停只换颜色 ── */
+  .tl-item {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.4375rem 0;
+    color: inherit;
+    text-decoration: none;
+  }
+  .tl-date {
+    width: 1.75rem;
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: color-mix(in oklab, var(--fg) 45%, transparent);
+    font-variant-numeric: tabular-nums;
+    transition: color 160ms ease;
+  }
+  .tl-title {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    /* 字重和颜色对齐首页 PostRow 的文章行，归档页的标题不该比别处更重。 */
+    font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--fg);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: color 160ms ease;
+  }
+  .tl-meta {
+    flex: none;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: color-mix(in oklab, var(--fg) 40%, transparent);
+    white-space: nowrap;
+  }
+  .tl-type {
+    display: none;
+    flex: none;
+    font-size: 0.625rem;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    color: color-mix(in oklab, var(--fg) 35%, transparent);
+  }
+  .tl-item:hover .tl-date {
+    color: var(--accent);
+  }
+  .tl-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  /* 窄屏只留一级分类，否则右侧 meta 会把标题挤成几个字。 */
+  @media (width < 30rem) {
+    .tl-meta-sub {
+      display: none;
+    }
+  }
+
+  /* ── 密视图：同一份 DOM，行更紧、标题更小、右侧只留一级分类 ── */
+  [data-view='dense'] .tl-year {
+    margin-bottom: 1.25rem;
+  }
+  [data-view='dense'] .tl-year-row {
+    margin-bottom: 0.375rem;
+  }
+  [data-view='dense'] .tl-month-label {
+    padding: 0.625rem 0 0.25rem;
+  }
+  [data-view='dense'] .tl-item {
+    align-items: baseline;
+    gap: 0.625rem;
+    padding: 0.1875rem 0;
+  }
+  [data-view='dense'] .tl-date {
+    width: 1.625rem;
+  }
+  [data-view='dense'] .tl-title {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: color-mix(in oklab, var(--fg) 85%, transparent);
+  }
+  [data-view='dense'] .tl-meta {
+    display: none;
+  }
+  [data-view='dense'] .tl-type {
+    display: inline;
+  }
+
+  /* ── 概览视图：每个月一行条形图，点一行跳回列表对应月份 ── */
+  .tl-skim {
+    display: none;
+  }
+  .tl-skim .tl-year {
+    margin-bottom: 1.25rem;
+  }
+  .tl-skim .tl-year-row {
+    margin-bottom: 0.375rem;
+  }
+  [data-view='skim'] .tl-list {
+    display: none;
+  }
+  [data-view='skim'] .tl-skim {
+    display: block;
+  }
+  .tl-skim-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4375rem 0;
+    color: inherit;
+    text-decoration: none;
+  }
+  .tl-skim-label {
+    width: 5.75rem;
+    flex: none;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--fg) 45%, transparent);
+  }
+  .tl-skim-chart {
+    position: relative;
+    flex: 1;
+    min-width: 2.5rem;
+    height: 1.125rem;
+  }
+  .tl-skim-chart::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0.25rem;
+    height: 1px;
+    background: var(--line);
+  }
+  .tl-skim-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0.25rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+    opacity: 0.55;
+    transition:
+      opacity 160ms ease,
+      height 160ms ease;
+  }
+  .tl-skim-row:hover .tl-skim-fill {
+    height: 3px;
+    opacity: 0.9;
+  }
+  .tl-skim-count {
+    width: 1.5rem;
+    flex: none;
+    text-align: right;
+    font-size: 0.75rem;
+    color: color-mix(in oklab, var(--fg) 40%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-skim-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  /* ── 页尾：一条细线收住，回顶部 ── */
+  .tl-end {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  .tl-top-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+  .tl-top-link:hover {
+    color: var(--fg);
+  }
+  .tl-top-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  /*
+   * 入场动画沿用 Base.astro 的 [data-reveal] 观察器，只把参数调成参考站的
+   * 8px / 400ms、每档 30ms 封顶 12 档，比全站默认的 14px / 700ms / 70ms 更轻快。
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .tl-item[data-reveal],
+    :global(html.js) .tl-month-label[data-reveal],
+    :global(html.js) .tl-year-row[data-reveal] {
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity 400ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: calc(min(var(--reveal-i, 0), 12) * 30ms);
+    }
+    :global(html.js) .tl-item[data-reveal].is-revealed,
+    :global(html.js) .tl-month-label[data-reveal].is-revealed,
+    :global(html.js) .tl-year-row[data-reveal].is-revealed {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
