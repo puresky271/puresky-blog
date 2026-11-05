@@ -10,7 +10,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +31,18 @@ for (const name of ['home', 'about']) {
   const found = ['png', 'jpg', 'jpeg', 'webp', 'avif'].some((ext) => existsSync(new URL(`../src/assets/local/${name}.${ext}`, import.meta.url)));
   if (!found) console.warn(`提示：src/assets/local/ 里没有 ${name} 插画，这次部署会用仓库里的默认插画。`);
 }
+
+/*
+ * 端程山的歌曲和 MV 不发布：版权原因，素材只留在本机（.gitignore 里同样排除）。
+ * public/ 下的文件会被 astro build 原样拷进 dist，这里在上传前摘掉；本地曲库是构建期扫描
+ * public/media/songs 生成的，线上置空，免得播放器挂着一首打不开的歌。
+ */
+for (const rel of ['media/songs', 'media/panorama']) {
+  rmSync(path.join(site, 'dist', rel), { recursive: true, force: true });
+}
+const localLibrary = path.join(site, 'dist', 'data', 'local-songs.json');
+if (existsSync(localLibrary)) writeFileSync(localLibrary, 'null', 'utf8');
+console.log('部署：已排除端程山的歌曲、MV 与 MV 截图，线上本地曲库为空。');
 
 // wrangler 在没有配置文件的 Astro 项目目录里会尝试「自动配置」：往 package.json 里装 @astrojs/cloudflare 和 wrangler。
 // 这里始终显式传配置文件，并从系统临时目录调用，避免它碰项目文件。

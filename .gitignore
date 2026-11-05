@@ -47,5 +47,14 @@ _scratch/
 .workbuddy/
 *.local.*
 
+# 端程山的歌曲、MV 与 MV 截图：版权原因只留在本机，不进仓库也不发布（scripts/deploy.mjs 上传前会再摘掉）
+site/public/media/songs/端程山.mp3
+site/public/media/songs/covers/端程山.jpg
+site/public/media/songs/lrc/
+site/public/media/songs/songs.json
+site/public/media/songs/videos.json
+site/public/media/songs/videos/
+site/public/media/panorama/
+
 # playwright 输出
 output/
