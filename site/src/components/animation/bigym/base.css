@@ -1,0 +1,174 @@
+/**
+ * BiGym 2.0 项目页交互演示的公共层：颜色令牌、分段控件、说明文字、滚动容器。
+ *
+ * 原站是 Astro 静态页，配色本来就用 OKLCH 语义令牌（--paper / --ink / --rule / --series-*），
+ * 这里原样搬过来，只把前缀换成 --bm-，选择器都挂在 .bm-demo 下面，不会漏到别的文章里。
+ *
+ * 原站亮色一套、暗色一套，两套的色值都在这里；组件自己的样式文件只写布局和状态。
+ */
+
+.bm-demo {
+  /* 页面底色与文字 */
+  --bm-paper: oklch(0.985 0.003 245);
+  --bm-paper-2: oklch(0.962 0.005 245);
+  --bm-paper-3: oklch(0.935 0.006 245);
+  --bm-ink: oklch(0.21 0.012 245);
+  --bm-ink-2: oklch(0.43 0.012 245);
+  --bm-ink-3: oklch(0.58 0.01 245);
+  --bm-rule: oklch(0.885 0.006 245);
+  --bm-rule-strong: oklch(0.8 0.008 245);
+  --bm-accent: oklch(0.52 0.13 245);
+  --bm-accent-ink: oklch(0.45 0.12 245);
+  --bm-accent-wash: oklch(0.52 0.13 245 / 9%);
+  --bm-bar: oklch(0.72 0.012 245);
+  --bm-media-edge: oklch(0% 0 0 / 8%);
+
+  /* 模型色：同一家的模型同一色，和原站一致，代表数据含义，不跟主题走 */
+  --bm-series-astra: #1f1f1f;
+  --bm-series-sol: #1f1f1f;
+  --bm-series-sol61: #1f1f1f;
+  --bm-series-terra: #1f1f1f;
+  --bm-series-opus: #cc785c;
+  --bm-series-haiku: #cc785c;
+  --bm-series-sonnet: #cc785c;
+  --bm-series-deepseek: #2243e6;
+  --bm-series-kimi: #047afe;
+
+  /* 任务场景色 */
+  --bm-scene-reaching: #56b4e9;
+  --bm-scene-tabletop: #009e73;
+  --bm-scene-dishwasher: #e69f00;
+  --bm-scene-counter: #d55e00;
+
+  --bm-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --bm-r-sm: 3px;
+  --bm-r-md: 8px;
+  --bm-r-lg: 12px;
+
+  position: relative;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--bm-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme='dark'] .bm-demo {
+  --bm-paper: oklch(0.165 0.004 245);
+  --bm-paper-2: oklch(0.2 0.006 245);
+  --bm-paper-3: oklch(0.235 0.007 245);
+  --bm-ink: oklch(0.93 0.004 245);
+  --bm-ink-2: oklch(0.76 0.008 245);
+  --bm-ink-3: oklch(0.6 0.008 245);
+  --bm-rule: oklch(0.29 0.006 245);
+  --bm-rule-strong: oklch(0.38 0.008 245);
+  --bm-accent: oklch(74% 0.11 240);
+  --bm-accent-ink: oklch(80% 0.09 240);
+  --bm-accent-wash: oklch(74% 0.11 240 / 12%);
+  --bm-bar: oklch(0.5 0.01 245);
+  --bm-media-edge: oklch(100% 0 0 / 8%);
+
+  --bm-series-astra: #e6e6e6;
+  --bm-series-sol: #e6e6e6;
+  --bm-series-sol61: #e6e6e6;
+  --bm-series-terra: #e6e6e6;
+  --bm-series-opus: #d98b70;
+  --bm-series-haiku: #d98b70;
+  --bm-series-sonnet: #d98b70;
+  --bm-series-deepseek: #6f86ff;
+  --bm-series-kimi: #3d9bff;
+}
+
+/* ── 分段控件（20 tasks / 9 core / 11 extended，以及各组件内的切换） ── */
+
+.bm-demo .bm-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--bm-rule-strong);
+  border-radius: 999px;
+}
+
+.bm-demo .bm-seg button {
+  padding: 0.4rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bm-ink-2);
+  font: 600 0.875rem var(--font-sans);
+  cursor: pointer;
+  transition: background-color 0.15s var(--bm-ease-out), color 0.15s var(--bm-ease-out);
+}
+
+.bm-demo .bm-seg button[aria-pressed='true'] {
+  background: var(--bm-ink);
+  color: var(--bm-paper);
+}
+
+.bm-demo .bm-seg button:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+
+/* ── 文字 ── */
+
+.bm-demo .bm-sub {
+  max-width: 44rem;
+  margin: -0.5rem 0 1rem;
+  color: var(--bm-ink-2);
+  font-size: 0.95rem;
+}
+
+.bm-demo .bm-note {
+  display: grid;
+  gap: 0.25rem;
+  max-width: 56rem;
+  margin-top: 1.2rem;
+  color: var(--bm-ink-3);
+  font-size: 0.82rem;
+}
+
+.bm-demo .bm-note p {
+  margin: 0;
+}
+
+.bm-demo .bm-cap {
+  margin: 0.9rem 0 0;
+  color: var(--bm-ink-3);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.bm-demo .bm-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* 数值用等宽数字，避免逐帧刷新时抖动 */
+.bm-demo .bm-num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bm-demo *,
+  .bm-demo *::before,
+  .bm-demo *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * 原站的这几个演示是按 1376px 宽的版心设计的（榜单 16 条柱子、逐任务表 736px 加转盘）。
+ * 文章版心只有 46rem，桌面端把它放大到 58rem，向右占用版心外的空白区域，
+ * 目录在左边，不会被压到。视口不够宽时退回 100%，由组件内部横向滚动。
+ */
+@media (min-width: 80rem) {
+  .prose .animation-demo[data-animation^='bigym-'] {
+    width: min(58rem, calc(100vw - 27rem));
+    max-width: none;
+  }
+}

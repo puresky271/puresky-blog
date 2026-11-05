@@ -28,10 +28,17 @@ const LABELS = {
   'avl-rotate': 'AVL 树的右旋与左旋',
   'thread-build': '线索二叉树的线索化',
   'thread-traverse': '遍历线索二叉树',
+  'omakase-curve': '一席 Omakase 的风味递进弧线',
+  'panorama-lyrics': '《端程山》双版本歌词对照与音画联动',
   'ws-teaser': '权重空间编程开场三格',
   'ws-traces': '模型读权重与写权重的完整记录',
   'ws-gohand': '从零写出的围棋网络的逐步改进',
   'ws-mathedit': '直接改权重提升数学能力',
+  'bigym-film': 'BiGym 2.0 开篇影像',
+  'bigym-board': '人形机器人家务任务榜单',
+  'bigym-tasks': '20 个任务与真人演示',
+  'bigym-cost': '成功率与单次会话成本',
+  'bigym-explorer': '每个程序在每个隐藏种子上的结果',
 };
 
 /** 精选收录里那篇文章的 trace 数据集：值就是 public/data/weight-space/traces/ 下的文件名。 */
@@ -48,8 +55,15 @@ const WS_TRACES = new Set([
 const EMPTY_CONFIG_OK = new Set([
   'tree-levelorder',
   'expression-tree',
+  'omakase-curve',
+  'panorama-lyrics',
   'ws-teaser',
   'ws-gohand',
+  'bigym-film',
+  'bigym-board',
+  'bigym-tasks',
+  'bigym-cost',
+  'bigym-explorer',
 ]);
 
 const VALIDATORS = {
@@ -138,6 +152,27 @@ const VALIDATORS = {
     }
     return null;
   },
+  'omakase-curve': (config) => (Object.keys(config).length === 0
+    ? null
+    : '味觉曲线演示不需要配置项。'),
+  'panorama-lyrics': (config) => {
+    const allowed = new Set(['lines', 'stanza', 'title']);
+    const unknown = Object.keys(config).filter((key) => !allowed.has(key));
+    if (unknown.length > 0) return `歌词对照演示不支持配置项：${unknown.join('、')}。`;
+    if (config.lines !== undefined) {
+      const lineStr = String(config.lines).trim();
+      if (!/^\d+(?:\s*[-–~]\s*\d+)?$/.test(lineStr)) {
+        return 'lines 需为形如 "16-19" 或 "1" 的行号范围。';
+      }
+    }
+    if (config.stanza !== undefined && !['verse-1', 'chorus-1', 'verse-2', 'chorus-2', 'bridge', 'outro'].includes(String(config.stanza))) {
+      return 'stanza 只能是 verse-1、chorus-1、verse-2、chorus-2、bridge 或 outro。';
+    }
+    if (config.title !== undefined && (typeof config.title !== 'string' || config.title.length > 80)) {
+      return 'title 需为不超过 80 字的字符串。';
+    }
+    return null;
+  },
   'ws-teaser': (config) => (Object.keys(config).length === 0
     ? null
     : '开篇三格演示不需要配置项。'),
@@ -163,6 +198,21 @@ const VALIDATORS = {
     }
     return null;
   },
+  'bigym-film': (config) => (Object.keys(config).length === 0
+    ? null
+    : '开篇影像不需要配置项。'),
+  'bigym-board': (config) => (Object.keys(config).length === 0
+    ? null
+    : '榜单演示不需要配置项。'),
+  'bigym-tasks': (config) => (Object.keys(config).length === 0
+    ? null
+    : '任务盘演示不需要配置项。'),
+  'bigym-cost': (config) => (Object.keys(config).length === 0
+    ? null
+    : '成本散点演示不需要配置项。'),
+  'bigym-explorer': (config) => (Object.keys(config).length === 0
+    ? null
+    : '程序浏览器不需要配置项。'),
 };
 
 const TYPES = new Set(Object.keys(LABELS));
@@ -223,7 +273,7 @@ function buildAnimation(type, source) {
         'data-config': JSON.stringify(config),
       },
     },
-    children: [message(type.startsWith('ws-')
+    children: [message(type.startsWith('ws-') || type.startsWith('bigym-')
       ? `交互演示：${LABELS[type]}。启用 JavaScript 后可以切换、展开和播放。`
       : `动画演示：${LABELS[type]}。启用 JavaScript 后可以播放，可以暂停，也可以单步查看。`)],
   };

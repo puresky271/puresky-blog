@@ -1,0 +1,1050 @@
+/**
+ * BiGym 2.0 程序浏览器（Every program, every seed）。
+ *
+ * 尺寸，圆角，字号，状态和原站 PolicyExplorer 一段对齐（原站 CSS 见
+ * _scratch/bigym2/interact/scripts/PolicyExplorer.pretty.css），颜色全部走
+ * base.css 的 --bm-* 令牌。选择器都挂在 .bm-explorer 下面，不会漏到别的文章里。
+ *
+ * 与原站的差别：原站右侧是 viser 3D 回放，这里是同一份 trace 驱动的轨迹时间轴，
+ * 播放器里是进度条和阶段名，不是视频。
+ */
+
+.bm-explorer {
+  /* 高亮窗口和迷你 trace-map 用的颜色，原站就是强调色 */
+  --hl-run: var(--bm-accent);
+
+  /* 代码词法着色：亮色取 shiki vitesse-light，暗色取 vitesse-dark，按原站采样值来 */
+  --tk-com: var(--bm-ink-3);
+  --tk-str: #b56959;
+  --tk-kw: #1e754f;
+  --tk-num: #2f798a;
+  --tk-fn: #59873a;
+  --tk-self: #a65e2b;
+}
+
+:root[data-theme='dark'] .bm-explorer {
+  --tk-str: #c98a7d;
+  --tk-kw: #4d9375;
+  --tk-num: #4c9a91;
+  --tk-fn: #80a665;
+  --tk-self: #c99076;
+}
+
+/* 只读屏幕阅读器的说明 */
+.bm-explorer .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bm-explorer-msg {
+  margin: 0;
+  padding: 1rem;
+  color: var(--bm-ink-3);
+  font-size: 0.9rem;
+}
+
+/* ── 说明文字 ── */
+
+.bm-explorer .lede {
+  max-width: 46rem;
+  margin: 0 0 1.1rem;
+  color: var(--bm-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  text-align: left;
+  text-wrap: pretty;
+}
+
+/* ── 成功率矩阵 ── */
+
+.bm-explorer .matrix-scroll {
+  /* 左侧留 4px，缩放和选中描边不会被滚动容器裁掉，列头字也不会贴边 */
+  padding: 2px 4px 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.bm-explorer .matrix-scroll:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 3px;
+}
+
+/*
+ * 文章正文的 .prose table 是「横向滚动的卡片」样式：display:block，圆角，边框，
+ * 自己就是滚动容器。逐项抵消掉，否则单元格的 sticky 会被表格自己的 overflow 吃掉。
+ */
+.bm-explorer .matrix {
+  display: table;
+  width: 100%;
+  max-width: none;
+  min-width: 45.5rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  border-collapse: separate;
+  border-spacing: 3px;
+  table-layout: fixed;
+  font-family: var(--font-sans);
+  font-size: inherit;
+}
+
+.bm-explorer .matrix th,
+.bm-explorer .matrix td,
+.bm-explorer .matrix tbody tr:nth-child(even) td {
+  background: transparent;
+  border-bottom: 0;
+}
+
+.bm-explorer .matrix th {
+  padding: 0 0.15rem 0.4rem;
+  color: var(--bm-ink-2);
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.25;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.bm-explorer .matrix th.m-agent {
+  width: 8.5rem;
+  padding-left: 0;
+  text-align: left;
+}
+
+.bm-explorer .matrix tbody th.m-agent {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding: 0 0.5rem 0 0;
+  background: var(--bm-paper);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.bm-explorer .kicker {
+  display: block;
+  color: var(--bm-ink-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bm-explorer .m-model {
+  display: block;
+  color: var(--bm-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.bm-explorer .m-n {
+  display: block;
+  color: var(--bm-ink-3);
+  font-size: 0.75rem;
+  font-weight: 450;
+}
+
+.bm-explorer .matrix td {
+  padding: 0;
+}
+
+/* 两批模型之间留一条空行，原站用 tr.first 加透明上边框做这件事 */
+.bm-explorer .matrix tr.first:not(:first-child) > * {
+  border-top: 0.6rem solid transparent;
+}
+
+.bm-explorer .m-cell {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 2.35rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--bm-r-sm);
+  background: color-mix(in oklab, var(--hl) calc(8% + var(--v) * 0.62%), var(--bm-paper));
+  color: var(--bm-ink);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    scale 0.14s var(--bm-ease-out),
+    box-shadow 0.14s var(--bm-ease-out);
+}
+
+.bm-explorer .m-cell[aria-pressed='true'] {
+  z-index: 1;
+  box-shadow:
+    0 0 0 2px var(--bm-paper),
+    0 0 0 4px var(--bm-ink);
+}
+
+@media (hover: hover) {
+  .bm-explorer .m-cell:hover {
+    scale: 1.06;
+  }
+}
+
+.bm-explorer .m-cell:active {
+  scale: 0.95;
+}
+
+.bm-explorer .m-cell:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+
+/* ── 选中的那一格 ── */
+
+.bm-explorer .picked {
+  margin: 1.75rem 0 0.9rem;
+  color: var(--bm-ink-2);
+  font-size: 0.9375rem;
+  text-align: left;
+  scroll-margin-top: 5rem;
+}
+
+.bm-explorer .picked b {
+  color: var(--bm-ink);
+  font-weight: 650;
+}
+
+/* ── 两栏正文 ── */
+
+.bm-explorer .body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+@media (min-width: 901px) {
+  .bm-explorer .body {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}
+
+/* ── 代码面板 ── */
+
+.bm-explorer .code-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  border-radius: var(--bm-r-lg);
+  background: var(--bm-paper-2);
+  box-shadow: inset 0 0 0 1px var(--bm-rule);
+  overflow: hidden;
+}
+
+.bm-explorer .bm-code-head {
+  display: flex;
+  height: auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+  border-bottom: 1px solid var(--bm-rule);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+}
+
+.bm-explorer .bm-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--bm-ink);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bm-explorer .bm-meta {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--bm-ink-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bm-explorer .bm-code-head .bm-raw {
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--bm-r-sm);
+  color: var(--bm-ink-2);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: background-color 0.14s var(--bm-ease-out), color 0.14s var(--bm-ease-out);
+}
+
+.bm-explorer .bm-code-head .bm-raw:hover {
+  background: var(--bm-paper-3);
+  color: var(--bm-ink);
+}
+
+.bm-explorer .bm-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2rem;
+  padding-inline: 0.6rem;
+  border: 0;
+  border-radius: var(--bm-r-sm);
+  background: transparent;
+  color: var(--bm-ink-2);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.14s var(--bm-ease-out),
+    color 0.14s var(--bm-ease-out),
+    scale 0.14s var(--bm-ease-out);
+}
+
+.bm-explorer .bm-copy:hover {
+  background: var(--bm-paper-3);
+  color: var(--bm-ink);
+}
+
+.bm-explorer .bm-copy:active {
+  scale: 0.96;
+}
+
+.bm-explorer .bm-copy:focus-visible,
+.bm-explorer .bm-raw:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+
+.bm-explorer .code-wrap {
+  position: relative;
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.bm-explorer .code {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  contain: layout paint;
+  overscroll-behavior: contain;
+  background: var(--bm-paper-2);
+  transition: opacity 0.16s var(--bm-ease-out);
+  will-change: scroll-position;
+}
+
+.bm-explorer .code.loading {
+  opacity: 0.4;
+}
+
+.bm-explorer .code.traced {
+  margin-right: 12px;
+}
+
+/* 文章页的 .prose pre 有自己的边框，底色和字号，这里全部盖掉，面板自己是一张卡片 */
+.bm-explorer .code pre {
+  margin: 0;
+  padding: 0.9rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  overflow: visible;
+  font-family: var(--font-mono) !important;
+  font-size: 0.8125rem;
+  font-variant-ligatures: none;
+  line-height: 1.65;
+  counter-reset: line;
+  tab-size: 4;
+}
+
+.bm-explorer .code code {
+  display: block;
+  min-width: max-content;
+  font-family: var(--font-mono) !important;
+}
+
+.bm-explorer .line {
+  display: block;
+  width: 100%;
+  padding-right: 1.25rem;
+}
+
+.bm-explorer .line::before {
+  display: inline-block;
+  width: 3.25rem;
+  padding-right: 1.1rem;
+  color: var(--bm-rule-strong);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  counter-increment: line;
+  content: counter(line);
+  user-select: none;
+}
+
+.bm-explorer .code.traced .line {
+  cursor: pointer;
+}
+
+.bm-explorer .code.traced .line.cold {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.bm-explorer .line.on {
+  background:
+    linear-gradient(var(--hl-run), var(--hl-run)) 0 0 / 3px 100% no-repeat,
+    color-mix(in oklab, var(--hl-run) 15%, transparent);
+}
+
+.bm-explorer .line.on::before {
+  color: var(--hl-run);
+}
+
+/* 词法着色 */
+
+.bm-explorer .tk-com {
+  color: var(--tk-com);
+}
+
+.bm-explorer .tk-str {
+  color: var(--tk-str);
+}
+
+.bm-explorer .tk-kw {
+  color: var(--tk-kw);
+}
+
+.bm-explorer .tk-num {
+  color: var(--tk-num);
+}
+
+.bm-explorer .tk-fn {
+  color: var(--tk-fn);
+}
+
+.bm-explorer .tk-self {
+  color: var(--tk-self);
+}
+
+/* 代码右侧的迷你 trace-map，每一行代码一颗格子 */
+
+.bm-explorer .trace-map {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  bottom: 4px;
+  display: grid;
+  grid-template-rows: repeat(var(--n, 0), 1fr);
+  width: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+.bm-explorer .trace-map i {
+  min-height: 0;
+  border-radius: 1px;
+}
+
+.bm-explorer .trace-map i.on {
+  background: var(--hl-run);
+}
+
+/* ── 右栏：播放器与阶段 ── */
+
+.bm-explorer .side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-self: start;
+  min-width: 0;
+}
+
+.bm-explorer .player {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--bm-r-md);
+  background: #0b0c0e;
+  box-shadow: inset 0 0 0 1px var(--bm-media-edge);
+  color-scheme: dark;
+  color: oklch(80% 0.008 245);
+}
+
+.bm-explorer .rollout-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.9rem;
+  padding: 0.6rem 0.8rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bm-explorer .rollout-meta .outcome {
+  font-weight: 600;
+}
+
+.bm-explorer .rollout-meta .outcome.ok {
+  color: oklch(80% 0.13 150);
+}
+
+.bm-explorer .rollout-meta .outcome.fail {
+  color: oklch(80% 0.008 245);
+}
+
+.bm-explorer .timeline {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 0;
+  padding: 0.2rem 0.8rem 0.8rem;
+}
+
+.bm-explorer .tl-phase {
+  margin: 0;
+  min-height: 1.2em;
+  overflow: hidden;
+  color: oklch(82% 0.008 245);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bm-explorer .tl-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+}
+
+.bm-explorer .tl-controls button {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff1a;
+  color: #f2f3f5;
+  cursor: pointer;
+  transition:
+    background-color 0.14s var(--bm-ease-out),
+    scale 0.14s var(--bm-ease-out);
+}
+
+.bm-explorer .tl-controls button:hover {
+  background: #ffffff2e;
+}
+
+.bm-explorer .tl-controls button:active {
+  scale: 0.95;
+}
+
+.bm-explorer .tl-controls button:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+
+.bm-explorer .tl-progress {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.bm-explorer .tl-range {
+  flex: 1;
+  min-width: 0;
+  height: 1.1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--bm-accent);
+  cursor: pointer;
+  appearance: none;
+}
+
+.bm-explorer .tl-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--bm-accent) 0 var(--p, 0%),
+    #ffffff2b var(--p, 0%) 100%
+  );
+}
+
+.bm-explorer .tl-range::-webkit-slider-thumb {
+  width: 13px;
+  height: 13px;
+  margin-top: -4.5px;
+  border: 0;
+  border-radius: 50%;
+  background: #f2f3f5;
+  box-shadow: 0 0 0 2px #0b0c0e;
+  appearance: none;
+}
+
+.bm-explorer .tl-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #ffffff2b;
+}
+
+.bm-explorer .tl-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--bm-accent);
+}
+
+.bm-explorer .tl-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: 0;
+  border-radius: 50%;
+  background: #f2f3f5;
+  box-shadow: 0 0 0 2px #0b0c0e;
+}
+
+.bm-explorer .tl-count {
+  color: oklch(82% 0.008 245);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bm-explorer .tl-hint {
+  margin: 0;
+  color: oklch(62% 0.008 245);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.bm-explorer .timeline-empty {
+  display: grid;
+  flex: 1;
+  place-content: center;
+  color: oklch(70% 0.008 245);
+  font-size: 0.8125rem;
+}
+
+.bm-explorer .timeline-empty p {
+  margin: 0;
+  text-align: center;
+}
+
+/* 没有录制回放时的斜纹底，原站 .no-rec 的样式 */
+
+.bm-explorer .no-rec {
+  display: grid;
+  flex: 1;
+  place-content: center;
+  gap: 0.3rem;
+  padding: 1.25rem;
+  background: repeating-linear-gradient(
+    135deg,
+    oklch(20% 0.005 245) 0 10px,
+    oklch(18% 0.005 245) 10px 20px
+  );
+  color: oklch(75% 0.01 245);
+  text-align: center;
+}
+
+.bm-explorer .no-rec-main {
+  margin: 0;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.bm-explorer .no-rec-sub {
+  margin: 0;
+  color: oklch(58% 0.008 245);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.bm-explorer .under {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── 阶段条 ── */
+
+.bm-explorer .phases {
+  position: relative;
+  height: 1.25rem;
+  border-radius: 5px;
+  background: var(--bm-paper-2);
+  box-shadow: inset 0 0 0 1px var(--bm-rule);
+}
+
+.bm-explorer .phases[hidden] {
+  display: none;
+}
+
+.bm-explorer .ph {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--hl-run) 22%, transparent);
+  box-shadow: inset -1px 0 0 var(--bm-paper-2);
+  cursor: pointer;
+}
+
+.bm-explorer .ph:nth-child(2n) {
+  background: color-mix(in oklab, var(--hl-run) 34%, transparent);
+}
+
+.bm-explorer .ph[aria-pressed='true'] {
+  background: var(--hl-run);
+}
+
+@media (hover: hover) {
+  .bm-explorer .ph:hover {
+    background: color-mix(in oklab, var(--hl-run) 60%, transparent);
+  }
+}
+
+.bm-explorer .ph:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+
+.bm-explorer .ph-track {
+  position: absolute;
+  inset: -3px 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bm-explorer .ph-head {
+  position: absolute;
+  inset: 0;
+}
+
+.bm-explorer .ph-head i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--bm-ink);
+}
+
+.bm-explorer .ph-methods {
+  display: block;
+  height: 1.5em;
+  margin-top: 0.45rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--bm-ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bm-explorer .ph-methods[hidden] {
+  display: none;
+}
+
+/* ── 分数与种子网格 ── */
+
+.bm-explorer .tally {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bm-explorer .score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.bm-explorer .score-num {
+  color: var(--bm-ink);
+  font-size: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.bm-explorer .score-of {
+  color: var(--bm-ink-3);
+  font-size: 0.8125rem;
+}
+
+.bm-explorer .seedgrid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 3px;
+  max-width: 16rem;
+  margin-top: 0.8rem;
+}
+
+.bm-explorer .seed {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  transition: scale 0.12s var(--bm-ease-out);
+}
+
+.bm-explorer .seed.ok {
+  background: var(--bm-accent);
+}
+
+.bm-explorer .seed.fail {
+  box-shadow: inset 0 0 0 1px var(--bm-rule-strong);
+}
+
+.bm-explorer .seed.rec::after {
+  position: absolute;
+  inset: 35%;
+  border-radius: 50%;
+  background: var(--bm-paper);
+  content: '';
+}
+
+.bm-explorer .seed.fail.rec::after {
+  background: var(--bm-ink-2);
+}
+
+.bm-explorer .seed[aria-pressed='true'] {
+  z-index: 1;
+  outline: 2px solid var(--bm-ink);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .bm-explorer .seed:hover {
+    scale: 1.12;
+  }
+}
+
+.bm-explorer .seed:active {
+  scale: 0.92;
+}
+
+.bm-explorer .seed:focus-visible {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+
+.bm-explorer .legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin: 0.8rem 0 0;
+  color: var(--bm-ink-3);
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.bm-explorer .legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.bm-explorer .sw {
+  position: relative;
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+}
+
+.bm-explorer .sw.ok {
+  background: var(--bm-accent);
+}
+
+.bm-explorer .sw.fail,
+.bm-explorer .sw.rec {
+  box-shadow: inset 0 0 0 1px var(--bm-rule-strong);
+}
+
+.bm-explorer .sw.rec::after {
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: var(--bm-ink-2);
+  content: '';
+}
+
+/* ── 响应式 ── */
+
+/* 901px 以上两栏。736px 版心里代码面板约 415px，代码区允许内部横向滚动。 */
+
+/* 900 以下代码面板不再跟右侧等高，改成自然高度加最大高度 */
+@media (max-width: 900px) {
+  .bm-explorer .code-wrap {
+    flex: none;
+  }
+
+  .bm-explorer .code {
+    height: auto;
+    max-height: 26rem;
+  }
+}
+
+/* 641 到 900：上下堆叠，播放器在左，分数和种子网格在右，和原站中段一致 */
+@media (min-width: 641px) and (max-width: 900px) {
+  .bm-explorer .side {
+    order: -1;
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    column-gap: 1.75rem;
+    row-gap: 0.75rem;
+  }
+
+  .bm-explorer .side > .player {
+    grid-area: 1 / 1;
+  }
+
+  .bm-explorer .side > .under {
+    grid-area: 2 / 1;
+  }
+
+  .bm-explorer .side > .tally {
+    grid-area: 1 / 2 / span 2;
+    align-self: start;
+  }
+
+  .bm-explorer .score {
+    margin-top: 0;
+  }
+}
+
+/* 640 以下：播放器，阶段，代码，分数从上到下一路排下来，照原站的移动端顺序 */
+@media (max-width: 640px) {
+  .bm-explorer .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+  }
+
+  .bm-explorer .side {
+    display: contents;
+  }
+
+  .bm-explorer .player {
+    order: 1;
+  }
+
+  .bm-explorer .under {
+    order: 2;
+  }
+
+  .bm-explorer .code-panel {
+    order: 3;
+    margin-top: 1rem;
+  }
+
+  .bm-explorer .tally {
+    order: 4;
+    margin-top: 1.75rem;
+  }
+
+  .bm-explorer .code {
+    max-height: min(26rem, 42svh);
+  }
+
+  .bm-explorer .seedgrid {
+    max-width: none;
+  }
+
+  .bm-explorer .legend {
+    font-size: 0.8125rem;
+  }
+
+  .bm-explorer .code pre {
+    font-size: 0.78125rem;
+  }
+
+  .bm-explorer .score-num {
+    font-size: 2.5rem;
+  }
+}
+
+/* 901px 以上：播放器占满整栏。种子网格和分数并排，和原站侧栏一致 */
+@media (min-width: 901px) {
+  .bm-explorer .side {
+    display: grid;
+    grid-template-columns: minmax(0, 16rem) minmax(7.5rem, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 1.75rem;
+    row-gap: 0.75rem;
+  }
+
+  .bm-explorer .side > .player,
+  .bm-explorer .side > .under {
+    grid-column: 1 / -1;
+  }
+
+  .bm-explorer .side > .tally {
+    display: contents;
+  }
+
+  .bm-explorer .side .seedgrid {
+    grid-area: 3 / 1 / span 2;
+    margin-top: 0.9rem;
+  }
+
+  .bm-explorer .side .score {
+    grid-area: 3 / 2;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin-top: 0.9rem;
+  }
+
+  .bm-explorer .score-num {
+    font-size: 3rem;
+  }
+
+  .bm-explorer .side .legend {
+    grid-area: 4 / 2;
+    flex-direction: column;
+    align-self: end;
+    gap: 0.45rem;
+    margin-top: 0;
+  }
+}

@@ -1,0 +1,136 @@
+/**
+.bm-demo * 成本散点。字号、虚线、点的描边按原站 index.css 的 #board 成本图一段，
+ * 颜色走 base.css 的 --bm-* 令牌，系列色由组件按数据里的 --c 注入。
+ */
+
+.bm-cost-head {
+  margin-bottom: 0.9rem;
+}
+.bm-demo .bm-cost-wrap {
+  position: relative;
+}
+.bm-demo .bm-cost-chart {
+  display: block;
+  width: 100%;
+  min-width: 40rem;
+  height: auto;
+  font-family: var(--font-sans);
+}
+.bm-demo .bm-cost-chart .bm-grid {
+  stroke: var(--bm-rule);
+}
+.bm-demo .bm-cost-chart .bm-grid.bm-dash {
+  stroke-dasharray: 2 4;
+}
+.bm-demo .bm-cost-chart .bm-tick {
+  fill: var(--bm-ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.bm-demo .bm-cost-chart .bm-axis {
+  fill: var(--bm-ink-2);
+  font-size: 13px;
+}
+.bm-demo .bm-cost-chart .bm-join {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 1.8px;
+  stroke-linecap: round;
+}
+.bm-demo .bm-cost-chart .bm-pt {
+  fill: var(--c);
+  stroke: var(--bm-paper);
+  stroke-width: 2px;
+  transition: r 0.12s;
+}
+.bm-demo .bm-cost-chart .bm-hit {
+  cursor: pointer;
+  outline: none;
+}
+.bm-demo .bm-cost-chart .bm-zone {
+  fill: transparent;
+}
+.bm-demo .bm-cost-chart .bm-hit:focus-visible .bm-pt {
+  stroke: var(--bm-accent);
+}
+.bm-demo .bm-cost-chart .bm-series,
+.bm-demo .bm-cost-chart .bm-lab {
+  transition: opacity 0.15s;
+}
+.bm-demo .bm-cost-chart .bm-lab {
+  fill: var(--c);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.bm-demo /* 指着某个点时，其它系列和标签退到 40%，颜色也灰掉 */
+.bm-cost-wrap.bm-hovering .bm-series:not(.bm-on),
+.bm-demo .bm-cost-wrap.bm-hovering .bm-lab:not(.bm-on) {
+  opacity: 0.4;
+  --c: var(--bm-ink-3) !important;
+}
+.bm-demo /* ── 两条虚线读数 ── */
+
+.bm-cost-chart .bm-guide {
+  opacity: 0;
+  pointer-events: none;
+}
+.bm-demo .bm-cost-chart .bm-guide.bm-show {
+  opacity: 1;
+}
+.bm-demo .bm-cost-chart .bm-guide line {
+  stroke: var(--c);
+  stroke-width: 1.2px;
+  stroke-dasharray: 4 3;
+}
+.bm-demo .bm-cost-chart .bm-guide rect {
+  fill: var(--bm-paper);
+}
+.bm-demo .bm-cost-chart .bm-guide text {
+  fill: var(--c);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.bm-demo /* ── 浮动提示框 ── */
+
+.bm-ctip {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--bm-rule);
+  border-radius: 8px;
+  background: var(--bm-paper);
+  box-shadow: 0 4px 14px #00000014;
+  transform: translate(14px, calc(-100% - 10px));
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.12s;
+}
+.bm-demo .bm-ctip.bm-flip {
+  transform: translate(calc(-100% - 14px), calc(-100% - 10px));
+}
+.bm-demo .bm-ctip.bm-on {
+  opacity: 1;
+}
+.bm-demo .bm-ctip-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--bm-ink);
+  font: 600 0.82rem var(--font-sans);
+}
+.bm-demo .bm-ctip-name i {
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+.bm-demo .bm-ctip-eff {
+  padding-left: 0.95rem;
+  color: var(--bm-ink-3);
+  font: 500 0.76rem var(--font-sans);
+}

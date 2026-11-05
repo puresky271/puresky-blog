@@ -17,12 +17,21 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'avl-rotate': async () => (await import('./AvlRotationDemo.svelte')).default,
   'thread-build': async () => (await import('./ThreadBuildDemo.svelte')).default,
   'thread-traverse': async () => (await import('./ThreadTraverseDemo.svelte')).default,
+  'omakase-curve': async () => (await import('./OmakaseCurve.svelte')).default,
+  'panorama-lyrics': async () => (await import('./PanoramaLyricsDemo.svelte')).default,
   // 精选收录《Sparks of Weight-Space Programming》里四个实验演示：原站是手写的 JS，这里按原站的交互重做成
   // Svelte，数据仍在 public/data/weight-space/ 下按需取，不进 bundle。
   'ws-teaser': async () => (await import('./WsTeaser.svelte')).default,
   'ws-traces': async () => (await import('./WsTraces.svelte')).default,
   'ws-gohand': async () => (await import('./WsGohand.svelte')).default,
   'ws-mathedit': async () => (await import('./WsMathedit.svelte')).default,
+  // 精选收录《BiGym 2.0》里五个交互演示：原站是 Astro 岛脚本，这里按原站的行为重做成 Svelte。
+  // 榜单、任务盘、成本散点、程序浏览器的数据在 public/data/bigym2/ 下，影像在 public/media/bigym2/。
+  'bigym-film': async () => (await import('./BigymFilm.svelte')).default,
+  'bigym-board': async () => (await import('./BigymBoard.svelte')).default,
+  'bigym-tasks': async () => (await import('./BigymTasks.svelte')).default,
+  'bigym-cost': async () => (await import('./BigymCost.svelte')).default,
+  'bigym-explorer': async () => (await import('./BigymExplorer.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();

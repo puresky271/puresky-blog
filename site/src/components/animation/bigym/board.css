@@ -1,0 +1,237 @@
+/**
+.bm-demo * 榜单条形图。尺寸、字号、圆角按原站 index.css 的 #board 一段搬过来，
+ * 颜色全部走 base.css 的 --bm-* 令牌。
+ */
+
+.bm-board {
+  font-family: var(--font-sans);
+}
+.bm-demo .bm-loading,
+.bm-demo .bm-error {
+  margin: 0;
+  padding: 1rem;
+  color: var(--bm-ink-3);
+  font-size: 0.9rem;
+}
+.bm-demo .bm-error {
+  color: var(--bm-danger, #d93a4b);
+}
+.bm-demo /* ── 表头：说明文字在左，分段控件在右 ── */
+
+.bm-board-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem clamp(1.5rem, 3vw, 3rem);
+  margin-bottom: 1.75rem;
+}
+.bm-demo .bm-board-lede {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--bm-ink-2);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.bm-demo .bm-which {
+  color: var(--bm-ink);
+}
+.bm-demo .bm-upd {
+  color: var(--bm-ink-3);
+  white-space: nowrap;
+}
+@media (max-width: 780px) {
+.bm-demo .bm-board-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 0.9rem;
+  }
+}
+.bm-demo /* ── 图表 ── */
+
+.bm-chart-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.bm-demo .bm-chart {
+  /* 原站是 3.2rem 一列，这里按字数最多的名字（DeepSeek V4.1 Flash 1017）保留同样宽度，
+     窄屏时整块横向滚动，和原站行为一致。 */
+  min-width: calc(var(--n) * 3.2rem + 2.6rem);
+  padding: 0.8rem 0 0 2.6rem;
+}
+.bm-demo .bm-plot {
+  position: relative;
+  height: clamp(15rem, 34vw, 21rem);
+  border-bottom: 1.5px solid var(--bm-ink-2);
+}
+.bm-demo .bm-gl {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 0;
+  border-top: 1px solid var(--bm-rule);
+}
+.bm-demo .bm-gl i {
+  position: absolute;
+  top: -0.55rem;
+  right: calc(100% + 0.6rem);
+  color: var(--bm-ink-3);
+  font: normal 0.75rem var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.bm-demo .bm-cols,
+.bm-demo .bm-names {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 0 clamp(0.35rem, 1vw, 1.1rem);
+  padding-inline: 0.4rem;
+}
+.bm-demo .bm-cols {
+  position: absolute;
+  inset: 0;
+  align-items: end;
+}
+.bm-demo .bm-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  appearance: none;
+}
+.bm-demo .bm-col:focus-visible .bm-bar {
+  outline: 2px solid var(--bm-accent);
+  outline-offset: 2px;
+}
+.bm-demo .bm-bar {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--h);
+  background: var(--c);
+  border-radius: 6px 6px 0 0;
+}
+.bm-demo .bm-val {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  transform: translateY(-50%);
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: clamp(0.95rem, 1.6vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.bm-demo /* 学出来的策略用的是浅灰条，深色条上的白字在它上面看不清，按原站规则单独处理 */
+.bm-col[data-s='learned'] .bm-val {
+  color: #15181d;
+}
+:root[data-theme='dark'] .bm-col:not([data-s='learned']) .bm-val {
+  color: #15181d;
+}
+:root[data-theme='dark'] .bm-col[data-s='learned'] .bm-val {
+  color: #fff;
+}
+.bm-demo /* 条太矮时数字挪到条的上方 */
+.bm-col.bm-short .bm-val {
+  top: auto;
+  bottom: calc(100% + 0.35rem);
+  transform: none;
+  color: var(--bm-ink);
+}
+.bm-demo /* ── 悬停提示：方法名 + 跑分口径 ── */
+
+.bm-tip {
+  position: absolute;
+  bottom: calc(var(--h) + 0.45rem);
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  width: max-content;
+  max-width: calc(100% + 0.6rem);
+  transform: translate(-50%, 3px);
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  text-wrap: balance;
+  line-height: 1.2;
+  transition: opacity 0.12s, transform 0.12s;
+}
+.bm-demo .bm-tip b {
+  color: var(--bm-ink);
+  font: 600 0.8rem/1.2 var(--font-sans);
+}
+.bm-demo .bm-tip span {
+  color: var(--bm-ink-3);
+  font: 500 0.72rem/1.2 var(--font-sans);
+}
+.bm-demo .bm-col:hover .bm-tip,
+.bm-demo .bm-col:focus-visible .bm-tip {
+  transform: translate(-50%);
+  opacity: 1;
+}
+.bm-demo .bm-col.bm-short .bm-tip {
+  bottom: calc(var(--h) + 2rem);
+}
+.bm-demo /* ── 名字列：图标、名字、思考档位 ── */
+
+.bm-names {
+  padding-top: 0.9rem;
+}
+.bm-demo .bm-nm {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.3rem;
+  color: var(--bm-ink);
+  font-size: 0.76rem;
+  line-height: 1.2;
+  text-align: center;
+}
+.bm-demo .bm-logo {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-bottom: 0.25rem;
+}
+.bm-demo .bm-logo :global(svg) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.bm-demo .bm-nm b {
+  font-weight: 600;
+}
+.bm-demo .bm-eff {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 0 8px;
+  border: 1px solid var(--c);
+  border-radius: 9px;
+  color: var(--bm-ink-2);
+  font: 600 11px/1 var(--font-sans);
+  letter-spacing: 0.02em;
+}
+.bm-demo .bm-left {
+  margin: 0.6rem 0 0;
+  color: var(--bm-ink-3);
+  font-size: 0.85rem;
+}

@@ -102,9 +102,20 @@ class Player {
   panelOpen = $state(false);
   /** 首页舞台处于音乐（过载）模式且在视口内时，浮动播放器让位，屏幕上只留一个播放器。 */
   dockSuppressed = $state(false);
+  /** 当前文章绑定的专属曲目 key（如 `local:端程山`）。非空时右下角播放器展示文章专属形态。 */
+  featuredKey = $state<string | null>(null);
 
   playlist = $derived<Library | null>(this.libraries[this.source]);
   track = $derived<MediaTrack | null>(this.playlist?.tracks[this.index] ?? null);
+  featuredTrack = $derived.by<MediaTrack | null>(() => {
+    const key = this.featuredKey;
+    if (!key) return null;
+    for (const src of ['local', 'netease'] as Source[]) {
+      const found = this.libraries[src]?.tracks.find((t) => t.key === key || t.id === key || t.name === key);
+      if (found) return found;
+    }
+    return null;
+  });
   lyricIndex = $derived(lineAt(this.lyrics, this.current));
   progress = $derived(this.duration > 0 ? Math.min(1, this.current / this.duration) : 0);
   /** 两个曲库都有歌时，界面上才需要来源切换。 */
@@ -202,6 +213,26 @@ class Player {
   toggle(): void {
     if (this.playing) this.pause();
     else void this.play();
+  }
+
+  /** 按曲目 key 或歌名定位并播放（或跳转），用于文章专属曲目联动。 */
+  async playTrack(keyOrName: string, seekSeconds?: number): Promise<void> {
+    if (this.status === 'idle' || this.status === 'loading') await this.load();
+    for (const src of ['local', 'netease'] as Source[]) {
+      const tracks = this.libraries[src]?.tracks ?? [];
+      const idx = tracks.findIndex((t) => t.key === keyOrName || t.id === keyOrName || t.name === keyOrName);
+      if (idx >= 0) {
+        const isSame = this.source === src && this.index === idx;
+        if (!isSame) {
+          await this.play(idx, src);
+          if (seekSeconds !== undefined) this.seek(seekSeconds);
+        } else {
+          if (seekSeconds !== undefined) this.seek(seekSeconds);
+          if (!this.playing) await this.play();
+        }
+        return;
+      }
+    }
   }
 
   /** 硬退出：暂停并回到「没播放过」的状态，浮动播放器收回成小圆钮。进度保留，下次接着放。 */

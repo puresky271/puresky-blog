@@ -57,6 +57,8 @@ const posts = defineCollection({
       commentsOff: z.boolean().default(false),
       /** 结论可能已过期但仍有参考价值时打开，正文顶部会显示一条时效提醒。 */
       mayBeStale: z.boolean().default(false),
+      /** 文章专属曲目（如 `local:端程山`）。进入文章时右下角播放器切换为该曲目的特殊形态。 */
+      song: z.string().optional(),
     }).superRefine((data, ctx) => {
       const subcategory = SUBCATEGORIES.find((item) => item.id === data.subcategory);
       if (!subcategory || subcategory.category !== data.category) {
