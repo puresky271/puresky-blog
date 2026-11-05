@@ -120,6 +120,15 @@ order: inorder
 :::
 ```
 
+`panorama-lyrics` 用于《端程山》随笔的日文原文、B站版翻译与网易云版翻译对照及音频/MV 分镜联动。不带参数时展示全曲 45 行工作台；可选配置 `lines`（如 `"16-19"`）、`stanza`（`verse-1` 至 `outro`）或 `title` 以展示局部精读卡：
+
+```md
+:::animation panorama-lyrics
+lines: "16-19"
+title: "主歌 B · 磨薄的鞋底与抬起头的视线"
+:::
+```
+
 需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
 
 ## 新增动画类型

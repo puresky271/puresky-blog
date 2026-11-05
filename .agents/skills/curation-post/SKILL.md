@@ -148,6 +148,20 @@ Invoke-WebRequest -Uri '<url>' -Headers @{'User-Agent'='Mozilla/5.0'} -TimeoutSe
 - 图注：英文那半照抄原文图注，中文那半以「图 N：」开头，写这张图**该看哪里**，不复述图注本身。
 - 注解：一条只说一件事，讲清楚「为什么值得注意」或者「这里容易误读」；中英两种模式下都会显示，所以别写「上一段英文里」这种只在一种语言下成立的话。
 
+## 原文带交互动画时怎么复刻
+
+原文页上的图如果是能点、能播、能指的（榜单、转盘、播放器、浏览器），截图会丢掉最值钱的部分。经验做法：
+
+- 先把原站的脚本抓下来读。`_scratch/<slug>/` 里存一份格式化过的版本，别只看截图猜行为。原站常用 vanilla JS 或 Astro 岛脚本，逻辑通常能整体搬。
+- 数据从原站 HTML 的 `data-*`、内联 `<script type="application/json">` 或 `fetch` 的 JSON 里抽出来，落到 `site/public/data/<slug>/`，组件运行时按需取，不进 bundle。数字和顺序逐字保留。
+- 媒体（视频、任务缩略图）放 `site/public/media/<slug>/`，`withBase` 拼路径。交互才加载的用 `preload="none"`，别让首屏拖十几 MB。
+- 一个交互一个组件，注册到 `components/animation/mount.ts` 和 `remark-animation.mjs`（加类型、文案、空配置白名单）。文章里只写 `:::animation <type>`。
+- 原站的类名和尺寸可以照抄，但选择器要加自己的前缀（如 `.ws-demo`、`.bm-demo`）并用组件自己的 CSS 文件：文章正文的 `.prose` 全局样式会覆盖表格、按钮这些元素，必要时用更具体的选择器把 `display`、`padding`、`background` 复位。
+- 站内版心 46rem，原站动辄 1376px。给演示加一条 `@media (min-width: 80rem)` 的放宽规则（如 `width: min(58rem, calc(100vw - 27rem))`），桌面端占满版心外的空白，手机上退回 100% 并允许组件内部横向滚动。
+- 验收别只看截图：用 Playwright 点 tab、悬停格子、按住加速、拖进度、点阶段，断言 DOM 状态和关键读数（条数、数值、高亮行数、播放进度）。
+- **视频验证要用系统 Chrome**（`C:/Program Files/Google/Chrome/Application/chrome.exe`）。`ChromiumForTesting` 不带 H.264，mp4 的 `readyState` 永远是 0，画面全黑，会把你引向错误结论。
+- 原站如果用第三方 3D 播放器（viser、Three.js iframe）或视频流，站内做不了就换成同数据驱动的替代交互（时间轴、逐帧高亮），并在注解里诚实说明差异。
+
 ## 常见坑
 
 - **图不显示、`<img>` 里是 `__ASTRO_IMAGE_`**：新图目录在 dev 启动之后才加进来。`astro dev --force` 重启，不是清浏览器缓存。
