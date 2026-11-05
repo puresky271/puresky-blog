@@ -7,6 +7,7 @@
  */
 
 import { api, ApiError, type ChangedPost, type Frontmatter, type GitChange, type GitStatus, type PostSummary, type SeriesOp, type Vocab, type VocabOp } from './client';
+import { NO_PHOTO, type PhotoContext, type PhotoLayout } from './photo';
 
 export type Mode = 'write' | 'organize' | 'git' | 'models';
 export type View = 'write' | 'split' | 'preview';
@@ -40,6 +41,8 @@ export interface CodeEditorHandle {
   codeBlock(lang: string): void;
   callout(kind: string): void;
   annotation(): void;
+  photo(layout: PhotoLayout): void;
+  photoWidth(width: number): void;
   footnote(): void;
   pickImages(files: File[]): void;
   jumpTo(line: number): void;
@@ -193,6 +196,8 @@ class EditorStore {
   restore = $state<{ savedAt: number; doc: Doc } | null>(null);
   cursor = $state({ line: 1, col: 1, lines: 1, selected: 0 });
   cm: CodeEditorHandle | null = null;
+  /** 光标所在 :::photo 容器的现状，工具栏的图片容器面板据此回填。 */
+  photo = $state<PhotoContext>({ ...NO_PHOTO });
   /** 预览滚到第 index 个标题（写作区注册，大纲调用）。 */
   revealHeading: ((index: number) => void) | null = null;
 

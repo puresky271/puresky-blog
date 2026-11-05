@@ -8,7 +8,7 @@
    * 颜色全部走站点的 CSS 变量，亮暗主题切换时编辑器跟着变，不需要重建。
    *
    * 对外的方法（bind:this 后调用）：load 换文档（清空撤销历史）；wrap / prefix / insert / heading / codeBlock /
-   * callout / footnote 给工具栏用；jumpTo 给大纲用；undo / redo / focus。
+   * callout / annotation / photo / photoWidth / footnote 给工具栏用；jumpTo 给大纲用；undo / redo / focus。
    */
   import { defaultKeymap, history, historyKeymap, indentWithTab, redo as redoCommand, undo as undoCommand } from '@codemirror/commands';
   import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -28,12 +28,28 @@
   import { tags as t } from '@lezer/highlight';
   import { onMount } from 'svelte';
 
+  import {
+    clampWidth,
+    countImages,
+    findPhotoContainer,
+    NO_PHOTO,
+    photoMarker,
+    PHOTO_LABELS,
+    PHOTO_SKELETON_WIDTH,
+    PHOTO_WIDTH_DEFAULT,
+    type PhotoContainer,
+    type PhotoContext,
+    type PhotoLayout,
+  } from './photo';
+
   let {
     initial = '',
     onchange,
     oncursor,
     onscrollratio,
     onimage,
+    onphoto,
+    onnotice,
   }: {
     /** 挂载时的初始内容；之后换文章用 load()。 */
     initial?: string;
@@ -41,6 +57,10 @@
     oncursor?: (pos: { line: number; col: number; lines: number; selected: number }) => void;
     onscrollratio?: (ratio: number) => void;
     onimage?: (file: File) => Promise<string>;
+    /** 光标位置的 :::photo 容器现状，工具栏的图片容器面板据此回填。 */
+    onphoto?: (context: PhotoContext) => void;
+    /** 编辑操作的提示（比如多张图自动改成横排），接到编辑器的轻提示上。 */
+    onnotice?: (kind: 'info' | 'error', text: string) => void;
   } = $props();
 
   let host = $state<HTMLDivElement>();
@@ -98,9 +118,12 @@
   async function insertImages(files: File[], at?: number) {
     if (!view || !onimage) return;
     for (const file of files) {
-      const pos = at ?? view.state.selection.main.head;
+      // 选中了东西时用图片替换它（图片容器骨架里的占位行就是这样被粘贴的图片换掉的），否则插在光标处。
+      const range = view.state.selection.main;
+      const pos = at ?? range.from;
+      const to = at === undefined ? range.to : pos;
       const token = `![上传中：${file.name || '图片'}…]()`;
-      view.dispatch({ changes: { from: pos, insert: token }, selection: { anchor: pos + token.length } });
+      view.dispatch({ changes: { from: pos, to, insert: token }, selection: { anchor: pos + token.length } });
       try {
         const path = await onimage(file);
         const alt = (file.name || '图片').replace(/\.[a-z0-9]+$/i, '');
@@ -193,6 +216,23 @@
     const line = state.doc.lineAt(head);
     const selected = state.selection.ranges.reduce((n, r) => n + (r.to - r.from), 0);
     oncursor?.({ line: line.number, col: head - line.from + 1, lines: state.doc.lines, selected });
+    onphoto?.(photoContext(state));
+  }
+
+  /** 光标所在 :::photo 容器的现状；不在容器里就是一份空状态。 */
+  function photoContext(state: EditorState): PhotoContext {
+    const container = findPhotoContainer(state.doc.toString(), state.selection.main.head);
+    if (!container) return NO_PHOTO;
+    return {
+      inside: true,
+      layout: container.layout,
+      width: container.width ?? PHOTO_WIDTH_DEFAULT,
+      widthSet: container.width !== null,
+      images: container.images,
+      line: container.openLine + 1,
+      marker: container.marker,
+      issues: container.issues,
+    };
   }
 
   onMount(() => {
@@ -358,6 +398,74 @@
     const lines = selectedLines();
     if (lines.empty) insertBlock(':::annotation\n', '\n:::');
     else insertBlock(':::annotation\n', '\n:::', view.state.sliceDoc(lines.from, lines.to), lines.from, lines.to);
+  }
+
+  /**
+   * 图片容器预设（左浮 / 右浮 / 加宽 / 横排 / 普通）：
+   * 光标已经在 :::photo 里时改这个容器的参数，有选区时把选中的行包进去，什么都没有就插入一个骨架。
+   */
+  export function photo(layout: PhotoLayout) {
+    if (!view) return;
+    const state = view.state;
+    const container = findPhotoContainer(state.doc.toString(), state.selection.main.head);
+    if (container) {
+      retargetPhoto(container, layout);
+      return;
+    }
+    const lines = selectedLines();
+    if (lines.empty) insertPhotoSkeleton(layout);
+    else wrapPhoto(layout, lines);
+  }
+
+  /** 改现有容器的位置，只替换开标记那一行。多张图塞 left / right 时自动改成横排并提示。 */
+  function retargetPhoto(container: PhotoContainer, layout: PhotoLayout) {
+    if (!view) return;
+    const next = floatLayout(layout, container.images);
+    const marker = photoMarker(next.layout, container.width);
+    const line = view.state.doc.line(container.openLine + 1);
+    if (line.text.trim() !== marker) view.dispatch({ changes: { from: line.from, to: line.to, insert: marker } });
+    if (next.notice) onnotice?.('info', next.notice);
+    view.focus();
+  }
+
+  /** 把选中的行包进 :::photo；选中的图多于一张时自动用横排。 */
+  function wrapPhoto(layout: PhotoLayout, lines: { from: number; to: number }) {
+    if (!view) return;
+    const text = view.state.sliceDoc(lines.from, lines.to);
+    const next = floatLayout(layout, countImages(text));
+    insertBlock(`${photoMarker(next.layout)}\n`, '\n:::', text, lines.from, lines.to);
+    if (next.notice) onnotice?.('info', next.notice);
+  }
+
+  /** 没有选区时插入的骨架：开标记、带占位图注的图片行、闭合标记。占位行会选中，粘贴图片直接替换。 */
+  function insertPhotoSkeleton(layout: PhotoLayout) {
+    const width = layout === 'left' || layout === 'right' ? PHOTO_SKELETON_WIDTH : null;
+    insertBlock(`${photoMarker(layout, width)}\n`, '\n:::', '![图片说明](图片地址)');
+    onnotice?.('info', '插入了图片容器骨架，占位的那一行已经选中，粘贴图片会直接替换它。');
+  }
+
+  /** 参数面板的宽度滑块，25% 到 60%，写回光标所在容器的开标记。 */
+  export function photoWidth(width: number) {
+    if (!view) return;
+    const state = view.state;
+    const container = findPhotoContainer(state.doc.toString(), state.selection.main.head);
+    if (!container) return;
+    if (container.layout !== 'left' && container.layout !== 'right') {
+      onnotice?.('info', '宽度只对左浮和右浮生效。');
+      return;
+    }
+    const marker = photoMarker(container.layout, clampWidth(width));
+    const line = state.doc.line(container.openLine + 1);
+    if (line.text.trim() === marker) return;
+    view.dispatch({ changes: { from: line.from, to: line.to, insert: marker } });
+  }
+
+  /** left / right 只能放一张图，多了就和 remark-figure 一样改成 row，并给出提示。 */
+  function floatLayout(layout: PhotoLayout, images: number): { layout: PhotoLayout; notice: string } {
+    if ((layout === 'left' || layout === 'right') && images > 1) {
+      return { layout: 'row', notice: `容器里有 ${images} 张图，${PHOTO_LABELS[layout]}只能放一张，已经改成横排。` };
+    }
+    return { layout, notice: '' };
   }
 
   /** 在光标处插入下一个编号的脚注引用，在文末补上定义，光标跳到定义处接着写。 */

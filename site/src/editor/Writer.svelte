@@ -14,6 +14,7 @@
   import { mountAnimations } from '@/components/animation/mount';
   import Icon from '@/components/ui/Icon.svelte';
   import { setupCodeCollapse } from '@/lib/code-collapse';
+  import { setupPhotoStrip } from '@/lib/photo-strip';
   import {
     iArrowSquareOut,
     iCheck,
@@ -72,6 +73,8 @@
   $effect(() => {
     void ed.docVersion;
     untrack(() => {
+      cleanupStrip?.();
+      cleanupStrip = undefined;
       previewHtml = '';
       previewError = '';
       if (ed.doc?.isNew) void tick().then(() => titleEl?.focus());
@@ -83,7 +86,12 @@
   let previewTimer = 0;
   let previewToken = 0;
   let cleanupAnimations: (() => void) | undefined;
-  onDestroy(() => cleanupAnimations?.());
+  /** 预览里 :::photo row 左右切换按钮的清理函数，预览重建前要先调掉。 */
+  let cleanupStrip: (() => void) | undefined;
+  onDestroy(() => {
+    cleanupAnimations?.();
+    cleanupStrip?.();
+  });
 
   function schedulePreview(delay = 320) {
     clearTimeout(previewTimer);
@@ -101,9 +109,12 @@
         if (token !== previewToken) return;
         cleanupAnimations?.();
         cleanupAnimations = undefined;
+        cleanupStrip?.();
+        cleanupStrip = undefined;
         previewHtml = html;
         previewError = '';
         await tick();
+        if (previewEl) cleanupStrip = setupPhotoStrip(previewEl);
         await enhancePreview(token);
       } catch (error) {
         if (token === previewToken) previewError = (error as Error).message;
@@ -277,6 +288,10 @@
             oncursor={(pos) => (ed.cursor = pos)}
             onscrollratio={syncScroll}
             onimage={uploadImage}
+            onphoto={(context) => {
+              ed.photo = context;
+            }}
+            onnotice={(kind, text) => ed.toast(kind, text)}
           />
         </div>
       </section>
@@ -289,7 +304,13 @@
             {#if previewError}
               <p class="pv-error"><Icon icon={iWarning} size={15} />{previewError}</p>
             {/if}
-            <div class="prose pv-body" class:busy={previewBusy}>{@html previewHtml}</div>
+            <div
+              class="prose pv-body"
+              class:prose-essay={doc.frontmatter.category === 'essays'}
+              class:busy={previewBusy}
+            >
+              {@html previewHtml}
+            </div>
           </div>
         </section>
       {/if}
@@ -479,6 +500,10 @@
   .pv-body {
     margin-top: 1.5rem;
     transition: opacity 200ms ease;
+  }
+  /* 随笔版式里加宽的图要出血到预览栏的内边距，1.75rem 正好贴到预览栏的纸边。 */
+  .pv-body.prose-essay {
+    --essay-bleed: 1.75rem;
   }
   .pv-body.busy {
     opacity: 0.75;
