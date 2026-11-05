@@ -1,0 +1,608 @@
+---
+/**
+ * EssayLayout.astro — 随笔的文章页版式「手记」。
+ *
+ * 正文压在一张纸上：纸比页面底色亮一档，加四层几乎看不见的接触阴影，边缘用一个只位移 1.5px 的
+ * SVG 滤镜（feTurbulence + feDisplacementMap）抖掉数学直线，左上角贴一枚分类书签。
+ * 滤镜只挂在纸面那一层（绝对定位、z-index -1），不挂在祖先上：filter 会给后代建包含块，
+ * 挂到外层会让目录的 sticky 和全站的 fixed 元素错位。Safari 在长元素上跑位移滤镜会掉帧，
+ * 用 @supports 嗅出 WebKit 后去掉滤镜，只留阴影；打印时纸面整个消失。
+ *
+ * 纸外两栏都很安静：左边是同系列或同分类的篇目流，告诉读者这篇在哪一串里；
+ * 右边是目录和字号（没有字体开关，随笔固定衬线排版）。1100px 以下两栏收起，目录退回正文上方的折叠块。
+ * 排版见 styles/essay.css 的 .prose-essay。
+ */
+import { Image } from 'astro:assets';
+
+import PostFooter from '@/components/post/PostFooter.astro';
+import PostNotices from '@/components/post/PostNotices.astro';
+import ReadingPrefs from '@/components/post/ReadingPrefs.astro';
+import Toc from '@/components/post/Toc.astro';
+import { AUTHOR } from '@/config';
+import type { Post } from '@/lib/content';
+import { categoryOf, getStream, postMinutes, postWords, subcategoryOf } from '@/lib/content';
+import { categoryPath, formatDate, formatDateWeekday, postPath, subcategoryPath, tagPath } from '@/lib/format';
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  post: Post;
+  headings: MarkdownHeading[];
+  adjacent: { newer?: Post; older?: Post };
+  related: Post[];
+}
+
+const { post, headings, adjacent, related } = Astro.props;
+const { title, description, pubDate, updatedDate, category, subcategory, tags, cover, coverAlt, archived } = post.data;
+const cat = categoryOf(category);
+const sub = subcategoryOf(subcategory);
+const byline = post.data.author ?? AUTHOR.name;
+const words = postWords(post);
+const minutes = postMinutes(post);
+const stream = await getStream(post);
+const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3).length;
+---
+
+<svg class="paper-defs" aria-hidden="true" width="0" height="0">
+  <defs>
+    <filter id="essay-deckle">
+      <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="3" seed="7" result="turb" />
+      <feDisplacementMap in="SourceGraphic" in2="turb" scale="1.5" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
+
+<article class="container-page essay-page">
+  <aside class="essay-stream" aria-label={`${stream.label} 篇目`}>
+    {
+      stream.posts.length > 1 && (
+        <nav>
+          <ol>
+            {stream.posts.map((item) =>
+              item.id === post.id ? (
+                <li>
+                  <span class="current" aria-current="page">
+                    「{item.data.title}」
+                  </span>
+                </li>
+              ) : (
+                <li>
+                  <a href={postPath(item.id)}>{item.data.title}</a>
+                </li>
+              )
+            )}
+          </ol>
+          <p class="stream-foot">
+            <span>{stream.label}</span>
+            <span class="stream-count">{stream.total}</span>
+          </p>
+        </nav>
+      )
+    }
+  </aside>
+
+  <div class="essay-sheet">
+    <div class="paper" aria-hidden="true"></div>
+    <a class="bookmark" href={subcategoryPath(category, subcategory)} title={`${cat.label} / ${sub.label}`}>{sub.id.endsWith('unclassified') ? cat.label : sub.label}</a>
+
+    <div class="essay-body">
+      <header class="essay-head">
+        <h1 class="essay-title">{title}</h1>
+        <p class="essay-meta">
+          <time datetime={pubDate.toISOString()}>{formatDateWeekday(pubDate)}</time>
+          {updatedDate && <span class="meta-extra">改于 {formatDate(updatedDate)}</span>}
+          <span class="meta-right">
+            {byline !== AUTHOR.name && <span>{byline}</span>}
+            <span>约 {minutes} 分钟</span>
+            <span>{words.toLocaleString('zh-CN')} 字</span>
+          </span>
+        </p>
+        <div class="essay-rule" aria-hidden="true"></div>
+        <div class="essay-sub">
+          {
+            tags.length > 0 && (
+              <ul class="essay-tags" aria-label="标签">
+                {tags.map((tag) => (
+                  <li>
+                    <a href={tagPath(tag)}>{tag}</a>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+          <a class="essay-cat" href={categoryPath(category)}>{cat.label}</a>
+        </div>
+        {description && <p class="essay-lead">{description}</p>}
+        {
+          cover && (
+            <figure class="essay-cover" data-zoom>
+              <Image src={cover} alt={coverAlt ?? ''} width={1280} loading="eager" fetchpriority="high" class="h-auto w-full" />
+            </figure>
+          )
+        }
+      </header>
+
+      {
+        tocItems >= 2 && (
+          <div class="essay-inline-toc">
+            <Toc headings={headings} variant="inline" />
+          </div>
+        )
+      }
+
+      {/* 1100px 以下纸外两栏收起，篇目流和字号开关折进正文上方，读者仍然知道自己在系列里的位置。 */}
+      {
+        stream.posts.length > 1 && (
+          <nav class="essay-inline-stream" aria-label={`${stream.label} 篇目`}>
+            <ol>
+              {stream.posts.map((item) =>
+                item.id === post.id ? (
+                  <li>
+                    <span class="current" aria-current="page">
+                      「{item.data.title}」
+                    </span>
+                  </li>
+                ) : (
+                  <li>
+                    <a href={postPath(item.id)}>{item.data.title}</a>
+                  </li>
+                )
+              )}
+            </ol>
+            <p class="stream-foot">
+              <span>{stream.label}</span>
+              <span class="stream-count">{stream.total}</span>
+            </p>
+          </nav>
+        )
+      }
+      <div class="essay-inline-prefs">
+        <span>字号</span>
+        <ReadingPrefs font={false} />
+      </div>
+
+      <PostNotices post={post} />
+
+      <div class="prose prose-essay" data-pagefind-body={archived ? undefined : ''}>
+        <slot />
+      </div>
+
+      <p class="essay-end" aria-hidden="true"><span>完</span></p>
+    </div>
+  </div>
+
+  <aside class="essay-side" aria-label="阅读辅助">
+    <div class="side-inner">
+      {tocItems >= 2 && <Toc headings={headings} variant="sidebar" />}
+      <div class="side-prefs">
+        <span>字号</span>
+        <ReadingPrefs font={false} />
+      </div>
+    </div>
+  </aside>
+
+  <div class="essay-tail">
+    <PostFooter post={post} adjacent={adjacent} related={related} />
+  </div>
+</article>
+
+<style>
+  .paper-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  /*
+   * 栅格：窄屏只有纸面一栏；1100px 起纸面两侧各一栏（篇目流 / 目录），纸面居中。
+   * 纸面最宽 50rem：正文 44rem 加两侧各 3rem 的内边距。
+   */
+  .essay-page {
+    --essay-bleed: 1.25rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 1360px;
+    padding-top: 0.5rem;
+  }
+  .essay-stream,
+  .essay-side {
+    display: none;
+  }
+  @media (width >= 40rem) {
+    .essay-page {
+      --essay-bleed: 3rem;
+    }
+  }
+  @media (width >= 68.75rem) {
+    .essay-page {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 50rem) minmax(0, 1fr);
+      column-gap: 2.5rem;
+    }
+    .essay-stream,
+    .essay-side {
+      display: block;
+    }
+    .essay-inline-toc {
+      display: none;
+    }
+    .essay-tail {
+      grid-column: 2;
+    }
+  }
+
+  /* ── 纸 ── */
+  .essay-sheet {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+    margin-top: 1.5rem;
+  }
+  .paper {
+    --paper: oklch(0.997 0.002 85);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 3px;
+    background: var(--paper);
+    box-shadow:
+      0 0 0 0.5px oklch(0.2 0.02 60 / 0.07),
+      0 0.5px 0 oklch(0.2 0.02 60 / 0.05),
+      0 1px 3px oklch(0.2 0.02 60 / 0.06),
+      0 14px 30px -18px oklch(0.3 0.05 60 / 0.22);
+    filter: url(#essay-deckle);
+  }
+  :global([data-theme='dark']) .paper {
+    --paper: oklch(0.215 0.012 262);
+    box-shadow:
+      0 0 0 0.5px oklch(1 0 0 / 0.07),
+      0 0.5px 0 oklch(0 0 0 / 0.25),
+      0 1px 3px oklch(0 0 0 / 0.3),
+      0 16px 34px -18px oklch(0 0 0 / 0.6);
+  }
+  /* WebKit（Safari）在超长元素上跑位移滤镜会掉帧，去掉形变只留阴影。 */
+  @supports (-webkit-hyphens: none) and (not (-moz-appearance: none)) and (font: -apple-system-body) {
+    .paper {
+      filter: none;
+    }
+  }
+  @media print {
+    .paper {
+      background: none;
+      box-shadow: none;
+      filter: none;
+    }
+  }
+
+  /* 分类书签：贴在纸的左上角，比纸面高出一截，像夹进去的一枚书签。 */
+  .bookmark {
+    position: absolute;
+    top: -0.55rem;
+    left: 1.25rem;
+    z-index: 1;
+    padding: 0.5rem 0.55rem 0.75rem;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 0.4rem), 0 100%);
+    /* 亮色主题里 ink 是近白，压在 0.56 明度的绿上只有 2.9:1；掺一档前景色把底压暗到 4.5:1 以上。 */
+    background: color-mix(in oklab, var(--cat-essays) 70%, var(--fg));
+    color: var(--cat-ink);
+    font-family: var(--font-serif);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    writing-mode: vertical-rl;
+    transition: padding-bottom 240ms var(--ease-out-expo);
+  }
+  .bookmark:hover {
+    padding-bottom: 1rem;
+  }
+  @media (width >= 40rem) {
+    .bookmark {
+      left: 2rem;
+    }
+  }
+
+  .essay-body {
+    padding: 3.5rem var(--essay-bleed) 2.5rem;
+  }
+  @media (width >= 40rem) {
+    .essay-body {
+      padding-top: 4rem;
+      padding-bottom: 3rem;
+    }
+  }
+
+  /* ── 页头：标题、带星期的日期和篇幅、一条细线、标签和导语 ── */
+  .essay-title {
+    font-family: var(--font-serif);
+    font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.35rem);
+    font-weight: 800;
+    line-height: 1.32;
+    letter-spacing: 0.01em;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+  .essay-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.9rem;
+    margin-top: 1rem;
+    font-family: var(--font-serif);
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--fg-muted);
+  }
+  .meta-extra {
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+  }
+  .meta-right {
+    display: inline-flex;
+    gap: 0.75rem;
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-style: normal;
+    letter-spacing: 0.12em;
+    color: var(--fg-subtle);
+  }
+  .essay-rule {
+    height: 1px;
+    margin-top: 0.9rem;
+    background: var(--line);
+  }
+  .essay-sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 1rem;
+    margin-top: 0.7rem;
+    font-size: 0.78rem;
+  }
+  .essay-tags {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.85rem;
+  }
+  .essay-tags a,
+  .essay-cat {
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .essay-tags a::before {
+    content: '#';
+    margin-right: 0.12em;
+    color: var(--fg-subtle);
+  }
+  .essay-tags a:hover,
+  .essay-cat:hover {
+    color: var(--cat-essays);
+  }
+  .essay-cat {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+  }
+  /* 导语放在细线下，是一段斜一点、淡一点的衬线字，像书前的题解。 */
+  .essay-lead {
+    margin-top: 1.6rem;
+    padding-left: 1rem;
+    border-left: 2px solid color-mix(in oklab, var(--cat-essays) 55%, transparent);
+    font-family: var(--font-serif);
+    font-size: 0.975rem;
+    line-height: 1.9;
+    color: var(--fg-muted);
+  }
+  .essay-cover {
+    margin: 2rem calc(var(--essay-bleed) * -1) 0;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  }
+
+  .essay-inline-toc {
+    margin-top: 2rem;
+  }
+
+  /* 窄屏回退：篇目流横排一行，字号开关跟在后面。1100px 起两栏出来，它们就隐藏。 */
+  .essay-inline-stream {
+    margin-top: 1.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .essay-inline-stream ol {
+    display: flex;
+    gap: 0.5rem 1.1rem;
+    padding-bottom: 0.35rem;
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .essay-inline-stream ol::-webkit-scrollbar {
+    display: none;
+  }
+  .essay-inline-stream a,
+  .essay-inline-stream .current {
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .essay-inline-stream a:hover {
+    color: var(--fg);
+  }
+  .essay-inline-stream .current {
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .essay-inline-stream .stream-foot {
+    margin-top: 0.5rem;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .essay-inline-prefs {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .essay-inline-prefs :global(.reading-prefs) {
+    margin-left: 0;
+  }
+  @media (width >= 68.75rem) {
+    .essay-inline-stream,
+    .essay-inline-prefs {
+      display: none;
+    }
+  }
+  .essay-inline-toc :global(.toc-inline) {
+    background: transparent;
+  }
+  .essay-body > :global(.stale:first-of-type) {
+    margin-top: 2rem;
+  }
+  .essay-body .prose {
+    margin-top: 2.5rem;
+  }
+
+  /* 文末一个小小的「完」，读到这里就是读完了。 */
+  .essay-end {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 3.5rem;
+    font-family: var(--font-serif);
+    font-size: 0.8125rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-subtle);
+  }
+  .essay-end::before,
+  .essay-end::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .essay-tail {
+    min-width: 0;
+  }
+  .essay-tail :global(.post-footer) {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  /* ── 左栏：篇目流 ── */
+  /* 长系列会让侧栏超出一屏、sticky 失效，给个上限让它自己滚动。 */
+  .essay-stream nav {
+    position: sticky;
+    top: calc(var(--nav-h) + 3rem);
+    max-width: 15rem;
+    max-height: calc(100dvh - var(--nav-h) - 6rem);
+    margin-top: 6rem;
+    margin-left: auto;
+    overflow-y: auto;
+    scrollbar-width: none;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+  .essay-stream ol {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .essay-stream a,
+  .essay-stream .current {
+    display: block;
+    overflow: hidden;
+    color: var(--fg-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 160ms ease;
+  }
+  .essay-stream a:hover {
+    color: var(--fg);
+  }
+  .essay-stream .current {
+    margin-left: -0.5em;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .stream-foot {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px dashed var(--line-strong);
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+  }
+  .stream-count {
+    font-family: var(--font-mono);
+    color: var(--fg-subtle);
+  }
+  .stream-count::before {
+    content: '·';
+    margin-right: 0.4rem;
+  }
+
+  /* ── 右栏：目录和字号。目录卡片在纸外不要框，和左栏一样是一列安静的字。 ── */
+  .side-inner {
+    position: sticky;
+    top: calc(var(--nav-h) + 3rem);
+    max-width: 15rem;
+    margin-top: 6rem;
+  }
+  .side-inner :global(.toc-sidebar) {
+    position: static;
+    max-height: calc(100dvh - var(--nav-h) - 10rem);
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .side-inner :global(.toc-head) {
+    display: none;
+  }
+  /*
+   * 当前目录项和左侧小竖条用深一档的绿：纯 --cat-essays 压在纸上只有 4.15:1，
+   * 和小字 4.5:1 的对比度要求差一点。
+   */
+  .side-inner :global(.toc-list a[aria-current='true']),
+  .side-inner :global(.toc-list a[aria-current='true'] .num) {
+    color: color-mix(in oklab, var(--cat-essays) 85%, var(--fg));
+  }
+  .side-inner :global(.toc-list a[aria-current='true']) {
+    background: none;
+  }
+  .side-inner :global(.toc-list a::before) {
+    background: color-mix(in oklab, var(--cat-essays) 85%, var(--fg));
+  }
+  .side-inner :global(.toc-list a:hover) {
+    background: none;
+  }
+  /*
+   * 目录下面的「回到顶部」：随笔侧栏没有目录卡片的外框，这里把它收成和左栏一样的一行小字，
+   * 和字号开关之间留一道虚线分隔。
+   */
+  .side-inner :global(.to-top) {
+    margin: 0.9rem 0 0 0.35rem;
+    padding-top: 0.7rem;
+    border-top: 1px dashed var(--line-strong);
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+  }
+  .side-prefs {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    padding: 0.9rem 0 0 0.6rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .side-prefs :global(.reading-prefs) {
+    margin-left: 0;
+  }
+</style>

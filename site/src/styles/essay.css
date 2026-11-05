@@ -1,0 +1,148 @@
+/*
+ * essay.css — 随笔（手记）的正文排版。
+ *
+ * 和 prose.css 一样必须全局 import（Markdown 输出没有作用域属性），挂在 .prose-essay 修饰类上：
+ * 衬线、首行缩进、首字下沉、不两端对齐，图片可以浮动、加宽、横排。
+ * 页面版式在 components/post/EssayLayout.astro，编辑器预览按 frontmatter 的分类加同一个类。
+ *
+ * 随笔按书刊的分段法：段与段之间只留很小的间距，靠首行缩进分界；
+ * 技术文章（prose.css 默认）是文档的分段法，段间空一行、两端对齐。两种分段法不混用。
+ */
+
+/* ══ 随笔：手记 ══ */
+
+/* ── 书刊底子 ── */
+
+.prose.prose-essay {
+  --prose-font: var(--font-serif);
+  --prose-weight: 500;
+  --prose-text: color-mix(in oklab, var(--fg) 88%, var(--fg-muted));
+  max-width: 44rem;
+  line-height: 1.95;
+  /* 中英文之间自动留出间隙，不支持的浏览器忽略。 */
+  text-autospace: normal;
+}
+.prose.prose-essay strong {
+  font-weight: 800;
+}
+.prose.prose-essay :is(pre, code, kbd, .code-head, .code-tabs-bar label, .code-toggle, [data-footnote-ref]) {
+  font-weight: 400;
+}
+
+/* 书刊分段：段首缩两格，段间只留一点点空，不两端对齐（中文 justify 在窄屏会拉出字距空洞）。 */
+.prose.prose-essay > * + * {
+  margin-top: 0.5em;
+}
+.prose.prose-essay p {
+  text-align: start;
+}
+.prose.prose-essay > p {
+  text-indent: 2em;
+}
+/* 标题、图、引用这些块前面要有呼吸；块后面紧跟的第一段不缩进（西文排版的老规矩，中文书也常这么排）。 */
+.prose.prose-essay > :is(h2, h3, h4, figure, blockquote, .callout, .code-block, .code-tabs, ul, ol, table, hr, .animation-demo) {
+  margin-top: 1.7em;
+}
+.prose.prose-essay > :is(figure, blockquote, .callout, .code-block, .code-tabs, ul, ol, table, .animation-demo) + * {
+  margin-top: 1.7em;
+}
+.prose.prose-essay > :is(h2, h3, h4) + p {
+  margin-top: 0.7em;
+}
+
+/*
+ * 首字下沉：只给第一段，而且第一段得是正文（不是提示块、不是图）。
+ * float 会让首字脱离行盒，line-height 压到 1 以下才不会把第一段顶开；0.88 是实测和两行文字对得最齐的值。
+ * 首字下沉的第一段不再缩进，否则首字前面会空出两格。
+ */
+.prose.prose-essay > p:first-child {
+  text-indent: 0;
+}
+.prose.prose-essay > p:first-child::first-letter {
+  float: left;
+  margin: 0.1em 0.14em 0 0;
+  font-size: 2.55em;
+  font-weight: 800;
+  line-height: 0.88;
+  color: var(--fg);
+}
+
+/* ── 随笔的标题 ── */
+
+/* 随笔里的小标题像书里的章节名：不要通栏线和主色竖条，只有字。 */
+.prose.prose-essay h2 {
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-size: 1.32em;
+  font-weight: 800;
+}
+.prose.prose-essay h3 {
+  padding-left: 0;
+  font-size: 1.1em;
+  font-weight: 800;
+}
+.prose.prose-essay h3::before {
+  display: none;
+}
+
+/*
+ * 引用保留 prose.css 的默认外观（主色描边 + 一层很淡的主色底 + 圆角）：手记里的引用也要看得出颜色，
+ * 只把里面的段落取消两端对齐和缩进，和纸面的书刊排版对齐。
+ */
+.prose.prose-essay blockquote p {
+  text-align: start;
+  text-indent: 0;
+}
+/* 随笔的分隔线是一枚居中的三星，不是一条渐变横线。 */
+.prose.prose-essay hr {
+  height: auto;
+  margin-block: 2.4em;
+  border: 0;
+  background: none;
+  text-align: center;
+  overflow: visible;
+}
+.prose.prose-essay hr::after {
+  content: '⁂';
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 1.15em;
+  letter-spacing: 0.3em;
+  color: var(--fg-subtle);
+}
+
+/* ── 随笔的图片 ── */
+
+/* 随笔的照片比截图多，不要描边，圆角收小，图注是衬线小字。 */
+.prose.prose-essay img {
+  border: 0;
+  border-radius: 6px;
+}
+.prose.prose-essay .figure figcaption {
+  font-family: var(--font-serif);
+  font-size: 0.84em;
+  letter-spacing: 0.01em;
+}
+/* 加宽（:::photo wide）向两侧各探出一截，探出的距离由版式给（--essay-bleed，等于纸面的左右内边距），
+   图最宽贴到纸边，不出纸。 */
+.prose.prose-essay .photo[data-layout='wide'] {
+  margin-inline: calc(var(--essay-bleed, 2rem) * -1);
+}
+.prose.prose-essay .photo[data-layout='wide'] img {
+  width: 100%;
+  border-radius: 0;
+}
+.prose.prose-essay .photo[data-layout='wide'] figcaption {
+  padding-inline: var(--essay-bleed, 2rem);
+}
+/* 浮动图旁边的段落：段首仍然缩进，但不能比浮动图更早出现在一行开头之前的空白里。 */
+.prose.prose-essay .photo[data-layout='left'] + p,
+.prose.prose-essay .photo[data-layout='right'] + p {
+  margin-top: 0;
+}
+/* 题记、落款这些单独成行的短句：右对齐、不缩进。 */
+.prose.prose-essay > p.signature {
+  text-indent: 0;
+  text-align: end;
+  color: var(--fg-muted);
+}

@@ -1,0 +1,70 @@
+---
+/**
+ * PostNotices.astro — 正文上方的提示条：已归档、结论可能过时、关联力扣题目。
+ * 三套文章版式共用。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import type { Post } from '@/lib/content';
+import { questionOf } from '@/lib/leetcode';
+
+interface Props {
+  post: Post;
+}
+
+const { archived, mayBeStale, leetcodeSlug } = Astro.props.post.data;
+const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
+---
+
+{
+  archived && (
+    <aside class="stale archived" role="note">
+      <Icon name="archive" size={17} />
+      <p>这篇文章已经归档，不再出现在文章列表和搜索里。内容保留在这里供参考，不再更新。</p>
+    </aside>
+  )
+}
+
+{
+  mayBeStale && (
+    <aside class="stale" role="note">
+      <Icon name="hourglass-medium" size={17} />
+      <p>这篇文章的结论可能已经过时。写作时的环境和依赖版本与现在不同，参考时请留意。</p>
+    </aside>
+  )
+}
+
+{
+  leetcodeSlug && (
+    <aside class="stale" role="note">
+      <Icon name="code" size={17} />
+      <p>这篇文章关联力扣题目 <a class="link" href={`https://leetcode.cn/problems/${leetcodeSlug}/`} target="_blank" rel="noopener noreferrer">{leetcode?.titleCn ?? leetcodeSlug}</a>{leetcode ? `（${leetcode.frontendId} · ${leetcode.difficulty} · ${leetcode.acRate == null ? '暂无通过率' : `${leetcode.acRate.toFixed(1)}% 通过率`}）` : ''}。代码风格因人而异，文中的题解代码以力扣官方题解为准。</p>
+    </aside>
+  )
+}
+
+<style>
+  .stale {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-control);
+    border: 1px solid color-mix(in oklab, var(--warning) 35%, var(--line));
+    background: color-mix(in oklab, var(--warning) 8%, var(--surface));
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--fg);
+  }
+  .stale :global(svg) {
+    margin-top: 0.15rem;
+    color: var(--warning);
+  }
+  .stale.archived {
+    border-color: var(--line-strong);
+    background: var(--surface-2);
+    color: var(--fg-muted);
+  }
+  .stale.archived :global(svg) {
+    color: var(--fg-subtle);
+  }
+</style>

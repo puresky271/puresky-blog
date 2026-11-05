@@ -26,9 +26,17 @@ const MONTH_DAY = new Intl.DateTimeFormat('zh-CN', {
   timeZone: SITE.timeZone,
 });
 
+const WEEKDAY = new Intl.DateTimeFormat('zh-CN', { weekday: 'long', timeZone: SITE.timeZone });
+
 /** 2026年7月30日 */
 export function formatDate(date: Date | string): string {
   return DATE_FULL.format(new Date(date));
+}
+
+/** 2026年7月30日 星期四。随笔和文学创作的页头用，手记的日期要带星期才像日记。 */
+export function formatDateWeekday(date: Date | string): string {
+  const value = new Date(date);
+  return `${DATE_FULL.format(value)} ${WEEKDAY.format(value)}`;
 }
 
 /** 2026-07-30，按作者时区。也用作日历里「哪天有文章」的键。 */

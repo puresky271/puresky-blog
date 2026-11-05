@@ -4,7 +4,14 @@
  *
  * 状态由 lib/reading-prefs.ts 写到 <html data-read-font data-read-size>，正文样式在 prose.css 里按属性切换。
  * 选中态也看 <html> 上的属性而不是 JS 里的局部状态：内联脚本在首次绘制前就写好了，不会先闪一下默认档。
+ * 随笔和文学创作的版式自带衬线排版，不给字体开关（font={false}），只留字号。
  */
+
+interface Props {
+  font?: boolean;
+}
+
+const { font = true } = Astro.props;
 
 const fonts = [
   { value: 'sans', label: '非衬线', title: '非衬线（默认）' },
@@ -18,22 +25,24 @@ const sizes = [
 ---
 
 <div class="reading-prefs">
-  <div class="segment" data-group="font" role="radiogroup" aria-label="正文字体">
-    <span class="thumb" aria-hidden="true" />
-    {
-      fonts.map((item) => (
-        <button
-          type="button"
-          role="radio"
-          aria-checked={item.value === 'sans' ? 'true' : 'false'}
-          data-option={item.value}
-          title={item.title}
-        >
-          {item.label}
-        </button>
-      ))
-    }
-  </div>
+  {
+    font && (
+      <div class="segment" data-group="font" role="radiogroup" aria-label="正文字体">
+        <span class="thumb" aria-hidden="true" />
+        {fonts.map((item) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={item.value === 'sans' ? 'true' : 'false'}
+            data-option={item.value}
+            title={item.title}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
   <div class="segment" data-group="size" role="radiogroup" aria-label="正文字号">
     <span class="thumb" aria-hidden="true" />
     {

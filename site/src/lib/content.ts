@@ -156,6 +156,20 @@ export async function getSeries(post: Post): Promise<Post[]> {
 }
 
 /**
+ * 随笔页左栏的篇目流：在系列里就列整个系列，否则列同分类里时间上挨着这一篇的几篇（含自己）。
+ * 归档的文章不在任何列表里，自己也不出现篇目流。
+ */
+export async function getStream(post: Post, limit = 7): Promise<{ label: string; posts: Post[]; total: number }> {
+  const series = await getSeries(post);
+  if (series.length > 1) return { label: post.data.series!, posts: series, total: series.length };
+  if (post.data.archived) return { label: categoryOf(post.data.category).label, posts: [], total: 0 };
+  const same = (await getPosts()).filter((p) => p.data.category === post.data.category);
+  const index = same.findIndex((p) => p.id === post.id);
+  const start = Math.max(0, Math.min(index - Math.floor(limit / 2), same.length - limit));
+  return { label: categoryOf(post.data.category).label, posts: same.slice(start, start + limit), total: same.length };
+}
+
+/**
  * 相关文章：共同标签数优先，同分类加一分，再按时间。
  * 不在系列里的才算，系列文章已经在系列导航里出现过了。
  */

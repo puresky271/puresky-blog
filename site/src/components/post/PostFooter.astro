@@ -1,0 +1,172 @@
+---
+/**
+ * PostFooter.astro — 文章页的收尾：点赞 / 浏览数 / 分享、源文件链接、上下篇、相关文章、评论。
+ *
+ * 三套文章版式（默认、随笔、文学创作）共用这一份，版式只决定它摆在哪、多宽。
+ */
+import Comments from '@/components/post/Comments.svelte';
+import LikeButton from '@/components/post/LikeButton.svelte';
+import ViewCount from '@/components/post/ViewCount.svelte';
+import Icon from '@/components/ui/Icon.astro';
+import { GITHUB } from '@/config';
+import { categoryOf, type Post } from '@/lib/content';
+import { postPath } from '@/lib/format';
+
+interface Props {
+  post: Post;
+  adjacent: { newer?: Post; older?: Post };
+  related: Post[];
+}
+
+const { post, adjacent, related } = Astro.props;
+const sourcePath = `${GITHUB.contentPath}/${post.filePath?.split('/').pop() ?? `${post.id}.mdx`}`;
+const sourceUrl = `https://github.com/${GITHUB.repo}/blob/${GITHUB.branch}/${sourcePath}`;
+const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/${sourcePath}`;
+---
+
+<footer class="post-footer">
+  <div class="actions">
+    <LikeButton client:visible slug={post.id} />
+    <ViewCount client:idle slug={post.id} />
+    <button type="button" class="btn btn-ghost" data-share>
+      <Icon name="share-network" size={17} />
+      <span data-share-label>分享</span>
+    </button>
+    <div class="source">
+      {
+        // 只在本机 astro dev 下出现：直接跳进本地编辑器改这一篇。
+        import.meta.env.DEV && (
+          <a href={`/__editor/?post=${post.id}`}>
+            <Icon name="pencil-simple" size={15} />在编辑器中打开
+          </a>
+        )
+      }
+      <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+        <Icon name="code" size={15} />源文件
+      </a>
+      <a href={historyUrl} target="_blank" rel="noopener noreferrer">
+        <Icon name="clock-counter-clockwise" size={15} />修改历史
+      </a>
+    </div>
+  </div>
+
+  {
+    (adjacent.newer || adjacent.older) && (
+      <nav class="adjacent" aria-label="相邻文章">
+        {adjacent.older ? (
+          <a href={postPath(adjacent.older.id)} class="card card-link adj">
+            <span class="meta inline-flex items-center gap-1">
+              <Icon name="arrow-left" size={13} />
+              上一篇
+            </span>
+            <span class="adj-title">{adjacent.older.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )}
+        {adjacent.newer && (
+          <a href={postPath(adjacent.newer.id)} class="card card-link adj text-right">
+            <span class="meta inline-flex items-center justify-end gap-1">
+              下一篇
+              <Icon name="arrow-right" size={13} />
+            </span>
+            <span class="adj-title">{adjacent.newer.data.title}</span>
+          </a>
+        )}
+      </nav>
+    )
+  }
+
+  {
+    related.length > 0 && (
+      <section aria-labelledby="related-title">
+        <h2 id="related-title" class="text-base font-semibold text-fg">相关文章</h2>
+        <ul class="mt-3 space-y-1">
+          {related.map((item) => (
+            <li>
+              <a href={postPath(item.id)} class="related">
+                <span>{item.data.title}</span>
+                <span class="meta shrink-0">{categoryOf(item.data.category).label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {!post.data.commentsOff && <Comments client:visible slug={post.id} />}
+</footer>
+
+<style>
+  .post-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .source {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+    font-size: 0.8125rem;
+  }
+  .source a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .source a:hover {
+    color: var(--fg);
+  }
+  @media (width < 30rem) {
+    .source {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+
+  .adjacent {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (width >= 40rem) {
+    .adjacent {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .adj {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem 1.15rem;
+  }
+  .adj-title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--fg);
+  }
+  .related {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    font-size: 0.9375rem;
+    color: var(--fg);
+  }
+  .related:hover span:first-child {
+    color: var(--accent);
+  }
+</style>

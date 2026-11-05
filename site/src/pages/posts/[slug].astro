@@ -1,22 +1,22 @@
 ---
 // 正文由 Markdown 渲染，元素上没有作用域属性，排版样式必须全局引入。
 import '@/styles/prose.css';
+// 随笔「手记」的正文排版，按分类加 .prose-essay 修饰类生效。
+import '@/styles/essay.css';
 
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
 
 import Lightbox from '@/components/Lightbox.astro';
-import Comments from '@/components/post/Comments.svelte';
-import LikeButton from '@/components/post/LikeButton.svelte';
+import EssayLayout from '@/components/post/EssayLayout.astro';
 import PaperLangToggle from '@/components/post/PaperLangToggle.astro';
 import PostEnhance from '@/components/post/PostEnhance.astro';
+import PostFooter from '@/components/post/PostFooter.astro';
+import PostNotices from '@/components/post/PostNotices.astro';
 import ReadingPrefs from '@/components/post/ReadingPrefs.astro';
 import Toc from '@/components/post/Toc.astro';
-import ViewCount from '@/components/post/ViewCount.svelte';
 import CategoryIcon from '@/components/ui/CategoryIcon.astro';
-import Icon from '@/components/ui/Icon.astro';
-import { AUTHOR, GITHUB } from '@/config';
-import { questionOf } from '@/lib/leetcode';
+import { AUTHOR } from '@/config';
 import Base from '@/layouts/Base.astro';
 import {
   categoryOf,
@@ -49,7 +49,11 @@ const noToc = tocItems < 2;
 
 // 正文里有行首的 :::bi 才是中英对照文章，头部才需要原文语言开关。
 const bilingual = /^ {0,3}:::bi\s*$/m.test(post.body ?? '');
-const { title, description, pubDate, updatedDate, category, subcategory, leetcodeSlug, tags, cover, coverAlt, mayBeStale, commentsOff, archived } = post.data;
+const { title, description, pubDate, updatedDate, category, subcategory, tags, cover, coverAlt, archived } = post.data;
+/*
+ * 版式按分类分两套：随笔走「手记」（纸面 + 篇目流），其余分类（含文学创作）走默认的文档版式。
+ */
+const layout = category === 'essays' ? 'essay' : 'default';
 
 const [adjacent, series, related] = await Promise.all([getAdjacent(post), getSeries(post), getRelated(post)]);
 const cat = categoryOf(category);
@@ -60,15 +64,21 @@ const byline = post.data.author ?? AUTHOR.name;
 const bylineLabel = external ? '原文作者' : '作者';
 const words = postWords(post);
 const minutes = postMinutes(post);
-const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
-const sourcePath = `${GITHUB.contentPath}/${post.filePath?.split('/').pop() ?? `${post.id}.mdx`}`;
-const sourceUrl = `https://github.com/${GITHUB.repo}/blob/${GITHUB.branch}/${sourcePath}`;
-const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/${sourcePath}`;
 ---
 
 <Base title={title} description={description} type="article" publishedTime={pubDate} image={cover?.src}>
+  {post.data.song && <span hidden data-post-song={post.data.song} />}
   <div class="reading-progress" aria-hidden="true"></div>
 
+  {
+    layout === 'essay' && (
+      <EssayLayout post={post} headings={headings} adjacent={adjacent} related={related}>
+        <Content />
+      </EssayLayout>
+    )
+  }
+
+  {layout === 'default' && (
   <article class:list={['container-page', 'post-container', { 'no-toc': noToc }]}>
     <header class="post-header">
       <div class="post-hero">
@@ -151,32 +161,7 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
           )
         }
 
-        {
-          archived && (
-            <aside class="stale archived" role="note">
-              <Icon name="archive" size={17} />
-              <p>这篇文章已经归档，不再出现在文章列表和搜索里。内容保留在这里供参考，不再更新。</p>
-            </aside>
-          )
-        }
-
-        {
-          mayBeStale && (
-            <aside class="stale" role="note">
-              <Icon name="hourglass-medium" size={17} />
-              <p>这篇文章的结论可能已经过时。写作时的环境和依赖版本与现在不同，参考时请留意。</p>
-            </aside>
-          )
-        }
-
-        {
-          leetcodeSlug && (
-            <aside class="stale" role="note">
-              <Icon name="code" size={17} />
-              <p>这篇文章关联力扣题目 <a class="link" href={`https://leetcode.cn/problems/${leetcodeSlug}/`} target="_blank" rel="noopener noreferrer">{leetcode?.titleCn ?? leetcodeSlug}</a>{leetcode ? `（${leetcode.frontendId} · ${leetcode.difficulty} · ${leetcode.acRate == null ? '暂无通过率' : `${leetcode.acRate.toFixed(1)}% 通过率`}）` : ''}。代码风格因人而异，文中的题解代码以力扣官方题解为准。</p>
-            </aside>
-          )
-        }
+        <PostNotices post={post} />
 
         {
           series.length > 1 && (
@@ -208,82 +193,11 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
           <Content />
         </div>
 
-        <footer class="post-footer">
-          <div class="actions">
-            <LikeButton client:visible slug={post.id} />
-            <ViewCount client:idle slug={post.id} />
-            <button type="button" class="btn btn-ghost" data-share>
-              <Icon name="share-network" size={17} />
-              <span data-share-label>分享</span>
-            </button>
-            <div class="source">
-              {
-                // 只在本机 astro dev 下出现：直接跳进本地编辑器改这一篇。
-                import.meta.env.DEV && (
-                  <a href={`/__editor/?post=${post.id}`}>
-                    <Icon name="pencil-simple" size={15} />在编辑器中打开
-                  </a>
-                )
-              }
-              <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
-                <Icon name="code" size={15} />源文件
-              </a>
-              <a href={historyUrl} target="_blank" rel="noopener noreferrer">
-                <Icon name="clock-counter-clockwise" size={15} />修改历史
-              </a>
-            </div>
-          </div>
-
-          {
-            (adjacent.newer || adjacent.older) && (
-              <nav class="adjacent" aria-label="相邻文章">
-                {adjacent.older ? (
-                  <a href={postPath(adjacent.older.id)} class="card card-link adj">
-                    <span class="meta inline-flex items-center gap-1">
-                      <Icon name="arrow-left" size={13} />
-                      上一篇
-                    </span>
-                    <span class="adj-title">{adjacent.older.data.title}</span>
-                  </a>
-                ) : (
-                  <span />
-                )}
-                {adjacent.newer && (
-                  <a href={postPath(adjacent.newer.id)} class="card card-link adj text-right">
-                    <span class="meta inline-flex items-center justify-end gap-1">
-                      下一篇
-                      <Icon name="arrow-right" size={13} />
-                    </span>
-                    <span class="adj-title">{adjacent.newer.data.title}</span>
-                  </a>
-                )}
-              </nav>
-            )
-          }
-
-          {
-            related.length > 0 && (
-              <section aria-labelledby="related-title">
-                <h2 id="related-title" class="text-base font-semibold text-fg">相关文章</h2>
-                <ul class="mt-3 space-y-1">
-                  {related.map((item) => (
-                    <li>
-                      <a href={postPath(item.id)} class="related">
-                        <span>{item.data.title}</span>
-                        <span class="meta shrink-0">{categoryOf(item.data.category).label}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )
-          }
-
-          {!commentsOff && <Comments client:visible slug={post.id} />}
-        </footer>
+        <PostFooter post={post} adjacent={adjacent} related={related} />
       </div>
     </div>
   </article>
+  )}
 
   <PostEnhance />
   <Lightbox />
@@ -585,31 +499,6 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
     margin-top: 0;
   }
 
-  .stale {
-    display: flex;
-    gap: 0.6rem;
-    margin-top: 1.5rem;
-    padding: 0.85rem 1rem;
-    border-radius: var(--radius-control);
-    border: 1px solid color-mix(in oklab, var(--warning) 35%, var(--line));
-    background: color-mix(in oklab, var(--warning) 8%, var(--surface));
-    font-size: 0.875rem;
-    line-height: 1.65;
-    color: var(--fg);
-  }
-  .stale :global(svg) {
-    margin-top: 0.15rem;
-    color: var(--warning);
-  }
-  .stale.archived {
-    border-color: var(--line-strong);
-    background: var(--surface-2);
-    color: var(--fg-muted);
-  }
-  .stale.archived :global(svg) {
-    color: var(--fg-subtle);
-  }
-
   .series {
     margin-top: 1.5rem;
     padding: 1rem 1.15rem;
@@ -631,74 +520,5 @@ const historyUrl = `https://github.com/${GITHUB.repo}/commits/${GITHUB.branch}/$
     font-weight: 600;
   }
 
-  .post-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-    margin-top: 3.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--line);
-  }
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .source {
-    display: flex;
-    gap: 1rem;
-    margin-left: auto;
-    font-size: 0.8125rem;
-  }
-  .source a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    color: var(--fg-muted);
-    transition: color 160ms ease;
-  }
-  .source a:hover {
-    color: var(--fg);
-  }
-  @media (width < 30rem) {
-    .source {
-      margin-left: 0;
-      width: 100%;
-    }
-  }
 
-  .adjacent {
-    display: grid;
-    gap: 1rem;
-  }
-  @media (width >= 40rem) {
-    .adjacent {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  .adj {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 1rem 1.15rem;
-  }
-  .adj-title {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    line-height: 1.5;
-    color: var(--fg);
-  }
-  .related {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.55rem 0;
-    font-size: 0.9375rem;
-    color: var(--fg);
-  }
-  .related:hover span:first-child {
-    color: var(--accent);
-  }
 </style>
