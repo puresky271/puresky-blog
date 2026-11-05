@@ -1,0 +1,1213 @@
+---
+/**
+ * ReadDemoPage.astro — 阅读页样板，只在 `astro dev` 里存在（editor/integration.mjs 注入 /__demo/read）。
+ *
+ * 这不是线上页面，是把参考站 innei.in 手记详情页里值得抄的几件事内化到我们文章页上的样板：
+ *   1. 首字下沉 + 首行缩进（衬线档生效，见 styles 里的 data-read-font 规则）
+ *   2. 图片下的小字图注（把 ![图注](src) 的 alt 变成看得见的 figcaption）
+ *   3. 「上次读到」记忆条（localStorage，纯前端）
+ *   4. 朗读本文（浏览器 speechSynthesis，句级高亮，跳过代码块）
+ *   5. 右缘浮动动作条（hover 展开成胶囊）
+ *   6. 文末「读完」卡（阅读时长 + 读完时间，进度过 96% 才点亮）
+ *
+ * 页面本身复用站点的 Base / Toc / ReadingPrefs / Lightbox / PostEnhance，正文是真实文章，
+ * 目的就是让「改完之后大概长什么样」能在真实内容上判断，而不是先改线上页面再回滚。
+ */
+import '@/styles/prose.css';
+
+import { render } from 'astro:content';
+
+import Lightbox from '@/components/Lightbox.astro';
+import PostEnhance from '@/components/post/PostEnhance.astro';
+import ReadingPrefs from '@/components/post/ReadingPrefs.astro';
+import Toc from '@/components/post/Toc.astro';
+import CategoryIcon from '@/components/ui/CategoryIcon.astro';
+import Base from '@/layouts/Base.astro';
+import { categoryOf, getAllPosts, postMinutes, postWords } from '@/lib/content';
+import { formatDate } from '@/lib/format';
+
+// ?slug= 换一篇看，默认用一篇带图注、开头是普通段落的文章。
+const posts = await getAllPosts();
+const wanted = Astro.url.searchParams.get('slug');
+const post = posts.find((item) => item.id === wanted) ?? posts.find((item) => item.id === 'post-20261105') ?? posts[0];
+const { Content, headings } = await render(post);
+const tocCount = headings.filter((h) => h.depth === 2 || h.depth === 3).length;
+const words = postWords(post);
+const minutes = postMinutes(post);
+const { title, description, category, tags, pubDate } = post.data;
+const categoryLabel = categoryOf(category).label;
+
+const features = [
+  '首字下沉与首行缩进（切到衬线档看）',
+  '图片小字图注',
+  '上次读到哪儿',
+  '朗读本文，句级高亮',
+  '右缘浮动动作条',
+  '文末读完卡',
+];
+---
+
+<Base title={`阅读页样板 · ${title}`} description="阅读页样板，只在本机开发环境里存在。">
+  <div class="reading-progress" aria-hidden="true"></div>
+
+  <article class="container-page demo-page" data-demo-slug={post.id}>
+    <p class="demo-flag">
+      <span class="demo-flag-tag">样板</span>
+      <span>只在本机 dev 存在，线上没有这个页面。这一页试了：</span>
+      {features.map((item) => <span class="demo-flag-item">{item}</span>)}
+      <button type="button" class="demo-flag-btn" data-try-serif>切到衬线档看效果</button>
+    </p>
+
+    <header class="demo-hero">
+      <div class="demo-cat">
+        <CategoryIcon category={category} />
+      </div>
+      <h1 class="post-title">{title}</h1>
+      <div class="demo-hero-bar">
+        <ul class="demo-tags" aria-label="标签">
+          {tags.slice(0, 3).map((tag) => <li>{tag}</li>)}
+        </ul>
+        <ReadingPrefs />
+      </div>
+      <p class="post-lead">{description}</p>
+      <dl class="demo-facts">
+        <div>
+          <dt>发布</dt>
+          <dd>{formatDate(pubDate)}</dd>
+        </div>
+        <div>
+          <dt>阅读</dt>
+          <dd>约 {minutes} 分钟 · {words.toLocaleString('zh-CN')} 字</dd>
+        </div>
+        <div>
+          <dt>分类</dt>
+          <dd>{categoryLabel}</dd>
+        </div>
+      </dl>
+      <button type="button" class="demo-resume" data-resume hidden>
+        <span data-resume-icon aria-hidden="true"></span>
+        <span data-resume-text>上次读到 0%</span>
+        <span class="demo-resume-go">接着读</span>
+      </button>
+    </header>
+
+    <div class="demo-divider" aria-hidden="true"></div>
+
+    <div class="demo-grid">
+      <aside class="demo-aside" aria-label="目录">
+        {tocCount >= 2 && <Toc headings={headings} variant="sidebar" />}
+      </aside>
+
+      <div class="demo-main">
+        <div class="demo-inline-toc">
+          {tocCount >= 2 && <Toc headings={headings} variant="inline" />}
+        </div>
+        <div class="prose demo-prose mt-8" data-demo-prose>
+          <Content />
+        </div>
+
+        <section class="demo-done" data-done aria-labelledby="demo-done-title">
+          <p class="demo-done-kicker" data-done-kicker>读到这儿</p>
+          <h2 id="demo-done-title" class="demo-done-title">这一篇读完了</h2>
+          <p class="demo-done-meta">
+            约 {minutes} 分钟 · {words.toLocaleString('zh-CN')} 字
+            <span data-done-time hidden> · 今天读完</span>
+          </p>
+          <div class="demo-done-actions">
+            <button type="button" class="demo-btn" data-rail-top>回到开头</button>
+            <button type="button" class="demo-btn demo-btn-quiet" data-rail-share>复制链接</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+
+  <div class="demo-rail" data-demo-rail role="toolbar" aria-label="阅读操作">
+    <div class="demo-rail-ring" title="阅读进度">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" class="demo-ring-track"></circle>
+        <circle cx="12" cy="12" r="9" class="demo-ring-bar" data-ring></circle>
+      </svg>
+      <span class="demo-rail-pct" data-rail-pct>0%</span>
+    </div>
+    <button type="button" class="demo-rail-btn" data-rail-read aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="demo-ic">
+        <path d="M4 9v6h3l4 3.5v-13L7 9H4z" />
+        <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+        <path d="M18 6a8.5 8.5 0 0 1 0 12" />
+      </svg>
+      <span class="demo-rail-label">朗读</span>
+    </button>
+    <button type="button" class="demo-rail-btn" data-rail-share>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="demo-ic">
+        <path d="M9 13.5 15 10" />
+        <path d="M9 10.5 15 14" />
+        <circle cx="17.5" cy="8.5" r="2.5" />
+        <circle cx="6.5" cy="12" r="2.5" />
+        <circle cx="17.5" cy="15.5" r="2.5" />
+      </svg>
+      <span class="demo-rail-label">分享</span>
+    </button>
+    <button type="button" class="demo-rail-btn" data-rail-top>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="demo-ic">
+        <path d="M12 19V5" />
+        <path d="m6 11 6-6 6 6" />
+      </svg>
+      <span class="demo-rail-label">顶部</span>
+    </button>
+  </div>
+
+  <div class="demo-tts" data-tts hidden>
+    <button type="button" class="demo-tts-play" data-tts-toggle aria-label="播放朗读">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="demo-ic" data-tts-icon="play">
+        <path d="M8 5.5v13l11-6.5-11-6.5z" />
+      </svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="demo-ic" data-tts-icon="pause">
+        <path d="M9 5v14" />
+        <path d="M15 5v14" />
+      </svg>
+    </button>
+    <div class="demo-tts-body">
+      <p class="demo-tts-head">
+        <span class="demo-tts-state" data-tts-state>准备朗读</span>
+        <span class="demo-tts-count" data-tts-count></span>
+      </p>
+      <p class="demo-tts-text" data-tts-text></p>
+      <div class="demo-tts-track" aria-hidden="true"><span class="demo-tts-fill" data-tts-fill></span></div>
+    </div>
+    <div class="demo-tts-side">
+      <button type="button" class="demo-tts-rate" data-tts-rate title="语速">1.0×</button>
+      <button type="button" class="demo-tts-close" data-tts-close aria-label="停止朗读">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="demo-ic"><path d="m6 6 12 12M18 6 6 18" /></svg>
+      </button>
+    </div>
+  </div>
+
+  <PostEnhance />
+  <Lightbox />
+</Base>
+
+<style>
+  /* ── 页头：只保留样板需要的信息，视觉沿用文章页 ── */
+  .demo-page {
+    max-width: 1320px;
+  }
+  .demo-flag {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    margin-top: 1.25rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-control);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--fg-muted);
+  }
+  .demo-flag-tag {
+    padding: 0.05rem 0.4rem;
+    border-radius: 5px;
+    background: color-mix(in oklab, var(--accent) 14%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--accent-strong);
+  }
+  .demo-flag-item {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--fg-muted);
+  }
+  .demo-flag-btn {
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--line));
+    font-size: 0.75rem;
+    color: var(--accent-strong);
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+  .demo-flag-btn:hover {
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 8%, transparent);
+  }
+
+  .demo-hero {
+    margin-top: 1.5rem;
+  }
+  /* 标题和导语的度量照抄文章页（[slug].astro 里是作用域样式，样板页得自带一份）。 */
+  .demo-cat {
+    width: fit-content;
+    margin-bottom: 1.35rem;
+  }
+  .post-title {
+    font-size: clamp(1.75rem, 1.25rem + 2vw, 2.6rem);
+    line-height: 1.28;
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+  .post-lead {
+    margin-top: 0.9rem;
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.75;
+    color: color-mix(in oklab, var(--fg) 78%, var(--fg-muted));
+  }
+  .demo-hero-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    margin-top: 1rem;
+  }
+  .demo-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+  }
+  .demo-tags li {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .demo-hero-bar :global(.reading-prefs) {
+    margin-left: auto;
+  }
+  .demo-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+  }
+  .demo-facts dt {
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--fg-subtle);
+  }
+  .demo-facts dd {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    color: var(--fg);
+  }
+
+  /* 上次读到：一条安静的提示，不抢标题。 */
+  .demo-resume {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 0.4rem 0.5rem 0.4rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+    transition:
+      border-color 180ms var(--ease-out-expo),
+      color 180ms var(--ease-out-expo);
+  }
+  .demo-resume[hidden] {
+    display: none;
+  }
+  .demo-resume:hover {
+    border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+    color: var(--fg);
+  }
+  [data-resume-icon] {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .demo-resume-go {
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--accent) 12%, transparent);
+    color: var(--accent-strong);
+    font-size: 0.75rem;
+  }
+
+  .demo-divider {
+    position: relative;
+    height: 1px;
+    margin-top: 2.25rem;
+    background: var(--line);
+  }
+  .demo-divider::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: 100vw;
+    translate: -50% 0;
+    background: var(--line);
+  }
+
+  /* ── 版式：和文章页同一套栅格（左目录 18/20rem，正文 46rem） ── */
+  .demo-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 2.25rem;
+  }
+  .demo-aside {
+    display: none;
+  }
+  .demo-main {
+    min-width: 0;
+  }
+  @media (width >= 64rem) {
+    .demo-grid {
+      grid-template-columns: 18rem minmax(0, 46rem);
+      column-gap: 2.5rem;
+    }
+    .demo-aside {
+      display: block;
+    }
+    .demo-inline-toc {
+      display: none;
+    }
+  }
+  @media (width >= 80rem) {
+    .demo-grid {
+      grid-template-columns: 20rem minmax(0, 46rem);
+      column-gap: 3.5rem;
+    }
+  }
+
+  /* ── 内化点 1：首字下沉 + 首行缩进（只在衬线档开，无衬线档保持现在的块式排版） ── */
+  :global(:root[data-read-font='serif'] .demo-prose > p) {
+    text-indent: 2em;
+  }
+  :global(:root[data-read-font='serif'] .demo-prose > p:first-of-type) {
+    text-indent: 0;
+  }
+  /*
+   * 首字下沉：float 会让首字母脱离行盒，行高按行盒算，所以 line-height 要压到 1 以下才不会
+   * 把第一段顶开一大块。0.86 是实测下来第一行基线和后面几行对得最齐的值。
+   */
+  :global(:root[data-read-font='serif'] .demo-prose > p:first-of-type::first-letter) {
+    float: left;
+    margin: 0.06em 0.12em 0 0;
+    font-size: 2.4em;
+    line-height: 0.86;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  /* 首字下沉时第一段的下边距要留够，否则下沉的首字母会压到第二段。 */
+  :global(:root[data-read-font='serif'] .demo-prose > p:first-of-type) {
+    margin-bottom: 1.5em;
+  }
+  /*
+   * 衬线档按书刊的分段法排版：行高 1.9，段与段之间只留半行、靠首行缩进分界，
+   * 而不是无衬线档那种「段间空一行」的块式排版。度量照参考站（16px / 1.85 / 0.5em / 2em）。
+   */
+  :global(:root[data-read-font='serif'] .demo-prose) {
+    line-height: 1.9;
+  }
+  /*
+   * 书刊式排版不两端对齐：中文 justify 在窄屏、长英文词前面会把字距拉开成一片空洞
+   * （prose.css 默认的 justify 在无衬线块式排版里不明显，缩进档一眼就看出来了）。
+   */
+  :global(:root[data-read-font='serif'] .demo-prose p) {
+    text-align: start;
+  }
+  :global(:root[data-read-font='serif'] .demo-prose > * + *) {
+    margin-top: 0.55em;
+  }
+  :global(:root[data-read-font='serif'] .demo-prose > h2),
+  :global(:root[data-read-font='serif'] .demo-prose > h3),
+  :global(:root[data-read-font='serif'] .demo-prose > figure),
+  :global(:root[data-read-font='serif'] .demo-prose > blockquote),
+  :global(:root[data-read-font='serif'] .demo-prose > .code-block) {
+    margin-top: 1.6em;
+  }
+
+  /* ── 内化点 2：图注 ── */
+  .demo-prose :global(figure.demo-figure) {
+    margin-inline: 0;
+  }
+  .demo-prose :global(figure.demo-figure figcaption) {
+    margin-top: 0.55em;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--fg-subtle);
+  }
+
+  /* ── 内化点 6：文末读完卡 ── */
+  .demo-done {
+    margin-top: 4rem;
+    padding: 1.5rem 1.5rem 1.35rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  .demo-done[data-finished] {
+    border-color: color-mix(in oklab, var(--accent) 32%, var(--line));
+    background: color-mix(in oklab, var(--accent) 5%, var(--surface));
+  }
+  .demo-done-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    color: var(--fg-subtle);
+  }
+  .demo-done-title {
+    margin-top: 0.35rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .demo-done-meta {
+    margin-top: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+  }
+  .demo-done-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+  }
+  .demo-btn {
+    height: 2rem;
+    padding-inline: 0.9rem;
+    border-radius: var(--radius-control);
+    border: 1px solid transparent;
+    background: var(--accent);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--accent-fg);
+    transition: filter 160ms ease;
+  }
+  .demo-btn:hover {
+    filter: brightness(1.06);
+  }
+  .demo-btn-quiet {
+    border-color: var(--line-strong);
+    background: transparent;
+    color: var(--fg-muted);
+  }
+  .demo-btn-quiet:hover {
+    border-color: var(--accent);
+    color: var(--accent-strong);
+    filter: none;
+  }
+
+  /* ── 内化点 5：右缘浮动动作条。hover 时从 40px 展开成图标 + 文字的胶囊 ── */
+  .demo-rail {
+    position: fixed;
+    right: 8px;
+    top: 50%;
+    z-index: var(--z-raised);
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+    translate: 0 -50%;
+  }
+  .demo-rail[hidden] {
+    display: none;
+  }
+  .demo-rail-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 2px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--surface) 86%, transparent);
+    color: var(--fg-subtle);
+    backdrop-filter: blur(8px);
+  }
+  .demo-rail-ring svg {
+    position: absolute;
+    inset: 0;
+    width: 40px;
+    height: 40px;
+    rotate: -90deg;
+  }
+  .demo-ring-track,
+  .demo-ring-bar {
+    fill: none;
+    stroke-width: 2;
+  }
+  .demo-ring-track {
+    stroke: var(--line);
+  }
+  .demo-ring-bar {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-dasharray: 56.5;
+    stroke-dashoffset: 56.5;
+    transition: stroke-dashoffset 180ms linear;
+  }
+  .demo-rail-pct {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.02em;
+  }
+  .demo-rail-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 40px;
+    max-width: 40px;
+    padding-inline: 11px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+    background: color-mix(in oklab, var(--surface) 86%, transparent);
+    color: var(--fg-muted);
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+    transition:
+      max-width 280ms var(--ease-out-expo),
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+  .demo-rail-btn:hover,
+  .demo-rail-btn:focus-visible {
+    max-width: 9rem;
+    border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+    color: var(--accent-strong);
+  }
+  .demo-rail-btn[aria-pressed='true'] {
+    color: var(--accent-strong);
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--line));
+  }
+  .demo-rail-label {
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  .demo-rail-btn:hover .demo-rail-label,
+  .demo-rail-btn:focus-visible .demo-rail-label {
+    opacity: 1;
+  }
+  .demo-ic {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .demo-rail-btn:first-of-type .demo-ic,
+  .demo-tts-play .demo-ic[data-tts-icon-play] {
+    fill: currentColor;
+    stroke: none;
+  }
+  /* 版心比动作条窄的时候（<88rem）藏掉，免得压在正文上。 */
+  @media (width < 88rem) {
+    .demo-rail {
+      display: none;
+    }
+  }
+
+  /* ── 内化点 4：朗读条 ── */
+  .demo-tts {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    z-index: calc(var(--z-nav) + 1);
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: min(38rem, calc(100vw - 2rem));
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    background: color-mix(in oklab, var(--surface) 94%, transparent);
+    box-shadow: var(--shadow-md);
+    translate: -50% 0;
+    backdrop-filter: blur(14px);
+    animation: tts-in 320ms var(--ease-out-expo) both;
+  }
+  .demo-tts[hidden] {
+    display: none;
+  }
+  @keyframes tts-in {
+    from {
+      opacity: 0;
+      translate: -50% 12px;
+    }
+    to {
+      opacity: 1;
+      translate: -50% 0;
+    }
+  }
+  /* 手机上播放器占用右下角，朗读条抬到它上面。 */
+  @media (width < 48rem) {
+    .demo-tts {
+      bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+      gap: 0.6rem;
+      padding: 0.6rem;
+    }
+  }
+  .demo-tts-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  .demo-tts-play .demo-ic {
+    width: 15px;
+    height: 15px;
+  }
+  /* 播放/暂停图标二选一：用 data-tts-state 控制，不靠 JS 改 hidden。 */
+  .demo-tts[data-playing] .demo-ic[data-tts-icon='play'] {
+    display: none;
+  }
+  .demo-tts:not([data-playing]) .demo-ic[data-tts-icon='pause'] {
+    display: none;
+  }
+  .demo-tts-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .demo-tts-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: var(--fg-subtle);
+  }
+  .demo-tts-state {
+    color: var(--accent-strong);
+  }
+  .demo-tts-text {
+    margin-top: 0.2rem;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--fg);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .demo-tts-track {
+    height: 2px;
+    margin-top: 0.5rem;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  .demo-tts-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 240ms linear;
+  }
+  .demo-tts-side {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .demo-tts-rate,
+  .demo-tts-close {
+    height: 1.75rem;
+    padding-inline: 0.5rem;
+    border-radius: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--fg-muted);
+    transition:
+      color 160ms ease,
+      background-color 160ms ease;
+  }
+  .demo-tts-rate:hover,
+  .demo-tts-close:hover {
+    background: var(--surface-2);
+    color: var(--fg);
+  }
+  .demo-tts-close {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    padding-inline: 0;
+  }
+
+  /* 朗读中：当前句用 CSS Custom Highlight 上色，不支持时退化成整段浅底。 */
+  .demo-prose :global([data-tts-active]) {
+    background: color-mix(in oklab, var(--accent) 5%, transparent);
+    border-radius: 4px;
+  }
+  .demo-prose :global(::highlight(tts-sentence)) {
+    background-color: color-mix(in oklab, var(--accent) 22%, transparent);
+    color: inherit;
+  }
+
+  /* 轻提示 */
+  .demo-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    z-index: var(--z-toast);
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: var(--fg);
+    font-size: 0.8125rem;
+    color: var(--bg);
+    translate: -50% 0;
+    animation: toast-in 200ms var(--ease-out-expo) both;
+    pointer-events: none;
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      translate: -50% 6px;
+    }
+    to {
+      opacity: 1;
+      translate: -50% 0;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * 样板页的全部交互。写成裸 JS 是有意的：这些效果最后都要进 PostEnhance 那种渐进增强脚本，
+   * 不能依赖 Svelte 岛的状态，不然没 JS 的读者连正文都受影响。
+   */
+  const $ = (sel: string, scope: any = document): any => scope.querySelector(sel);
+  const $$ = (sel: string, scope: any = document): any[] => [...scope.querySelectorAll(sel)];
+
+  let tts: any = null;
+
+  /* ───────── 内化点 2：图注 ───────── */
+  /** 把 `![图注](x)` 的 alt 变成看得见的 figcaption；alt 是占位词的图不给图注。 */
+  function wrapFigures() {
+    for (const img of $$('.demo-prose p > img:only-child')) {
+      if (img.closest('figure')) continue;
+      const alt = (img.getAttribute('alt') || '').trim();
+      const paragraph = img.parentElement;
+      const figure = document.createElement('figure');
+      figure.className = 'demo-figure';
+      paragraph.replaceWith(figure);
+      figure.append(img);
+      if (alt && !/^(image|img|图片|screenshot)\s*\d*$/i.test(alt)) {
+        const caption = document.createElement('figcaption');
+        caption.textContent = alt;
+        figure.append(caption);
+      }
+    }
+  }
+
+  /* ───────── 内化点 3 + 5：进度环、上次读到 ───────── */
+  const RING = 56.5;
+
+  function progress(): number {
+    const prose = $('[data-demo-prose]');
+    if (!prose) return 0;
+    const rect = prose.getBoundingClientRect();
+    const total = rect.height - window.innerHeight * 0.4;
+    const passed = -(rect.top - window.innerHeight * 0.3);
+    return Math.min(1, Math.max(0, total > 0 ? passed / total : 0));
+  }
+
+  function paintProgress(value: number) {
+    const ring = $('[data-ring]');
+    const label = $('[data-rail-pct]');
+    const done = $('[data-done]');
+    const pct = Math.round(value * 100);
+    if (ring) ring.style.strokeDashoffset = String(RING * (1 - value));
+    if (label) label.textContent = `${pct}%`;
+    if (done) {
+      if (value >= 0.96) {
+        done.setAttribute('data-finished', '');
+        const stamp = $('[data-done-time]');
+        if (stamp) stamp.hidden = false;
+      } else {
+        done.removeAttribute('data-finished');
+      }
+    }
+    return pct;
+  }
+
+  /** 每篇一个 key，退出再进来还在。 */
+  function progressKey() {
+    const page = $('[data-demo-slug]');
+    return `puresky:demo-read:${page?.dataset.demoSlug ?? 'x'}`;
+  }
+
+  function readSaved() {
+    try {
+      const raw = localStorage.getItem(progressKey());
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  let lastSave = 0;
+  function saveProgress(value: number) {
+    const now = Date.now();
+    if (now - lastSave < 900) return;
+    lastSave = now;
+    try {
+      localStorage.setItem(progressKey(), JSON.stringify({ pct: Math.round(value * 100), y: Math.round(window.scrollY) }));
+    } catch {}
+  }
+
+  function paintResume(value: number) {
+    const chip = $('[data-resume]');
+    if (!chip) return;
+    const saved = readSaved();
+    const pct = Math.round(value * 100);
+    if (!saved || saved.pct < 8 || pct >= saved.pct) {
+      chip.hidden = true;
+      return;
+    }
+    const text = $('[data-resume-text]');
+    if (text) text.textContent = saved.pct >= 96 ? '上次读完了这一篇' : `上次读到 ${saved.pct}%`;
+    chip.hidden = false;
+    chip.dataset.resumeY = String(saved.y ?? 0);
+  }
+
+  /* ───────── 内化点 4：朗读 ───────── */
+  const synth = window.speechSynthesis;
+
+  /** 只有真的装了中文语音才把入口放出来，不然点了没反应比没有更烦。 */
+  function pickVoice() {
+    if (!synth) return null;
+    const voices = synth.getVoices();
+    const zh = voices.filter((voice) => /^zh/i.test(voice.lang));
+    return (
+      zh.find((voice) => /xiaoxiao|tingting|huihui|yaoyao|kangkang|female|unihan/i.test(voice.name)) ||
+      zh[0] ||
+      null
+    );
+  }
+
+  /** 按句切：中文句号、问号、叹号、分号都断，句尾的引号跟着走。 */
+  function sentenceSpans(text: string) {
+    const pattern = /[^。！？!?…；;\n]+[。！？!?…；;]+[”’」』】）》)]*|[^。！？!?…；;\n]+/g;
+    const spans: any[] = [];
+    let match;
+    while ((match = pattern.exec(text))) {
+      const clean = match[0].replace(/\s+/g, ' ').trim();
+      if (clean) spans.push({ start: match.index, end: match.index + match[0].length, text: clean });
+    }
+    return spans;
+  }
+
+  function buildUnits() {
+    const prose = $('[data-demo-prose]');
+    if (!prose) return [];
+    const skip = 'pre, code, .code-block, .code-tabs, .katex, .heading-anchor, .callout-icon, [data-no-tts]';
+    const blocks = $$('p, li, h2, h3, blockquote, figcaption, td', prose).filter((el) => !el.closest(skip));
+    const units: any[] = [];
+    for (const el of blocks) {
+      // 只读最内层块：li/blockquote/td 里还有 p 时，文字交给 p 去读，避免读两遍。
+      if (el.matches('li, blockquote, td') && el.querySelector('p')) continue;
+      const raw = el.textContent || '';
+      for (const span of sentenceSpans(raw)) units.push({ el, ...span });
+    }
+    return units;
+  }
+
+  /** 把「块内字符偏移」翻成 Range，给 CSS Custom Highlight 用。 */
+  function rangeOf(el: any, start: number, end: number) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const range = document.createRange();
+    let pos = 0;
+    let opened = false;
+    let node;
+    while ((node = walker.nextNode())) {
+      const len = node.nodeValue ? node.nodeValue.length : 0;
+      if (!opened && start < pos + len) {
+        range.setStart(node, Math.max(0, start - pos));
+        opened = true;
+      }
+      if (opened && end <= pos + len) {
+        range.setEnd(node, Math.max(0, end - pos));
+        return range;
+      }
+      pos += len;
+    }
+    return null;
+  }
+
+  const highlightOk = typeof CSS !== 'undefined' && 'highlights' in CSS;
+  const cssAny = CSS as any;
+
+  function markUnit(unit: any) {
+    $$('[data-tts-active]').forEach((el) => el.removeAttribute('data-tts-active'));
+    if (highlightOk && 'Highlight' in window) {
+
+      cssAny.highlights.delete('tts-sentence');
+      if (unit) {
+        const range = rangeOf(unit.el, unit.start, unit.end);
+        if (range) cssAny.highlights.set('tts-sentence', new (window as any).Highlight(range));
+      }
+    }
+    if (unit) unit.el.setAttribute('data-tts-active', '');
+  }
+
+  function scrollToUnit(el: any) {
+    const rect = el.getBoundingClientRect();
+    const top = window.innerHeight * 0.3;
+    const bottom = window.innerHeight * 0.72;
+    if (rect.top < top || rect.bottom > bottom) {
+      window.scrollTo({ top: window.scrollY + rect.top - window.innerHeight * 0.34, behavior: 'smooth' });
+    }
+  }
+
+  function paintTts() {
+    const bar = $('[data-tts]');
+    if (!bar || !tts) return;
+    const total = tts.units.length;
+    const index = Math.min(tts.index, total - 1);
+    const unit = tts.units[index];
+    const count = $('[data-tts-count]');
+    const text = $('[data-tts-text]');
+    const fill = $('[data-tts-fill]');
+    const state = $('[data-tts-state]');
+    const toggle = $('[data-tts-toggle]');
+    const rateBtn = $('[data-tts-rate]');
+    if (count) count.textContent = total ? `${index + 1} / ${total} 句` : '';
+    if (text) text.textContent = unit ? unit.text : '';
+    if (fill) fill.style.width = `${total ? ((index + 1) / total) * 100 : 0}%`;
+    if (state) state.textContent = tts.paused ? '已暂停' : tts.speaking ? '正在朗读' : tts.preview ? '样式预览' : '准备朗读';
+    const playing = Boolean(tts.speaking && !tts.paused);
+    if (bar) bar.toggleAttribute('data-playing', playing);
+    if (toggle) toggle.setAttribute('aria-label', playing ? '暂停朗读' : '播放朗读');
+    if (rateBtn) rateBtn.textContent = `${tts.rate.toFixed(1)}×`;
+  }
+
+  function stopTts(quiet: boolean) {
+    if (!tts) return;
+    tts.speaking = false;
+    tts.paused = false;
+    if (synth) synth.cancel();
+    markUnit(null);
+    const bar = $('[data-tts]');
+    const read = $('[data-rail-read]');
+    if (read) read.setAttribute('aria-pressed', 'false');
+    if (bar) bar.hidden = true;
+    if (!quiet && tts.index > 0) showToast(`停在 ${tts.index + 1} / ${tts.units.length} 句`);
+  }
+
+  function speakCurrent() {
+    const unit = tts.units[tts.index];
+    if (!unit) {
+      stopTts(true);
+      showToast('这一篇读完了');
+      return;
+    }
+    markUnit(unit);
+    paintTts();
+    scrollToUnit(unit.el);
+    const utter = new SpeechSynthesisUtterance(unit.text);
+    if (tts.voice) utter.voice = tts.voice;
+    utter.lang = tts.voice?.lang || 'zh-CN';
+    utter.rate = tts.rate;
+    utter.onend = () => {
+      if (!tts.speaking || tts.paused) return;
+      tts.index += 1;
+      speakCurrent();
+    };
+    utter.onerror = (event) => {
+      // interrupted / canceled 是我们自己停的，不算错误。
+      if (event.error === 'interrupted' || event.error === 'canceled') return;
+      tts.index += 1;
+      speakCurrent();
+    };
+    tts.speaking = true;
+    tts.paused = false;
+    synth.speak(utter);
+    paintTts();
+  }
+
+  function startTts(preview: boolean) {
+    const bar = $('[data-tts]');
+    const read = $('[data-rail-read]');
+    if (!tts) tts = { units: [], index: 0, rate: 1, voice: null, speaking: false, paused: false, preview: false };
+    if (!tts.units.length) {
+      tts.units = buildUnits();
+      tts.voice = pickVoice();
+    }
+    if (!tts.units.length) {
+      showToast('这篇没有可以朗读的正文');
+      return;
+    }
+    if (!tts.units[0].el) return;
+    if (!preview && !tts.voice) {
+      showToast('这台设备没有中文语音，朗读按钮会在有语音的环境出现');
+      return;
+    }
+    tts.preview = Boolean(preview);
+    tts.index = 0;
+    tts.speaking = false;
+    tts.paused = false;
+    if (bar) bar.hidden = false;
+    if (read) read.setAttribute('aria-pressed', 'true');
+    if (preview) {
+      // 预览态：只铺高亮、不动声音，给截图和无语音环境看样式。
+      tts.index = 2;
+      markUnit(tts.units[2]);
+      if (bar) bar.setAttribute('data-preview', '');
+      paintTts();
+      scrollToUnit(tts.units[0].el);
+      return;
+    }
+    speakCurrent();
+  }
+
+  function toggleTts() {
+    if (!tts || !tts.speaking) {
+      startTts(false);
+      return;
+    }
+    if (tts.paused) {
+      synth.resume();
+      tts.paused = false;
+    } else {
+      synth.pause();
+      tts.paused = true;
+    }
+    paintTts();
+  }
+
+  /* ───────── 轻提示 ───────── */
+  let toastTimer = 0;
+  function showToast(message: string) {
+    $$('.demo-toast').forEach((el) => el.remove());
+    const toast = document.createElement('p');
+    toast.className = 'demo-toast';
+    toast.textContent = message;
+    document.body.append(toast);
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => toast.remove(), 2000);
+  }
+
+  /* ───────── 初始化 ───────── */
+  let frame = 0;
+
+  function setup() {
+    wrapFigures();
+
+    // 滚动：进度环、上次读到、保存位置，一帧最多算一次。
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const value = progress();
+        paintProgress(value);
+        paintResume(value);
+        saveProgress(value);
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    window.addEventListener('load', onScroll, { once: true });
+
+    // 上次读到：点一下跳回去。
+    const chip = $('[data-resume]');
+    if (chip) {
+      chip.addEventListener('click', () => {
+        const y = Number(chip.dataset.resumeY || 0);
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        chip.hidden = true;
+        showToast('接着上次的位置读');
+      });
+    }
+
+    // 「切到衬线档看效果」：改偏好、滚到正文第一段。
+    const trySerif = $('[data-try-serif]');
+    if (trySerif)
+      trySerif.addEventListener('click', () => {
+        try {
+          localStorage.setItem('read-font', 'serif');
+        } catch {}
+        document.documentElement.dataset.readFont = 'serif';
+        $$('.reading-prefs [data-option]').forEach((el) =>
+          el.setAttribute('aria-checked', String(el.dataset.option === 'serif'))
+        );
+        const prose = $('[data-demo-prose]');
+        if (prose) window.scrollTo({ top: window.scrollY + prose.getBoundingClientRect().top - 90, behavior: 'smooth' });
+        showToast('衬线档：首字下沉 + 首行缩进已生效');
+      });
+
+    // 朗读条。
+    if (synth) {
+      const resumeVoices = () => {
+        if (tts) tts.voice = pickVoice();
+      };
+      synth.addEventListener?.('voiceschanged', resumeVoices);
+      const read = $('[data-rail-read]');
+      if (read) read.hidden = false;
+    }
+    const readBtn = $('[data-rail-read]');
+    if (readBtn) readBtn.addEventListener('click', toggleTts);
+    const toggle = $('[data-tts-toggle]');
+    if (toggle) toggle.addEventListener('click', toggleTts);
+    const close = $('[data-tts-close]');
+    if (close) close.addEventListener('click', () => stopTts(false));
+    const rateBtn = $('[data-tts-rate]');
+    if (rateBtn)
+      rateBtn.addEventListener('click', () => {
+        if (!tts) return;
+        // 三档循环：1.0 → 1.2 → 0.85 → 1.0
+        tts.rate = tts.rate === 1 ? 1.2 : tts.rate === 1.2 ? 0.85 : 1;
+        if (tts.speaking && !tts.paused && synth) {
+          // 语速只对之后排队的句子生效，当前句重排一次才听得出变化。
+          synth.cancel();
+          speakCurrent();
+        } else {
+          paintTts();
+        }
+      });
+
+    // 回顶 / 分享。
+    $$('[data-rail-top]').forEach((btn) =>
+      btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }))
+    );
+    $$('[data-rail-share]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(location.href.split('#')[0]);
+          showToast('链接已复制');
+        } catch {
+          showToast('复制失败');
+        }
+      })
+    );
+
+    // 样式预览：?tts=preview 直接铺出朗读条和高亮，方便截图。
+    if (new URLSearchParams(location.search).get('tts') === 'preview') startTts(true);
+  }
+
+  setup();
+  // 站内软导航回到这一页时重新绑一次（模块只求值一次，监听器不会重复挂）。
+  document.addEventListener('astro:page-load', setup);
+  // 换页必须停掉朗读，否则上一页还在念。
+  document.addEventListener('astro:before-swap', () => {
+    if (tts && tts.speaking && synth) {
+      tts.speaking = false;
+      synth.cancel();
+    }
+  });
+</script>

@@ -22,8 +22,11 @@ export default function editor({ markdown }) {
         if (command !== 'dev') return;
         root = fileURLToPath(config.root);
         injectRoute({ pattern: '/__editor', entrypoint: './src/editor/EditorPage.astro' });
+        // 阅读页样板：只在本机 dev 里存在，给参考站设计点试稿用，线上没有这个页面。
+        injectRoute({ pattern: '/__demo/read', entrypoint: './src/demo/ReadDemoPage.astro' });
         addWatchFile(new URL('./src/config.ts', config.root));
         logger.info('本地文章编辑器：/__editor（只对本机开放）');
+        logger.info('阅读页样板：/__demo/read/（只在本机 dev 存在）');
       },
       'astro:server:setup': ({ server }) => {
         const handler = createEditorApi({ root, markdown });
