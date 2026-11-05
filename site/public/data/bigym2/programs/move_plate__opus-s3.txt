@@ -1,0 +1,698 @@
+"""Move the plate from the left dish rack to the right dish rack (Unitree G1).
+
+Hand-written phase machine:
+  measure both racks in the first head image -> raise the left arm (tool pointing 45
+  degrees down) -> walk left -> find the plate column in the head image -> walk so the
+  plate is in front of the left shoulder -> measure the left rack's depth -> centre the
+  plate between the fingers with the left wrist camera -> descend along the tool axis ->
+  close -> lift -> back off -> walk right -> stand still and measure the right rack
+  against a calibrated head-image model -> move the wrist to the reference placing point
+  shifted by the measured rack offset -> lower until contact -> open -> retract.
+Geometry comes from hand-written G1 arm kinematics (fk.py) and camera measurements
+(vision.py); no learned components.
+"""
+
+import os
+import sys
+
+import numpy as np
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import ctrl  # noqa: E402
+import fk  # noqa: E402
+import vision  # noqa: E402
+
+ANG = 0.8                      # tool tilt below horizontal for grasp/place
+SEEDQ = np.array([-1.752, 0.206, 1.323, 1.412, 1.115, 1.094, -0.073])
+TUCKR = np.array([0.3, -0.15, 0.0, 1.2, 0.0, 0.0, 0.0])
+HAND_REL_Y = 0.138             # wrist y relative to pelvis at grasp/place
+GRASP_BASE_X = 0.02            # pelvis x at grasp
+# Head-image models of the racks' front bar (right end column `ur`, row `bar`) as a
+# function of pelvis (x, y), measured on the reference layout (seed 87) by walking a
+# 3x3 grid of base positions. Offsets of another layout follow from the pixel residuals.
+RACK_MODEL = {
+    'left': dict(ur=(23.30, -11.6, 126.2), bar=(23.85, 88.0, 13.2)),
+    # right: intercepts re-measured while holding the plate at lift height (body lean)
+    'right': dict(ur=(90.39, 0.77, 124.8), bar=(28.62, 84.9, 0.2)),
+}
+PX_PER_M_LAT = 125.5
+PX_PER_M_DEPTH = 86.5
+# Wrist x, y that seated the plate in the reference layout (seed 87), shifted one peg
+# pitch (+y) away from the rack's right end so small lateral errors stay inside the rack.
+PLACE_REF = (0.317, -0.331 + 0.04)
+HAND_REL_X = 0.363
+LOOK_R_X = -0.10               # pelvis x where the right rack is measured (grid centre)
+CARRY_V = 0.15                 # walking speed limit while holding the plate
+# Rack features in the first head image (identical robot pose in every episode) for
+# the reference layout, and the pixel scales at that distance.
+START_REF = dict(urL=23.0, barL=17.55, ulR=58.0, barR=23.06)
+START_PX_LAT = 118.0
+START_PX_DEPTH = 62.0
+OBS_X = -0.02
+BACK_X = -0.22                 # pelvis x while walking sideways with the plate
+WRIST_U_STAR = 40.5            # wrist image column of a plate centred between fingers
+CAM_DY = 0.0175                # head camera lateral offset from pelvis
+PLATE_U_C = 41.5
+PLATE_K = 0.0068               # metres per pixel for the plate column estimate
+PLATE_C = 0.053                # plate y - pelvis y for a plate at the image centre
+LIFT_Z = 1.22
+GRASP_Z = 0.98                 # wrist height with the rim deep between the fingers
+GRASP_X = 0.35                 # wrist x at grasp for the reference rack
+APPROACH = 0.07                # pre-grasp distance back along the tool axis
+AXIS = np.array([np.cos(ANG), 0.0, -np.sin(ANG)])
+
+
+def rack_offset(which, f, x, y):
+    """Rack displacement (dx, dy) from the reference layout given head features."""
+    if f is None or f['touch_r']:
+        return np.zeros(2)
+    m = RACK_MODEL[which]
+    ur = m['ur'][0] + m['ur'][1] * x + m['ur'][2] * y
+    bar = m['bar'][0] + m['bar'][1] * x + m['bar'][2] * y
+    return np.array([-(f['bar'] - bar) / PX_PER_M_DEPTH, -(f['ur'] - ur) / PX_PER_M_LAT])
+
+
+def _base_cmd(obs, goal, vmax=0.2, tol=0.012):
+    x, y, _, yaw = ctrl.pelvis(obs)
+    ex, ey = goal[0] - x, goal[1] - y
+    c, s = np.cos(yaw), np.sin(yaw)
+    bx, by = c * ex + s * ey, -s * ex + c * ey
+    vx, vy = np.clip(1.5 * bx, -vmax, vmax), np.clip(1.5 * by, -vmax, vmax)
+    d = np.hypot(bx, by)
+    sp = np.hypot(vx, vy)
+    if d < tol:
+        return 0.0, 0.0, d
+    if sp < 0.07:
+        vx, vy = vx / sp * 0.07, vy / sp * 0.07
+    return float(vx), float(vy), d
+
+
+class Policy:
+    """The control policy that is scored on the hidden seeds."""
+
+    def reset(self, obs, tools):
+        self.phase = 'raise'
+        self.k = 0
+        self.t = 0
+        self.log = []
+        o = obs['low_dim_obs']
+        self.ql = o[0:7].astype(float).copy()
+        self.qr = o[9:16].astype(float).copy()
+        self.grip = 0.6
+        self.qhigh = fk.arm_ik((0.25, 0.12, 0.45), SEEDQ, 'left', rot=ctrl.tilt_rot(ANG),
+                               w_rot=0.3, iters=400, lo=ctrl.LO, hi=ctrl.HI)
+        self.q_from = self.ql.copy()
+        self.qr_from = self.qr.copy()
+        self.goal = (OBS_X, 0.12)
+        self.settle = 0
+        self.Rw = ctrl.tilt_rot(ANG)
+        self.hand_t = None
+        self.corr = np.zeros(3)
+        self.tries = 0
+        self.looks = []
+        self.plate_y = None
+        self.place_t = None
+        sf = vision.start_features(tools.image('head'))
+        self.dL0 = np.zeros(2)
+        self.dR0 = np.zeros(2)
+        if sf is not None:
+            r = START_REF
+            self.dL0 = np.array([-(sf['barL'] - r['barL']) / START_PX_DEPTH, -(sf['urL'] - r['urL']) / START_PX_LAT])
+            self.dR0 = np.array([-(sf['barR'] - r['barR']) / START_PX_DEPTH, -(sf['ulR'] - r['ulR']) / START_PX_LAT])
+        self.looks.append(('start', sf, self.dL0, self.dR0))
+
+    # ---- helpers
+    def _set_phase(self, p):
+        self.log.append((p, self.t))
+        self.phase = p
+        self.k = 0
+        self.settle = 0
+
+    def _hand_to(self, obs, target, rate=0.004, integrate=True):
+        """Move the IK target smoothly toward `target` (world wrist point)."""
+        hw = ctrl.hand_world(obs)[0]
+        if self.hand_t is None:
+            self.hand_t = hw.copy()
+        d = np.asarray(target, float) - self.hand_t
+        n = np.linalg.norm(d)
+        if n > rate:
+            d *= rate / n
+        self.hand_t = self.hand_t + d
+        if integrate:
+            self.corr = np.clip(self.corr + 0.03 * (self.hand_t - hw), -0.04, 0.04)
+        self.ql = ctrl.ik_world(self.hand_t + self.corr, self.Rw, obs, self.ql, iters=15)
+        return n
+
+    def _walk(self, obs, a, tol=0.02, n_settle=8, max_k=150, vmax=0.2):
+        vx, vy, d = _base_cmd(obs, self.goal, vmax=vmax)
+        a[0], a[1] = vx, vy
+        self.settle = self.settle + 1 if d < tol else 0
+        return self.settle > n_settle or self.k > max_k
+
+    def _joint_interp(self, target, n):
+        s = min(1.0, self.k / n)
+        self.ql = self.q_from + (target - self.q_from) * s
+        return self.k >= n
+
+    def _rack(self, tools, which):
+        im = tools.image('head')
+        blobs = [b for b in vision.rack_blobs(im) if b['n'] > 60]
+        if not blobs:
+            return None, im
+        b = min(blobs, key=lambda b: b['uc']) if which == 'left' else max(blobs, key=lambda b: b['uc'])
+        return b, im
+
+    def act(self, obs, tools):
+        self.t = int(obs['t'])
+        a = np.asarray(tools.hold_action(), dtype=np.float64).copy()
+        a[3] = ctrl.yaw_hold(obs)
+        self.k += 1
+        ph = self.phase
+        x, y, _, yaw = ctrl.pelvis(obs)
+
+        if ph == 'raise':
+            s = min(1.0, self.k / 40)
+            self.ql = self.q_from + (self.qhigh - self.q_from) * s
+            self.qr = self.qr_from + (TUCKR - self.qr_from) * s
+            if self.k >= 45:
+                self._set_phase('walk_obs')
+
+        elif ph == 'walk_obs':
+            if self._walk(obs, a):
+                self._set_phase('find_plate')
+
+        elif ph == 'find_plate':
+            if self.k >= 5:
+                b, im = self._rack(tools, 'left')
+                up = vision.plate_column(im, b) if b is not None else None
+                self.looks.append(('plate', x, y, up))
+                if up is None:
+                    self.goal = (OBS_X, y + 0.08)
+                    self._set_phase('walk_obs')
+                else:
+                    self.plate_y = y + PLATE_C - (up - PLATE_U_C) * PLATE_K
+                    self.goal = (GRASP_BASE_X, self.plate_y - HAND_REL_Y)
+                    self._set_phase('walk_grasp')
+
+        elif ph == 'walk_grasp':
+            if self._walk(obs, a):
+                self._set_phase('look_L')
+
+        elif ph == 'look_L':
+            if self.k >= 5:
+                f = vision.rack_features(tools.image('head'), 'left')
+                self.poseL = np.array([x, y])
+                self.dL = rack_offset('left', f, x, y)
+                self.looks.append(('L', x, y, yaw, None if f is None else (f['ur'], f['bar']), self.dL))
+                self.hand_t = None
+                self.grasp_pt = np.array([GRASP_X + self.dL[0], self.plate_y, GRASP_Z])
+                self.pre = self.grasp_pt + np.array([0.01, 0.0, 0.10])
+                self._set_phase('pregrasp')
+
+        elif ph == 'pregrasp':
+            n = self._hand_to(obs, self.pre, 0.005)
+            if n < 1e-3 and self.k > 30:
+                self._set_phase('wrist_servo')
+
+        elif ph == 'wrist_servo':
+            self._hand_to(obs, self.pre, 0.003)
+            if self.k % 12 == 0:
+                uw = vision.wrist_plate_column(tools.image('left_wrist'))
+                self.looks.append(('wrist', self.pre[1], uw))
+                done = uw is None or abs(uw - WRIST_U_STAR) < 1.5 or self.k > 150
+                if not done:
+                    self.pre[1] -= np.clip((uw - WRIST_U_STAR) * 0.0009, -0.01, 0.01)
+                else:
+                    self.grasp_pt[1] = self.pre[1]
+                    self._set_phase('descend')
+
+        elif ph == 'descend':
+            tgt = self.grasp_pt + AXIS * 0.03
+            n = self._hand_to(obs, tgt, 0.002, integrate=False)
+            if n < 1e-3:
+                self.settle += 1
+            if self.settle > 15:
+                self.grasp_hand = ctrl.hand_world(obs)[0]
+                self._set_phase('close')
+
+        elif ph == 'close':
+            self.grip = 1.0
+            if self.k > 30:
+                self.hand_t = None
+                self.place_t = np.array([PLACE_REF[0] + self.dR0[0], PLACE_REF[1] + self.dR0[1], LIFT_Z])
+                self.looks.append(('place0', self.place_t.copy(), self.dL0, self.dR0))
+                self._set_phase('lift')
+
+        elif ph == 'lift':
+            n = self._hand_to(obs, [self.grasp_hand[0] - 0.05, self.grasp_hand[1], LIFT_Z], 0.005)
+            if n < 1e-3 or self.k > 100:
+                self.goal = (BACK_X, y)
+                self._set_phase('back_off')
+
+        elif ph == 'back_off':
+            if self._walk(obs, a, tol=0.04, n_settle=2, vmax=CARRY_V):
+                self.goal = (BACK_X, self.place_t[1] - HAND_REL_Y)
+                self._set_phase('walk_side')
+
+        elif ph == 'walk_side':
+            if self._walk(obs, a, tol=0.03, n_settle=3, max_k=350, vmax=CARRY_V):
+                # stand so the right rack appears where it did during calibration
+                self.goal = (LOOK_R_X + float(np.clip(self.dR0[0], -0.06, 0.1)), self.place_t[1] - HAND_REL_Y)
+                self._set_phase('approach_R')
+
+        elif ph == 'approach_R':
+            if self._walk(obs, a, tol=0.015, n_settle=25, max_k=250, vmax=CARRY_V):
+                self.feats = []
+                self._set_phase('look_R')
+
+        elif ph == 'look_R':
+            # let the walking transient decay, then take the median over ~0.7 s
+            f = vision.rack_features(tools.image('head'), 'right') if self.k >= 15 else None
+            if f is not None and not f['touch_r']:
+                self.feats.append(rack_offset('right', f, x, y))
+            if self.k >= 50:
+                if self.feats:
+                    self.dR = np.median(np.array(self.feats), axis=0)
+                    if np.all(np.abs(self.dR - self.dR0) < 0.08):
+                        self.place_t = np.array([PLACE_REF[0] + self.dR[0], PLACE_REF[1] + self.dR[1], LIFT_Z])
+                self.looks.append(('place', self.place_t.copy(), self.feats[-1] if self.feats else None))
+                self.rel_x = ctrl.hand_world(obs)[0][0] - x
+                self.hand_t = None
+                self.goal = (self.place_t[0] - HAND_REL_X, self.place_t[1] - HAND_REL_Y)
+                self._set_phase('insert')
+
+        elif ph == 'insert':
+            done = self._walk(obs, a, max_k=200, vmax=CARRY_V)
+            tgt = self.place_t.copy()
+            tgt[0] = min(x + self.rel_x, self.place_t[0])
+            self._hand_to(obs, tgt, 0.004)
+            if done:
+                self._set_phase('reach_place')
+
+        elif ph == 'reach_place':
+            n = self._hand_to(obs, self.place_t, 0.003)
+            hw = ctrl.hand_world(obs)[0]
+            if n < 1e-3 and self.k > 15 and (np.linalg.norm(hw[:2] - self.place_t[:2]) < 0.008 or self.k > 90):
+                self._set_phase('lower_place')
+
+        elif ph == 'lower_place':
+            tgt = np.array([self.place_t[0], self.place_t[1], self.grasp_hand[2] - 0.04])
+            self._hand_to(obs, tgt, 0.002, integrate=False)
+            hw = ctrl.hand_world(obs)[0]
+            if self.hand_t[2] < hw[2] - 0.02 or self.k > 200:
+                self.release_z = hw[2]
+                self._set_phase('release')
+
+        elif ph == 'release':
+            self.grip = 0.0
+            if self.k > 20:
+                self.hand_t = None
+                self._set_phase('retract')
+
+        elif ph == 'retract':
+            hw = self.place_t
+            if self.k < 30:
+                self._hand_to(obs, [hw[0] - 0.02, hw[1], self.release_z + 0.08], 0.003)
+            else:
+                self._hand_to(obs, [hw[0] - 0.12, hw[1], LIFT_Z], 0.004)
+            if self.k > 60:
+                self._set_phase('done')
+
+        return self._finish(a)
+
+    def _finish(self, a):
+        a[4:11] = self.ql
+        a[11:18] = self.qr
+        a[18] = self.grip
+        a[19] = 0.6
+        return a.astype(np.float32)
+
+# ──────── ctrl.py ────────
+
+"""Shared control helpers: world<->pelvis transforms, IK wrappers, base hold."""
+import numpy as np
+import fk
+
+LO = np.array([-3.0892, -1.5882, -2.618, -1.0472, -1.97222, -1.61443, -1.61443])
+HI = np.array([2.6704, 2.2515, 2.618, 2.0944, 1.97222, 1.61443, 1.61443])
+
+
+def pelvis(obs):
+    o = obs['low_dim_obs']
+    return float(o[18]), float(o[19]), float(o[20]), float(o[21])
+
+
+def world_to_pelvis(p, obs):
+    x, y, z, yaw = pelvis(obs)
+    c, s = np.cos(yaw), np.sin(yaw)
+    d = np.asarray(p, float) - np.array([x, y, z])
+    return np.array([c * d[0] + s * d[1], -s * d[0] + c * d[1], d[2]])
+
+
+def pelvis_to_world(p, obs):
+    x, y, z, yaw = pelvis(obs)
+    c, s = np.cos(yaw), np.sin(yaw)
+    p = np.asarray(p, float)
+    return np.array([x + c * p[0] - s * p[1], y + s * p[0] + c * p[1], z + p[2]])
+
+
+def rot_z(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def tilt_rot(ang, yaw=0.0):
+    """Tool frame with x pointing forward and `ang` rad downward, y left (world yaw `yaw`)."""
+    c, s = np.cos(ang), np.sin(ang)
+    R = np.column_stack([[c, 0, -s], [0, 1, 0], [s, 0, c]])
+    return rot_z(yaw) @ R
+
+
+def ik_world(p_world, R_world, obs, q0, side='left', tool=(0, 0, 0), iters=60):
+    """IK for a world-frame target given the current pelvis pose."""
+    yaw = pelvis(obs)[3]
+    p = world_to_pelvis(p_world, obs)
+    R = rot_z(-yaw) @ R_world
+    return fk.arm_ik(p, q0, side, tool, rot=R, w_rot=0.3, iters=iters, lo=LO, hi=HI)
+
+
+def hand_world(obs, side='left', tool=(0, 0, 0)):
+    o = obs['low_dim_obs']
+    q = o[0:7] if side == 'left' else o[9:16]
+    p, R = fk.arm_fk(q, side, tool)
+    return pelvis_to_world(p, obs), rot_z(pelvis(obs)[3]) @ R
+
+
+def yaw_hold(obs, yaw_ref=0.0, k=3.0, lim=0.5, wmin=0.1, dead=0.008):
+    yaw = pelvis(obs)[3]
+    e = (yaw_ref - yaw + np.pi) % (2 * np.pi) - np.pi
+    if abs(e) < dead:
+        return 0.0
+    w = float(np.clip(k * e, -lim, lim))
+    if abs(w) < wmin:
+        w = wmin * np.sign(w)
+    return w
+
+# ──────── fk.py ────────
+
+"""Hand-written forward kinematics of the Unitree G1 arms (pelvis frame).
+
+Link offsets follow the published G1 URDF; waist joints are assumed locked at 0.
+"""
+import numpy as np
+
+
+def _rx(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+
+def _ry(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+
+def _rz(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def _rpy(r, p, y):
+    return _rz(y) @ _ry(p) @ _rx(r)
+
+
+TORSO = np.array([-0.0039635, 0.0, 0.054])
+# (origin xyz, origin rpy, axis) per joint, for the left arm; right arm mirrors y.
+_LEFT = [
+    ((0.0039563, 0.10022, 0.23778), (0.27931, 5.4949e-05, -0.00019159), 'y'),
+    ((0.0, 0.038, -0.013831), (-0.27925, 0.0, 0.0), 'x'),
+    ((0.0, 0.00624, -0.1032), (0, 0, 0), 'z'),
+    ((0.015783, 0.0, -0.080518), (0, 0, 0), 'y'),
+    ((0.100, 0.00188791, -0.010), (0, 0, 0), 'x'),
+    ((0.038, 0.0, 0.0), (0, 0, 0), 'y'),
+    ((0.046, 0.0, 0.0), (0, 0, 0), 'z'),
+]
+_AX = {'x': _rx, 'y': _ry, 'z': _rz}
+
+
+def arm_fk(q, side='left', tool=(0.0, 0.0, 0.0)):
+    """Return (position, rotation) of a point on the wrist-yaw link, pelvis frame.
+
+    Args:
+        q: 7 joint angles.
+        side: 'left' or 'right'.
+        tool: Offset of the point in the wrist-yaw link frame.
+    """
+    sgn = 1.0 if side == 'left' else -1.0
+    p = TORSO.copy()
+    R = np.eye(3)
+    for (xyz, rpy, ax), a in zip(_LEFT, q):
+        xyz = np.array([xyz[0], sgn * xyz[1], xyz[2]])
+        rpy = (sgn * rpy[0], rpy[1], sgn * rpy[2])
+        p = p + R @ xyz
+        R = R @ _rpy(*rpy) @ _AX[ax](a)
+    return p + R @ np.asarray(tool), R
+
+
+def arm_ik(target, q0, side='left', tool=(0.0, 0.0, 0.0), rot=None, w_rot=0.3,
+           iters=100, lo=None, hi=None, rot_axes=None):
+    """Damped least-squares IK for position (and optionally orientation).
+
+    Args:
+        target: Desired tool point position (pelvis frame).
+        q0: Initial joint guess.
+        rot: Desired rotation matrix, or None.
+        w_rot: Weight of orientation error.
+        rot_axes: If given, list of (local_axis, world_dir) pairs to align
+            instead of a full rotation.
+    """
+    q = np.array(q0, dtype=float)
+    for _ in range(iters):
+        p, R = arm_fk(q, side, tool)
+        err = [np.asarray(target) - p]
+        if rot is not None:
+            Re = rot @ R.T
+            ang = np.array([Re[2, 1] - Re[1, 2], Re[0, 2] - Re[2, 0], Re[1, 0] - Re[0, 1]]) * 0.5
+            err.append(w_rot * ang)
+        if rot_axes is not None:
+            for la, wd in rot_axes:
+                v = R @ np.asarray(la)
+                err.append(w_rot * np.cross(v, np.asarray(wd)))
+        e = np.concatenate(err)
+        if np.linalg.norm(e) < 1e-4:
+            break
+        J = np.zeros((len(e), 7))
+        eps = 1e-5
+        for j in range(7):
+            dq = q.copy()
+            dq[j] += eps
+            p2, R2 = arm_fk(dq, side, tool)
+            col = [(p2 - p) / eps]
+            if rot is not None:
+                dR = R2 @ R.T
+                col.append(w_rot * np.array([dR[2, 1] - dR[1, 2], dR[0, 2] - dR[2, 0], dR[1, 0] - dR[0, 1]]) * 0.5 / eps)
+            if rot_axes is not None:
+                for la, wd in rot_axes:
+                    v1 = R @ np.asarray(la)
+                    v2 = R2 @ np.asarray(la)
+                    col.append(w_rot * (np.cross(v2, np.asarray(wd)) - np.cross(v1, np.asarray(wd))) / eps)
+            J[:, j] = np.concatenate(col)
+        lam = 0.02
+        dq = J.T @ np.linalg.solve(J @ J.T + lam * np.eye(len(e)), e)
+        n = np.linalg.norm(dq)
+        if n > 0.3:
+            dq *= 0.3 / n
+        q = q + dq
+        if lo is not None:
+            q = np.clip(q, lo, hi)
+    return q
+
+# ──────── vision.py ────────
+
+"""Image measurements used by the policy."""
+import numpy as np
+import cv2
+
+
+def hsv(im):
+    return cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+
+
+def counter_mask(im):
+    h = hsv(im)
+    return (h[..., 1] < 40) & (h[..., 2] > 150)
+
+
+def wood_mask(im):
+    h = hsv(im)
+    return (h[..., 0] >= 5) & (h[..., 0] <= 25) & (h[..., 1] > 70) & (h[..., 2] > 60)
+
+
+def rack_blobs(im, min_area=15):
+    """Connected wood regions (racks) in the head image: list of dicts, largest first."""
+    m = wood_mask(im).astype(np.uint8)
+    m = cv2.dilate(m, np.ones((3, 3), np.uint8))
+    n, lab, st, cen = cv2.connectedComponentsWithStats(m)
+    out = []
+    for i in range(1, n):
+        if st[i, 4] < min_area:
+            continue
+        ys, xs = np.where((lab == i) & wood_mask(im))
+        out.append(dict(u0=xs.min(), u1=xs.max(), v0=ys.min(), v1=ys.max(), uc=xs.mean(), vc=ys.mean(),
+                        n=len(xs), touches=(xs.min() == 0 or xs.max() == im.shape[1] - 1)))
+    out.sort(key=lambda b: -b['n'])
+    return out
+
+
+def rack_features(im, which):
+    """Front bar of the left- or right-most rack in the head image.
+
+    Returns dict(bar=row, ul=left end, ur=right end, um=midpoint, touches) or None.
+    """
+    blobs = [b for b in rack_blobs(im) if b['n'] > 50]
+    if not blobs:
+        return None
+    b = min(blobs, key=lambda b: b['uc']) if which == 'left' else max(blobs, key=lambda b: b['uc'])
+    m = wood_mask(im)
+    sub = np.zeros_like(m)
+    sub[b['v0']:b['v1'] + 1, b['u0']:b['u1'] + 1] = m[b['v0']:b['v1'] + 1, b['u0']:b['u1'] + 1]
+    rows = sub.sum(1)
+    thr = 0.5 * rows.max()
+    cand = np.where(rows >= thr)[0]
+    bar = int(cand.max())
+    band = sub[max(0, bar - 1):bar + 2]
+    xs = np.where(band.any(0))[0]
+    # weighted bar row (sub-pixel) from the rows around the bar
+    r = np.arange(max(0, bar - 2), min(m.shape[0], bar + 3))
+    w = rows[r].astype(float)
+    barf = float((r * w).sum() / max(w.sum(), 1e-6))
+    return dict(bar=barf, ul=float(xs.min()), ur=float(xs.max()), um=0.5 * float(xs.min() + xs.max()),
+                touches=bool(xs.min() == 0 or xs.max() == m.shape[1] - 1),
+                touch_r=bool(xs.max() == m.shape[1] - 1), blob=b)
+
+
+def dark_mask(im):
+    h = hsv(im)
+    return h[..., 2] < 110
+
+
+def peg_phase(im, f, periods=np.arange(4.0, 7.01, 0.05)):
+    """Sub-pixel phase of the peg comb of a rack in the head image.
+
+    Uses dark pixels in the band just above the front bar, within the rack blob.
+    Returns (period, phase, strength) with pegs at phase + k * period, or None.
+    """
+    b = f['blob']
+    bar = int(round(f['bar']))
+    r0, r1 = max(0, bar - 7), max(1, bar - 1)
+    u0, u1 = int(b['u0']), int(b['u1']) + 1
+    band = dark_mask(im)[r0:r1, u0:u1].astype(float)
+    prof = band.sum(0)
+    if prof.sum() < 5:
+        return None
+    prof = prof - prof.mean()
+    u = np.arange(u0, u1, dtype=float)
+    best = None
+    for P in periods:
+        z = (prof * np.exp(-2j * np.pi * u / P)).sum()
+        if best is None or abs(z) > best[2]:
+            best = (float(P), float((np.angle(z) * P / (2 * np.pi)) % P), float(abs(z)))
+    return best
+
+
+def start_features(im):
+    """Rack features in the head image at the initial pose (both racks in view).
+
+    Left rack: right end of its front bar; right rack: left end of its front bar.
+    """
+    fl = rack_features(im, 'left')
+    fr = rack_features(im, 'right')
+    if fl is None or fr is None or fl['blob'] is fr['blob']:
+        return None
+    return dict(urL=fl['ur'], barL=fl['bar'], ulR=fr['ul'], barR=fr['bar'])
+
+
+def white_mask(im):
+    h = hsv(im)
+    return (h[..., 2] > 215) & (h[..., 1] < 25)
+
+
+def plate_column(im, blob):
+    """Median column of plate (white) pixels over a rack blob in the head image."""
+    m = white_mask(im)
+    u0, u1 = int(blob['u0']), int(blob['u1'])
+    v1 = int(blob['v1'])
+    sub = m[:v1 + 1, u0:u1 + 1]
+    ys, xs = np.where(sub)
+    if len(xs) < 5:
+        return None
+    return float(np.median(xs) + u0)
+
+
+def wrist_plate_column(im, rows=(0, 42), cols=(12, 72)):
+    """Median column of the plate strip in the wrist image (plate seen edge-on)."""
+    m = white_mask(im)[rows[0]:rows[1], cols[0]:cols[1]]
+    ys, xs = np.where(m)
+    if len(xs) < 8:
+        return None
+    return float(np.median(xs) + cols[0])
+
+
+def peg_comb(im, excl=(36, 54)):
+    """Front-row peg columns in a wrist image looking at a rack.
+
+    Returns (bar_row, period, phase, cols) or None. Pegs are at phase + k * period.
+    """
+    m = wood_mask(im)
+    m[:, excl[0]:excl[1]] = False
+    rows = m.sum(1)
+    bar = int(np.argmax(rows))
+    if rows[bar] < 8:
+        return None
+    r0, r1 = max(0, bar - 7), max(1, bar - 1)
+    band = m[r0:r1]
+    prof = band.sum(0).astype(float)
+    cols = []
+    for u in range(1, len(prof) - 1):
+        if prof[u] >= 2 and prof[u] >= prof[u - 1] and prof[u] > prof[u + 1]:
+            # centroid of the local run
+            lo, hi = u, u
+            while lo > 0 and prof[lo - 1] > 0:
+                lo -= 1
+            while hi < len(prof) - 1 and prof[hi + 1] > 0:
+                hi += 1
+            w = prof[lo:hi + 1]
+            cols.append(float((np.arange(lo, hi + 1) * w).sum() / w.sum()))
+    cols = sorted(set(round(c, 2) for c in cols))
+    if len(cols) < 3:
+        return None
+    d = np.diff(cols)
+    period = float(np.median(d[(d > 4) & (d < 20)])) if np.any((d > 4) & (d < 20)) else None
+    if period is None:
+        return None
+    # phase by circular mean
+    ang = 2 * np.pi * np.array(cols) / period
+    phase = float(np.arctan2(np.sin(ang).mean(), np.cos(ang).mean()) * period / (2 * np.pi)) % period
+    return bar, period, phase, cols
+
+
+def gap_offset(comb, col):
+    """Signed pixel offset of `col` from the nearest gap centre of the peg comb."""
+    bar, period, phase, cols = comb
+    g = phase + period / 2
+    k = np.round((col - g) / period)
+    return float(col - (g + k * period))
+
+
+def counter_edge_row(im, cols=(30, 54)):
+    """Lowest row of the counter top (grey) in the central columns of the head image."""
+    m = counter_mask(im)[:, cols[0]:cols[1]]
+    frac = m.mean(axis=1)
+    rows = np.where(frac > 0.5)[0]
+    if len(rows) == 0:
+        return None
+    # contiguous run from top
+    r = rows[0]
+    while r + 1 < m.shape[0] and frac[r + 1] > 0.5:
+        r += 1
+    return int(r)

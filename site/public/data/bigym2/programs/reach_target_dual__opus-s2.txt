@@ -1,0 +1,623 @@
+"""Dual reach: touch the red sphere with the left hand and the green one with the right.
+
+Hand-written pipeline:
+  1. Stand still for a few steps and locate both spheres with the head camera: the
+     sphere disc gives a viewing ray, its floor shadow (light from straight above)
+     gives the horizontal position; together they give the 3D centre (world frame).
+  2. Walk so that the spheres sit at a comfortable reach in front of the shoulders,
+     then look again from there.
+  3. Move each hand (position IK) to the estimate. Once the sphere shows up in the
+     wrist camera, servo the hand so the sphere sits at a fixed place in that view.
+  4. A sphere lights up while it is touched. A hand whose sphere is neither lit nor
+     seen by its wrist camera searches small offsets around the estimate.
+"""
+
+import numpy as np
+
+import g1reach_geom as geom
+from g1reach_vision import find_sphere, find_shadows
+
+Q_DEFAULT = np.array([0.018, 0.0, 0.0, 0.028, 0.0, 0.038, 0.0])
+OBS_STEPS = 10
+X_REACH = 0.30          # desired sphere x in the arm frame after walking
+WALK_TOL = 0.02
+MOVE_STEPS = 40
+SETTLE = 20
+PROBE_STEPS = 12
+TARGET_BIAS = np.array([0.01, 0.01, 0.035])   # (x, outward, z) on the head estimate
+DEFAULT_Z = 0.115       # sphere height (arm frame) when it is not seen in the head view
+WR_TARGET = (42.0, 38.0, 56.0)   # where the touched sphere sits in the wrist view
+PRESS = 0.01           # extra push along the wrist view axis on first contact
+OFF_RATE = 0.004        # m per step at which search offsets are approached
+MAX_DEV = 0.10
+# typical sphere centres in the arm frame at the start pose (fallback only)
+TYPICAL = {'red': np.array([0.46, 0.17, 0.10]), 'green': np.array([0.47, -0.20, 0.08])}         # servo may move the hand target this far from the head estimate
+SERVO_GAIN = 0.35
+SERVO_STEP = 0.02
+DEBUG = False
+
+
+def _search_offsets():
+    # the wrist camera looks down and forward: going up first brings a sphere that is
+    # higher than estimated into view; y is outward for either hand
+    offs = [(0, 0, 0), (0, 0, 0.03), (-0.01, 0, 0.06), (-0.02, 0, 0.09), (0.02, 0, -0.02),
+            (0.03, 0, -0.05), (-0.01, 0.03, 0.04), (-0.01, -0.03, 0.04), (0.03, 0, 0.02),
+            (-0.02, 0.04, 0.08), (-0.02, -0.04, 0.08), (0.02, 0.03, -0.03), (0.02, -0.03, -0.03),
+            (-0.03, 0, 0.12), (0.04, 0, -0.08)]
+    return [np.array(o, dtype=float) for o in offs]
+
+
+SEARCH = _search_offsets()
+SIDES = (('L', 'red'), ('R', 'green'))
+
+
+def _rz2(yaw):
+    c, s = np.cos(yaw), np.sin(yaw)
+    return np.array([[c, -s], [s, c]])
+
+
+def _rz3(yaw):
+    c, s = np.cos(yaw), np.sin(yaw)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1.0]])
+
+
+def lit_in(img, color):
+    im = img.astype(np.int16)
+    r, g, b = im[..., 0], im[..., 1], im[..., 2]
+    if color == 'red':
+        m = (r >= 235) & (g < 90) & (b < 90)
+    else:
+        m = (g >= 235) & (r < 120) & (b < 120)
+    return int(m.sum())
+
+
+def _wrap(a):
+    return (a + np.pi) % (2 * np.pi) - np.pi
+
+
+class Policy:
+    """The control policy that is scored on the hidden seeds."""
+
+    def reset(self, obs, tools):
+        self.hold = np.asarray(tools.hold_action(), dtype=np.float32)
+        self.t = 0
+        self.phase = 'observe'
+        self.phase_t = 0
+        self.samples = {'red': [], 'green': []}
+        self.shadow_only = {'red': [], 'green': []}
+        self.world = {}
+        self.quality = {}
+        self.q_cmd = {'L': Q_DEFAULT.copy(), 'R': Q_DEFAULT.copy()}
+        self.q_out = {'L': Q_DEFAULT.copy(), 'R': Q_DEFAULT.copy()}
+        self.integ = {'L': np.zeros(7), 'R': np.zeros(7)}
+        self.hand = {}
+        self.yaw0 = float(obs['low_dim_obs'][21])
+        self.debug = []
+
+    # ------------------------------------------------------------ geometry
+    def _to_world(self, p_fk, pel, yaw):
+        wxy = pel[:2] + _rz2(yaw) @ p_fk[:2]
+        return np.array([wxy[0], wxy[1], p_fk[2] - (pel[2] - 0.746)])
+
+    def _to_fk(self, w, pel, yaw):
+        xy = _rz2(yaw).T @ (w[:2] - pel[:2])
+        return np.array([xy[0], xy[1], w[2] + (pel[2] - 0.746)])
+
+    def _estimate(self, img, pel, yaw):
+        cam_h = pel[2] + geom.CAM_H_ABOVE_PELVIS
+        shadows = [s for s in find_shadows(img) if s['area'] <= 90 and max(s['w'], s['h']) <= 12]
+        for s in shadows:
+            s['fp'] = geom.floor_point(s['u'], s['v'], cam_h)
+        shadows = [s for s in shadows if s['fp'] is not None]
+        used = set()
+        for color in ('red', 'green'):
+            sp = find_sphere(img, color)
+            if sp is None or sp['area'] < 6:
+                continue
+            d = geom.pixel_ray(sp['u'], sp['v'])
+            best = None
+            for i, s in enumerate(shadows):
+                S = s['fp']
+                t = (S[:2] @ d[:2]) / (d[:2] @ d[:2])
+                if t <= 0:
+                    continue
+                err = np.linalg.norm(t * d[:2] - S[:2])
+                # height from the ray elevation at the shadow's horizontal distance
+                z_rel = np.linalg.norm(S[:2]) * d[2] / np.linalg.norm(d[:2])
+                P = np.array([S[0], S[1], z_rel])
+                z_world = cam_h + P[2]
+                if not (0.5 < z_world < 1.3):
+                    continue
+                if best is None or err < best[0]:
+                    best = (err, P, i)
+            if best is None or best[0] > (0.07 if sp['border'] else 0.045):
+                continue
+            used.add(best[2])
+            self.samples[color].append(self._to_world(geom.CAM_FK + best[1], pel, yaw))
+        # shadows that belong to no visible sphere: candidates for a sphere out of view
+        rest = [s for i, s in enumerate(shadows)
+                if i not in used and 12 <= s['area'] <= 60
+                and 0.18 < s['fp'][0] < 0.6 and abs(s['fp'][1]) < 0.45]
+        if rest:
+            ys = [s['fp'][1] for s in rest]
+            for color, pick in (('red', int(np.argmax(ys))), ('green', int(np.argmin(ys)))):
+                s = rest[pick]
+                P = s['fp'].copy()
+                fk = geom.CAM_FK + P
+                fk[2] = self._hidden_height(P, cam_h)
+                self.shadow_only[color].append(self._to_world(fk, pel, yaw))
+
+    @staticmethod
+    def _hidden_height(P, cam_h):
+        """Arm-frame height guess for a sphere whose shadow is seen but the sphere is not."""
+        for z_fk in np.arange(-0.05, 0.35, 0.01):
+            p = np.array([P[0], P[1], z_fk - geom.CAM_FK[2]])
+            uv = geom.project(p)
+            if uv is None:
+                break
+            if 0 <= uv[0] < 84 and uv[1] < -4:
+                return min(z_fk + 0.03, 0.25)
+        return DEFAULT_Z
+
+    def _fuse(self, prior=None):
+        for c in ('red', 'green'):
+            est, qual = None, None
+            if len(self.samples[c]) >= 2:
+                est, qual = np.median(np.array(self.samples[c]), axis=0), 'full'
+            elif prior is None or c not in prior or self.quality.get(c) == 'guess':
+                if len(self.shadow_only[c]) >= 2:
+                    est, qual = np.median(np.array(self.shadow_only[c]), axis=0), 'shadow'
+            if prior is not None and c in prior:
+                keep_prior = est is None or (np.linalg.norm(est - prior[c]) > 0.08
+                                             and self.quality.get(c) == 'full')
+                if keep_prior:
+                    est, qual = prior[c], self.quality.get(c)
+            if est is not None:
+                self.world[c] = est
+                self.quality[c] = qual
+        # a shadow-only guess must not duplicate the other sphere
+        if 'red' in self.world and 'green' in self.world:
+            if np.linalg.norm(self.world['red'][:2] - self.world['green'][:2]) < 0.08:
+                for c in ('red', 'green'):
+                    if len(self.samples[c]) < 2 and (prior is None or c not in prior):
+                        del self.world[c]
+        self.samples = {'red': [], 'green': []}
+        # nothing seen at all: fall back to the typical placement
+        for c in ('red', 'green'):
+            if c not in self.world:
+                self.world[c] = self._to_world(TYPICAL[c], self.pel_now, self.yaw_now)
+                self.quality[c] = 'guess'
+        self.shadow_only = {'red': [], 'green': []}
+
+    def _walk_goal(self):
+        pts = [self.world[c][:2] for c in ('red', 'green') if c in self.world]
+        if len(pts) < 2:
+            return None
+        m = np.mean(pts, axis=0)
+        return m - _rz2(self.yaw0) @ np.array([X_REACH, 0.0])
+
+    # ------------------------------------------------------------ control
+    def _arm_out(self, raw):
+        raw[4:11] = self.q_out['L']
+        raw[11:18] = self.q_out['R']
+
+    def act(self, obs, tools):
+        raw = self.hold.copy()
+        lo = obs['low_dim_obs']
+        pel, yaw = lo[18:21].astype(float), float(lo[21])
+        self.pel_now, self.yaw_now = pel, yaw
+        t = self.t
+        self.t += 1
+        self.phase_t += 1
+        pt = self.phase_t
+
+        if self.phase == 'observe':
+            if pt >= 3:
+                self._estimate(tools.image('head'), pel, yaw)
+            if pt >= OBS_STEPS:
+                self._fuse()
+                self.goal = self._walk_goal()
+                self.phase, self.phase_t = ('walk' if self.goal is not None else 'settle'), 0
+            self._arm_out(raw)
+            return raw
+
+        if self.phase == 'walk':
+            e_b = _rz2(yaw).T @ (self.goal - pel[:2])
+            v = np.clip(1.5 * e_b, -0.3, 0.3)
+            if np.linalg.norm(e_b) < WALK_TOL or pt > 250:
+                self.phase, self.phase_t = 'settle', 0
+                v = np.zeros(2)
+            else:
+                sp = np.linalg.norm(v)
+                if sp < 0.07:
+                    v = v / max(sp, 1e-6) * 0.07
+            raw[0], raw[1] = v[0], v[1]
+            raw[3] = np.clip(-1.5 * _wrap(yaw - self.yaw0), -0.3, 0.3)
+            self._arm_out(raw)
+            return raw
+
+        if self.phase == 'settle':
+            if pt >= 25:
+                self._estimate(tools.image('head'), pel, yaw)
+            if pt >= 35:
+                self._fuse(prior=dict(self.world))
+                self.phase, self.phase_t = 'reach', 0
+            self._arm_out(raw)
+            return raw
+
+        # ---- reach / servo / search
+        if not self.hand:
+            for side, c in SIDES:
+                if c not in self.world:
+                    continue
+                b = TARGET_BIAS * np.array([1, 1 if side == 'L' else -1, 1])
+                tgt0 = self.world[c] + _rz3(yaw) @ b
+                self.hand[side] = dict(color=c, k=0, lit=False, unlit=0, seen=-100, wr=None,
+                                       tgt=tgt0.copy(), tgt0=tgt0, pressed=False, off=np.zeros(3))
+        imgs = None
+        if pt % 2 == 0:
+            imgs = {cam: tools.image(cam) for cam in ('head', 'left_wrist', 'right_wrist')}
+        for side, c in SIDES:
+            if side not in self.hand:
+                continue
+            h = self.hand[side]
+            qm = (lo[0:7] if side == 'L' else lo[9:16]).astype(float)
+            if imgs is not None:
+                lit = sum(lit_in(im, c) for im in imgs.values()) >= 3
+                h['lit'] = lit
+                h['unlit'] = 0 if lit else h['unlit'] + 2
+                if pt > MOVE_STEPS // 2:
+                    wimg = imgs['left_wrist' if side == 'L' else 'right_wrist']
+                    s = find_sphere(wimg, c)
+                    h['wr'] = None if s is None else (round(s['u'], 1), round(s['v'], 1), round(s['r'], 1), s['area'])
+                    ok = s is not None and s['r'] < 75 and (
+                        s['area'] >= 60 or (s['border'] and s['area'] >= 20))
+                    if ok:
+                        h['seen'] = pt
+                        if not lit:
+                            if s['border'] and s['area'] < 400:
+                                # a sliver at the edge: only its direction is reliable
+                                p_s = geom.wrist_sphere_cam(s['cu'], s['cv'], 40.0)
+                            else:
+                                u = float(np.clip(s['u'], -30, 114))
+                                v = float(np.clip(s['v'], -30, 114))
+                                p_s = geom.wrist_sphere_cam(u, v, float(np.clip(s['r'], 20.0, 60.0)))
+                            p_t = geom.wrist_sphere_cam(*WR_TARGET)
+                            _, R_link, _ = geom.fk(qm, side)
+                            e = _rz3(yaw) @ (R_link @ geom.R_LC @ (p_s - p_t))
+                            step = SERVO_GAIN * e
+                            n = np.linalg.norm(step)
+                            if n > SERVO_STEP:
+                                step *= SERVO_STEP / n
+                            new = h['tgt'] + step
+                            dev = new - h['tgt0']
+                            nd = np.linalg.norm(dev)
+                            if nd > MAX_DEV:
+                                new = h['tgt0'] + dev * MAX_DEV / nd
+                            h['tgt'] = new
+            if imgs is not None:
+                if h['lit'] and not h['pressed']:
+                    # first contact: lean a little further in along the wrist view axis
+                    _, R_link, _ = geom.fk(qm, side)
+                    axis = _rz3(yaw) @ (R_link @ geom.R_LC @ np.array([1.0, 0, 0]))
+                    h['tgt'] = h['tgt'] + PRESS * axis
+                    h['pressed'] = True
+                elif h['unlit'] >= 20:
+                    h['pressed'] = False
+            recently_seen = pt - h['seen'] < 30
+            if pt > MOVE_STEPS + SETTLE and h['unlit'] >= PROBE_STEPS and not recently_seen:
+                h['k'] = (h['k'] + 1) % len(SEARCH)
+                h['unlit'] = 0
+            goal = SEARCH[h['k']].copy()
+            if side == 'R':
+                goal[1] = -goal[1]
+            d_off = goal - h['off']
+            n = np.linalg.norm(d_off)
+            h['off'] = goal if n <= OFF_RATE else h['off'] + d_off * OFF_RATE / n
+            tgt = self._to_fk(h['tgt'], pel, yaw) + h['off']
+            q, err = geom.ik(tgt, self.q_cmd[side], side, n_iter=60 if pt <= 1 else 20)
+            self.q_cmd[side] = q
+            if pt < MOVE_STEPS:
+                a = (pt + 1) / MOVE_STEPS
+                self.q_out[side] = Q_DEFAULT + a * (q - Q_DEFAULT)
+            else:
+                ig = self.integ[side]
+                ig[:4] = np.clip(ig[:4] + 0.05 * (q[:4] - qm[:4]), -0.3, 0.3)
+                self.q_out[side] = q + ig
+        self._arm_out(raw)
+        if DEBUG:
+            rel = {}
+            for side, c in SIDES:
+                if side in self.hand:
+                    qm = lo[0:7] if side == 'L' else lo[9:16]
+                    rel[side] = (geom.fk(qm, side)[0] - self._to_fk(self.world[c], pel, yaw)).round(4).tolist()
+            self.debug.append(dict(t=t, phase=self.phase, lit={s: self.hand[s]['lit'] for s in self.hand},
+                                   k={s: self.hand[s]['k'] for s in self.hand}, rel=rel,
+                                   tgt={s: self.hand[s]['tgt'].round(4).tolist() for s in self.hand},
+                                   wr={s: self.hand[s]['wr'] for s in self.hand}))
+        return raw
+
+# ──────── g1reach_geom.py ────────
+
+"""Camera, floor and arm geometry for the G1 reach policy (hand-written models)."""
+
+import numpy as np
+
+# ---------------------------------------------------------------- head camera
+# Fitted from the floor checkerboard (0.2 m squares) in the head images.
+F_PX = 68.51          # focal length in pixels (84x84 image)
+K1 = -0.0225          # radial term (undistorted = distorted * (1 + K1 r^2))
+CAM_PITCH = 1.104     # rad, pitched down
+CAM_ROLL = -0.012
+CAM_YAW = -0.005      # relative to the pelvis yaw
+CAM_H_ABOVE_PELVIS = 0.349   # camera height above the pelvis z (world)
+# camera position in the arm-FK frame (fitted against hand observations)
+CAM_FK = np.array([0.146, 0.0, 0.382])
+NADIR = None
+
+
+def _rot(th, ph, ps):
+    cy, sy = np.cos(ps), np.sin(ps)
+    cp, sp = np.cos(th), np.sin(th)
+    cr, sr = np.cos(ph), np.sin(ph)
+    Rz = np.array([[cy, -sy, 0], [sy, cy, 0], [0, 0, 1]])
+    Ry = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
+    Rx = np.array([[1, 0, 0], [0, cr, -sr], [0, sr, cr]])
+    return Rz @ Ry @ Rx
+
+
+R_CAM = _rot(CAM_PITCH, CAM_ROLL, CAM_YAW)   # camera -> yaw-aligned body frame
+
+
+def pixel_ray(u, v):
+    """Unit ray (body frame, yaw-aligned, z up) through pixel (u, v)."""
+    xd = (u - 42.0) / F_PX
+    yd = (v - 42.0) / F_PX
+    rr = xd * xd + yd * yd
+    xu = xd * (1 + K1 * rr)
+    yu = yd * (1 + K1 * rr)
+    d = R_CAM @ np.array([1.0, -xu, -yu])
+    return d / np.linalg.norm(d)
+
+
+def project(p_cam):
+    """Pixel of point p (body frame, relative to the camera)."""
+    d = R_CAM.T @ p_cam
+    if d[0] <= 1e-6:
+        return None
+    xu, yu = -d[1] / d[0], -d[2] / d[0]
+    rr = xu * xu + yu * yu
+    xd, yd = xu / (1 + K1 * rr), yu / (1 + K1 * rr)
+    return 42.0 + F_PX * xd, 42.0 + F_PX * yd
+
+
+def floor_point(u, v, cam_h):
+    """Floor point (relative to camera, body frame) seen at pixel (u, v)."""
+    d = pixel_ray(u, v)
+    if d[2] >= -1e-3:
+        return None
+    return d * (cam_h / -d[2])
+
+
+# ---------------------------------------------------------------- wrist cameras
+# Fitted from the floor checkerboard in the wrist images at the default arm pose:
+# the camera looks 0.744 rad below the wrist-yaw link x axis.
+WR_F = 73.0
+SPHERE_R = 0.05
+
+
+def _ry_(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+
+R_LC = _ry_(0.744)     # wrist camera (fwd, left, up) -> wrist-yaw link frame
+
+
+def wrist_dir(u, v):
+    d = np.array([1.0, -(u - 42.0) / WR_F, -(v - 42.0) / WR_F])
+    return d / np.linalg.norm(d)
+
+
+def wrist_sphere_cam(u, v, r):
+    """Sphere centre in wrist camera coordinates from its image circle."""
+    D = SPHERE_R / np.sin(np.arctan(max(r, 1.0) / WR_F))
+    return D * wrist_dir(u, v)
+
+
+# ---------------------------------------------------------------- arm FK
+def _rx(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+
+def _ry(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+
+def _rz(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def _rpy(r, p, y):
+    return _rz(y) @ _ry(p) @ _rx(r)
+
+
+_TORSO = np.array([-0.0039635, 0.0, 0.054])
+_AX = {'x': _rx, 'y': _ry, 'z': _rz}
+_AXV = {'x': np.array([1.0, 0, 0]), 'y': np.array([0, 1.0, 0]), 'z': np.array([0, 0, 1.0])}
+
+
+def _chain(side):
+    s = 1.0 if side == 'L' else -1.0
+    return [
+        ((0.0039563, s * 0.10022, 0.23778), _rpy(s * 0.27931, 5.4949e-05, -s * 0.00019159), 'y'),
+        ((0.0, s * 0.038, -0.013831), _rpy(-s * 0.27925, 0, 0), 'x'),
+        ((0.0, s * 0.00624, -0.1032), np.eye(3), 'z'),
+        ((0.015783, 0, -0.080518), np.eye(3), 'y'),
+        ((0.100, s * 0.00188791, -0.010), np.eye(3), 'x'),
+        ((0.038, 0, 0), np.eye(3), 'y'),
+        ((0.046, 0, 0), np.eye(3), 'z'),
+    ]
+
+
+CHAINS = {'L': _chain('L'), 'R': _chain('R')}
+TOOL = np.array([0.153, -0.017, 0.020])   # fingertip midpoint in the wrist-yaw frame (left)
+
+JL = {
+    'L': (np.array([-3.0892, -1.5882, -2.618, -1.0472, -1.97222, -1.61443, -1.61443]),
+          np.array([2.6704, 2.2515, 2.618, 2.0944, 1.97222, 1.61443, 1.61443])),
+    'R': (np.array([-3.0892, -1.5882, -2.618, -1.0472, -1.97222, -1.61443, -1.61443]),
+          np.array([2.6704, 2.2515, 2.618, 2.0944, 1.97222, 1.61443, 1.61443])),
+}
+
+
+def tool_of(side):
+    t = TOOL.copy()
+    if side == 'R':
+        t[1] = -t[1]
+    return t
+
+
+def fk(q, side, tool=None):
+    """Tool position, wrist-yaw rotation, and joint (pos, axis) list in the FK frame."""
+    tool = tool_of(side) if tool is None else tool
+    p = _TORSO.copy()
+    R = np.eye(3)
+    joints = []
+    for (xyz, R0, ax), qi in zip(CHAINS[side], q):
+        p = p + R @ np.array(xyz)
+        R = R @ R0
+        joints.append((p.copy(), R @ _AXV[ax]))
+        R = R @ _AX[ax](qi)
+    return p + R @ tool, R, joints
+
+
+def jacobian(q, side, tool=None):
+    pt, R, joints = fk(q, side, tool)
+    J = np.zeros((3, 7))
+    for i, (pj, a) in enumerate(joints):
+        J[:, i] = np.cross(a, pt - pj)
+    return pt, R, J
+
+
+Q_REST = np.array([0.0, 0.1, 0.0, 0.3, 0.0, 0.0, 0.0])
+
+
+def ik(target, q0, side, n_iter=40, active=(0, 1, 2, 3), q_rest=None, w_rest=3e-4, tool=None):
+    """Position IK: min |p(q) - target|^2 + w_rest |q - q_rest|^2 (Levenberg-Marquardt)."""
+    q = np.array(q0, dtype=float).copy()
+    lo, hi = JL[side]
+    act = list(active)
+    if q_rest is None:
+        q_rest = Q_REST.copy()
+        if side == 'R':
+            q_rest[[1, 2, 4, 6]] *= -1
+    q_rest = np.asarray(q_rest, dtype=float)
+    lam = 1e-4
+    for _ in range(n_iter):
+        p, _, J = jacobian(q, side, tool)
+        e = target - p
+        Ja = J[:, act]
+        A = Ja.T @ Ja + (lam + w_rest) * np.eye(len(act))
+        b = Ja.T @ e + w_rest * (q_rest[act] - q[act])
+        dq = np.linalg.solve(A, b)
+        n = np.linalg.norm(dq)
+        if n > 0.2:
+            dq *= 0.2 / n
+        q[act] = np.clip(q[act] + dq, lo[act] + 0.02, hi[act] - 0.02)
+        if n < 1e-5:
+            break
+    p, _, _ = fk(q, side, tool)
+    return q, float(np.linalg.norm(target - p))
+
+# ──────── g1reach_vision.py ────────
+
+"""Colour segmentation of the target spheres and their floor shadows."""
+
+import numpy as np
+import cv2
+
+
+def sphere_mask(img, color):
+    im = img.astype(np.int16)
+    r, g, b = im[..., 0], im[..., 1], im[..., 2]
+    if color == 'red':
+        return (r > 25) & (r > g + 20) & (r > b + 20)
+    return (g > 25) & (g > r + 20) & (g > b + 20)
+
+
+def circle_fit(xs, ys):
+    A = np.stack([xs, ys, np.ones_like(xs)], 1)
+    bb = xs * xs + ys * ys
+    sol, *_ = np.linalg.lstsq(A, bb, rcond=None)
+    cx, cy = sol[0] / 2, sol[1] / 2
+    r = np.sqrt(max(sol[2] + cx * cx + cy * cy, 0.0))
+    return cx, cy, r
+
+
+def find_sphere(img, color):
+    """Largest blob of the colour: dict(u, v, r, area, lit, border) or None."""
+    m = sphere_mask(img, color).astype(np.uint8)
+    n, lab, stats, cents = cv2.connectedComponentsWithStats(m, connectivity=8)
+    if n <= 1:
+        return None
+    k = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    area = int(stats[k, cv2.CC_STAT_AREA])
+    if area < 3:
+        return None
+    blob = (lab == k).astype(np.uint8)
+    ch = 0 if color == 'red' else 1
+    vals = img[..., ch][blob > 0]
+    lit = float(np.percentile(vals, 90)) >= 235
+    # boundary pixels not on the image border and next to background (not to an
+    # occluding robot part)
+    er = cv2.erode(blob, np.ones((3, 3), np.uint8))
+    edge = (blob > 0) & (er == 0)
+    H, W = blob.shape
+    ys, xs = np.nonzero(edge)
+    keep = (xs > 0) & (xs < W - 1) & (ys > 0) & (ys < H - 1)
+    border = bool((~keep).any())
+    im = img.astype(np.int16)
+    bg = ((im[..., 2] > im[..., 0] + 15) & (im[..., 2] >= im[..., 1])).astype(np.uint8)
+    near_bg = cv2.dilate(bg, np.ones((3, 3), np.uint8)) > 0
+    keep2 = keep & near_bg[ys, xs]
+    if keep2.sum() >= 8:
+        keep = keep2
+    xs, ys = xs[keep] + 0.5, ys[keep] + 0.5
+    if len(xs) >= 6:
+        u, v, r = circle_fit(xs.astype(float), ys.astype(float))
+        r += 0.5
+    else:
+        u, v = cents[k][0] + 0.5, cents[k][1] + 0.5
+        r = np.sqrt(area / np.pi)
+    r_area = np.sqrt(area / np.pi)
+    if not border and (r > 1.3 * r_area or r < 0.8 * r_area):
+        u, v = cents[k][0] + 0.5, cents[k][1] + 0.5
+        r = r_area
+    return dict(u=float(u), v=float(v), r=float(r), area=area, lit=lit, border=border,
+                cu=float(cents[k][0] + 0.5), cv=float(cents[k][1] + 0.5))
+
+
+def shadow_mask(img):
+    im = img.astype(np.int16)
+    r, g, b = im[..., 0], im[..., 1], im[..., 2]
+    return (b < 126) & (b > r + 30) & (g < 100) & (g > r + 15)
+
+
+def find_shadows(img, min_area=8, v_min=28):
+    """Dark blobs on the near floor: list of dict(u, v, area, w, h)."""
+    m = shadow_mask(img).astype(np.uint8)
+    m[:v_min] = 0
+    m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
+    n, lab, stats, cents = cv2.connectedComponentsWithStats(m, connectivity=4)
+    out = []
+    for k in range(1, n):
+        a = int(stats[k, cv2.CC_STAT_AREA])
+        if a < min_area:
+            continue
+        out.append(dict(u=float(cents[k][0] + 0.5), v=float(cents[k][1] + 0.5), area=a,
+                        w=int(stats[k, cv2.CC_STAT_WIDTH]), h=int(stats[k, cv2.CC_STAT_HEIGHT])))
+    return out

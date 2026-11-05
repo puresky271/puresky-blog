@@ -1,0 +1,46 @@
+{
+ "clips": {
+  "plate": {
+   "light": "/media/hero/plate.mp4",
+   "dark": "/media/hero/dark/plate.mp4"
+  },
+  "cup": {
+   "light": "/media/hero/cup.mp4",
+   "dark": "/media/hero/dark/cup.mp4"
+  },
+  "cupboard": {
+   "light": "/media/hero/cupboard.mp4",
+   "dark": "/media/hero/dark/cupboard.mp4"
+  },
+  "blocks": {
+   "light": "/media/hero/blocks.mp4",
+   "dark": "/media/hero/dark/blocks.mp4"
+  },
+  "reach": {
+   "light": "/media/hero/reach.mp4",
+   "dark": "/media/hero/dark/reach.mp4"
+  },
+  "dishwasher": {
+   "light": "/media/hero/dishwasher.mp4",
+   "dark": "/media/hero/dark/dishwasher.mp4"
+  },
+  "contact": {
+   "light": "/media/hero/contact.mp4",
+   "dark": "/media/hero/dark/contact.mp4"
+  }
+ },
+ "pairs": [
+  [
+   "plate",
+   "cup"
+  ],
+  [
+   "cupboard",
+   "blocks"
+  ],
+  [
+   "reach",
+   "dishwasher"
+  ]
+ ]
+}

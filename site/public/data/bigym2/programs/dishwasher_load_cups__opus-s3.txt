@@ -1,0 +1,901 @@
+"""Scripted policy: load two mugs from the counter into the dishwasher upper rack.
+
+Hand-written control: approximate G1 arm kinematics + IK (g1kin.py), colour
+segmentation of the wrist cameras (vision.py), and a fixed choreography.
+"""
+
+import numpy as np
+
+import g1kin as K
+import vision
+
+QNOM = np.array([-0.8, 0.15, 0.0, 0.6, 0.0, 0.0, 0.0])
+DEBUG = False
+LOCK = None
+Q_PRE_L = np.array([-0.56, 0.23, 0.43, -1.05, -0.36, 1.61, 0.02])
+
+P = dict(
+    stand=(0.15, -0.60), stand2_dy=0.02, ys_l=0.14, ys_r=-0.14,
+    zg=0.90,           # tool height for the handle grasp (world z)
+    x0=0.22, xmax=0.37,
+    ustar=40.0, vstar=40.0,  # handle-shadow start: column target, row trigger
+    dx_blind=0.15,     # forward move from trigger to grasp
+    hold_fj=-0.017,    # finger joint above this after closing = something in the hand
+    va=23.66, vh=-42.5,  # wrist camera ground-plane model: distance = va / (row - vh)
+    vstop=55.0, xgmax=0.53,
+    mug_r=0.04, bar_r=0.075, grip_off=0.09,
+    carry_l=(0.30, 0.24, 1.16), carry_r=(0.30, -0.24, 1.16), ylim=0.04,
+    do_right=True,
+    dw=(0.17, -0.52, 1.5708),   # stand in front of the open dishwasher, clear of the door
+    place_h=0.62, place_pitch=0.3,
+    place_x=0.55, place_y=0.10, place_zhi=1.02, place_zmin=0.76,
+    gpre=0.3,          # gripper pre-shape before the final approach
+    kpx=0.0018,        # servo gain m/px
+)
+
+
+def qnom(side):
+    q = QNOM.copy()
+    if side == 'r':
+        q[[1, 2, 4, 6]] *= -1
+    return q
+
+
+def mirror(q):
+    q = np.array(q, float).copy()
+    q[[1, 2, 4, 6]] *= -1
+    return q
+
+
+def body_to_world(ld, p):
+    x, y, yaw = ld[21], ld[22], ld[24]
+    c, s = np.cos(yaw), np.sin(yaw)
+    return np.array([x + c * p[0] - s * p[1], y + s * p[0] + c * p[1], p[2]])
+
+
+class Arm:
+    """Tool target in the body frame (pelvis x, y, yaw; world z)."""
+
+    def __init__(self, side, q):
+        self.s = side
+        self.q = np.array(q, float)
+        self.pb = None
+        self.hd = 0.0
+        self.pt = 0.0
+        self.frozen = True
+
+    def set(self, pb, hd=0.0, pt=0.0):
+        self.pb = np.array(pb, float)
+        self.hd, self.pt = hd, pt
+        self.frozen = False
+
+    def freeze(self):
+        self.frozen = True
+
+    def solve(self, ld, frame):
+        if self.frozen or self.pb is None:
+            return
+        pw = body_to_world(frame, self.pb)
+        h = frame[24] + self.hd
+        d = np.array([np.cos(h) * np.cos(self.pt), np.sin(h) * np.cos(self.pt), -np.sin(self.pt)])
+        pt = K.world_to_torso(ld, p=pw)
+        dt = K.world_to_torso(ld, d=d)
+        zt = K.world_to_torso(ld, d=[0, 0, 1])
+        best = None
+        for q0 in (self.q, qnom(self.s)):
+            q, err = K.solve(self.s, pt, dt, zt, q0, qnom=qnom(self.s), wreg=0.02, lock=LOCK)
+            M = K.arm_T(self.s, q)
+            cost = err + 0.1 * np.linalg.norm(M[:3, 0] - dt) + 0.02 * np.linalg.norm(q - qnom(self.s))
+            if best is None or cost < best[0] - 1e-3:
+                best = (cost, q, err)
+        _, self.q, self.err = best
+
+    def tool_body(self, ld):
+        """Current tool position in body frame (from measured joints)."""
+        M = K.torso_world(ld) @ K.arm_T(self.s, K.arm_q(ld, self.s))
+        p = M[:3, 3]
+        x, y, yaw = ld[21], ld[22], ld[24]
+        c, s = np.cos(yaw), np.sin(yaw)
+        dx, dy = p[0] - x, p[1] - y
+        return np.array([c * dx + s * dy, -s * dx + c * dy, p[2]])
+
+
+class Policy:
+    def reset(self, obs, tools):
+        self.tools = tools
+        self.base = np.asarray(tools.hold_action(), dtype=np.float64)
+        self.base[0] = self.base[1] = self.base[3] = 0.0
+        self.base[2] = 0.74
+        self.base[4] = 0.0
+        self.base[19] = self.base[20] = 0.0
+        self.arms = {'l': Arm('l', Q_PRE_L), 'r': Arm('r', mirror(Q_PRE_L))}
+        self.off = np.zeros(14)
+        self.obs = obs
+        self.frame = None
+        self.face = 0.0
+        self.holding_active = False
+        self.nowalk = False
+        self.k = 0
+        self.log = []
+        self.gen = self.script()
+
+    # ---------------------------------------------------------------- helpers
+    def action(self):
+        ld = self.obs['low_dim_obs']
+        if self.k % 5 == 0:
+            fr = ld if self.frame is None else self.frame
+            for A in self.arms.values():
+                A.solve(ld, fr)
+            if DEBUG:
+                self.log.append(('dbg', self.obs['t'], ld[21:25].round(3), self.arms['l'].q.round(2),
+                                 None if self.arms['l'].pb is None else self.arms['l'].pb.round(3),
+                                 round(float(getattr(self.arms['l'], 'err', -1)), 3), self.base[:4].round(2)))
+        self.k += 1
+        qt = np.concatenate([self.arms['l'].q, self.arms['r'].q])
+        qa = np.concatenate([ld[3:10], ld[12:19]])
+        self.off = np.clip(self.off + 0.1 * (qt - qa), -0.3, 0.3)
+        a = self.base.copy()
+        a[5:19] = qt + self.off
+        return a
+
+    def steps(self, n, walk=None):
+        for _ in range(n):
+            if walk is not None:
+                if walk(self.obs['low_dim_obs']):
+                    break
+            elif self.frame is not None:
+                self.hold_base(self.obs['low_dim_obs'])
+            yield self.action()
+
+    def move(self, side, goal, speed=0.1, settle=10, hd=None):
+        """Move one tool target in a straight line at a limited speed (m/s)."""
+        A = self.arms[side]
+        goal = np.array(goal, float)
+        if A.pb is None:
+            A.set(goal)
+        start = A.pb.copy()
+        h0 = A.hd
+        h1 = h0 if hd is None else hd
+        n = max(1, int(np.ceil(np.linalg.norm(goal - start) / (speed * 0.02))))
+        for i in range(1, n + 1):
+            A.pb = start + (goal - start) * i / n
+            A.hd = h0 + (h1 - h0) * i / n
+            A.frozen = False
+            yield self.action_with_hold()
+        yield from self.steps(settle)
+
+    def action_with_hold(self):
+        if self.frame is not None:
+            self.hold_base(self.obs['low_dim_obs'])
+        return self.action()
+
+    def goto(self, x, y, yaw, n=400):
+        """Walk to a pose with the arm targets following the body, then fix the task frame there."""
+        self.frame = None
+        yield from self.steps(n, self.walker(x, y, yaw))
+        self.stop_base()
+        fr = np.zeros(56)
+        fr[21:25] = self.obs['low_dim_obs'][21:25]
+        self.log.append(('goto', (x, y, yaw), fr[21:25].round(3), self.obs['t']))
+        self.frame = fr
+        self.holding_active = False
+        yield from self.steps(20)
+
+    def hold_base(self, ld):
+        """Keep the pelvis near the task frame; correct only when drift is large."""
+        fr = self.frame
+        if self.nowalk:
+            self.stop_base()
+            return
+        dx, dy = fr[21] - ld[21], fr[22] - ld[22]
+        c, s = np.cos(ld[24]), np.sin(ld[24])
+        bx, by = c * dx + s * dy, -s * dx + c * dy
+        ey = (fr[24] - ld[24] + np.pi) % (2 * np.pi) - np.pi
+        d = np.hypot(bx, by)
+        if not self.holding_active and (d > 0.08 or abs(ey) > 0.10):
+            self.holding_active = True
+        if self.holding_active and d < 0.03 and abs(ey) < 0.03:
+            self.holding_active = False
+        if not self.holding_active:
+            self.stop_base()
+            return
+        v = np.array([bx, by]) * 1.5
+        sp = np.linalg.norm(v)
+        if d < 0.015:
+            v[:] = 0
+        elif sp < 0.07:
+            v *= 0.07 / max(sp, 1e-6)
+        elif sp > 0.12:
+            v *= 0.12 / sp
+        self.base[0], self.base[1] = v
+        self.base[3] = np.clip(1.2 * ey, -0.3, 0.3) if abs(ey) > 0.02 else 0.0
+
+    def walker(self, tx, ty, tyaw, vmax=0.2, tol=0.03):
+        def w(ld):
+            x, y, yaw = ld[21], ld[22], ld[24]
+            dx, dy = tx - x, ty - y
+            c, s = np.cos(yaw), np.sin(yaw)
+            bx, by = c * dx + s * dy, -s * dx + c * dy
+            ey = (tyaw - yaw + np.pi) % (2 * np.pi) - np.pi
+            v = np.array([bx, by]) * 1.5
+            sp = np.linalg.norm(v)
+            if sp > vmax:
+                v *= vmax / sp
+            close = np.hypot(bx, by) < tol
+            if close:
+                v[:] = 0
+            elif sp < 0.07:
+                v *= 0.07 / max(sp, 1e-6)
+            self.base[0], self.base[1] = v
+            self.base[3] = np.clip(1.5 * ey, -0.5, 0.5) if abs(ey) > 0.03 else 0.0
+            if close and abs(ey) < 0.04:
+                self.base[0] = self.base[1] = self.base[3] = 0.0
+                return True
+            return False
+        return w
+
+    def stop_base(self):
+        self.base[0] = self.base[1] = self.base[3] = 0.0
+
+    # ---------------------------------------------------------------- vision
+    def foot(self, side, pick):
+        cam = 'left_wrist' if side == 'l' else 'right_wrist'
+        im = self.tools.image(cam)
+        f = vision.mug_obs(im, pick)
+        if f is None or f['us'] is None:
+            return None
+        return (f['us'], f['vs'])
+
+    # ---------------------------------------------------------------- script
+    def holding(self, side):
+        ld = self.obs['low_dim_obs']
+        fj = ld[10] if side == 'l' else ld[19]
+        return fj > P['hold_fj']
+
+    def center_base(self, side, cam, pick, u0, tol=6, search_vy=0.0):
+        """Side-step (base vy) until the tracked mug is centred in the wrist camera."""
+        good = 0
+        miss = 0
+        self.frame = None
+        for it in range(40):
+            f = vision.mug_obs(self.tools.image(cam), pick, near=self.track)
+            if f is None:
+                miss += 1
+                if miss >= 2:
+                    self.track = None
+                self.stop_base()
+                if search_vy != 0.0 and miss >= 2:
+                    self.base[1] = search_vy
+                self.log.append(('search', side, it, self.obs['low_dim_obs'][21:25].round(3)))
+                yield from self.steps(10)
+                continue
+            miss = 0
+            self.track = f['cx']
+            err = f['cx'] - u0
+            self.log.append(('center', side, it, round(err, 1), self.obs['low_dim_obs'][21:25].round(3)))
+            if abs(err) < tol:
+                self.stop_base()
+                good += 1
+                if good >= 2:
+                    break
+                yield from self.steps(15)
+                continue
+            good = 0
+            vy = -np.clip(0.004 * err, -0.15, 0.15)
+            vy = np.sign(vy) * max(abs(vy), 0.07)
+            ld = self.obs['low_dim_obs']
+            ey = (self.face - ld[24] + np.pi) % (2 * np.pi) - np.pi
+            self.base[0] = 0.0
+            self.base[1] = vy
+            self.base[3] = np.clip(1.5 * ey, -0.3, 0.3) if abs(ey) > 0.03 else 0.0
+            yield from self.steps(10)
+        self.stop_base()
+        yield from self.steps(25)
+        fr = np.zeros(56)
+        fr[21:25] = self.obs['low_dim_obs'][21:25]
+        self.frame = fr
+        self.holding_active = False
+
+    def grasp(self, side, pick, ys):
+        """Visual approach to the mug handle and close; returns via self.result."""
+        A = self.arms[side]
+        gi = 19 if side == 'l' else 20
+        self.base[gi] = 0.0
+        cam = 'left_wrist' if side == 'l' else 'right_wrist'
+        u0 = P['ustar'] if side == 'l' else 84 - P['ustar']
+        A.set((P['x0'], ys, P['zg'] + 0.07))
+        yield from self.steps(20)
+        A.set((P['x0'], ys, P['zg']))
+        yield from self.steps(20)
+        # side-step until the target mug is centred in this hand's wrist camera
+        self.track = None
+        if side == 'r':
+            yield from self.center_base(side, cam, pick, u0, search_vy=-0.08)
+        track = self.track
+        mode = 'front'
+        extra = 0.0
+        for attempt in range(3):
+            est = []
+            sin_psi = {'left': 1.0, 'right': -1.0}.get(mode, 0.0)
+            for it in range(50):
+                im = self.tools.image(cam)
+                f = vision.mug_obs(im, pick, near=track)
+                if f is not None:
+                    track = f['cx']
+                self.log.append(('servo', side, attempt, it, None if f is None else
+                                 (f['uc'], f['vb'], f['w'], f['us']), A.pb.copy()))
+                ok_lat = False
+                if f is not None and f['touch']:
+                    # mug cut by the image border: shift sideways toward it
+                    A.pb[1] += 0.008 if f['uc'] < 42 else -0.008
+                    A.pb[1] = float(np.clip(A.pb[1], ys - P['ylim'], ys + P['ylim']))
+                    ok_lat = True
+                elif f is not None and f['w'] >= 8:
+                    if mode == 'front':
+                        if f['us'] is not None:
+                            sin_psi = float(np.clip((f['uc'] - f['us']) / (0.5 * f['w']), -0.4, 0.4))
+                        ub = f['uc'] - sin_psi * 0.94 * f['w']
+                    else:
+                        e = vision.side_edges(im, pick, near=track)
+                        ub = e[0] + 1.5 if mode == 'left' else e[1] - 1.5
+                    err = ub - u0
+                    ynew = A.pb[1] + np.clip(-P['kpx'] * err, -0.008, 0.008)
+                    ynew = float(np.clip(ynew, ys - P['ylim'], ys + P['ylim']))
+                    at_lim = abs(ynew - A.pb[1]) < 1e-4 and abs(err) >= 4
+                    A.pb[1] = ynew
+                    ok_lat = abs(err) < 4 or at_lim
+                    if 22 <= f['vb'] <= 78:
+                        est.append(A.pb[0] + P['va'] / (f['vb'] - P['vh']))
+                    if f['vb'] >= P['vstop'] and len(est) >= 2 and ok_lat:
+                        break
+                if A.pb[0] >= P['xmax']:
+                    break
+                if ok_lat or f is None:
+                    A.pb[0] += 0.015
+                yield from self.steps(9)
+            self.base[gi] = P['gpre']
+            x0 = A.pb[0]
+            if est:
+                xf = float(np.median(est[-3:]))
+                cpsi = np.sqrt(1 - sin_psi ** 2)
+                xg = xf + P['mug_r'] - P['bar_r'] * cpsi - P['grip_off'] + extra
+            else:
+                xg = x0 + P['dx_blind'] + extra
+            xg = float(np.clip(xg, x0, P['xgmax']))
+            self.log.append(('xg', side, attempt, round(xg, 3), round(sin_psi, 2), len(est)))
+            n = max(1, int(round((xg - x0) / 0.01)))
+            for i in range(1, n + 1):
+                A.pb[0] = x0 + (xg - x0) * i / n
+                yield from self.steps(6)
+            yield from self.steps(15)
+            self.base[gi] = 1.0
+            yield from self.steps(35)
+            ok = self.holding(side)
+            self.log.append(('close', side, attempt, A.pb.copy(), ok))
+            if ok:
+                yield from self.move(side, A.pb + (0, 0, 0.06), speed=0.05)
+                if self.holding(side):
+                    self.result = True
+                    return
+            # retry: open, back off, go deeper next time
+            self.base[gi] = 0.0
+            yield from self.steps(15)
+            A.pb[2] = P['zg']
+            A.pb[0] = x0 - 0.06
+            yield from self.steps(40)
+            extra += 0.02
+        self.result = False
+
+    def script(self):
+        yield from self.steps(10)
+        yield from self.goto(*P['stand'], 0.0)
+        yield from self.grasp('l', 'left', P['ys_l'])
+        self.log.append(('grasp_l', self.result, self.obs['t']))
+        yield from self.move('l', P['carry_l'], speed=0.15)
+        self.log.append(('carry_l', self.holding('l'), self.obs['t']))
+        if P['do_right']:
+            # the remaining mug is to the right of the first one: put the right hand
+            # just right of where the left hand took the first mug
+            y1 = self.frame[22] + P['ys_l']
+            yield from self.goto(self.frame[21], y1 + P['stand2_dy'], 0.0)
+            yield from self.grasp('r', 'big', P['ys_r'])
+            self.log.append(('grasp_r', self.result, self.obs['t']))
+            yield from self.move('r', P['carry_r'], speed=0.15)
+        yield from self.goto(*P['dw'], n=300)
+        self.log.append(('turned', self.holding('l'), self.holding('r'), self.obs['t']))
+        # squat and lean over the rack; re-anchor the task frame where the pelvis settles
+        self.frame = None
+        self.base[2] = P['place_h']
+        self.base[4] = P['place_pitch']
+        yield from self.steps(60)
+        fr = np.zeros(56)
+        fr[21:25] = self.obs['low_dim_obs'][21:25]
+        self.frame = fr
+        self.nowalk = True   # never walk while squatting
+        self.log.append(('squat', fr[21:25].round(3), self.obs['t']))
+        for side in ('l', 'r') if P['do_right'] else ('l',):
+            yield from self.place(side)
+        while True:
+            yield from self.steps(50)
+
+    def place(self, side):
+        A = self.arms[side]
+        gi = 19 if side == 'l' else 20
+        s = 1 if side == 'l' else -1
+        yield from self.move(side, (P['place_x'], s * P['place_y'], P['place_zhi']), speed=0.08)
+        z = P['place_zhi']
+        while z > P['place_zmin']:
+            z -= 0.01
+            yield from self.move(side, (P['place_x'], s * P['place_y'], z), speed=0.04, settle=3)
+            tb = A.tool_body(self.obs['low_dim_obs'])
+            if tb[2] - z > 0.015:
+                break
+        self.log.append(('place', side, round(z, 3), self.obs['t']))
+        self.base[gi] = 0.0
+        yield from self.steps(25)
+        yield from self.move(side, A.pb + (0, 0, 0.10), speed=0.06)
+        yield from self.move(side, A.pb + (-0.10, 0, 0), speed=0.08)
+
+    def act(self, obs, tools):
+        self.obs = obs
+        return next(self.gen)
+
+# ──────── g1kin.py ────────
+
+"""Approximate Unitree G1 kinematics and a small IK for the policy (hand-written, no learning)."""
+import numpy as np
+from scipy.optimize import least_squares
+
+
+def rx(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+
+def ry(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+
+def rz(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def T(R=np.eye(3), p=(0, 0, 0)):
+    M = np.eye(4)
+    M[:3, :3] = R
+    M[:3, 3] = p
+    return M
+
+
+AX = {'x': rx, 'y': ry, 'z': rz}
+LO = np.array([-3.0892, -1.5882, -2.618, -1.0472, -1.97222, -1.61443, -1.61443])
+HI = np.array([2.6704, 2.2515, 2.618, 2.0944, 1.97222, 1.61443, 1.61443])
+TOOL = (0.15, 0.0, 0.0)
+
+
+def _chain(side):
+    s = 1 if side == 'l' else -1
+    return [
+        ((0.0039563, s * 0.10022, 0.23778), rx(s * 0.27931), 'y'),
+        ((0, s * 0.038, -0.013831), rx(-s * 0.27925), 'x'),
+        ((0, s * 0.00624, -0.1032), np.eye(3), 'z'),
+        ((0.015783, 0, -0.080518), np.eye(3), 'y'),
+        ((0.100, s * 0.00188791, -0.010), np.eye(3), 'x'),
+        ((0.038, 0, 0), np.eye(3), 'y'),
+        ((0.046, 0, 0), np.eye(3), 'z'),
+    ]
+
+
+CHAIN = {'l': _chain('l'), 'r': _chain('r')}
+
+
+def limits(side):
+    if side == 'l':
+        return LO, HI
+    lo, hi = LO.copy(), HI.copy()
+    lo[1], hi[1] = -HI[1], -LO[1]
+    lo[2], hi[2] = -HI[2], -LO[2]
+    lo[4], hi[4] = -HI[4], -LO[4]
+    lo[6], hi[6] = -HI[6], -LO[6]
+    return lo, hi
+
+
+def torso_T(waist):
+    M = T(rz(waist[0]))
+    M = M @ T(rx(waist[1]), (-0.0039635, 0, 0.035))
+    M = M @ T(ry(waist[2]), (0, 0, 0.019))
+    return M
+
+
+def arm_T(side, q, tool=TOOL):
+    M = np.eye(4)
+    for (p, R, ax), qi in zip(CHAIN[side], q):
+        M = M @ T(R, p) @ T(AX[ax](qi))
+    return M @ T(np.eye(3), tool)
+
+
+def pelvis_T(ld):
+    x, y, z, yaw = ld[21:25]
+    return T(rz(yaw), (x, y, z))
+
+
+def torso_world(ld):
+    return pelvis_T(ld) @ torso_T(ld[0:3])
+
+
+def arm_q(ld, side):
+    return np.array(ld[3:10] if side == 'l' else ld[12:19], dtype=float)
+
+
+def solve(side, pos, xdir, zdir, q0, tool=TOOL, wori=0.3, wreg=0.05, qnom=None, lock=None):
+    """IK in torso frame: tool point at pos, tool x along xdir, tool z near zdir.
+
+    lock: dict joint index -> fixed value.
+    """
+    lo, hi = limits(side)
+    q0 = np.clip(np.asarray(q0, float), lo + 1e-4, hi - 1e-4)
+    full = q0.copy()
+    free = np.arange(7)
+    if lock:
+        for i, v in lock.items():
+            full[i] = v
+        free = np.array([i for i in range(7) if i not in lock])
+    qn = full.copy() if qnom is None else np.asarray(qnom, float)
+    pos = np.asarray(pos, float)
+    xdir = np.asarray(xdir, float)
+    zdir = None if zdir is None else np.asarray(zdir, float)
+
+    def expand(v):
+        q = full.copy()
+        q[free] = v
+        return q
+
+    def r(v):
+        q = expand(v)
+        M = arm_T(side, q, tool)
+        e = [M[:3, 3] - pos, wori * (M[:3, 0] - xdir)]
+        if zdir is not None:
+            e.append(wori * 0.5 * (M[:3, 2] - zdir))
+        e.append(wreg * (q - qn)[free])
+        return np.concatenate(e)
+
+    s = least_squares(r, full[free], bounds=(lo[free], hi[free]), xtol=1e-6, ftol=1e-6)
+    q = expand(s.x)
+    M = arm_T(side, q, tool)
+    return q, float(np.linalg.norm(M[:3, 3] - pos))
+
+
+def world_to_torso(ld, p=None, d=None):
+    Tw = torso_world(ld)
+    R, t = Tw[:3, :3], Tw[:3, 3]
+    if p is not None:
+        return R.T @ (np.asarray(p) - t)
+    return R.T @ np.asarray(d)
+
+# ──────── vision.py ────────
+
+"""Colour segmentation helpers for the mug task (hand-written thresholds)."""
+import numpy as np
+import cv2
+
+
+def mug_mask(im):
+    im = im.astype(np.int16)
+    r, g, b = im[..., 0], im[..., 1], im[..., 2]
+    v = im.max(-1)
+    grey = (np.abs(r - b) < 14) & (np.abs(r - g) < 10) & (v > 70) & (v < 246)
+    m = grey.astype(np.uint8)
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
+    return m
+
+
+def stick_mask(im):
+    im = im.astype(np.int16)
+    r, g, b = im[..., 0], im[..., 1], im[..., 2]
+    v = im.max(-1)
+    return ((r - b > 22) & (r - b < 90) & (v > 80) & (v < 180) & (r >= g)).astype(np.uint8)
+
+
+def blobs(mask, min_area=20):
+    n, lab, stats, cent = cv2.connectedComponentsWithStats(mask, 8)
+    out = []
+    for i in range(1, n):
+        x, y, w, h, a = stats[i]
+        if a >= min_area:
+            out.append(dict(label=i, x0=int(x), y0=int(y), x1=int(x + w - 1), y1=int(y + h - 1), area=int(a),
+                            cx=float(cent[i][0]), cy=float(cent[i][1]), mask=(lab == i)))
+    return out
+
+
+def sticks(im, min_area=3):
+    """Handle-shadow blobs: returns list with endpoints."""
+    out = []
+    for s in blobs(stick_mask(im), min_area):
+        if s['area'] > 150:
+            continue
+        ys, xs = np.where(s['mask'])
+        s['pts'] = np.stack([xs, ys], 1).astype(float)
+        out.append(s)
+    return out
+
+
+def mug_blobs_all(im):
+    out = []
+    for b in blobs(mug_mask(im), 60):
+        w = b['x1'] - b['x0'] + 1
+        h = b['y1'] - b['y0'] + 1
+        if b['y1'] >= 80 or w > 45 or b['area'] > 2500:
+            continue
+        if h < 0.8 * w and b['y0'] > 0:
+            continue
+        b['edge'] = b['x0'] == 0 or b['x1'] == 83
+        out.append(b)
+    return out
+
+
+def mug_blobs(im):
+    out = []
+    for b in blobs(mug_mask(im), 60):
+        w = b['x1'] - b['x0'] + 1
+        h = b['y1'] - b['y0'] + 1
+        if b['y1'] >= 80:
+            continue          # cabinet front / things at the bottom edge
+        if w > 45 or b['area'] > 2500:
+            continue
+        if h < 0.8 * w and b['y0'] > 0:
+            continue
+        b['edge'] = b['x0'] == 0 or b['x1'] == 83
+        out.append(b)
+    full = [b for b in out if not b['edge']]
+    return full if full else out
+
+
+def handle_foot(im, pick='left'):
+    """Image point of the far end of the handle shadow of the chosen mug (u, v) or None."""
+    mugs = mug_blobs(im)
+    if not mugs:
+        return None
+    if pick == 'left':
+        mugs.sort(key=lambda b: b['cx'])
+    elif pick == 'right':
+        mugs.sort(key=lambda b: -b['cx'])
+    else:
+        mugs.sort(key=lambda b: abs(b['cx'] - 42))
+    ss = sticks(im, 3)
+    for mb in mugs:
+        grown = cv2.dilate(mb['mask'].astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
+        mk = mb['mask']
+        rows = np.where(mk.any(1))[0]
+        y1 = rows[-1]
+        hb = max(2, int(0.2 * (y1 - rows[0] + 1)))
+        cols = np.where(mk[y1 - hb + 1:y1 + 1].any(0))[0]
+        c = np.array([0.5 * (cols[0] + cols[-1]), float(y1)])
+        best = None
+        for s in ss:
+            if not (grown & s['mask']).any():
+                continue
+            if best is None or s['area'] > best['area']:
+                best = s
+        if best is None:
+            continue
+        d = np.linalg.norm(best['pts'] - c, axis=1)
+        p = best['pts'][int(np.argmax(d))]
+        return (float(p[0]), float(p[1]), c[0], c[1])
+    return None
+
+
+def mug_obs(im, pick='left', near=None):
+    """Body bottom-centre (uc, vb), body width w, handle-shadow start column us (or None).
+
+    near: image column of the mug tracked so far; the blob closest to it is used.
+    """
+    mugs = mug_blobs_all(im) if (near is not None or pick == 'big') else mug_blobs(im)
+    if not mugs:
+        return None
+    if near is not None:
+        mb = min(mugs, key=lambda b: abs(b['cx'] - near))
+        if abs(mb['cx'] - near) > 25:
+            return None
+    elif pick == 'big':
+        mb = max(mugs, key=lambda b: b['area'])
+    elif pick == 'left':
+        mb = min(mugs, key=lambda b: b['cx'])
+    elif pick == 'right':
+        mb = max(mugs, key=lambda b: b['cx'])
+    else:
+        mb = min(mugs, key=lambda b: abs(b['cx'] - 42))
+    mk = mb['mask']
+    rows = np.where(mk.any(1))[0]
+    y0, y1 = rows[0], rows[-1]
+    hb = max(2, int(0.15 * (y1 - y0 + 1)))
+    cols = np.where(mk[y1 - hb + 1:y1 + 1].any(0))[0]
+    uc = 0.5 * (cols[0] + cols[-1])
+    w = float(cols[-1] - cols[0] + 1)
+    # body bottom row at the centre column
+    cc = int(round(uc))
+    colr = np.where(mk[:, cc])[0]
+    vb = float(colr[-1]) if len(colr) else float(y1)
+    grown = cv2.dilate(mk.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
+    best = None
+    for s in sticks(im, 3):
+        if not (grown & s['mask']).any():
+            continue
+        if best is None or s['area'] > best['area']:
+            best = s
+    us = vs = None
+    if best is not None:
+        d = np.abs(best['pts'][:, 0] - uc) + np.abs(best['pts'][:, 1] - vb)
+        near = best['pts'][d <= d.min() + 1.5]
+        us, vs = float(near[:, 0].mean()), float(near[:, 1].mean())
+        if abs(us - uc) > 1.3 * max(w, 8) or abs(vs - vb) > 6:
+            us = vs = None
+    touch = mb['x0'] == 0 or mb['x1'] == 83
+    # handle protruding past the body outline (sideways handle)
+    protL = protR = 0.0
+    edgeL, edgeR = float(cols[0]), float(cols[-1])
+    if y0 > 0 and y1 - y0 >= 10:
+        top = [np.where(mk[r])[0] for r in range(y0 + 1, y0 + 4)]
+        top = [c for c in top if len(c)]
+        if top:
+            xl = max(c[0] for c in top)
+            xr = min(c[-1] for c in top)
+            for r in range(y0 + 4, y1 + 1):
+                c = np.where(mk[r])[0]
+                if len(c):
+                    if xl - c[0] > protL:
+                        protL, edgeL = float(xl - c[0]), float(c[0])
+                    if c[-1] - xr > protR:
+                        protR, edgeR = float(c[-1] - xr), float(c[-1])
+    return dict(uc=uc, vb=vb, w=w, us=us, vs=vs, y0=int(y0), touch=touch, cx=float(mb['cx']),
+                protL=float(protL), protR=float(protR), edgeL=edgeL, edgeR=edgeR)
+
+
+def side_edges(im, pick, near=None):
+    """Leftmost / rightmost silhouette column of the chosen mug above its bottom rows."""
+    mugs = mug_blobs_all(im) if near is not None else mug_blobs(im)
+    if not mugs:
+        return None
+    if near is not None:
+        mb = min(mugs, key=lambda b: abs(b['cx'] - near))
+    elif pick == 'left':
+        mb = min(mugs, key=lambda b: b['cx'])
+    elif pick == 'right':
+        mb = max(mugs, key=lambda b: b['cx'])
+    else:
+        mb = min(mugs, key=lambda b: abs(b['cx'] - 42))
+    mk = mb['mask']
+    rows = np.where(mk.any(1))[0]
+    y0, y1 = rows[0], rows[-1]
+    sub = mk[y0:max(y0 + 1, y1 - int(0.12 * (y1 - y0)))]
+    cols = np.where(sub.any(0))[0]
+    return float(cols[0]), float(cols[-1])
+
+
+def handle_bar(f):
+    """(column of the handle's outer bar, sin of handle direction; + = toward image left)."""
+    w = f['w']
+    if f['protL'] >= 3 and f['protL'] >= f['protR'] + 2:
+        return f['edgeL'] + 1.5, float(np.clip((0.5 * w + f['protL']) / (0.94 * w), 0.4, 1.0))
+    if f['protR'] >= 3 and f['protR'] >= f['protL'] + 2:
+        return f['edgeR'] - 1.5, -float(np.clip((0.5 * w + f['protR']) / (0.94 * w), 0.4, 1.0))
+    s = 0.0
+    if f['us'] is not None:
+        s = float(np.clip((f['uc'] - f['us']) / (0.5 * w), -0.4, 0.4))
+    return f['uc'] - s * 0.94 * w, s
+
+
+def mug_handle(im, pick='left', ratio=1.6):
+    """Mug body + handle estimate.
+
+    Returns dict(uc, vb, w, uh, side, psi) where uh is the image column of the
+    handle's outer bar and psi the handle yaw relative to the camera (+ = handle
+    toward image right).
+    """
+    mugs = mug_blobs(im)
+    if not mugs:
+        return None
+    if pick == 'left':
+        mb = min(mugs, key=lambda b: b['cx'])
+    elif pick == 'right':
+        mb = max(mugs, key=lambda b: b['cx'])
+    else:
+        mb = min(mugs, key=lambda b: abs(b['cx'] - 42))
+    mk = mb['mask'].copy()
+    # fill enclosed highlights (handle shine) : holes inside the blob
+    filled = mk.astype(np.uint8).copy()
+    h, w_ = filled.shape
+    ff = np.zeros((h + 2, w_ + 2), np.uint8)
+    inv = (1 - filled).astype(np.uint8)
+    cv2.floodFill(inv, ff, (0, h - 1), 0)
+    holes = inv > 0
+    full = mk | holes
+    rows = np.where(full.any(1))[0]
+    y0, y1 = int(rows[0]), int(rows[-1])
+    H = y1 - y0 + 1
+    L = np.array([np.where(full[r])[0][0] if full[r].any() else -1 for r in range(84)], float)
+    R = np.array([np.where(full[r])[0][-1] if full[r].any() else -1 for r in range(84)], float)
+    nb = max(2, int(0.12 * H))
+    bot = list(range(y1 - nb + 1, y1 + 1))
+    top = [r for r in range(y0, y0 + nb) if y0 > 0]
+    fitrows = bot + top
+    fr = np.array(fitrows, float)
+    if len(top) >= 2:
+        pl = np.polyfit(fr, L[fitrows], 1); pr = np.polyfit(fr, R[fitrows], 1)
+    else:
+        pl = np.array([0.0, np.median(L[bot])]); pr = np.array([0.0, np.median(R[bot])])
+    mid = [r for r in range(y0 + nb, y1 - nb + 1)]
+    uc = 0.5 * (np.median(L[bot]) + np.median(R[bot]))
+    wb = float(np.median(R[bot]) - np.median(L[bot]) + 1)
+    cc = int(round(uc))
+    colr = np.where(mk[:, cc])[0]
+    vb = float(colr[-1]) if len(colr) else float(y1)
+    protL = protR = 0.0
+    rl = rr = None
+    for r in mid:
+        dl = np.polyval(pl, r) - L[r]
+        dr = R[r] - np.polyval(pr, r)
+        if dl > protL:
+            protL, rl = dl, r
+        if dr > protR:
+            protR, rr = dr, r
+    touchL = mb['x0'] == 0
+    touchR = mb['x1'] == 83
+    side = 0
+    if protL > 2.5 and protL >= protR and not touchL:
+        side = -1
+        uh = L[rl] + 1.0
+    elif protR > 2.5 and not touchR:
+        side = 1
+        uh = R[rr] - 1.0
+    else:
+        hm = holes.copy()
+        hm[:y0 + nb] = False
+        hm[y1 - nb + 1:] = False
+        ys, xs = np.where(hm)
+        uh = float(xs.mean()) if len(xs) >= 2 else uc
+    s = (uh - uc) / (ratio * wb / 2)
+    psi = float(np.arcsin(np.clip(s, -1, 1)))
+    return dict(uc=float(uc), vb=vb, w=wb, uh=float(uh), side=side, psi=psi,
+                protL=float(protL), protR=float(protR), y0=y0, y1=y1,
+                touch=bool(touchL or touchR))
+
+
+def mug_features(im, pick='left'):
+    """Find mug blobs; return features of the chosen one (leftmost/rightmost/center)."""
+    m = mug_mask(im)
+    cands = []
+    for b in blobs(m, 40):
+        w = b['x1'] - b['x0'] + 1
+        if b['y1'] >= 82 and w > 50:
+            continue
+        cands.append(b)
+    if not cands:
+        return None
+    if pick == 'left':
+        b = min(cands, key=lambda b: b['cx'])
+    elif pick == 'right':
+        b = max(cands, key=lambda b: b['cx'])
+    else:
+        b = min(cands, key=lambda b: abs(b['cx'] - 42) + abs(b['cy'] - 42))
+    mk = b['mask']
+    rows = np.where(mk.any(1))[0]
+    y0, y1 = rows[0], rows[-1]
+    hb = max(2, int(0.2 * (y1 - y0 + 1)))
+    lo = mk[y1 - hb + 1:y1 + 1]
+    cols = np.where(lo.any(0))[0]
+    xl, xr = cols[0], cols[-1]
+    f = dict(x0=b['x0'], x1=b['x1'], y0=int(y0), y1=int(y1), xl=int(xl), xr=int(xr),
+             uc=0.5 * (xl + xr), w=float(xr - xl + 1), area=b['area'], cx=b['cx'], cy=b['cy'])
+    sm = stick_mask(im)
+    best = None
+    for s in blobs(sm, 2):
+        if s['y0'] >= y1 - 6 and s['y0'] <= y1 + 4 and s['x0'] >= b['x0'] - 4 and s['x1'] <= b['x1'] + 4 and s['area'] < 80:
+            if best is None or s['area'] > best['area']:
+                best = s
+    if best is not None:
+        top = best['mask'][best['y0']]
+        f['uh'] = float(np.mean(np.where(top)[0]))
+        f['vh'] = float(best['y0'])
+    return f

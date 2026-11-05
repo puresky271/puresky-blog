@@ -1,0 +1,495 @@
+"""Open the top drawer: walk to a fixed pose relative to the handle seen by the
+head camera, grasp the handle with the left gripper (fingers vertical), pull."""
+
+import numpy as np
+from scipy import ndimage
+
+from headcam import on_plane_z, project
+from kin import fk, ik
+
+TUCK_L = np.array([0.2, 0.25, 0.0, 1.3, 0.0, 0.0, 0.0])  # arms down, out of the head view
+TUCK_R = np.array([0.2, -0.25, 0.0, 1.3, 0.0, 0.0, 0.0])
+RT = np.array([[1.0, 0, 0], [0, 0, -1.0], [0, 1.0, 0]])  # gripper forward, fingers vertical
+
+P = dict(
+    ZH=-0.02,  # handle height in the pelvis frame
+    HX=0.31,  # desired handle position in the pelvis frame after walking
+    HY=0.13,
+    PRE=0.06,
+    WALK_TOL=0.04,
+    KI=0.05,  # pre-grasp stand-off
+    PULL_T=150.0,
+    HOOK=0.4,
+    PULL_D=0.12,
+    BACK_T=500,
+    BACK_D=0.30,
+    VBACK=-0.1,
+    EMPTY=-0.017,
+    RETRIES=2,
+    RETRY_D=0.18,
+    DX=0.10,  # max grasp depth offset past the detected handle
+    DZ=0.005,
+    DY=-0.06,
+    ADV=0.0015,  # approach speed per step
+    LAG=0.015,  # contact: commanded minus measured hand x
+    BACKOFF=0.01,
+    KZ=0.2 / 537.0,
+    CT=43.0,
+    KY=0.0002,
+    BOT=75,
+    TOP=8,
+)
+
+
+def wood_edge(im):
+    """Bottom edge of the wooden counter front: v = m*u + b, or None."""
+    g = im.astype(float)
+    wood = (g[..., 0] - g[..., 2]) > 30
+    us, vs = [], []
+    for u in range(8, 76):
+        rows = np.nonzero(wood[0:40, u])[0]
+        if len(rows):
+            r = rows[0]
+            while r + 1 < 40 and wood[r + 1, u]:
+                r += 1
+            us.append(u)
+            vs.append(r + 0.5)
+    if len(us) < 20:
+        return None
+    us = np.array(us, float)
+    vs = np.array(vs)
+    A = np.stack([us, np.ones_like(us)], 1)
+    m, b = np.linalg.lstsq(A, vs, rcond=None)[0]
+    for _ in range(2):
+        keep = np.abs(vs - (m * us + b)) < 1.2
+        if keep.sum() < 10:
+            break
+        m, b = np.linalg.lstsq(A[keep], vs[keep], rcond=None)[0]
+    return m, b
+
+
+def detect_handle(im, pred=None):
+    """Top drawer handle in the head image: topmost dark horizontal bar below the counter."""
+    g = im.astype(float).mean(axis=2)
+    # thin dark horizontal line: darker than the pixels a few rows above and below
+    d = np.zeros_like(g)
+    for k in (1, 2, 3):
+        up = np.full_like(g, 0.0)
+        dn = np.full_like(g, 0.0)
+        up[k:] = g[:-k]
+        dn[:-k] = g[k:]
+        d = np.maximum(d, np.minimum(up, dn) - g)
+    dark = (d > 25) & (g < 112)
+    loose = (d > 12) & (g < 132)
+    edge = wood_edge(im)
+    vv = np.arange(84)[:, None]
+    uu = np.arange(84)[None, :]
+    if edge is not None:
+        dark &= vv > edge[0] * uu + edge[1] + 3
+    else:
+        dark[:8] = False
+    dark[60:] = False
+    dark[:, :10] = False
+    dark[:, 74:] = False
+    # horizontal runs of dark-line pixels, 6..30 px long, containing a dark core
+    runs = []
+    for r in range(84):
+        row = dark[r]
+        u = 0
+        while u < 84:
+            if row[u]:
+                s = u
+                while u < 84 and row[u]:
+                    u += 1
+                if 5 <= u - s <= 30:
+                    # extend over the lighter ends of the bar
+                    s0, u0 = s, u
+                    while s > 0 and loose[r, s - 1] and s0 - s < 5:
+                        s -= 1
+                    while u < 84 and loose[r, u] and u - u0 < 5:
+                        u += 1
+                    runs.append((r, s, u))
+            else:
+                u += 1
+    best = None
+    for r, s, e in runs:
+        if True:
+            c = ((s + e - 1) / 2.0, float(r), e - s)
+            if pred is not None:
+                d = np.hypot(c[0] - pred[0], c[1] - pred[1])
+                if d > 8:
+                    continue
+                key = d
+            else:
+                key = c[1]
+            if best is None or key < best[0]:
+                best = (key, c)
+    return None if best is None else best[1]
+
+
+def detect_bar(im):
+    """Handle bar in the left wrist image (gripper rolled 90 deg: the bar is a
+    vertical uniform-grey band). Returns (column centre, width, top row, bottom row)."""
+    g = im.astype(float).mean(axis=2)
+    mask = (g >= 86) & (g <= 106)
+    mask = ndimage.binary_opening(mask, np.ones((1, 3)))
+    lab, n = ndimage.label(mask)
+    best = None
+    for i in range(1, n + 1):
+        ys, xs = np.nonzero(lab == i)
+        if ys.max() - ys.min() < 12 or len(ys) < 60:
+            continue
+        if best is None or len(ys) > best[0]:
+            best = (len(ys), ys, xs)
+    if best is None:
+        return None
+    _, ys, xs = best
+    near = np.abs(ys - 42) <= 10
+    c = xs[near].mean() if near.sum() >= 10 else xs.mean()
+    rows, counts = np.unique(ys, return_counts=True)
+    w = float(np.median(counts))
+    return float(c), w, int(ys.min()), int(ys.max())
+
+
+def to_world(p, pel):
+    x, y, yaw = pel
+    c, s = np.cos(yaw), np.sin(yaw)
+    return np.array([x + c * p[0] - s * p[1], y + s * p[0] + c * p[1], p[2]])
+
+
+def to_body(pw, pel):
+    x, y, yaw = pel
+    c, s = np.cos(yaw), np.sin(yaw)
+    dx, dy = pw[0] - x, pw[1] - y
+    return np.array([c * dx + s * dy, -s * dx + c * dy, pw[2]])
+
+
+class Policy:
+    def reset(self, obs, tools):
+        self.hold = np.asarray(tools.hold_action(), dtype=np.float32)
+        self.phase = "settle"
+        self.t_phase = 0
+        self.meas = []
+        self.handle_w = None
+        self.q_left = np.zeros(7)
+        self.grip = 0.6
+        self.dbg = ""
+        self.n_walk = 0
+        self.hist = []
+        self.qi = np.zeros(7)
+        self.bar = None
+        self.off = np.zeros(3)
+        self.n_lag = 0
+        self.n_empty = 0
+        self.retries = 0
+
+    def pel(self, obs):
+        lo = obs["low_dim_obs"]
+        return np.array([lo[18], lo[19], lo[21]])
+
+    def measure(self, obs, tools):
+        pred = None
+        if self.handle_w is not None:
+            pred = project(to_body(self.handle_w, self.pel(obs)))
+        det = detect_handle(tools.image("head"), pred)
+        if det is None:
+            return None
+        u, v, w = det
+        pb = on_plane_z(u, v, P["ZH"])
+        return to_world(pb, self.pel(obs))
+
+    def walk_err(self, pel):
+        """Body-frame error to the stance with yaw 0 and the handle at (HX, HY)."""
+        goal = self.handle_w[:2] - np.array([P["HX"], P["HY"]])
+        ew = goal - pel[:2]
+        c, s = np.cos(pel[2]), np.sin(pel[2])
+        eb = np.array([c * ew[0] + s * ew[1], -s * ew[0] + c * ew[1]])
+        return eb, np.linalg.norm(eb)
+
+    def servo(self, tools):
+        """Centre the handle bar between the fingers using the left wrist camera."""
+        self.bar = detect_bar(tools.image("left_wrist"))
+        if self.bar is None:
+            return
+        c, w, top, bot = self.bar
+        if w > 22 or bot - top < 15:
+            self.bar = None
+            return
+        self.off[2] -= np.clip(P["KZ"] * (c - P["CT"]), -0.0015, 0.0015)
+        # image up = world right (-y): centre the visible part of the bar vertically
+        mid = (min(bot, 80) + max(top, 3)) / 2.0
+        self.off[1] -= np.clip(P["KY"] * (41.5 - mid), -0.0015, 0.0015)
+        self.off[1:] = np.clip(self.off[1:], [-0.12, -0.08], [0.08, 0.08])
+
+    def empty(self, obs):
+        """Fingers closed on nothing (they stop near -0.012 on the handle)."""
+        return float(np.mean(obs["low_dim_obs"][7:9])) < P["EMPTY"]
+
+    def hand_now(self):
+        p, _ = fk(self.q_left, "left")
+        return p
+
+    def goto(self, name):
+        self.phase = name
+        self.t_phase = 0
+
+    def arm(self, target, q0=None, pitch=0.0):
+        c, s = np.cos(pitch), np.sin(pitch)
+        Ry = np.array([[c, 0, s], [0, 1.0, 0], [-s, 0, c]])
+        q, _ = ik(np.asarray(target, float), Ry @ RT, "left", q0=self.q_left if q0 is None else q0)
+        self.q_left = q
+        return q
+
+    def act(self, obs, tools):
+        a = self.hold.copy()
+        pel = self.pel(obs)
+        self.t_phase += 1
+        tp = self.t_phase
+
+        if self.phase in ("settle", "walk", "measure"):
+            a[4:11] = TUCK_L
+            a[11:18] = TUCK_R
+        if self.phase == "settle":
+            if tp > 30:
+                m = self.measure(obs, tools)
+                if m is not None:
+                    self.meas.append(m)
+            if tp >= 40:
+                if not self.meas:
+                    self.dbg = "no handle"
+                    return a
+                self.handle_w = np.median(np.array(self.meas), axis=0)
+                self.meas = []
+                self.goto("walk")
+        elif self.phase == "walk":
+            eb, dist = self.walk_err(pel)
+            a[3] = np.clip(-1.5 * pel[2], -0.3, 0.3)
+            if dist > 0.012:
+                v = eb * np.clip(1.5 * dist, 0.07, 0.2) / dist
+                a[0], a[1] = v
+            self.dbg = f"eb={np.round(eb,3)}"
+            if (dist < 0.012 and abs(pel[2]) < 0.02) or tp > 300:
+                self.goto("measure")
+        elif self.phase == "measure":
+            if tp > 25:
+                m = self.measure(obs, tools)
+                if m is not None:
+                    self.meas.append(m)
+            if tp >= 40:
+                if self.meas:
+                    self.handle_w = np.median(np.array(self.meas), axis=0)
+                self.meas = []
+                self.n_walk += 1
+                eb, dist = self.walk_err(pel)
+                self.hist.append(np.round(eb, 3).tolist())
+                if dist > P["WALK_TOL"] and self.n_walk < 3:
+                    self.goto("walk")
+                else:
+                    self.q_left = np.zeros(7)
+                    self.goto("pregrasp")
+        else:
+            hb = to_body(self.handle_w, pel)
+            self.dbg = f"hb={np.round(hb,3)}"
+            if self.phase == "pregrasp":
+                if tp == 1:
+                    self.off = np.array([-P["PRE"], P["DY"], P["DZ"]])
+                self.grip = 0.0
+                if tp > 35:
+                    self.servo(tools)
+                self.arm(hb + self.off)
+                if tp >= 60:
+                    self.goto("approach")
+            elif self.phase == "approach":
+                self.servo(tools)
+                self.off[0] += P["ADV"]
+                self.arm(hb + self.off)
+                pm, _ = fk(obs["low_dim_obs"][0:7], "left")
+                pc, _ = fk(self.q_left, "left")
+                lag = pc[0] - pm[0]
+                if tp == 1:
+                    self.pel_app = pel.copy()
+                retreat = to_body(np.r_[self.pel_app[:2], 0.0], pel)[0]
+                lag = max(lag, retreat)
+                self.dbg = f"off={np.round(self.off,3)} lag={lag:.3f} bar={self.bar}"
+                self.n_lag = self.n_lag + 1 if (tp > 20 and lag > P["LAG"]) else 0
+                if self.n_lag >= 5 or self.off[0] > P["DX"]:
+                    self.off[0] -= P["BACKOFF"]
+                    self.tgt_fix = hb + self.off
+                    self.grasp_w = to_world(self.tgt_fix, pel)
+                    self.hist.append(("grasp", np.round(self.off, 3).tolist(), round(float(lag), 3)))
+                    self.goto("close")
+            elif self.phase == "close":
+                self.arm(self.tgt_fix)
+                self.grip = 1.0
+                if tp >= 30:
+                    self.back0 = pel.copy()
+                    if self.empty(obs) and self.retries < P["RETRIES"]:
+                        self.goto("lost")
+                    else:
+                        self.goto("pull")
+            elif self.phase == "lost":
+                # missed or dropped the handle: open, back the hand off, start over
+                self.grip = 0.0
+                self.arm(self.tgt_fix - np.array([0.10 * min(1.0, tp / 30.0), 0, 0]))
+                if tp >= 40:
+                    self.retries += 1
+                    self.hist.append(("retry", int(obs["t"])))
+                    self.handle_w = None
+                    self.meas = []
+                    self.n_walk = 0
+                    self.qi = np.zeros(7)
+                    self.n_empty = 0
+                    self.goto("settle")
+            elif self.phase == "pull":
+                # retract the arm while stepping backwards
+                fp = min(1.0, tp / 20.0)
+                f = min(1.0, max(0.0, tp - 20) / P["PULL_T"])
+                # keep the hand's lateral world position on the bar while the body drifts
+                tb = to_body(self.grasp_w, pel)
+                tgt = np.array([self.tgt_fix[0] - P["PULL_D"] * f, tb[1], self.tgt_fix[2]])
+                self.arm(tgt, pitch=P["HOOK"] * fp)
+                self.grip = 1.0
+                moved = np.hypot(*(pel[:2] - self.back0[:2]))
+                self.dbg = f"moved={moved:.3f}"
+                if tp > 20 and tp < P["BACK_T"] and moved < P["BACK_D"]:
+                    a[0] = P["VBACK"]
+                    ey = to_body(np.r_[self.back0[:2], 0.0], pel)[1]
+                    if abs(ey) > 0.01:
+                        a[1] = np.clip(1.5 * ey, -0.1, 0.1)
+                    a[3] = np.clip(-1.0 * pel[2], -0.2, 0.2)
+                self.n_empty = self.n_empty + 1 if self.empty(obs) else 0
+                if self.n_empty >= 10:
+                    if moved < P["RETRY_D"] and self.retries < P["RETRIES"]:
+                        self.tgt_fix = self.hand_now()
+                        self.goto("lost")
+                    else:
+                        # drawer pulled out to its stop: stand still
+                        self.goto("done")
+            elif self.phase == "done":
+                self.grip = 0.0
+            if self.phase in ("pregrasp", "approach"):
+                # integral action against gravity sag of the position-controlled arm
+                qm = obs["low_dim_obs"][0:7]
+                self.qi = np.clip(self.qi + P["KI"] * (self.q_left - qm), -0.1, 0.1)
+            a[4:11] = self.q_left + self.qi
+            a[11:18] = TUCK_R
+        a[18] = self.grip
+        return a
+
+# ──────── headcam.py ────────
+
+"""Head camera model (pelvis frame), calibrated from the left gripper seen at known arm poses."""
+import numpy as np
+
+# camera centre (pelvis frame), camera axes as columns (x right, y down, z optical), focal px
+CAM_C = np.array([0.1379, 0.0027, 0.3873])
+CAM_R = np.array([[0.0242, -0.9044, 0.426],
+                  [-0.9997, -0.0215, 0.0113],
+                  [-0.001, -0.4261, -0.9047]])
+CAM_F = 70.59
+
+
+def ray(u, v):
+    """Unit ray (pelvis frame) through pixel (u, v) of the 84x84 head image."""
+    d = CAM_R @ np.array([(u - 42.0) / CAM_F, (v - 42.0) / CAM_F, 1.0])
+    return d / np.linalg.norm(d)
+
+
+def project(p):
+    pc = CAM_R.T @ (np.asarray(p) - CAM_C)
+    return np.array([42 + CAM_F * pc[0] / pc[2], 42 + CAM_F * pc[1] / pc[2]])
+
+
+def on_plane_z(u, v, z):
+    """Point on the ray through (u,v) at pelvis-frame height z."""
+    d = ray(u, v)
+    t = (z - CAM_C[2]) / d[2]
+    return CAM_C + t * d
+
+
+def on_plane_x(u, v, x):
+    d = ray(u, v)
+    t = (x - CAM_C[0]) / d[0]
+    return CAM_C + t * d
+
+# ──────── kin.py ────────
+
+"""Approximate G1 arm kinematics (pelvis frame: x forward, y left, z up)."""
+import numpy as np
+from scipy.optimize import least_squares
+
+
+def _rx(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+
+def _ry(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+
+def _rz(a):
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def _rpy(r, p, y):
+    return _rz(y) @ _ry(p) @ _rx(r)
+
+
+LO = np.array([-3.0892, -1.5882, -2.618, -1.0472, -1.97222, -1.61443, -1.61443])
+HI = np.array([2.6704, 2.2515, 2.618, 2.0944, 1.97222, 1.61443, 1.61443])
+TORSO = np.array([-0.0039635, 0.0, 0.054])
+HAND = 0.12  # wrist-yaw joint to grasp centre (guess)
+
+
+def fk(q, side="left", hand=HAND):
+    """Return (position, rotation) of the grasp point in the pelvis frame."""
+    s = 1.0 if side == "left" else -1.0
+    lo, hi = (LO, HI) if side == "left" else (np.array([LO[0], -HI[1], LO[2], LO[3], LO[4], LO[5], LO[6]]), None)
+    p = TORSO.copy()
+    R = np.eye(3)
+
+    def step(t, Rj):
+        nonlocal p, R
+        p = p + R @ np.asarray(t)
+        R = R @ Rj
+
+    step([0.0039563, s * 0.10022, 0.23778], _rpy(s * 0.27931, 5.4949e-05, -s * 0.00019159) @ _ry(q[0]))
+    step([0, s * 0.038, -0.013831], _rx(-s * 0.27925) @ _rx(q[1]))
+    step([0, s * 0.00624, -0.1032], _rz(q[2]))
+    step([0.015783, 0, -0.080518], _ry(q[3]))
+    step([0.100, s * 0.00188791, -0.010], _rx(q[4]))
+    step([0.038, 0, 0], _ry(q[5]))
+    step([0.046, 0, 0], _rz(q[6]))
+    return p + R @ np.array([hand, 0, 0]), R
+
+
+def limits(side):
+    # shoulder roll limited so the upper arm does not hit the torso
+    if side == "left":
+        lo = LO.copy()
+        lo[1] = 0.02
+        return lo, HI
+    # right arm: roll/yaw limits mirrored
+    lo = np.array([-3.0892, -2.2515, -2.618, -1.0472, -1.97222, -1.61443, -1.61443])
+    hi = np.array([2.6704, -0.02, 2.618, 2.0944, 1.97222, 1.61443, 1.61443])
+    return lo, hi
+
+
+def ik(target_p, target_R=None, side="left", q0=None, hand=HAND, w_rot=0.3, reg=0.01, q_ref=None):
+    lo, hi = limits(side)
+    q0 = np.zeros(7) if q0 is None else np.asarray(q0, float)
+    q_ref = q0 if q_ref is None else q_ref
+
+    def res(q):
+        p, R = fk(q, side, hand)
+        r = [p - target_p]
+        if target_R is not None:
+            r.append(w_rot * (R - target_R).ravel())
+        r.append(reg * (q - q_ref))
+        return np.concatenate(r)
+
+    sol = least_squares(res, np.clip(q0, lo + 1e-3, hi - 1e-3), bounds=(lo, hi))
+    return sol.x, sol

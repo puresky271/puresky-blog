@@ -1,0 +1,753 @@
+{
+ "sets": [
+  {
+   "id": "all",
+   "label": "20 tasks",
+   "lede": "all 20 tasks",
+   "pressed": "false"
+  },
+  {
+   "id": "core",
+   "label": "9 core",
+   "lede": "the 9 core tasks",
+   "pressed": "true"
+  },
+  {
+   "id": "ext",
+   "label": "11 extended",
+   "lede": "the 11 extended tasks",
+   "pressed": "false"
+  }
+ ],
+ "views": {
+  "all": {
+   "chartStyle": "--n: 9",
+   "ticks": [
+    {
+     "bottom": "bottom: 0%",
+     "label": "0%"
+    },
+    {
+     "bottom": "bottom: 33.33333333333333%",
+     "label": "20%"
+    },
+    {
+     "bottom": "bottom: 66.66666666666666%",
+     "label": "40%"
+    },
+    {
+     "bottom": "bottom: 100%",
+     "label": "60%"
+    }
+   ],
+   "bars": [
+    {
+     "key": "opus",
+     "aria": "Claude Opus 5.5 (high): 51.9%",
+     "style": "--c: var(--series-opus); --h: 86.5%",
+     "short": false,
+     "name": "Claude Opus 5.5",
+     "kind": "Claude Code",
+     "value": "51.9"
+    },
+    {
+     "key": "astra",
+     "aria": "GPT-6 Astra (high): 46.5%",
+     "style": "--c: var(--series-astra); --h: 77.55583333333331%",
+     "short": false,
+     "name": "GPT-6 Astra",
+     "kind": "Codex CLI",
+     "value": "46.5"
+    },
+    {
+     "key": "sol61",
+     "aria": "GPT-6.1 Sol (high): 35.7%",
+     "style": "--c: var(--series-sol61); --h: 59.52916666666667%",
+     "short": false,
+     "name": "GPT-6.1 Sol",
+     "kind": "Codex CLI",
+     "value": "35.7"
+    },
+    {
+     "key": "terra",
+     "aria": "GPT-6.1 Terra (max): 32.9%",
+     "style": "--c: var(--series-terra); --h: 54.75166666666668%",
+     "short": false,
+     "name": "GPT-6.1 Terra",
+     "kind": "Codex CLI",
+     "value": "32.9"
+    },
+    {
+     "key": "sol",
+     "aria": "GPT-6 Sol (high): 20.5%",
+     "style": "--c: var(--series-sol); --h: 34.19416666666667%",
+     "short": false,
+     "name": "GPT-6 Sol",
+     "kind": "Codex CLI",
+     "value": "20.5"
+    },
+    {
+     "key": "kimi",
+     "aria": "Kimi K3.1 Pro (max): 18.4%",
+     "style": "--c: var(--series-kimi); --h: 30.748333333333328%",
+     "short": false,
+     "name": "Kimi K3.1 Pro",
+     "kind": "Claude Code",
+     "value": "18.4"
+    },
+    {
+     "key": "terra",
+     "aria": "GPT-6.1 Terra (high): 17.7%",
+     "style": "--c: var(--series-terra); --h: 29.5%",
+     "short": false,
+     "name": "GPT-6.1 Terra",
+     "kind": "Codex CLI",
+     "value": "17.7"
+    },
+    {
+     "key": "deepseek",
+     "aria": "DeepSeek V4.1 Flash (1017) (max): 10.6%",
+     "style": "--c: var(--series-deepseek); --h: 17.66583333333333%",
+     "short": false,
+     "name": "DeepSeek V4.1 Flash (1017)",
+     "kind": "DeepSeek CLI",
+     "value": "10.6"
+    },
+    {
+     "key": "haiku",
+     "aria": "Claude Haiku 5.5 (max): 5.8%",
+     "style": "--c: var(--series-haiku); --h: 9.611666666666666%",
+     "short": true,
+     "name": "Claude Haiku 5.5",
+     "kind": "Claude Code",
+     "value": "5.8"
+    }
+   ],
+   "names": [
+    {
+     "lines": [
+      "Claude Opus",
+      "5.5"
+     ],
+     "text": "Claude Opus5.5",
+     "effort": "high",
+     "color": "--c: var(--series-opus)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6",
+      "Astra"
+     ],
+     "text": "GPT-6Astra",
+     "effort": "high",
+     "color": "--c: var(--series-astra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Sol"
+     ],
+     "text": "GPT-6.1Sol",
+     "effort": "high",
+     "color": "--c: var(--series-sol61)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Terra"
+     ],
+     "text": "GPT-6.1Terra",
+     "effort": "max",
+     "color": "--c: var(--series-terra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6",
+      "Sol"
+     ],
+     "text": "GPT-6Sol",
+     "effort": "high",
+     "color": "--c: var(--series-sol)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Kimi",
+      "K3.1 Pro"
+     ],
+     "text": "KimiK3.1 Pro",
+     "effort": "max",
+     "color": "--c: var(--series-kimi)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Terra"
+     ],
+     "text": "GPT-6.1Terra",
+     "effort": "high",
+     "color": "--c: var(--series-terra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "DeepSeek",
+      "V4.1 Flash 1017"
+     ],
+     "text": "DeepSeekV4.1 Flash 1017",
+     "effort": "max",
+     "color": "--c: var(--series-deepseek)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Claude Haiku",
+      "5.5"
+     ],
+     "text": "Claude Haiku5.5",
+     "effort": "max",
+     "color": "--c: var(--series-haiku)",
+     "logo": true
+    }
+   ],
+   "leftNote": "Not shown in this view: Claude Sonnet 5.5 at max (9 core tasks only)."
+  },
+  "core": {
+   "chartStyle": "--n: 16",
+   "ticks": [
+    {
+     "bottom": "bottom: 0%",
+     "label": "0%"
+    },
+    {
+     "bottom": "bottom: 20%",
+     "label": "20%"
+    },
+    {
+     "bottom": "bottom: 40%",
+     "label": "40%"
+    },
+    {
+     "bottom": "bottom: 60%",
+     "label": "60%"
+    },
+    {
+     "bottom": "bottom: 80%",
+     "label": "80%"
+    },
+    {
+     "bottom": "bottom: 100%",
+     "label": "100%"
+    }
+   ],
+   "bars": [
+    {
+     "key": "learned",
+     "aria": "π0.5: 75.0%",
+     "style": "--c: var(--bar); --h: 75%",
+     "short": false,
+     "name": "π0.5",
+     "kind": "VLA",
+     "value": "75.0"
+    },
+    {
+     "key": "learned",
+     "aria": "ACT: 68.0%",
+     "style": "--c: var(--bar); --h: 68%",
+     "short": false,
+     "name": "ACT",
+     "kind": "Imitation",
+     "value": "68.0"
+    },
+    {
+     "key": "astra",
+     "aria": "GPT-6 Astra (high): 64.5%",
+     "style": "--c: var(--series-astra); --h: 64.51888888888888%",
+     "short": false,
+     "name": "GPT-6 Astra",
+     "kind": "Codex CLI",
+     "value": "64.5"
+    },
+    {
+     "key": "sonnet",
+     "aria": "Claude Sonnet 5.5 (max): 61.0%",
+     "style": "--c: var(--series-sonnet); --h: 61%",
+     "short": false,
+     "name": "Claude Sonnet 5.5",
+     "kind": "Claude Code",
+     "value": "61.0"
+    },
+    {
+     "key": "opus",
+     "aria": "Claude Opus 5.5 (high): 60.6%",
+     "style": "--c: var(--series-opus); --h: 60.55444444444444%",
+     "short": false,
+     "name": "Claude Opus 5.5",
+     "kind": "Claude Code",
+     "value": "60.6"
+    },
+    {
+     "key": "learned",
+     "aria": "DP: 56.0%",
+     "style": "--c: var(--bar); --h: 56.00000000000001%",
+     "short": false,
+     "name": "DP",
+     "kind": "Imitation",
+     "value": "56.0"
+    },
+    {
+     "key": "learned",
+     "aria": "CQN-AS: 50.0%",
+     "style": "--c: var(--bar); --h: 50%",
+     "short": false,
+     "name": "CQN-AS",
+     "kind": "Demo RL",
+     "value": "50.0"
+    },
+    {
+     "key": "terra",
+     "aria": "GPT-6.1 Terra (max): 49.1%",
+     "style": "--c: var(--series-terra); --h: 49.11222222222222%",
+     "short": false,
+     "name": "GPT-6.1 Terra",
+     "kind": "Codex CLI",
+     "value": "49.1"
+    },
+    {
+     "key": "learned",
+     "aria": "DEAS: 41.0%",
+     "style": "--c: var(--bar); --h: 41%",
+     "short": false,
+     "name": "DEAS",
+     "kind": "Offline RL",
+     "value": "41.0"
+    },
+    {
+     "key": "sol61",
+     "aria": "GPT-6.1 Sol (high): 40.7%",
+     "style": "--c: var(--series-sol61); --h: 40.66777777777778%",
+     "short": false,
+     "name": "GPT-6.1 Sol",
+     "kind": "Codex CLI",
+     "value": "40.7"
+    },
+    {
+     "key": "sol",
+     "aria": "GPT-6 Sol (high): 31.2%",
+     "style": "--c: var(--series-sol); --h: 31.18444444444444%",
+     "short": false,
+     "name": "GPT-6 Sol",
+     "kind": "Codex CLI",
+     "value": "31.2"
+    },
+    {
+     "key": "terra",
+     "aria": "GPT-6.1 Terra (high): 28.6%",
+     "style": "--c: var(--series-terra); --h: 28.63%",
+     "short": false,
+     "name": "GPT-6.1 Terra",
+     "kind": "Codex CLI",
+     "value": "28.6"
+    },
+    {
+     "key": "kimi",
+     "aria": "Kimi K3.1 Pro (max): 21.3%",
+     "style": "--c: var(--series-kimi); --h: 21.257777777777775%",
+     "short": false,
+     "name": "Kimi K3.1 Pro",
+     "kind": "Claude Code",
+     "value": "21.3"
+    },
+    {
+     "key": "deepseek",
+     "aria": "DeepSeek V4.1 Flash (1017) (max): 13.1%",
+     "style": "--c: var(--series-deepseek); --h: 13.147777777777778%",
+     "short": false,
+     "name": "DeepSeek V4.1 Flash (1017)",
+     "kind": "DeepSeek CLI",
+     "value": "13.1"
+    },
+    {
+     "key": "learned",
+     "aria": "DrQ-v2+: 11.0%",
+     "style": "--c: var(--bar); --h: 11%",
+     "short": false,
+     "name": "DrQ-v2+",
+     "kind": "Demo RL",
+     "value": "11.0"
+    },
+    {
+     "key": "haiku",
+     "aria": "Claude Haiku 5.5 (max): 8.3%",
+     "style": "--c: var(--series-haiku); --h: 8.296666666666667%",
+     "short": true,
+     "name": "Claude Haiku 5.5",
+     "kind": "Claude Code",
+     "value": "8.3"
+    }
+   ],
+   "names": [
+    {
+     "lines": [
+      "π0.5"
+     ],
+     "text": "π0.5",
+     "effort": "",
+     "color": "",
+     "logo": false
+    },
+    {
+     "lines": [
+      "ACT"
+     ],
+     "text": "ACT",
+     "effort": "",
+     "color": "",
+     "logo": false
+    },
+    {
+     "lines": [
+      "GPT-6",
+      "Astra"
+     ],
+     "text": "GPT-6Astra",
+     "effort": "high",
+     "color": "--c: var(--series-astra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Claude Sonnet",
+      "5.5"
+     ],
+     "text": "Claude Sonnet5.5",
+     "effort": "max",
+     "color": "--c: var(--series-sonnet)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Claude Opus",
+      "5.5"
+     ],
+     "text": "Claude Opus5.5",
+     "effort": "high",
+     "color": "--c: var(--series-opus)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "DP"
+     ],
+     "text": "DP",
+     "effort": "",
+     "color": "",
+     "logo": false
+    },
+    {
+     "lines": [
+      "CQN-AS"
+     ],
+     "text": "CQN-AS",
+     "effort": "",
+     "color": "",
+     "logo": false
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Terra"
+     ],
+     "text": "GPT-6.1Terra",
+     "effort": "max",
+     "color": "--c: var(--series-terra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "DEAS"
+     ],
+     "text": "DEAS",
+     "effort": "",
+     "color": "",
+     "logo": false
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Sol"
+     ],
+     "text": "GPT-6.1Sol",
+     "effort": "high",
+     "color": "--c: var(--series-sol61)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6",
+      "Sol"
+     ],
+     "text": "GPT-6Sol",
+     "effort": "high",
+     "color": "--c: var(--series-sol)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Terra"
+     ],
+     "text": "GPT-6.1Terra",
+     "effort": "high",
+     "color": "--c: var(--series-terra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Kimi",
+      "K3.1 Pro"
+     ],
+     "text": "KimiK3.1 Pro",
+     "effort": "max",
+     "color": "--c: var(--series-kimi)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "DeepSeek",
+      "V4.1 Flash 1017"
+     ],
+     "text": "DeepSeekV4.1 Flash 1017",
+     "effort": "max",
+     "color": "--c: var(--series-deepseek)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "DrQ-v2+"
+     ],
+     "text": "DrQ-v2+",
+     "effort": "",
+     "color": "",
+     "logo": false
+    },
+    {
+     "lines": [
+      "Claude Haiku",
+      "5.5"
+     ],
+     "text": "Claude Haiku5.5",
+     "effort": "max",
+     "color": "--c: var(--series-haiku)",
+     "logo": true
+    }
+   ],
+   "leftNote": null
+  },
+  "ext": {
+   "chartStyle": "--n: 9",
+   "ticks": [
+    {
+     "bottom": "bottom: 0%",
+     "label": "0%"
+    },
+    {
+     "bottom": "bottom: 33.33333333333333%",
+     "label": "20%"
+    },
+    {
+     "bottom": "bottom: 66.66666666666666%",
+     "label": "40%"
+    },
+    {
+     "bottom": "bottom: 100%",
+     "label": "60%"
+    }
+   ],
+   "bars": [
+    {
+     "key": "opus",
+     "aria": "Claude Opus 5.5 (high): 44.8%",
+     "style": "--c: var(--series-opus); --h: 74.69848484848485%",
+     "short": false,
+     "name": "Claude Opus 5.5",
+     "kind": "Claude Code",
+     "value": "44.8"
+    },
+    {
+     "key": "astra",
+     "aria": "GPT-6 Astra (high): 31.8%",
+     "style": "--c: var(--series-astra); --h: 53.03030303030303%",
+     "short": false,
+     "name": "GPT-6 Astra",
+     "kind": "Codex CLI",
+     "value": "31.8"
+    },
+    {
+     "key": "sol61",
+     "aria": "GPT-6.1 Sol (high): 31.7%",
+     "style": "--c: var(--series-sol61); --h: 52.77878787878788%",
+     "short": false,
+     "name": "GPT-6.1 Sol",
+     "kind": "Codex CLI",
+     "value": "31.7"
+    },
+    {
+     "key": "terra",
+     "aria": "GPT-6.1 Terra (max): 19.5%",
+     "style": "--c: var(--series-terra); --h: 32.57727272727273%",
+     "short": false,
+     "name": "GPT-6.1 Terra",
+     "kind": "Codex CLI",
+     "value": "19.5"
+    },
+    {
+     "key": "kimi",
+     "aria": "Kimi K3.1 Pro (max): 16.2%",
+     "style": "--c: var(--series-kimi); --h: 26.918181818181818%",
+     "short": false,
+     "name": "Kimi K3.1 Pro",
+     "kind": "Claude Code",
+     "value": "16.2"
+    },
+    {
+     "key": "sol",
+     "aria": "GPT-6 Sol (high): 11.8%",
+     "style": "--c: var(--series-sol); --h: 19.6469696969697%",
+     "short": false,
+     "name": "GPT-6 Sol",
+     "kind": "Codex CLI",
+     "value": "11.8"
+    },
+    {
+     "key": "terra",
+     "aria": "GPT-6.1 Terra (high): 8.8%",
+     "style": "--c: var(--series-terra); --h: 14.595454545454547%",
+     "short": false,
+     "name": "GPT-6.1 Terra",
+     "kind": "Codex CLI",
+     "value": "8.8"
+    },
+    {
+     "key": "deepseek",
+     "aria": "DeepSeek V4.1 Flash (1017) (max): 8.5%",
+     "style": "--c: var(--series-deepseek); --h: 14.19090909090909%",
+     "short": false,
+     "name": "DeepSeek V4.1 Flash (1017)",
+     "kind": "DeepSeek CLI",
+     "value": "8.5"
+    },
+    {
+     "key": "haiku",
+     "aria": "Claude Haiku 5.5 (max): 3.7%",
+     "style": "--c: var(--series-haiku); --h: 6.162121212121212%",
+     "short": true,
+     "name": "Claude Haiku 5.5",
+     "kind": "Claude Code",
+     "value": "3.7"
+    }
+   ],
+   "names": [
+    {
+     "lines": [
+      "Claude Opus",
+      "5.5"
+     ],
+     "text": "Claude Opus5.5",
+     "effort": "high",
+     "color": "--c: var(--series-opus)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6",
+      "Astra"
+     ],
+     "text": "GPT-6Astra",
+     "effort": "high",
+     "color": "--c: var(--series-astra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Sol"
+     ],
+     "text": "GPT-6.1Sol",
+     "effort": "high",
+     "color": "--c: var(--series-sol61)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Terra"
+     ],
+     "text": "GPT-6.1Terra",
+     "effort": "max",
+     "color": "--c: var(--series-terra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Kimi",
+      "K3.1 Pro"
+     ],
+     "text": "KimiK3.1 Pro",
+     "effort": "max",
+     "color": "--c: var(--series-kimi)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6",
+      "Sol"
+     ],
+     "text": "GPT-6Sol",
+     "effort": "high",
+     "color": "--c: var(--series-sol)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "GPT-6.1",
+      "Terra"
+     ],
+     "text": "GPT-6.1Terra",
+     "effort": "high",
+     "color": "--c: var(--series-terra)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "DeepSeek",
+      "V4.1 Flash 1017"
+     ],
+     "text": "DeepSeekV4.1 Flash 1017",
+     "effort": "max",
+     "color": "--c: var(--series-deepseek)",
+     "logo": true
+    },
+    {
+     "lines": [
+      "Claude Haiku",
+      "5.5"
+     ],
+     "text": "Claude Haiku5.5",
+     "effort": "max",
+     "color": "--c: var(--series-haiku)",
+     "logo": true
+    }
+   ],
+   "leftNote": "Not shown in this view: Claude Sonnet 5.5 at max (9 core tasks only)."
+  }
+ },
+ "updated": "Updated 31 October 2026.",
+ "ledeBefore": "Mean success over ",
+ "ledeAfter": ", 3 independent sessions per task, 100 hidden episodes per final program. "
+}

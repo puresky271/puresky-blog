@@ -1,0 +1,3031 @@
+{
+ "all": {
+  "h3": [
+   "Success by task",
+   "A score is a point on a cost curve"
+  ],
+  "subs": [
+   "Mean success against what one session costs at list price, log scale. A model run at several efforts is one line through its points."
+  ],
+  "scenes": [
+   {
+    "label": "Reaching",
+    "style": "--sc: var(--scene-reaching)"
+   },
+   {
+    "label": "Table-top",
+    "style": "--sc: var(--scene-tabletop)"
+   },
+   {
+    "label": "Dishwasher",
+    "style": "--sc: var(--scene-dishwasher)"
+   },
+   {
+    "label": "Kitchen counter",
+    "style": "--sc: var(--scene-counter)"
+   }
+  ],
+  "tasks": [
+   {
+    "name": "reach target single",
+    "instruction": "Reach the target with the left wrist."
+   },
+   {
+    "name": "reach target multi modal",
+    "instruction": "Reach the target with either wrist."
+   },
+   {
+    "name": "reach target dual",
+    "instruction": "Reach the two targets, one with each wrist."
+   },
+   {
+    "name": "move plate",
+    "instruction": "Move the plate between two draining racks."
+   },
+   {
+    "name": "move two plates",
+    "instruction": "Move two plates simultaneously from one draining rack to the other."
+   },
+   {
+    "name": "flip cup",
+    "instruction": "Flip the upside-down cup to an upright position."
+   },
+   {
+    "name": "flip cutlery",
+    "instruction": "Take the cutlery from the holder, flip it, and place it back."
+   },
+   {
+    "name": "stack blocks",
+    "instruction": "Move blocks across the table and stack them in the target area."
+   },
+   {
+    "name": "dishwasher close",
+    "instruction": "Push back all trays and close the door of the dishwasher."
+   },
+   {
+    "name": "dishwasher load cups",
+    "instruction": "Move the cups from the table into the dishwasher's upper tray."
+   },
+   {
+    "name": "dishwasher load cutlery",
+    "instruction": "Move the cutlery from the holder on the table into the dishwasher's cutlery basket."
+   },
+   {
+    "name": "dishwasher load plates",
+    "instruction": "Move the plates from the rack into the dishwasher's lower tray."
+   },
+   {
+    "name": "drawer top open",
+    "instruction": "Open the top drawer of the kitchen cabinet."
+   },
+   {
+    "name": "drawer top close",
+    "instruction": "Close the top drawer of the kitchen cabinet."
+   },
+   {
+    "name": "pick box",
+    "instruction": "Pick up the box from the side table and place it on the counter."
+   },
+   {
+    "name": "put cups",
+    "instruction": "Pick up the cups from the table and put them into the closed wall cabinet."
+   },
+   {
+    "name": "saucepan to hob",
+    "instruction": "Take the saucepan from the closed cabinet and place it on the hob."
+   },
+   {
+    "name": "sandwich remove",
+    "instruction": "Remove the sandwich from the frying pan."
+   },
+   {
+    "name": "wall cupboard open",
+    "instruction": "Open the doors of the wall cabinet."
+   },
+   {
+    "name": "wall cupboard close",
+    "instruction": "Close the doors of the wall cabinet."
+   }
+  ],
+  "rows": [
+   {
+    "label": "Claude Opus 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "reach_target_single: 99.7%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 100.0%"
+     },
+     {
+      "v": "78",
+      "p": "--p: 78%",
+      "hi": true,
+      "title": "reach_target_dual: 78.3%"
+     },
+     {
+      "v": "20",
+      "p": "--p: 20%",
+      "hi": false,
+      "title": "move_plate: 19.7%"
+     },
+     {
+      "v": "15",
+      "p": "--p: 15%",
+      "hi": false,
+      "title": "move_two_plates: 15.0%"
+     },
+     {
+      "v": "94",
+      "p": "--p: 94%",
+      "hi": true,
+      "title": "flip_cup: 94.0%"
+     },
+     {
+      "v": "30",
+      "p": "--p: 30%",
+      "hi": false,
+      "title": "flip_cutlery: 29.7%"
+     },
+     {
+      "v": "34",
+      "p": "--p: 34%",
+      "hi": false,
+      "title": "stack_blocks: 33.7%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "dishwasher_close: 33.3%"
+     },
+     {
+      "v": "28",
+      "p": "--p: 28%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 28.3%"
+     },
+     {
+      "v": "10",
+      "p": "--p: 10%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 9.7%"
+     },
+     {
+      "v": "13",
+      "p": "--p: 13%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 13.0%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_open: 99.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "71",
+      "p": "--p: 71%",
+      "hi": true,
+      "title": "pick_box: 71.3%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "put_cups: 4.7%"
+     },
+     {
+      "v": "8",
+      "p": "--p: 8%",
+      "hi": false,
+      "title": "saucepan_to_hob: 8.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.3%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_open: 100.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_close: 100.0%"
+     }
+    ],
+    "mean": "51.9"
+   },
+   {
+    "label": "GPT-6 Astra",
+    "kind": "",
+    "cells": [
+     {
+      "v": "98",
+      "p": "--p: 98%",
+      "hi": true,
+      "title": "reach_target_single: 98.3%"
+     },
+     {
+      "v": "89",
+      "p": "--p: 89%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 89.0%"
+     },
+     {
+      "v": "89",
+      "p": "--p: 89%",
+      "hi": true,
+      "title": "reach_target_dual: 89.3%"
+     },
+     {
+      "v": "14",
+      "p": "--p: 14%",
+      "hi": false,
+      "title": "move_plate: 14.0%"
+     },
+     {
+      "v": "16",
+      "p": "--p: 16%",
+      "hi": false,
+      "title": "move_two_plates: 15.7%"
+     },
+     {
+      "v": "38",
+      "p": "--p: 38%",
+      "hi": false,
+      "title": "flip_cup: 38.3%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cutlery: 1.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "stack_blocks: 1.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "dishwasher_close: 100.0%"
+     },
+     {
+      "v": "21",
+      "p": "--p: 21%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 21.3%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 1.7%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 3.7%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_open: 99.0%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_close: 98.7%"
+     },
+     {
+      "v": "54",
+      "p": "--p: 54%",
+      "hi": false,
+      "title": "pick_box: 53.7%"
+     },
+     {
+      "v": "8",
+      "p": "--p: 8%",
+      "hi": false,
+      "title": "put_cups: 8.0%"
+     },
+     {
+      "v": "26",
+      "p": "--p: 26%",
+      "hi": false,
+      "title": "saucepan_to_hob: 26.3%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "sandwich_remove: 5.0%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_open: 66.7%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_close: 100.0%"
+     }
+    ],
+    "mean": "46.5"
+   },
+   {
+    "label": "GPT-6.1 Sol",
+    "kind": "",
+    "cells": [
+     {
+      "v": "93",
+      "p": "--p: 93%",
+      "hi": true,
+      "title": "reach_target_single: 92.7%"
+     },
+     {
+      "v": "93",
+      "p": "--p: 93%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 92.7%"
+     },
+     {
+      "v": "70",
+      "p": "--p: 70%",
+      "hi": true,
+      "title": "reach_target_dual: 69.7%"
+     },
+     {
+      "v": "8",
+      "p": "--p: 8%",
+      "hi": false,
+      "title": "move_plate: 8.0%"
+     },
+     {
+      "v": "3",
+      "p": "--p: 3%",
+      "hi": false,
+      "title": "move_two_plates: 2.7%"
+     },
+     {
+      "v": "25",
+      "p": "--p: 25%",
+      "hi": false,
+      "title": "flip_cup: 24.7%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "flip_cutlery: 4.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 17.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.7%"
+     },
+     {
+      "v": "58",
+      "p": "--p: 58%",
+      "hi": true,
+      "title": "drawer_top_open: 58.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "17",
+      "p": "--p: 17%",
+      "hi": false,
+      "title": "pick_box: 17.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "25",
+      "p": "--p: 25%",
+      "hi": false,
+      "title": "saucepan_to_hob: 25.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.3%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_open: 100.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_close: 100.0%"
+     }
+    ],
+    "mean": "35.7"
+   },
+   {
+    "label": "GPT-6.1 Terra · max",
+    "kind": "max",
+    "cells": [
+     {
+      "v": "95",
+      "p": "--p: 95%",
+      "hi": true,
+      "title": "reach_target_single: 94.7%"
+     },
+     {
+      "v": "85",
+      "p": "--p: 85%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 84.7%"
+     },
+     {
+      "v": "81",
+      "p": "--p: 81%",
+      "hi": true,
+      "title": "reach_target_dual: 81.0%"
+     },
+     {
+      "v": "12",
+      "p": "--p: 12%",
+      "hi": false,
+      "title": "move_plate: 11.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cup: 0.3%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "flip_cutlery: 3.7%"
+     },
+     {
+      "v": "13",
+      "p": "--p: 13%",
+      "hi": false,
+      "title": "stack_blocks: 12.7%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "dishwasher_close: 33.3%"
+     },
+     {
+      "v": "16",
+      "p": "--p: 16%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 15.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 1.3%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 1.7%"
+     },
+     {
+      "v": "84",
+      "p": "--p: 84%",
+      "hi": true,
+      "title": "drawer_top_open: 83.7%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "32",
+      "p": "--p: 32%",
+      "hi": false,
+      "title": "pick_box: 32.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "put_cups: 0.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_open: 33.3%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_close: 66.7%"
+     }
+    ],
+    "mean": "32.9"
+   },
+   {
+    "label": "GPT-6 Sol",
+    "kind": "",
+    "cells": [
+     {
+      "v": "61",
+      "p": "--p: 61%",
+      "hi": true,
+      "title": "reach_target_single: 61.0%"
+     },
+     {
+      "v": "86",
+      "p": "--p: 86%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 86.0%"
+     },
+     {
+      "v": "37",
+      "p": "--p: 37%",
+      "hi": false,
+      "title": "reach_target_dual: 37.0%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "move_plate: 4.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cup: 0.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cutlery: 1.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 1.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "52",
+      "p": "--p: 52%",
+      "hi": false,
+      "title": "drawer_top_open: 52.3%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_close: 99.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_close: 66.7%"
+     }
+    ],
+    "mean": "20.5"
+   },
+   {
+    "label": "Kimi K3.1 Pro",
+    "kind": "",
+    "cells": [
+     {
+      "v": "71",
+      "p": "--p: 71%",
+      "hi": true,
+      "title": "reach_target_single: 71.3%"
+     },
+     {
+      "v": "82",
+      "p": "--p: 82%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 82.0%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "reach_target_dual: 18.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "flip_cup: 5.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 1.3%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 1.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "drawer_top_open: 33.3%"
+     },
+     {
+      "v": "56",
+      "p": "--p: 56%",
+      "hi": true,
+      "title": "drawer_top_close: 56.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_open: 33.3%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_close: 66.7%"
+     }
+    ],
+    "mean": "18.4"
+   },
+   {
+    "label": "GPT-6.1 Terra · high",
+    "kind": "high",
+    "cells": [
+     {
+      "v": "58",
+      "p": "--p: 58%",
+      "hi": true,
+      "title": "reach_target_single: 58.0%"
+     },
+     {
+      "v": "72",
+      "p": "--p: 72%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 72.0%"
+     },
+     {
+      "v": "45",
+      "p": "--p: 45%",
+      "hi": false,
+      "title": "reach_target_dual: 45.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "move_plate: 1.3%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "move_two_plates: 1.7%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "flip_cup: 3.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cutlery: 1.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "12",
+      "p": "--p: 12%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 12.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "42",
+      "p": "--p: 42%",
+      "hi": false,
+      "title": "drawer_top_open: 42.3%"
+     },
+     {
+      "v": "80",
+      "p": "--p: 80%",
+      "hi": true,
+      "title": "drawer_top_close: 79.7%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "pick_box: 3.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_close: 33.3%"
+     }
+    ],
+    "mean": "17.7"
+   },
+   {
+    "label": "DeepSeek V4.1 Flash (1017)",
+    "kind": "",
+    "cells": [
+     {
+      "v": "60",
+      "p": "--p: 60%",
+      "hi": true,
+      "title": "reach_target_single: 60.3%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "reach_target_multi_modal: 3.7%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "reach_target_dual: 18.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cup: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "drawer_top_open: 0.0%"
+     },
+     {
+      "v": "96",
+      "p": "--p: 96%",
+      "hi": true,
+      "title": "drawer_top_close: 96.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_close: 33.3%"
+     }
+    ],
+    "mean": "10.6"
+   },
+   {
+    "label": "Claude Haiku 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "41",
+      "p": "--p: 41%",
+      "hi": false,
+      "title": "reach_target_single: 40.7%"
+     },
+     {
+      "v": "59",
+      "p": "--p: 59%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 58.7%"
+     },
+     {
+      "v": "13",
+      "p": "--p: 13%",
+      "hi": false,
+      "title": "reach_target_dual: 13.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cup: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "3",
+      "p": "--p: 3%",
+      "hi": false,
+      "title": "drawer_top_open: 2.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "drawer_top_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_close: 0.0%"
+     }
+    ],
+    "mean": "5.8"
+   }
+  ]
+ },
+ "core": {
+  "h3": [
+   "Success by task",
+   "A score is a point on a cost curve"
+  ],
+  "subs": [
+   "Mean success against what one session costs at list price, log scale. A model run at several efforts is one line through its points."
+  ],
+  "scenes": [
+   {
+    "label": "Reaching",
+    "style": "--sc: var(--scene-reaching)"
+   },
+   {
+    "label": "Table-top",
+    "style": "--sc: var(--scene-tabletop)"
+   },
+   {
+    "label": "Dishwasher",
+    "style": "--sc: var(--scene-dishwasher)"
+   },
+   {
+    "label": "Kitchen counter",
+    "style": "--sc: var(--scene-counter)"
+   }
+  ],
+  "tasks": [
+   {
+    "name": "reach target multi modal",
+    "instruction": "Reach the target with either wrist."
+   },
+   {
+    "name": "reach target dual",
+    "instruction": "Reach the two targets, one with each wrist."
+   },
+   {
+    "name": "move plate",
+    "instruction": "Move the plate between two draining racks."
+   },
+   {
+    "name": "move two plates",
+    "instruction": "Move two plates simultaneously from one draining rack to the other."
+   },
+   {
+    "name": "dishwasher close",
+    "instruction": "Push back all trays and close the door of the dishwasher."
+   },
+   {
+    "name": "dishwasher load cups",
+    "instruction": "Move the cups from the table into the dishwasher's upper tray."
+   },
+   {
+    "name": "drawer top open",
+    "instruction": "Open the top drawer of the kitchen cabinet."
+   },
+   {
+    "name": "drawer top close",
+    "instruction": "Close the top drawer of the kitchen cabinet."
+   },
+   {
+    "name": "pick box",
+    "instruction": "Pick up the box from the side table and place it on the counter."
+   }
+  ],
+  "rows": [
+   {
+    "label": "π0.5 · VLA",
+    "kind": "VLA",
+    "cells": [
+     {
+      "v": "90",
+      "p": "--p: 90%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 90.0%"
+     },
+     {
+      "v": "58",
+      "p": "--p: 58%",
+      "hi": true,
+      "title": "reach_target_dual: 58.0%"
+     },
+     {
+      "v": "65",
+      "p": "--p: 65%",
+      "hi": true,
+      "title": "move_plate: 65.0%"
+     },
+     {
+      "v": "68",
+      "p": "--p: 68%",
+      "hi": true,
+      "title": "move_two_plates: 68.0%"
+     },
+     {
+      "v": "79",
+      "p": "--p: 79%",
+      "hi": true,
+      "title": "dishwasher_close: 79.0%"
+     },
+     {
+      "v": "92",
+      "p": "--p: 92%",
+      "hi": true,
+      "title": "dishwasher_load_cups: 92.0%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_open: 99.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "19",
+      "p": "--p: 19%",
+      "hi": false,
+      "title": "pick_box: 19.0%"
+     }
+    ],
+    "mean": "75.0"
+   },
+   {
+    "label": "ACT · Imitation",
+    "kind": "Imitation",
+    "cells": [
+     {
+      "v": "81",
+      "p": "--p: 81%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 81.0%"
+     },
+     {
+      "v": "30",
+      "p": "--p: 30%",
+      "hi": false,
+      "title": "reach_target_dual: 30.0%"
+     },
+     {
+      "v": "60",
+      "p": "--p: 60%",
+      "hi": true,
+      "title": "move_plate: 60.0%"
+     },
+     {
+      "v": "39",
+      "p": "--p: 39%",
+      "hi": false,
+      "title": "move_two_plates: 39.0%"
+     },
+     {
+      "v": "93",
+      "p": "--p: 93%",
+      "hi": true,
+      "title": "dishwasher_close: 93.0%"
+     },
+     {
+      "v": "56",
+      "p": "--p: 56%",
+      "hi": true,
+      "title": "dishwasher_load_cups: 56.0%"
+     },
+     {
+      "v": "92",
+      "p": "--p: 92%",
+      "hi": true,
+      "title": "drawer_top_open: 92.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "61",
+      "p": "--p: 61%",
+      "hi": true,
+      "title": "pick_box: 61.0%"
+     }
+    ],
+    "mean": "68.0"
+   },
+   {
+    "label": "GPT-6 Astra",
+    "kind": "",
+    "cells": [
+     {
+      "v": "89",
+      "p": "--p: 89%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 89.0%"
+     },
+     {
+      "v": "89",
+      "p": "--p: 89%",
+      "hi": true,
+      "title": "reach_target_dual: 89.3%"
+     },
+     {
+      "v": "14",
+      "p": "--p: 14%",
+      "hi": false,
+      "title": "move_plate: 14.0%"
+     },
+     {
+      "v": "16",
+      "p": "--p: 16%",
+      "hi": false,
+      "title": "move_two_plates: 15.7%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "dishwasher_close: 100.0%"
+     },
+     {
+      "v": "21",
+      "p": "--p: 21%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 21.3%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_open: 99.0%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_close: 98.7%"
+     },
+     {
+      "v": "54",
+      "p": "--p: 54%",
+      "hi": false,
+      "title": "pick_box: 53.7%"
+     }
+    ],
+    "mean": "64.5"
+   },
+   {
+    "label": "Claude Sonnet 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 100.0%"
+     },
+     {
+      "v": "97",
+      "p": "--p: 97%",
+      "hi": true,
+      "title": "reach_target_dual: 96.7%"
+     },
+     {
+      "v": "54",
+      "p": "--p: 54%",
+      "hi": false,
+      "title": "move_plate: 54.0%"
+     },
+     {
+      "v": "44",
+      "p": "--p: 44%",
+      "hi": false,
+      "title": "move_two_plates: 44.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 0.3%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_open: 100.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "54",
+      "p": "--p: 54%",
+      "hi": false,
+      "title": "pick_box: 54.0%"
+     }
+    ],
+    "mean": "61.0"
+   },
+   {
+    "label": "Claude Opus 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 100.0%"
+     },
+     {
+      "v": "78",
+      "p": "--p: 78%",
+      "hi": true,
+      "title": "reach_target_dual: 78.3%"
+     },
+     {
+      "v": "20",
+      "p": "--p: 20%",
+      "hi": false,
+      "title": "move_plate: 19.7%"
+     },
+     {
+      "v": "15",
+      "p": "--p: 15%",
+      "hi": false,
+      "title": "move_two_plates: 15.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "dishwasher_close: 33.3%"
+     },
+     {
+      "v": "28",
+      "p": "--p: 28%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 28.3%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_open: 99.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "71",
+      "p": "--p: 71%",
+      "hi": true,
+      "title": "pick_box: 71.3%"
+     }
+    ],
+    "mean": "60.6"
+   },
+   {
+    "label": "DP · Imitation",
+    "kind": "Imitation",
+    "cells": [
+     {
+      "v": "84",
+      "p": "--p: 84%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 84.0%"
+     },
+     {
+      "v": "27",
+      "p": "--p: 27%",
+      "hi": false,
+      "title": "reach_target_dual: 27.0%"
+     },
+     {
+      "v": "62",
+      "p": "--p: 62%",
+      "hi": true,
+      "title": "move_plate: 62.0%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "move_two_plates: 18.0%"
+     },
+     {
+      "v": "51",
+      "p": "--p: 51%",
+      "hi": false,
+      "title": "dishwasher_close: 51.0%"
+     },
+     {
+      "v": "51",
+      "p": "--p: 51%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 51.0%"
+     },
+     {
+      "v": "98",
+      "p": "--p: 98%",
+      "hi": true,
+      "title": "drawer_top_open: 98.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "10",
+      "p": "--p: 10%",
+      "hi": false,
+      "title": "pick_box: 10.0%"
+     }
+    ],
+    "mean": "56.0"
+   },
+   {
+    "label": "CQN-AS · Demo RL",
+    "kind": "Demo RL",
+    "cells": [
+     {
+      "v": "19",
+      "p": "--p: 19%",
+      "hi": false,
+      "title": "reach_target_multi_modal: 19.0%"
+     },
+     {
+      "v": "3",
+      "p": "--p: 3%",
+      "hi": false,
+      "title": "reach_target_dual: 3.0%"
+     },
+     {
+      "v": "48",
+      "p": "--p: 48%",
+      "hi": false,
+      "title": "move_plate: 48.0%"
+     },
+     {
+      "v": "21",
+      "p": "--p: 21%",
+      "hi": false,
+      "title": "move_two_plates: 21.0%"
+     },
+     {
+      "v": "78",
+      "p": "--p: 78%",
+      "hi": true,
+      "title": "dishwasher_close: 78.0%"
+     },
+     {
+      "v": "47",
+      "p": "--p: 47%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 47.0%"
+     },
+     {
+      "v": "89",
+      "p": "--p: 89%",
+      "hi": true,
+      "title": "drawer_top_open: 89.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "48",
+      "p": "--p: 48%",
+      "hi": false,
+      "title": "pick_box: 48.0%"
+     }
+    ],
+    "mean": "50.0"
+   },
+   {
+    "label": "GPT-6.1 Terra · max",
+    "kind": "max",
+    "cells": [
+     {
+      "v": "85",
+      "p": "--p: 85%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 84.7%"
+     },
+     {
+      "v": "81",
+      "p": "--p: 81%",
+      "hi": true,
+      "title": "reach_target_dual: 81.0%"
+     },
+     {
+      "v": "12",
+      "p": "--p: 12%",
+      "hi": false,
+      "title": "move_plate: 11.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "dishwasher_close: 33.3%"
+     },
+     {
+      "v": "16",
+      "p": "--p: 16%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 15.7%"
+     },
+     {
+      "v": "84",
+      "p": "--p: 84%",
+      "hi": true,
+      "title": "drawer_top_open: 83.7%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "32",
+      "p": "--p: 32%",
+      "hi": false,
+      "title": "pick_box: 32.0%"
+     }
+    ],
+    "mean": "49.1"
+   },
+   {
+    "label": "DEAS · Offline RL",
+    "kind": "Offline RL",
+    "cells": [
+     {
+      "v": "79",
+      "p": "--p: 79%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 79.0%"
+     },
+     {
+      "v": "34",
+      "p": "--p: 34%",
+      "hi": false,
+      "title": "reach_target_dual: 34.0%"
+     },
+     {
+      "v": "27",
+      "p": "--p: 27%",
+      "hi": false,
+      "title": "move_plate: 27.0%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "move_two_plates: 2.0%"
+     },
+     {
+      "v": "27",
+      "p": "--p: 27%",
+      "hi": false,
+      "title": "dishwasher_close: 27.0%"
+     },
+     {
+      "v": "6",
+      "p": "--p: 6%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 6.0%"
+     },
+     {
+      "v": "79",
+      "p": "--p: 79%",
+      "hi": true,
+      "title": "drawer_top_open: 79.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "14",
+      "p": "--p: 14%",
+      "hi": false,
+      "title": "pick_box: 14.0%"
+     }
+    ],
+    "mean": "41.0"
+   },
+   {
+    "label": "GPT-6.1 Sol",
+    "kind": "",
+    "cells": [
+     {
+      "v": "93",
+      "p": "--p: 93%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 92.7%"
+     },
+     {
+      "v": "70",
+      "p": "--p: 70%",
+      "hi": true,
+      "title": "reach_target_dual: 69.7%"
+     },
+     {
+      "v": "8",
+      "p": "--p: 8%",
+      "hi": false,
+      "title": "move_plate: 8.0%"
+     },
+     {
+      "v": "3",
+      "p": "--p: 3%",
+      "hi": false,
+      "title": "move_two_plates: 2.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 17.7%"
+     },
+     {
+      "v": "58",
+      "p": "--p: 58%",
+      "hi": true,
+      "title": "drawer_top_open: 58.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "drawer_top_close: 100.0%"
+     },
+     {
+      "v": "17",
+      "p": "--p: 17%",
+      "hi": false,
+      "title": "pick_box: 17.3%"
+     }
+    ],
+    "mean": "40.7"
+   },
+   {
+    "label": "GPT-6 Sol",
+    "kind": "",
+    "cells": [
+     {
+      "v": "86",
+      "p": "--p: 86%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 86.0%"
+     },
+     {
+      "v": "37",
+      "p": "--p: 37%",
+      "hi": false,
+      "title": "reach_target_dual: 37.0%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "move_plate: 4.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 1.7%"
+     },
+     {
+      "v": "52",
+      "p": "--p: 52%",
+      "hi": false,
+      "title": "drawer_top_open: 52.3%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_close: 99.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     }
+    ],
+    "mean": "31.2"
+   },
+   {
+    "label": "GPT-6.1 Terra · high",
+    "kind": "high",
+    "cells": [
+     {
+      "v": "72",
+      "p": "--p: 72%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 72.0%"
+     },
+     {
+      "v": "45",
+      "p": "--p: 45%",
+      "hi": false,
+      "title": "reach_target_dual: 45.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "move_plate: 1.3%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "move_two_plates: 1.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "12",
+      "p": "--p: 12%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 12.0%"
+     },
+     {
+      "v": "42",
+      "p": "--p: 42%",
+      "hi": false,
+      "title": "drawer_top_open: 42.3%"
+     },
+     {
+      "v": "80",
+      "p": "--p: 80%",
+      "hi": true,
+      "title": "drawer_top_close: 79.7%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "pick_box: 3.7%"
+     }
+    ],
+    "mean": "28.6"
+   },
+   {
+    "label": "Kimi K3.1 Pro",
+    "kind": "",
+    "cells": [
+     {
+      "v": "82",
+      "p": "--p: 82%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 82.0%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "reach_target_dual: 18.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 1.3%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "drawer_top_open: 33.3%"
+     },
+     {
+      "v": "56",
+      "p": "--p: 56%",
+      "hi": true,
+      "title": "drawer_top_close: 56.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     }
+    ],
+    "mean": "21.3"
+   },
+   {
+    "label": "DeepSeek V4.1 Flash (1017)",
+    "kind": "",
+    "cells": [
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "reach_target_multi_modal: 3.7%"
+     },
+     {
+      "v": "18",
+      "p": "--p: 18%",
+      "hi": false,
+      "title": "reach_target_dual: 18.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "drawer_top_open: 0.0%"
+     },
+     {
+      "v": "96",
+      "p": "--p: 96%",
+      "hi": true,
+      "title": "drawer_top_close: 96.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     }
+    ],
+    "mean": "13.1"
+   },
+   {
+    "label": "DrQ-v2+ · Demo RL",
+    "kind": "Demo RL",
+    "cells": [
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "reach_target_multi_modal: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "reach_target_dual: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "drawer_top_open: 0.0%"
+     },
+     {
+      "v": "99",
+      "p": "--p: 99%",
+      "hi": true,
+      "title": "drawer_top_close: 99.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     }
+    ],
+    "mean": "11.0"
+   },
+   {
+    "label": "Claude Haiku 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "59",
+      "p": "--p: 59%",
+      "hi": true,
+      "title": "reach_target_multi_modal: 58.7%"
+     },
+     {
+      "v": "13",
+      "p": "--p: 13%",
+      "hi": false,
+      "title": "reach_target_dual: 13.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_plate: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "move_two_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cups: 0.0%"
+     },
+     {
+      "v": "3",
+      "p": "--p: 3%",
+      "hi": false,
+      "title": "drawer_top_open: 2.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "drawer_top_close: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "pick_box: 0.0%"
+     }
+    ],
+    "mean": "8.3"
+   }
+  ]
+ },
+ "ext": {
+  "h3": [
+   "Success by task",
+   "A score is a point on a cost curve"
+  ],
+  "subs": [
+   "Mean success against what one session costs at list price, log scale. A model run at several efforts is one line through its points."
+  ],
+  "scenes": [
+   {
+    "label": "Reaching",
+    "style": "--sc: var(--scene-reaching)"
+   },
+   {
+    "label": "Table-top",
+    "style": "--sc: var(--scene-tabletop)"
+   },
+   {
+    "label": "Dishwasher",
+    "style": "--sc: var(--scene-dishwasher)"
+   },
+   {
+    "label": "Kitchen counter",
+    "style": "--sc: var(--scene-counter)"
+   }
+  ],
+  "tasks": [
+   {
+    "name": "reach target single",
+    "instruction": "Reach the target with the left wrist."
+   },
+   {
+    "name": "flip cup",
+    "instruction": "Flip the upside-down cup to an upright position."
+   },
+   {
+    "name": "flip cutlery",
+    "instruction": "Take the cutlery from the holder, flip it, and place it back."
+   },
+   {
+    "name": "stack blocks",
+    "instruction": "Move blocks across the table and stack them in the target area."
+   },
+   {
+    "name": "dishwasher load cutlery",
+    "instruction": "Move the cutlery from the holder on the table into the dishwasher's cutlery basket."
+   },
+   {
+    "name": "dishwasher load plates",
+    "instruction": "Move the plates from the rack into the dishwasher's lower tray."
+   },
+   {
+    "name": "put cups",
+    "instruction": "Pick up the cups from the table and put them into the closed wall cabinet."
+   },
+   {
+    "name": "saucepan to hob",
+    "instruction": "Take the saucepan from the closed cabinet and place it on the hob."
+   },
+   {
+    "name": "sandwich remove",
+    "instruction": "Remove the sandwich from the frying pan."
+   },
+   {
+    "name": "wall cupboard open",
+    "instruction": "Open the doors of the wall cabinet."
+   },
+   {
+    "name": "wall cupboard close",
+    "instruction": "Close the doors of the wall cabinet."
+   }
+  ],
+  "rows": [
+   {
+    "label": "Claude Opus 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "reach_target_single: 99.7%"
+     },
+     {
+      "v": "94",
+      "p": "--p: 94%",
+      "hi": true,
+      "title": "flip_cup: 94.0%"
+     },
+     {
+      "v": "30",
+      "p": "--p: 30%",
+      "hi": false,
+      "title": "flip_cutlery: 29.7%"
+     },
+     {
+      "v": "34",
+      "p": "--p: 34%",
+      "hi": false,
+      "title": "stack_blocks: 33.7%"
+     },
+     {
+      "v": "10",
+      "p": "--p: 10%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 9.7%"
+     },
+     {
+      "v": "13",
+      "p": "--p: 13%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 13.0%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "put_cups: 4.7%"
+     },
+     {
+      "v": "8",
+      "p": "--p: 8%",
+      "hi": false,
+      "title": "saucepan_to_hob: 8.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.3%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_open: 100.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_close: 100.0%"
+     }
+    ],
+    "mean": "44.8"
+   },
+   {
+    "label": "GPT-6 Astra",
+    "kind": "",
+    "cells": [
+     {
+      "v": "98",
+      "p": "--p: 98%",
+      "hi": true,
+      "title": "reach_target_single: 98.3%"
+     },
+     {
+      "v": "38",
+      "p": "--p: 38%",
+      "hi": false,
+      "title": "flip_cup: 38.3%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cutlery: 1.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "stack_blocks: 1.0%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 1.7%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 3.7%"
+     },
+     {
+      "v": "8",
+      "p": "--p: 8%",
+      "hi": false,
+      "title": "put_cups: 8.0%"
+     },
+     {
+      "v": "26",
+      "p": "--p: 26%",
+      "hi": false,
+      "title": "saucepan_to_hob: 26.3%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "sandwich_remove: 5.0%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_open: 66.7%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_close: 100.0%"
+     }
+    ],
+    "mean": "31.8"
+   },
+   {
+    "label": "GPT-6.1 Sol",
+    "kind": "",
+    "cells": [
+     {
+      "v": "93",
+      "p": "--p: 93%",
+      "hi": true,
+      "title": "reach_target_single: 92.7%"
+     },
+     {
+      "v": "25",
+      "p": "--p: 25%",
+      "hi": false,
+      "title": "flip_cup: 24.7%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "flip_cutlery: 4.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "25",
+      "p": "--p: 25%",
+      "hi": false,
+      "title": "saucepan_to_hob: 25.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.3%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_open: 100.0%"
+     },
+     {
+      "v": "100",
+      "p": "--p: 100%",
+      "hi": true,
+      "title": "wall_cupboard_close: 100.0%"
+     }
+    ],
+    "mean": "31.7"
+   },
+   {
+    "label": "GPT-6.1 Terra · max",
+    "kind": "max",
+    "cells": [
+     {
+      "v": "95",
+      "p": "--p: 95%",
+      "hi": true,
+      "title": "reach_target_single: 94.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cup: 0.3%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "flip_cutlery: 3.7%"
+     },
+     {
+      "v": "13",
+      "p": "--p: 13%",
+      "hi": false,
+      "title": "stack_blocks: 12.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 1.3%"
+     },
+     {
+      "v": "2",
+      "p": "--p: 2%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 1.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "put_cups: 0.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_open: 33.3%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_close: 66.7%"
+     }
+    ],
+    "mean": "19.5"
+   },
+   {
+    "label": "Kimi K3.1 Pro",
+    "kind": "",
+    "cells": [
+     {
+      "v": "71",
+      "p": "--p: 71%",
+      "hi": true,
+      "title": "reach_target_single: 71.3%"
+     },
+     {
+      "v": "5",
+      "p": "--p: 5%",
+      "hi": false,
+      "title": "flip_cup: 5.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 1.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_open: 33.3%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_close: 66.7%"
+     }
+    ],
+    "mean": "16.2"
+   },
+   {
+    "label": "GPT-6 Sol",
+    "kind": "",
+    "cells": [
+     {
+      "v": "61",
+      "p": "--p: 61%",
+      "hi": true,
+      "title": "reach_target_single: 61.0%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cup: 0.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cutlery: 1.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "67",
+      "p": "--p: 67%",
+      "hi": true,
+      "title": "wall_cupboard_close: 66.7%"
+     }
+    ],
+    "mean": "11.8"
+   },
+   {
+    "label": "GPT-6.1 Terra · high",
+    "kind": "high",
+    "cells": [
+     {
+      "v": "58",
+      "p": "--p: 58%",
+      "hi": true,
+      "title": "reach_target_single: 58.0%"
+     },
+     {
+      "v": "4",
+      "p": "--p: 4%",
+      "hi": false,
+      "title": "flip_cup: 3.7%"
+     },
+     {
+      "v": "1",
+      "p": "--p: 1%",
+      "hi": false,
+      "title": "flip_cutlery: 1.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_close: 33.3%"
+     }
+    ],
+    "mean": "8.8"
+   },
+   {
+    "label": "DeepSeek V4.1 Flash (1017)",
+    "kind": "",
+    "cells": [
+     {
+      "v": "60",
+      "p": "--p: 60%",
+      "hi": true,
+      "title": "reach_target_single: 60.3%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cup: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "33",
+      "p": "--p: 33%",
+      "hi": false,
+      "title": "wall_cupboard_close: 33.3%"
+     }
+    ],
+    "mean": "8.5"
+   },
+   {
+    "label": "Claude Haiku 5.5",
+    "kind": "",
+    "cells": [
+     {
+      "v": "41",
+      "p": "--p: 41%",
+      "hi": false,
+      "title": "reach_target_single: 40.7%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cup: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "flip_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "stack_blocks: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_cutlery: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "dishwasher_load_plates: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "put_cups: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "saucepan_to_hob: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "sandwich_remove: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_open: 0.0%"
+     },
+     {
+      "v": "0",
+      "p": "--p: 0%",
+      "hi": false,
+      "title": "wall_cupboard_close: 0.0%"
+     }
+    ],
+    "mean": "3.7"
+   }
+  ]
+ }
+}

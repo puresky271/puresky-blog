@@ -1,0 +1,1086 @@
+{
+ "all": {
+  "viewBox": "0 0 1100 420",
+  "x0": "56",
+  "axisY": "368",
+  "aria": "Mean success against cost per session, all 20 tasks",
+  "grid": [
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "368",
+    "y2": "368"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "251.33333333333337",
+    "y2": "251.33333333333337"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "134.66666666666669",
+    "y2": "134.66666666666669"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "18",
+    "y2": "18"
+   },
+   {
+    "dash": true,
+    "x1": "104.84620639046149",
+    "x2": "104.84620639046149",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "273.5100812370132",
+    "x2": "273.5100812370132",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "442.1739560835649",
+    "x2": "442.1739560835649",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "665.1354708357877",
+    "x2": "665.1354708357877",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "833.7993456823394",
+    "x2": "833.7993456823394",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "1002.463220528891",
+    "x2": "1002.463220528891",
+    "y1": "18",
+    "y2": "368"
+   }
+  ],
+  "ticks": [
+   {
+    "x": "46",
+    "y": "372",
+    "anchor": "end",
+    "text": "0%"
+   },
+   {
+    "x": "46",
+    "y": "255.33333333333337",
+    "anchor": "end",
+    "text": "20%"
+   },
+   {
+    "x": "46",
+    "y": "138.66666666666669",
+    "anchor": "end",
+    "text": "40%"
+   },
+   {
+    "x": "46",
+    "y": "22",
+    "anchor": "end",
+    "text": "60%"
+   },
+   {
+    "x": "104.84620639046149",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$0.5"
+   },
+   {
+    "x": "273.5100812370132",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$1"
+   },
+   {
+    "x": "442.1739560835649",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$2"
+   },
+   {
+    "x": "665.1354708357877",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$5"
+   },
+   {
+    "x": "833.7993456823394",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$10"
+   },
+   {
+    "x": "1002.463220528891",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$20"
+   }
+  ],
+  "axis": [
+   "Cost per session, US$"
+  ],
+  "labels": [
+   {
+    "id": "opus",
+    "x": "973.3379579884408",
+    "y": "53.25",
+    "anchor": "middle",
+    "text": "Claude Opus 5.5",
+    "style": "--c: var(--series-opus)"
+   },
+   {
+    "id": "astra",
+    "x": "936.3183640582652",
+    "y": "101.05458333333341",
+    "anchor": "start",
+    "text": "GPT-6 Astra",
+    "style": "--c: var(--series-astra)"
+   },
+   {
+    "id": "sol61",
+    "x": "443.6697429670804",
+    "y": "164.14791666666667",
+    "anchor": "start",
+    "text": "GPT-6.1 Sol",
+    "style": "--c: var(--series-sol61)"
+   },
+   {
+    "id": "terra",
+    "x": "286.8066751527703",
+    "y": "211.90613791487556",
+    "anchor": "end",
+    "text": "GPT-6.1 Terra",
+    "style": "--c: var(--series-terra)"
+   },
+   {
+    "id": "sol",
+    "x": "658.3228320320443",
+    "y": "252.82041666666666",
+    "anchor": "start",
+    "text": "GPT-6 Sol",
+    "style": "--c: var(--series-sol)"
+   },
+   {
+    "id": "kimi",
+    "x": "940.0222656097924",
+    "y": "264.8808333333333",
+    "anchor": "start",
+    "text": "Kimi K3.1 Pro",
+    "style": "--c: var(--series-kimi)"
+   },
+   {
+    "id": "deepseek",
+    "x": "188.66620859979713",
+    "y": "310.6695833333333",
+    "anchor": "start",
+    "text": "DeepSeek V4.1 Flash (1017)",
+    "style": "--c: var(--series-deepseek)"
+   },
+   {
+    "id": "haiku",
+    "x": "564.5407070877178",
+    "y": "338.8591666666667",
+    "anchor": "start",
+    "text": "Claude Haiku 5.5",
+    "style": "--c: var(--series-haiku)"
+   }
+  ],
+  "series": [
+   {
+    "id": "opus",
+    "style": "--c: var(--series-opus)",
+    "points": [
+     {
+      "name": "Claude Opus 5.5",
+      "effort": "high",
+      "score": "51.9",
+      "cost": "17.7",
+      "x": "973.3",
+      "y": "65.3",
+      "aria": "Claude Opus 5.5, high effort: 51.9% at $17.74 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "astra",
+    "style": "--c: var(--series-astra)",
+    "points": [
+     {
+      "name": "GPT-6 Astra",
+      "effort": "high",
+      "score": "46.5",
+      "cost": "14.5",
+      "x": "924.3",
+      "y": "96.6",
+      "aria": "GPT-6 Astra, high effort: 46.5% at $14.51 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sol61",
+    "style": "--c: var(--series-sol61)",
+    "points": [
+     {
+      "name": "GPT-6.1 Sol",
+      "effort": "high",
+      "score": "35.7",
+      "cost": "1.9",
+      "x": "431.7",
+      "y": "159.6",
+      "aria": "GPT-6.1 Sol, high effort: 35.7% at $1.92 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "terra",
+    "style": "--c: var(--series-terra)",
+    "points": [
+     {
+      "name": "GPT-6.1 Terra",
+      "effort": "high",
+      "score": "17.7",
+      "cost": "0.65",
+      "x": "170.4",
+      "y": "264.8",
+      "aria": "GPT-6.1 Terra, high effort: 17.7% at $0.65 per session"
+     },
+     {
+      "name": "GPT-6.1 Terra",
+      "effort": "max",
+      "score": "32.9",
+      "cost": "1.8",
+      "x": "412.8",
+      "y": "176.4",
+      "aria": "GPT-6.1 Terra, max effort: 32.9% at $1.77 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sol",
+    "style": "--c: var(--series-sol)",
+    "points": [
+     {
+      "name": "GPT-6 Sol",
+      "effort": "high",
+      "score": "20.5",
+      "cost": "4.6",
+      "x": "646.3",
+      "y": "248.3",
+      "aria": "GPT-6 Sol, high effort: 20.5% at $4.63 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "kimi",
+    "style": "--c: var(--series-kimi)",
+    "points": [
+     {
+      "name": "Kimi K3.1 Pro",
+      "effort": "max",
+      "score": "18.4",
+      "cost": "14.7",
+      "x": "928.0",
+      "y": "260.4",
+      "aria": "Kimi K3.1 Pro, max effort: 18.4% at $14.73 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "deepseek",
+    "style": "--c: var(--series-deepseek)",
+    "points": [
+     {
+      "name": "DeepSeek V4.1 Flash (1017)",
+      "effort": "max",
+      "score": "10.6",
+      "cost": "0.67",
+      "x": "176.7",
+      "y": "306.2",
+      "aria": "DeepSeek V4.1 Flash (1017), max effort: 10.6% at $0.67 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "haiku",
+    "style": "--c: var(--series-haiku)",
+    "points": [
+     {
+      "name": "Claude Haiku 5.5",
+      "effort": "max",
+      "score": "5.8",
+      "cost": "3.1",
+      "x": "552.5",
+      "y": "334.4",
+      "aria": "Claude Haiku 5.5, max effort: 5.8% at $3.15 per session"
+     }
+    ],
+    "pathD": null
+   }
+  ],
+  "sub": "Mean success against what one session costs at list price, log scale. A model run at several efforts is one line through its points."
+ },
+ "core": {
+  "viewBox": "0 0 1100 420",
+  "x0": "56",
+  "axisY": "368",
+  "aria": "Mean success against cost per session, the 9 core tasks",
+  "grid": [
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "368",
+    "y2": "368"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "280.5",
+    "y2": "280.5"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "193",
+    "y2": "193"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "105.5",
+    "y2": "105.5"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "18",
+    "y2": "18"
+   },
+   {
+    "dash": true,
+    "x1": "105.38419775078219",
+    "x2": "105.38419775078219",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "258.78552722487154",
+    "x2": "258.78552722487154",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "412.1868566989609",
+    "x2": "412.1868566989609",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "614.9723839238325",
+    "x2": "614.9723839238325",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "768.3737133979218",
+    "x2": "768.3737133979218",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "921.7750428720112",
+    "x2": "921.7750428720112",
+    "y1": "18",
+    "y2": "368"
+   }
+  ],
+  "ticks": [
+   {
+    "x": "46",
+    "y": "372",
+    "anchor": "end",
+    "text": "0%"
+   },
+   {
+    "x": "46",
+    "y": "284.5",
+    "anchor": "end",
+    "text": "20%"
+   },
+   {
+    "x": "46",
+    "y": "197",
+    "anchor": "end",
+    "text": "40%"
+   },
+   {
+    "x": "46",
+    "y": "109.5",
+    "anchor": "end",
+    "text": "60%"
+   },
+   {
+    "x": "46",
+    "y": "22",
+    "anchor": "end",
+    "text": "80%"
+   },
+   {
+    "x": "105.38419775078219",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$0.5"
+   },
+   {
+    "x": "258.78552722487154",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$1"
+   },
+   {
+    "x": "412.1868566989609",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$2"
+   },
+   {
+    "x": "614.9723839238325",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$5"
+   },
+   {
+    "x": "768.3737133979218",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$10"
+   },
+   {
+    "x": "921.7750428720112",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$20"
+   }
+  ],
+  "axis": [
+   "Cost per session, US$"
+  ],
+  "labels": [
+   {
+    "id": "sonnet",
+    "x": "982.2659746968867",
+    "y": "89.12500000000001",
+    "anchor": "middle",
+    "text": "Claude Sonnet 5.5",
+    "style": "--c: var(--series-sonnet)"
+   },
+   {
+    "id": "astra",
+    "x": "800.5185594823928",
+    "y": "90.22986111111115",
+    "anchor": "start",
+    "text": "GPT-6 Astra",
+    "style": "--c: var(--series-astra)"
+   },
+   {
+    "id": "opus",
+    "x": "863.3442356845879",
+    "y": "107.57430555555555",
+    "anchor": "start",
+    "text": "Claude Opus 5.5",
+    "style": "--c: var(--series-opus)"
+   },
+   {
+    "id": "terra",
+    "x": "250.81362376024572",
+    "y": "189.89048991783883",
+    "anchor": "end",
+    "text": "GPT-6.1 Terra",
+    "style": "--c: var(--series-terra)"
+   },
+   {
+    "id": "sol61",
+    "x": "332.35273596405733",
+    "y": "194.5784722222222",
+    "anchor": "start",
+    "text": "GPT-6.1 Sol",
+    "style": "--c: var(--series-sol61)"
+   },
+   {
+    "id": "sol",
+    "x": "623.2361061779769",
+    "y": "236.06805555555556",
+    "anchor": "start",
+    "text": "GPT-6 Sol",
+    "style": "--c: var(--series-sol)"
+   },
+   {
+    "id": "kimi",
+    "x": "824.2741388363241",
+    "y": "279.4972222222222",
+    "anchor": "start",
+    "text": "Kimi K3.1 Pro",
+    "style": "--c: var(--series-kimi)"
+   },
+   {
+    "id": "deepseek",
+    "x": "172.01713172330722",
+    "y": "314.97847222222225",
+    "anchor": "start",
+    "text": "DeepSeek V4.1 Flash (1017)",
+    "style": "--c: var(--series-deepseek)"
+   },
+   {
+    "id": "haiku",
+    "x": "539.1481264522472",
+    "y": "336.20208333333335",
+    "anchor": "start",
+    "text": "Claude Haiku 5.5",
+    "style": "--c: var(--series-haiku)"
+   }
+  ],
+  "series": [
+   {
+    "id": "astra",
+    "style": "--c: var(--series-astra)",
+    "points": [
+     {
+      "name": "GPT-6 Astra",
+      "effort": "high",
+      "score": "64.5",
+      "cost": "11.0",
+      "x": "788.5",
+      "y": "85.7",
+      "aria": "GPT-6 Astra, high effort: 64.5% at $10.95 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sonnet",
+    "style": "--c: var(--series-sonnet)",
+    "points": [
+     {
+      "name": "Claude Sonnet 5.5",
+      "effort": "max",
+      "score": "61.0",
+      "cost": "26.3",
+      "x": "982.3",
+      "y": "101.1",
+      "aria": "Claude Sonnet 5.5, max effort: 61.0% at $26.29 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "opus",
+    "style": "--c: var(--series-opus)",
+    "points": [
+     {
+      "name": "Claude Opus 5.5",
+      "effort": "high",
+      "score": "60.6",
+      "cost": "14.5",
+      "x": "851.3",
+      "y": "103.1",
+      "aria": "Claude Opus 5.5, high effort: 60.6% at $14.55 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "terra",
+    "style": "--c: var(--series-terra)",
+    "points": [
+     {
+      "name": "GPT-6.1 Terra",
+      "effort": "high",
+      "score": "28.6",
+      "cost": "0.66",
+      "x": "166.5",
+      "y": "242.7",
+      "aria": "GPT-6.1 Terra, high effort: 28.6% at $0.66 per session"
+     },
+     {
+      "name": "GPT-6.1 Terra",
+      "effort": "max",
+      "score": "49.1",
+      "cost": "1.5",
+      "x": "347.6",
+      "y": "153.1",
+      "aria": "GPT-6.1 Terra, max effort: 49.1% at $1.49 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sol61",
+    "style": "--c: var(--series-sol61)",
+    "points": [
+     {
+      "name": "GPT-6.1 Sol",
+      "effort": "high",
+      "score": "40.7",
+      "cost": "1.3",
+      "x": "320.4",
+      "y": "190.1",
+      "aria": "GPT-6.1 Sol, high effort: 40.7% at $1.32 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sol",
+    "style": "--c: var(--series-sol)",
+    "points": [
+     {
+      "name": "GPT-6 Sol",
+      "effort": "high",
+      "score": "31.2",
+      "cost": "4.9",
+      "x": "611.2",
+      "y": "231.6",
+      "aria": "GPT-6 Sol, high effort: 31.2% at $4.92 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "kimi",
+    "style": "--c: var(--series-kimi)",
+    "points": [
+     {
+      "name": "Kimi K3.1 Pro",
+      "effort": "max",
+      "score": "21.3",
+      "cost": "12.2",
+      "x": "812.3",
+      "y": "275.0",
+      "aria": "Kimi K3.1 Pro, max effort: 21.3% at $12.19 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "deepseek",
+    "style": "--c: var(--series-deepseek)",
+    "points": [
+     {
+      "name": "DeepSeek V4.1 Flash (1017)",
+      "effort": "max",
+      "score": "13.1",
+      "cost": "0.64",
+      "x": "160.0",
+      "y": "310.5",
+      "aria": "DeepSeek V4.1 Flash (1017), max effort: 13.1% at $0.64 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "haiku",
+    "style": "--c: var(--series-haiku)",
+    "points": [
+     {
+      "name": "Claude Haiku 5.5",
+      "effort": "max",
+      "score": "8.3",
+      "cost": "3.4",
+      "x": "527.1",
+      "y": "331.7",
+      "aria": "Claude Haiku 5.5, max effort: 8.3% at $3.36 per session"
+     }
+    ],
+    "pathD": null
+   }
+  ],
+  "sub": "Mean success against what one session costs at list price, log scale. A model run at several efforts is one line through its points."
+ },
+ "ext": {
+  "viewBox": "0 0 1100 420",
+  "x0": "56",
+  "axisY": "368",
+  "aria": "Mean success against cost per session, the 11 extended tasks",
+  "grid": [
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "368",
+    "y2": "368"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "251.33333333333337",
+    "y2": "251.33333333333337"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "134.66666666666669",
+    "y2": "134.66666666666669"
+   },
+   {
+    "dash": false,
+    "x1": "56",
+    "x2": "1072",
+    "y1": "18",
+    "y2": "18"
+   },
+   {
+    "dash": true,
+    "x1": "104.52368225869137",
+    "x2": "104.52368225869137",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "267.60441201090055",
+    "x2": "267.60441201090055",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "430.68514176310964",
+    "x2": "430.68514176310964",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "646.2661401572883",
+    "x2": "646.2661401572883",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "809.3468699094976",
+    "x2": "809.3468699094976",
+    "y1": "18",
+    "y2": "368"
+   },
+   {
+    "dash": true,
+    "x1": "972.4275996617067",
+    "x2": "972.4275996617067",
+    "y1": "18",
+    "y2": "368"
+   }
+  ],
+  "ticks": [
+   {
+    "x": "46",
+    "y": "372",
+    "anchor": "end",
+    "text": "0%"
+   },
+   {
+    "x": "46",
+    "y": "255.33333333333337",
+    "anchor": "end",
+    "text": "20%"
+   },
+   {
+    "x": "46",
+    "y": "138.66666666666669",
+    "anchor": "end",
+    "text": "40%"
+   },
+   {
+    "x": "46",
+    "y": "22",
+    "anchor": "end",
+    "text": "60%"
+   },
+   {
+    "x": "104.52368225869137",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$0.5"
+   },
+   {
+    "x": "267.60441201090055",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$1"
+   },
+   {
+    "x": "430.68514176310964",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$2"
+   },
+   {
+    "x": "646.2661401572883",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$5"
+   },
+   {
+    "x": "809.3468699094976",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$10"
+   },
+   {
+    "x": "972.4275996617067",
+    "y": "388",
+    "anchor": "middle",
+    "text": "$20"
+   }
+  ],
+  "axis": [
+   "Cost per session, US$"
+  ],
+  "labels": [
+   {
+    "id": "opus",
+    "x": "976.6038885047169",
+    "y": "94.55530303030304",
+    "anchor": "middle",
+    "text": "Claude Opus 5.5",
+    "style": "--c: var(--series-opus)"
+   },
+   {
+    "id": "astra",
+    "x": "951.8469240980813",
+    "y": "186.8939393939394",
+    "anchor": "start",
+    "text": "GPT-6 Astra",
+    "style": "--c: var(--series-astra)"
+   },
+   {
+    "id": "sol61",
+    "x": "485.7888385228617",
+    "y": "187.77424242424243",
+    "anchor": "start",
+    "text": "GPT-6.1 Sol",
+    "style": "--c: var(--series-sol61)"
+   },
+   {
+    "id": "terra",
+    "x": "295.4603952690799",
+    "y": "276.328676703984",
+    "anchor": "end",
+    "text": "GPT-6.1 Terra",
+    "style": "--c: var(--series-terra)"
+   },
+   {
+    "id": "kimi",
+    "x": "943.4446649960935",
+    "y": "278.2863636363636",
+    "anchor": "start",
+    "text": "Kimi K3.1 Pro",
+    "style": "--c: var(--series-kimi)"
+   },
+   {
+    "id": "sol",
+    "x": "627.7683761873253",
+    "y": "303.7356060606061",
+    "anchor": "start",
+    "text": "GPT-6 Sol",
+    "style": "--c: var(--series-sol)"
+   },
+   {
+    "id": "deepseek",
+    "x": "194.87122145913327",
+    "y": "322.8318181818182",
+    "anchor": "start",
+    "text": "DeepSeek V4.1 Flash (1017)",
+    "style": "--c: var(--series-deepseek)"
+   },
+   {
+    "id": "haiku",
+    "x": "535.9086167662642",
+    "y": "350.93257575757576",
+    "anchor": "start",
+    "text": "Claude Haiku 5.5",
+    "style": "--c: var(--series-haiku)"
+   }
+  ],
+  "series": [
+   {
+    "id": "opus",
+    "style": "--c: var(--series-opus)",
+    "points": [
+     {
+      "name": "Claude Opus 5.5",
+      "effort": "high",
+      "score": "44.8",
+      "cost": "20.4",
+      "x": "976.6",
+      "y": "106.6",
+      "aria": "Claude Opus 5.5, high effort: 44.8% at $20.36 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "astra",
+    "style": "--c: var(--series-astra)",
+    "points": [
+     {
+      "name": "GPT-6 Astra",
+      "effort": "high",
+      "score": "31.8",
+      "cost": "17.4",
+      "x": "939.8",
+      "y": "182.4",
+      "aria": "GPT-6 Astra, high effort: 31.8% at $17.41 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sol61",
+    "style": "--c: var(--series-sol61)",
+    "points": [
+     {
+      "name": "GPT-6.1 Sol",
+      "effort": "high",
+      "score": "31.7",
+      "cost": "2.4",
+      "x": "473.8",
+      "y": "183.3",
+      "aria": "GPT-6.1 Sol, high effort: 31.7% at $2.40 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "terra",
+    "style": "--c: var(--series-terra)",
+    "points": [
+     {
+      "name": "GPT-6.1 Terra",
+      "effort": "high",
+      "score": "8.8",
+      "cost": "0.65",
+      "x": "166.6",
+      "y": "316.9",
+      "aria": "GPT-6.1 Terra, high effort: 8.8% at $0.65 per session"
+     },
+     {
+      "name": "GPT-6.1 Terra",
+      "effort": "max",
+      "score": "19.5",
+      "cost": "2.0",
+      "x": "430.8",
+      "y": "254.0",
+      "aria": "GPT-6.1 Terra, max effort: 19.5% at $2.00 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "kimi",
+    "style": "--c: var(--series-kimi)",
+    "points": [
+     {
+      "name": "Kimi K3.1 Pro",
+      "effort": "max",
+      "score": "16.2",
+      "cost": "16.8",
+      "x": "931.4",
+      "y": "273.8",
+      "aria": "Kimi K3.1 Pro, max effort: 16.2% at $16.80 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "sol",
+    "style": "--c: var(--series-sol)",
+    "points": [
+     {
+      "name": "GPT-6 Sol",
+      "effort": "high",
+      "score": "11.8",
+      "cost": "4.4",
+      "x": "615.8",
+      "y": "299.2",
+      "aria": "GPT-6 Sol, high effort: 11.8% at $4.39 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "deepseek",
+    "style": "--c: var(--series-deepseek)",
+    "points": [
+     {
+      "name": "DeepSeek V4.1 Flash (1017)",
+      "effort": "max",
+      "score": "8.5",
+      "cost": "0.70",
+      "x": "182.9",
+      "y": "318.3",
+      "aria": "DeepSeek V4.1 Flash (1017), max effort: 8.5% at $0.70 per session"
+     }
+    ],
+    "pathD": null
+   },
+   {
+    "id": "haiku",
+    "style": "--c: var(--series-haiku)",
+    "points": [
+     {
+      "name": "Claude Haiku 5.5",
+      "effort": "max",
+      "score": "3.7",
+      "cost": "3.0",
+      "x": "523.9",
+      "y": "346.4",
+      "aria": "Claude Haiku 5.5, max effort: 3.7% at $2.97 per session"
+     }
+    ],
+    "pathD": null
+   }
+  ],
+  "sub": "Mean success against what one session costs at list price, log scale. A model run at several efforts is one line through its points."
+ }
+}
