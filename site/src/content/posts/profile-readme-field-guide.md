@@ -297,9 +297,7 @@ jobs:
 
 聊完了怎么往主页上加东西，最后我拿自己现在的真实主页（`github.com/puresky271`）当例子，聊聊做减法和防裂图的事。
 
-![image](./images/profile-readme-field-guide/mvckhrq4-image.png)
-
-（这就是我的主页readme，很简洁。）
+![这就是我的主页 README，很简洁](./images/profile-readme-field-guide/mvckhrq4-image.png)
 
 如果你现在点进我的 GitHub 主页，会发现它的源码短得惊人，全部内容加起来不到 900 字节：
 

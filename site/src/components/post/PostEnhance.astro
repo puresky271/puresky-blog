@@ -1,6 +1,7 @@
 ---
 /**
- * PostEnhance.astro — 正文的渐进增强：代码块的标题栏（语言标签、复制按钮）、分享按钮。
+ * PostEnhance.astro — 正文的渐进增强：代码块的标题栏（语言标签、复制按钮）、分享按钮、
+ * :::photo row 的左右切换按钮。
  * 没有 JS 时正文照常可读，这些都是锦上添花。
  */
 import { iCheck, iCopy } from '@/lib/icons.generated';
@@ -14,6 +15,7 @@ const svg = (icon: { size: number; body: string }) =>
 <script>
   import { mountAnimations } from '@/components/animation/mount';
   import { setupCodeCollapse } from '@/lib/code-collapse';
+  import { setupPhotoStrip } from '@/lib/photo-strip';
 
   /**
    * 代码块包成一扇「窗」：标题栏（三点 + 语言 + 复制按钮）在上，<pre> 在下。
@@ -131,12 +133,24 @@ const svg = (icon: { size: number; body: string }) =>
     }, 1800);
   });
 
+  /**
+   * :::photo row 的左右切换按钮（lib/photo-strip.ts）。翻页时整份 DOM 会换掉，
+   * astro:page-load 之后要重新接一遍，顺手清掉上一页留下的监听和观察器。
+   */
+  let cleanupPhotoStrip: (() => void) | undefined;
+  function enhancePhotoStrips() {
+    cleanupPhotoStrip?.();
+    cleanupPhotoStrip = setupPhotoStrip(document);
+  }
+
   enhanceCode();
   enhanceCodeTabs();
+  enhancePhotoStrips();
   void mountAnimations(document);
   document.addEventListener('astro:page-load', () => {
     enhanceCode();
     enhanceCodeTabs();
+    enhancePhotoStrips();
     void mountAnimations(document);
   });
 </script>

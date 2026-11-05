@@ -29,6 +29,9 @@ function visit(node) {
   const children = node.children;
   for (let i = 0; i < children.length; i += 1) {
     const child = children[i];
+    if (child.type === 'paragraph' && child.children?.[0]?.type === 'text' && /^ {0,3}:::/.test(child.children[0].value)) {
+      continue;
+    }
     if (child.type === 'text') {
       // 节点内部：汉字\n汉字
       child.value = child.value.replace(/([^\n])\n(?=[^\n])/g, (match, before, offset, whole) =>

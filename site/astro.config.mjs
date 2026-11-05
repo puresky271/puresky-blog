@@ -21,6 +21,7 @@ import { rehypeHeadingAnchors } from './src/lib/markdown/rehype-heading-anchors.
 import { remarkCallout } from './src/lib/markdown/remark-callout.mjs';
 import { remarkCjkLines } from './src/lib/markdown/remark-cjk-lines.mjs';
 import { remarkCodeTabs } from './src/lib/markdown/remark-code-tabs.mjs';
+import { remarkFigure } from './src/lib/markdown/remark-figure.mjs';
 import { remarkLocalImages } from './src/lib/markdown/remark-local-images.mjs';
 import { remarkPaper } from './src/lib/markdown/remark-paper.mjs';
 
@@ -44,8 +45,10 @@ const runtimeBase = isCloudflarePages ? '/' : isGitHubPages && isProduction ? RE
  * animation：:::animation 容器里的 YAML 配置生成受限的内置动画挂载点。
  * math：$...$ 行内公式、$$...$$ 行间公式，渲染成 KaTeX（样式在 prose.css 顶部 @import）。
  * paper：:::bi / :::figure 是中英逐段对照，:::annotation 是注解、:::source 是原文出处（见 remark-paper.mjs）。
+ * figure：单独成段的图包成 figure，alt 当图注；:::photo 控制图片浮动、加宽和横排（见 remark-figure.mjs）。
+ *   排在 local-images 之后，缺图摘掉以后空出来的容器不输出。
  */
-const remarkPlugins = [remarkCjkFriendly, remarkMath, remarkPaper, remarkCjkLines, remarkCallout, remarkLocalImages, remarkCodeTabs, remarkAnimation];
+const remarkPlugins = [remarkCjkFriendly, remarkMath, remarkPaper, remarkCjkLines, remarkCallout, remarkLocalImages, remarkFigure, remarkCodeTabs, remarkAnimation];
 const rehypePlugins = [rehypeKatex, rehypeHeadingAnchors, rehypeExternalLinks];
 const shikiConfig = /** @type {const} */ ({
   themes: { light: 'github-light', dark: 'github-dark-dimmed' },
