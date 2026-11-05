@@ -109,6 +109,7 @@ export const SUBCATEGORIES = [
   { id: 'system-engineering', category: 'technology', label: '系统工程', blurb: '性能、并发、缓存、可观测性和可靠性。' },
   { id: 'frontend-tools', category: 'technology', label: '前端与工具', blurb: '界面、浏览器、Git 和开发工具。' },
   { id: 'data-structures', category: 'technology', label: '数据结构', blurb: '数据结构的概念、实现与应用。' },
+  { id: 'programming-basics', category: 'technology', label: '编程基础', blurb: '语言与格式的基础概念：JSON、XML、编码与序列化。' },
   { id: 'technology-unclassified', category: 'technology', label: '待归类', blurb: '暂时无法确定子类的技术文章。' },
   { id: 'arrays-strings', category: 'algorithms', label: '数组与字符串', blurb: '数组、字符串和双指针问题。' },
   { id: 'linked-lists-trees', category: 'algorithms', label: '链表与树', blurb: '链表、二叉树和递归结构。' },
@@ -175,6 +176,7 @@ export const TAGS = [
   { name: 'AI 与人', slug: 'ai-and-people', group: 'topic', blurb: 'AI 时代里人的位置：工作、学习、陪伴与责任。' },
   { name: '学习', slug: 'learning', group: 'topic', blurb: '作为学生，在答案触手可及的时代怎么学。' },
   { name: '软件工程', slug: 'software-engineering', group: 'topic', blurb: '把软件做对做稳的设计、流程与质量约束。' },
+  { name: '数据交换', slug: 'data-interchange', group: 'topic', blurb: '系统之间把数据写成文本再读回来：JSON、XML 与二进制。' },
   { name: '世界模型', slug: 'world-model', group: 'topic', blurb: '让智能体在内部预测世界里学习和行动的模型。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
@@ -194,6 +196,7 @@ export const TAGS = [
   { name: 'git', slug: 'git', group: 'tech', blurb: '关于git的各种知识' },
   { name: 'github', slug: 'github', group: 'tech', blurb: 'github的各种知识' },
   { name: '规范性', slug: 'normative', group: 'tech', blurb: '开发时的规范性标准' },
+  { name: 'JSON', slug: 'json', group: 'tech', blurb: '这个数据交换格式本身：语法、序列化与跨语言解析。' },
   { name: '自动化', slug: 'automation', group: 'tech', blurb: '' },
   { name: 'TypeScript', slug: 'typescript', group: 'tech', blurb: 'TypeScript 语言与类型工程。' },
   { name: 'Astro', slug: 'astro', group: 'tech', blurb: 'Astro 框架与岛屿架构。' },
@@ -274,6 +277,9 @@ export const TAGS = [
   { name: '情绪', slug: 'emotion', group: 'essay', blurb: '焦虑、疲惫、开心这些说不清的状态。' },
   { name: '人际关系', slug: 'relationships', group: 'essay', blurb: '和朋友、家人、同学怎么相处。' },
   { name: '消费', slug: 'consumption', group: 'essay', blurb: '买东西时的判断和花钱之后的感受。' },
+  { name: '音乐', slug: 'music', group: 'essay', blurb: '听过的歌、现场演出和旋律背后的故事。' },
+  { name: '翻译', slug: 'translation', group: 'essay', blurb: '跨语种转换时的字词推敲、语感得失与意境还原。' },
+  { name: 'MyGO!!!!!', slug: 'mygo', group: 'topic', blurb: '迷子们的音乐、故事与旅途。' },
   // 模型印象（模型榜单用，文章里也可以用来给自己的判断打标）
   { name: '日常主力', slug: 'daily-driver', group: 'model', blurb: '会长期留在默认入口里的那种。' },
   { name: '代码', slug: 'coding', group: 'model', blurb: '写代码、改仓库、读报错这类活。' },
@@ -291,6 +297,7 @@ export const TAGS = [
   { name: '创意', slug: 'creative', group: 'model', blurb: '写东西的时候敢往意外处走。' },
   { name: '可解释性', slug: 'interpretability', group: 'tech', blurb: '看进模型内部：激活、回路与内部表征。' },
   { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
+  { name: '具身智能', slug: 'embodied-ai', group: 'tech', blurb: '机器人、操作与在物理世界里行动的策略。' },
   // 出处（精选收录的外部文章：团队和作者）
   {
     name: 'Anthropic团队·Addy Osmani 等',
@@ -333,6 +340,18 @@ export const TAGS = [
     slug: 'mit-csail-rikiya-takehi',
     group: 'source',
     blurb: 'MIT CSAIL 的研究博客文章，作者是 Rikiya Takehi，Jayden Teoh，Alex Zhang 和 Omar Khattab。',
+  },
+  {
+    name: '帝国理工·Zexi Zhang 等',
+    slug: 'imperial-zexi-zhang',
+    group: 'source',
+    blurb: '伦敦帝国理工学院 SWIRL 实验室的项目页，作者是 Zexi Zhang，Zecheng Zhu，Zidong Chen，Zulkhuu Tuya 和 Stephen James。',
+  },
+  {
+    name: '纽约大学·Thomas Hikaru Clark 等',
+    slug: 'nyu-thomas-clark',
+    group: 'source',
+    blurb: '纽约大学与得克萨斯大学奥斯汀分校的语言学研究，作者是 Thomas Hikaru Clark，Matias B. Martin 和 Kyle Mahowald。',
   },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
