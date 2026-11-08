@@ -175,6 +175,7 @@ export const TAGS = [
   { name: '人格一致性', slug: 'persona', group: 'topic', blurb: '同一个角色在长对话、多轮重建之后还是她自己。' },
   { name: 'AI 与人', slug: 'ai-and-people', group: 'topic', blurb: 'AI 时代里人的位置：工作、学习、陪伴与责任。' },
   { name: '学习', slug: 'learning', group: 'topic', blurb: '作为学生，在答案触手可及的时代怎么学。' },
+  { name: '设计系统', slug: 'design-system', group: 'topic', blurb: '设计令牌、组件规范与界面语言。' },
   { name: '软件工程', slug: 'software-engineering', group: 'topic', blurb: '把软件做对做稳的设计、流程与质量约束。' },
   { name: '数据交换', slug: 'data-interchange', group: 'topic', blurb: '系统之间把数据写成文本再读回来：JSON、XML 与二进制。' },
   { name: '世界模型', slug: 'world-model', group: 'topic', blurb: '让智能体在内部预测世界里学习和行动的模型。' },
@@ -366,6 +367,12 @@ export const TAGS = [
     slug: 'tianyu-ding',
     group: 'source',
     blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。',
+  },
+  {
+    name: 'Vercel设计团队·Geist',
+    slug: 'vercel-geist',
+    group: 'source',
+    blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。',
   },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
