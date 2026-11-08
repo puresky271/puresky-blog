@@ -178,6 +178,8 @@ export const TAGS = [
   { name: '软件工程', slug: 'software-engineering', group: 'topic', blurb: '把软件做对做稳的设计、流程与质量约束。' },
   { name: '数据交换', slug: 'data-interchange', group: 'topic', blurb: '系统之间把数据写成文本再读回来：JSON、XML 与二进制。' },
   { name: '世界模型', slug: 'world-model', group: 'topic', blurb: '让智能体在内部预测世界里学习和行动的模型。' },
+  { name: 'AGI', slug: 'agi', group: 'topic', blurb: '通用人工智能的界定、到达之后的世界与继续前进的路径。' },
+  { name: '超级智能', slug: 'superintelligence', group: 'topic', blurb: '超过人类专家集体的系统：能力上限、实现路径与路上的摩擦。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
   { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
@@ -352,6 +354,18 @@ export const TAGS = [
     slug: 'nyu-thomas-clark',
     group: 'source',
     blurb: '纽约大学与得克萨斯大学奥斯汀分校的语言学研究，作者是 Thomas Hikaru Clark，Matias B. Martin 和 Kyle Mahowald。',
+  },
+  {
+    name: 'Google DeepMind团队·Tim Genewein 等',
+    slug: 'deepmind-tim-genewein',
+    group: 'source',
+    blurb: 'Google DeepMind 的 AGI 到 ASI 报告，作者是 Tim Genewein，Matija Franklin，Alexander Lerchner 等十四人。',
+  },
+  {
+    name: 'Tianyu Ding 等四人',
+    slug: 'tianyu-ding',
+    group: 'source',
+    blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。',
   },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
