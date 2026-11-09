@@ -181,6 +181,7 @@ export const TAGS = [
   { name: '世界模型', slug: 'world-model', group: 'topic', blurb: '让智能体在内部预测世界里学习和行动的模型。' },
   { name: 'AGI', slug: 'agi', group: 'topic', blurb: '通用人工智能的界定、到达之后的世界与继续前进的路径。' },
   { name: '超级智能', slug: 'superintelligence', group: 'topic', blurb: '超过人类专家集体的系统：能力上限、实现路径与路上的摩擦。' },
+  { name: 'MyGO!!!!!', slug: 'mygo', group: 'topic', blurb: '迷子们的音乐、故事与旅途。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
   { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
@@ -205,6 +206,7 @@ export const TAGS = [
   { name: 'Astro', slug: 'astro', group: 'tech', blurb: 'Astro 框架与岛屿架构。' },
   { name: 'Svelte', slug: 'svelte', group: 'tech', blurb: 'Svelte 组件与响应式。' },
   { name: 'CSS', slug: 'css', group: 'tech', blurb: '样式、布局与设计令牌。' },
+  { name: 'HTML', slug: 'html', group: 'tech', blurb: '网页结构、语义化标记与静态页面。' },
   { name: 'Node.js', slug: 'nodejs', group: 'tech', blurb: 'Node.js 运行时与工具链。' },
   { name: 'Cloudflare', slug: 'cloudflare', group: 'tech', blurb: 'Workers、KV、D1、R2 等边缘平台能力。' },
   { name: 'GitHub Actions', slug: 'github-actions', group: 'tech', blurb: 'workflow、定时任务与 CI/CD 实践。' },
@@ -223,6 +225,10 @@ export const TAGS = [
   { name: 'PyTorch', slug: 'pytorch', group: 'tech', blurb: '关于PyTorch的相关知识' },
   { name: '强化学习', slug: 'reinforcement-learning', group: 'tech', blurb: '智能体通过试错与奖励信号学习策略。' },
   { name: '生成模型', slug: 'generative-model', group: 'tech', blurb: '学习数据分布并采样生成新样本的模型。' },
+  { name: '可解释性', slug: 'interpretability', group: 'tech', blurb: '看进模型内部：激活、回路与内部表征。' },
+  { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
+  { name: '具身智能', slug: 'embodied-ai', group: 'tech', blurb: '机器人、操作与在物理世界里行动的策略。' },
+  { name: 'html', slug: 'html', group: 'tech', blurb: 'html的语法，应用和生态' },
   // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
@@ -272,6 +278,7 @@ export const TAGS = [
   { name: '方法论', slug: 'methodology', group: 'kind', blurb: '从多次踩坑里沉淀下来的做法。' },
   { name: '反思', slug: 'reflection', group: 'kind', blurb: '不那么技术的想法。' },
   // 随笔
+  { name: '天文', slug: 'astronomy', group: 'essay', blurb: '星空、星座、行星与宇宙尺度的观测与遐想。' },
   { name: '校园生活', slug: 'campus', group: 'essay', blurb: '课程、考试、社团和学生组织里的事。' },
   { name: '日常记录', slug: 'daily-life', group: 'essay', blurb: '日常的近况、琐事和小变化。' },
   { name: '饮食', slug: 'food', group: 'essay', blurb: '吃过的店、吃法和饮食文化。' },
@@ -282,8 +289,7 @@ export const TAGS = [
   { name: '消费', slug: 'consumption', group: 'essay', blurb: '买东西时的判断和花钱之后的感受。' },
   { name: '音乐', slug: 'music', group: 'essay', blurb: '听过的歌、现场演出和旋律背后的故事。' },
   { name: '翻译', slug: 'translation', group: 'essay', blurb: '跨语种转换时的字词推敲、语感得失与意境还原。' },
-  { name: 'MyGO!!!!!', slug: 'mygo', group: 'topic', blurb: '迷子们的音乐、故事与旅途。' },
-  // 模型印象（模型榜单用，文章里也可以用来给自己的判断打标）
+  // 模型印象
   { name: '日常主力', slug: 'daily-driver', group: 'model', blurb: '会长期留在默认入口里的那种。' },
   { name: '代码', slug: 'coding', group: 'model', blurb: '写代码、改仓库、读报错这类活。' },
   { name: '中文', slug: 'chinese', group: 'model', blurb: '中文表达自然，不是翻译腔。' },
@@ -298,82 +304,20 @@ export const TAGS = [
   { name: '贵', slug: 'pricey', group: 'model', blurb: '用之前要先算一下账。' },
   { name: '稳定', slug: 'stable', group: 'model', blurb: '同样的提示词，结果不会一天一个样。' },
   { name: '创意', slug: 'creative', group: 'model', blurb: '写东西的时候敢往意外处走。' },
-  { name: '可解释性', slug: 'interpretability', group: 'tech', blurb: '看进模型内部：激活、回路与内部表征。' },
-  { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
-  { name: '具身智能', slug: 'embodied-ai', group: 'tech', blurb: '机器人、操作与在物理世界里行动的策略。' },
-  // 出处（精选收录的外部文章：团队和作者）
-  {
-    name: 'Anthropic团队·Addy Osmani 等',
-    slug: 'anthropic-addy-osmani',
-    group: 'source',
-    blurb: 'Anthropic 官方工程博客，作者是 Addy Osmani，Morgan Westlee Lunt 和 Qing Wang。',
-  },
-  {
-    name: 'Anthropic团队·Prithvi Rajasekaran 等',
-    slug: 'anthropic-prithvi-rajasekaran',
-    group: 'source',
-    blurb: 'Anthropic 研究博客，作者是应用 AI 团队的 Prithvi Rajasekaran，Ethan Dixon，Carly Ryan 和 Jeremy Hadfield。',
-  },
-  {
-    name: 'Cognition团队·Walden Yan',
-    slug: 'cognition-walden-yan',
-    group: 'source',
-    blurb: 'Cognition 官方博客，作者是 Walden Yan。',
-  },
-  {
-    name: 'Anthropic团队·Wes Gurnee 等',
-    slug: 'anthropic-wes-gurnee',
-    group: 'source',
-    blurb: 'Anthropic 可解释性研究，配套论文的作者是 Wes Gurnee 和 Nicholas Sofroniew 等十六人。',
-  },
-  {
-    name: '斯坦福团队·Joon Sung Park 等',
-    slug: 'stanford-joonsung-park',
-    group: 'source',
-    blurb: '斯坦福大学人机交互方向，作者是 Joon Sung Park，Joseph C. O’Brien，Carrie J. Cai 等六人。',
-  },
-  {
-    name: 'DeepSeek团队·Yujia Qiao 等',
-    slug: 'deepseek-yujia-qiao',
-    group: 'source',
-    blurb: 'DeepSeek 产品团队，文章由 Yujia Qiao 执笔，团队共同实践与审阅。',
-  },
-  {
-    name: 'MIT CSAIL·Rikiya Takehi 等',
-    slug: 'mit-csail-rikiya-takehi',
-    group: 'source',
-    blurb: 'MIT CSAIL 的研究博客文章，作者是 Rikiya Takehi，Jayden Teoh，Alex Zhang 和 Omar Khattab。',
-  },
-  {
-    name: '帝国理工·Zexi Zhang 等',
-    slug: 'imperial-zexi-zhang',
-    group: 'source',
-    blurb: '伦敦帝国理工学院 SWIRL 实验室的项目页，作者是 Zexi Zhang，Zecheng Zhu，Zidong Chen，Zulkhuu Tuya 和 Stephen James。',
-  },
-  {
-    name: '纽约大学·Thomas Hikaru Clark 等',
-    slug: 'nyu-thomas-clark',
-    group: 'source',
-    blurb: '纽约大学与得克萨斯大学奥斯汀分校的语言学研究，作者是 Thomas Hikaru Clark，Matias B. Martin 和 Kyle Mahowald。',
-  },
-  {
-    name: 'Google DeepMind团队·Tim Genewein 等',
-    slug: 'deepmind-tim-genewein',
-    group: 'source',
-    blurb: 'Google DeepMind 的 AGI 到 ASI 报告，作者是 Tim Genewein，Matija Franklin，Alexander Lerchner 等十四人。',
-  },
-  {
-    name: 'Tianyu Ding 等四人',
-    slug: 'tianyu-ding',
-    group: 'source',
-    blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。',
-  },
-  {
-    name: 'Vercel设计团队·Geist',
-    slug: 'vercel-geist',
-    group: 'source',
-    blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。',
-  },
+  // 出处
+  { name: 'Anthropic团队·Addy Osmani 等', slug: 'anthropic-addy-osmani', group: 'source', blurb: 'Anthropic 官方工程博客，作者是 Addy Osmani，Morgan Westlee Lunt 和 Qing Wang。' },
+  { name: 'Anthropic团队·Prithvi Rajasekaran 等', slug: 'anthropic-prithvi-rajasekaran', group: 'source', blurb: 'Anthropic 研究博客，作者是应用 AI 团队的 Prithvi Rajasekaran，Ethan Dixon，Carly Ryan 和 Jeremy Hadfield。' },
+  { name: 'Cognition团队·Walden Yan', slug: 'cognition-walden-yan', group: 'source', blurb: 'Cognition 官方博客，作者是 Walden Yan。' },
+  { name: 'Anthropic团队·Wes Gurnee 等', slug: 'anthropic-wes-gurnee', group: 'source', blurb: 'Anthropic 可解释性研究，配套论文的作者是 Wes Gurnee 和 Nicholas Sofroniew 等十六人。' },
+  { name: '斯坦福团队·Joon Sung Park 等', slug: 'stanford-joonsung-park', group: 'source', blurb: '斯坦福大学人机交互方向，作者是 Joon Sung Park，Joseph C. O’Brien，Carrie J. Cai 等六人。' },
+  { name: 'DeepSeek团队·Yujia Qiao 等', slug: 'deepseek-yujia-qiao', group: 'source', blurb: 'DeepSeek 产品团队，文章由 Yujia Qiao 执笔，团队共同实践与审阅。' },
+  { name: 'MIT CSAIL·Rikiya Takehi 等', slug: 'mit-csail-rikiya-takehi', group: 'source', blurb: 'MIT CSAIL 的研究博客文章，作者是 Rikiya Takehi，Jayden Teoh，Alex Zhang 和 Omar Khattab。' },
+  { name: '帝国理工·Zexi Zhang 等', slug: 'imperial-zexi-zhang', group: 'source', blurb: '伦敦帝国理工学院 SWIRL 实验室的项目页，作者是 Zexi Zhang，Zecheng Zhu，Zidong Chen，Zulkhuu Tuya 和 Stephen James。' },
+  { name: '纽约大学·Thomas Hikaru Clark 等', slug: 'nyu-thomas-clark', group: 'source', blurb: '纽约大学与得克萨斯大学奥斯汀分校的语言学研究，作者是 Thomas Hikaru Clark，Matias B. Martin 和 Kyle Mahowald。' },
+  { name: 'Google DeepMind团队·Tim Genewein 等', slug: 'deepmind-tim-genewein', group: 'source', blurb: 'Google DeepMind 的 AGI 到 ASI 报告，作者是 Tim Genewein，Matija Franklin，Alexander Lerchner 等十四人。' },
+  { name: 'Tianyu Ding 等四人', slug: 'tianyu-ding', group: 'source', blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。' },
+  { name: 'Vercel设计团队·Geist', slug: 'vercel-geist', group: 'source', blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。' },
+  { name: 'Anthropic团队·Thariq Shihipar', slug: 'anthropic-thariq-shihipar', group: 'source', blurb: 'Anthropic 官方博客 claude.dev，作者是 Claude Code 团队的 Thariq Shihipar。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
