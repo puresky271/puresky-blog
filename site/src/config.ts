@@ -228,7 +228,6 @@ export const TAGS = [
   { name: '可解释性', slug: 'interpretability', group: 'tech', blurb: '看进模型内部：激活、回路与内部表征。' },
   { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
   { name: '具身智能', slug: 'embodied-ai', group: 'tech', blurb: '机器人、操作与在物理世界里行动的策略。' },
-  { name: 'html', slug: 'html', group: 'tech', blurb: 'html的语法，应用和生态' },
   // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
