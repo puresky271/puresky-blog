@@ -26,7 +26,7 @@
     ],
     "acRate": 68,
     "url": "https://leetcode.cn/problems/reorder-list/",
-    "fetchedAt": "2026-11-10T23:30:00.454Z"
+    "fetchedAt": "2026-11-12T00:49:37.085Z"
   },
   {
     "slug": "trapping-rain-water",
@@ -59,7 +59,7 @@
     ],
     "acRate": 66.2,
     "url": "https://leetcode.cn/problems/trapping-rain-water/",
-    "fetchedAt": "2026-11-10T23:30:00.454Z"
+    "fetchedAt": "2026-11-12T00:49:37.085Z"
   },
   {
     "slug": "shortest-palindrome",
@@ -98,9 +98,9 @@
         "slug": "z-algorithm"
       }
     ],
-    "acRate": 41.3,
+    "acRate": 41.4,
     "url": "https://leetcode.cn/problems/shortest-palindrome/",
-    "fetchedAt": "2026-11-10T23:30:00.454Z"
+    "fetchedAt": "2026-11-12T00:49:37.085Z"
   },
   {
     "slug": "range-sum-query-mutable",
@@ -137,6 +137,6 @@
     ],
     "acRate": 54.5,
     "url": "https://leetcode.cn/problems/range-sum-query-mutable/",
-    "fetchedAt": "2026-11-10T23:30:00.454Z"
+    "fetchedAt": "2026-11-12T00:49:37.085Z"
   }
 ]
