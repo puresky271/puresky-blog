@@ -109,6 +109,7 @@ export const SUBCATEGORIES = [
   { id: 'system-engineering', category: 'technology', label: '系统工程', blurb: '性能、并发、缓存、可观测性和可靠性。' },
   { id: 'frontend-tools', category: 'technology', label: '前端与工具', blurb: '界面、浏览器、Git 和开发工具。' },
   { id: 'data-structures', category: 'technology', label: '数据结构', blurb: '数据结构的概念、实现与应用。' },
+  { id: 'databases', category: 'technology', label: '数据库', blurb: '数据库系统的数据模型、存储、索引、查询与事务。' },
   { id: 'programming-basics', category: 'technology', label: '编程基础', blurb: '语言与格式的基础概念：JSON、XML、编码与序列化。' },
   { id: 'technology-unclassified', category: 'technology', label: '待归类', blurb: '暂时无法确定子类的技术文章。' },
   { id: 'arrays-strings', category: 'algorithms', label: '数组与字符串', blurb: '数组、字符串和双指针问题。' },
@@ -214,6 +215,9 @@ export const TAGS = [
   { name: 'Linux', slug: 'linux', group: 'tech', blurb: 'Linux 系统与服务器运维。' },
   { name: '命令行', slug: 'cli', group: 'tech', blurb: '终端、shell 与命令行工具。' },
   { name: '数据库', slug: 'database', group: 'tech', blurb: 'SQL、索引与数据建模。' },
+  { name: '关系模型', slug: 'relational-model', group: 'tech', blurb: '用关系（表）组织数据：Codd 在 1970 年提出的模型。' },
+  { name: 'SQL', slug: 'sql', group: 'tech', blurb: '关系数据库的查询语言与它的方言。' },
+  { name: 'CMU 15-445', slug: 'cmu-15-445', group: 'tech', blurb: '卡内基梅隆大学的数据库系统公开课。' },
   { name: '测试', slug: 'testing', group: 'tech', blurb: '单元测试、集成测试与断言设计。' },
   { name: 'MCP', slug: 'mcp', group: 'tech', blurb: 'Model Context Protocol 的配置与接入。' },
   { name: 'Agent', slug: 'agent', group: 'tech', blurb: '编码 Agent 与自主任务执行。' },
@@ -338,6 +342,7 @@ export const SERIES = [
   { name: '图与集合笔记', blurb: '并查集这类维护元素之间连通与归属关系的结构。' },
   { name: '字符串匹配笔记', blurb: 'KMP 这类在主串中查找模式串的算法。' },
   { name: 'GitHub Actions 笔记', blurb: 'GitHub Actions 的用法与自动化实践。' },
+  { name: '数据库基础', blurb: '跟着 CMU 15-445 从关系模型走到存储、索引、查询与事务。' },
 ] as const;
 
 /** 每页文章数。 */
