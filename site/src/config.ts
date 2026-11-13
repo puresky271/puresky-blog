@@ -183,6 +183,7 @@ export const TAGS = [
   { name: 'AGI', slug: 'agi', group: 'topic', blurb: '通用人工智能的界定、到达之后的世界与继续前进的路径。' },
   { name: '超级智能', slug: 'superintelligence', group: 'topic', blurb: '超过人类专家集体的系统：能力上限、实现路径与路上的摩擦。' },
   { name: 'MyGO!!!!!', slug: 'mygo', group: 'topic', blurb: '迷子们的音乐、故事与旅途。' },
+  { name: '人机交互', slug: 'hci', group: 'topic', blurb: '人与计算机交互的研究：交互设计、用户研究与 Human-AI Interaction。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
   { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
@@ -232,6 +233,7 @@ export const TAGS = [
   { name: '可解释性', slug: 'interpretability', group: 'tech', blurb: '看进模型内部：激活、回路与内部表征。' },
   { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
   { name: '具身智能', slug: 'embodied-ai', group: 'tech', blurb: '机器人、操作与在物理世界里行动的策略。' },
+  { name: '学术写作', slug: 'academic-writing', group: 'tech', blurb: '研究论文的写作、投稿与评审。' },
   // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
@@ -321,6 +323,7 @@ export const TAGS = [
   { name: 'Tianyu Ding 等四人', slug: 'tianyu-ding', group: 'source', blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。' },
   { name: 'Vercel设计团队·Geist', slug: 'vercel-geist', group: 'source', blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。' },
   { name: 'Anthropic团队·Thariq Shihipar', slug: 'anthropic-thariq-shihipar', group: 'source', blurb: 'Anthropic 官方博客 claude.dev，作者是 Claude Code 团队的 Thariq Shihipar。' },
+  { name: '华盛顿大学·Jacob O. Wobbrock 与 Julie A. Kientz', slug: 'uw-wobbrock-kientz', group: 'source', blurb: '华盛顿大学人机交互方向的两位作者 Jacob O. Wobbrock 与 Julie A. Kientz，文章发表于 ACM Interactions。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
