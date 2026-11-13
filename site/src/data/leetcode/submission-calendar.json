@@ -1,7 +1,7 @@
 {
   "username": "puresky271",
-  "fetchedAt": "2026-11-12T23:41:56.492Z",
-  "total": 34,
+  "fetchedAt": "2026-11-13T23:40:18.720Z",
+  "total": 45,
   "days": [
     {
       "timestamp": 1769212800,
@@ -13,37 +13,37 @@
       "timestamp": 1791676800,
       "date": "2026-10-11",
       "count": 4,
-      "level": 3
+      "level": 2
     },
     {
       "timestamp": 1791763200,
       "date": "2026-10-12",
       "count": 6,
-      "level": 4
+      "level": 3
     },
     {
       "timestamp": 1791936000,
       "date": "2026-10-14",
       "count": 6,
-      "level": 4
+      "level": 3
     },
     {
       "timestamp": 1792022400,
       "date": "2026-10-15",
       "count": 2,
-      "level": 2
+      "level": 1
     },
     {
       "timestamp": 1794096000,
       "date": "2026-11-08",
       "count": 2,
-      "level": 2
+      "level": 1
     },
     {
       "timestamp": 1794182400,
       "date": "2026-11-09",
       "count": 2,
-      "level": 2
+      "level": 1
     },
     {
       "timestamp": 1794268800,
@@ -66,8 +66,14 @@
     {
       "timestamp": 1794528000,
       "date": "2026-11-13",
-      "count": 4,
-      "level": 3
+      "count": 10,
+      "level": 4
+    },
+    {
+      "timestamp": 1794614400,
+      "date": "2026-11-14",
+      "count": 5,
+      "level": 2
     }
   ]
 }
