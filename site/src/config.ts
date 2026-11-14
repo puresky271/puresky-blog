@@ -125,6 +125,7 @@ export const SUBCATEGORIES = [
   { id: 'paper-rl', category: 'papers', label: '强化学习与世界模型', blurb: '模型基强化学习、世界模型与决策规划。' },
   { id: 'paper-systems', category: 'papers', label: '系统与工程', blurb: '训练与推理基础设施、分布式系统和工程实践。' },
   { id: 'paper-theory', category: 'papers', label: '算法与理论', blurb: '算法、数据结构、复杂度与理论证明。' },
+  { id: 'paper-hci', category: 'papers', label: '人机交互', blurb: '交互设计、可用性、用户研究与 Human-AI Interaction 的论文。' },
   { id: 'papers-unclassified', category: 'papers', label: '待归类', blurb: '暂时无法确定子类的论文解读。' },
   { id: 'curation-tech', category: 'curation', label: '技术文章', blurb: '技术博客、工程实践与架构经验。' },
   { id: 'curation-opinion', category: 'curation', label: '观点与方法', blurb: '行业判断、学习方法与工作方式。' },
@@ -184,6 +185,7 @@ export const TAGS = [
   { name: '超级智能', slug: 'superintelligence', group: 'topic', blurb: '超过人类专家集体的系统：能力上限、实现路径与路上的摩擦。' },
   { name: 'MyGO!!!!!', slug: 'mygo', group: 'topic', blurb: '迷子们的音乐、故事与旅途。' },
   { name: '人机交互', slug: 'hci', group: 'topic', blurb: '人与计算机交互的研究：交互设计、用户研究与 Human-AI Interaction。' },
+  { name: '交互设计', slug: 'interaction-design', group: 'topic', blurb: '界面、交互方式与设计指南。' },
   // 技术
   { name: 'LLM', slug: 'llm', group: 'tech', blurb: '大语言模型本身的行为与边界。' },
   { name: '提示词', slug: 'prompt', group: 'tech', blurb: '提示词的装配、版本与调试。' },
@@ -234,6 +236,7 @@ export const TAGS = [
   { name: 'AI 安全', slug: 'ai-safety', group: 'tech', blurb: '模型行为对齐、失准与监测。' },
   { name: '具身智能', slug: 'embodied-ai', group: 'tech', blurb: '机器人、操作与在物理世界里行动的策略。' },
   { name: '学术写作', slug: 'academic-writing', group: 'tech', blurb: '研究论文的写作、投稿与评审。' },
+  { name: '用户研究', slug: 'user-study', group: 'tech', blurb: '访谈、问卷、可用性测试与启发式评估这些研究方法。' },
   // 算法
   { name: '双指针', slug: 'two-pointers', group: 'algo', blurb: '对撞、快慢与分离指针。' },
   { name: '滑动窗口', slug: 'sliding-window', group: 'algo', blurb: '可变与定长窗口的维护。' },
@@ -324,6 +327,8 @@ export const TAGS = [
   { name: 'Vercel设计团队·Geist', slug: 'vercel-geist', group: 'source', blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。' },
   { name: 'Anthropic团队·Thariq Shihipar', slug: 'anthropic-thariq-shihipar', group: 'source', blurb: 'Anthropic 官方博客 claude.dev，作者是 Claude Code 团队的 Thariq Shihipar。' },
   { name: '华盛顿大学·Jacob O. Wobbrock 与 Julie A. Kientz', slug: 'uw-wobbrock-kientz', group: 'source', blurb: '华盛顿大学人机交互方向的两位作者 Jacob O. Wobbrock 与 Julie A. Kientz，文章发表于 ACM Interactions。' },
+  { name: 'Lisa Anthony', slug: 'lisa-anthony', group: 'source', blurb: '人机交互研究者，CHI 的长期作者与程序委员会成员，博客写 CHI 投稿与论文写作。' },
+  { name: '微软研究院·Saleema Amershi 等', slug: 'msr-amershi', group: 'source', blurb: '微软研究院的人机交互团队，作者是 Saleema Amershi，Dan Weld，Mihaela Vorvoreanu 等十三人。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
