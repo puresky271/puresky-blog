@@ -323,12 +323,15 @@ export const TAGS = [
   { name: '帝国理工·Zexi Zhang 等', slug: 'imperial-zexi-zhang', group: 'source', blurb: '伦敦帝国理工学院 SWIRL 实验室的项目页，作者是 Zexi Zhang，Zecheng Zhu，Zidong Chen，Zulkhuu Tuya 和 Stephen James。' },
   { name: '纽约大学·Thomas Hikaru Clark 等', slug: 'nyu-thomas-clark', group: 'source', blurb: '纽约大学与得克萨斯大学奥斯汀分校的语言学研究，作者是 Thomas Hikaru Clark，Matias B. Martin 和 Kyle Mahowald。' },
   { name: 'Google DeepMind团队·Tim Genewein 等', slug: 'deepmind-tim-genewein', group: 'source', blurb: 'Google DeepMind 的 AGI 到 ASI 报告，作者是 Tim Genewein，Matija Franklin，Alexander Lerchner 等十四人。' },
+  { name: 'Google DeepMind团队·Alexander Sasha Vezhnevets 等', slug: 'deepmind-vezhnevets', group: 'source', blurb: 'Google DeepMind 的 Concordia 生成式智能体建模库论文，作者是 Alexander Sasha Vezhnevets，John P. Agapiou，Avia Aharon 等十人。' },
   { name: 'Tianyu Ding 等四人', slug: 'tianyu-ding', group: 'source', blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。' },
   { name: 'Vercel设计团队·Geist', slug: 'vercel-geist', group: 'source', blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。' },
   { name: 'Anthropic团队·Thariq Shihipar', slug: 'anthropic-thariq-shihipar', group: 'source', blurb: 'Anthropic 官方博客 claude.dev，作者是 Claude Code 团队的 Thariq Shihipar。' },
   { name: '华盛顿大学·Jacob O. Wobbrock 与 Julie A. Kientz', slug: 'uw-wobbrock-kientz', group: 'source', blurb: '华盛顿大学人机交互方向的两位作者 Jacob O. Wobbrock 与 Julie A. Kientz，文章发表于 ACM Interactions。' },
   { name: 'Lisa Anthony', slug: 'lisa-anthony', group: 'source', blurb: '人机交互研究者，CHI 的长期作者与程序委员会成员，博客写 CHI 投稿与论文写作。' },
   { name: '微软研究院·Saleema Amershi 等', slug: 'msr-amershi', group: 'source', blurb: '微软研究院的人机交互团队，作者是 Saleema Amershi，Dan Weld，Mihaela Vorvoreanu 等十三人。' },
+  { name: 'KAIST·Yewon Kim 等', slug: 'kaist-yewon-kim', group: 'source', blurb: 'KAIST 与卡内基梅隆大学的人机交互与音乐计算团队，作者是 Yewon Kim，Sung-Ju Lee 和 Chris Donahue。' },
+  { name: '复旦团队·Jiangjie Chen 等', slug: 'fudan-jiangjie-chen', group: 'source', blurb: '复旦大学的角色扮演语言智能体综述，作者是 Jiangjie Chen，Xintao Wang，Rui Xu 等十八人，发表于 TMLR 2024。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
