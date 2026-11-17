@@ -28,8 +28,13 @@ const LABELS = {
   'avl-rotate': 'AVL 树的右旋与左旋',
   'thread-build': '线索二叉树的线索化',
   'thread-traverse': '遍历线索二叉树',
+  'rpn-eval': '逆波兰表达式求值',
+  'graph-dfs': '图的深度优先遍历：一条路走到黑',
+  'graph-bfs': '图的广度优先遍历：一层一层向外扩散',
+  'relation-anatomy': '解剖关系模型的一张表',
   'omakase-curve': '一席 Omakase 的风味递进弧线',
   'panorama-lyrics': '《端程山》双版本歌词对照与音画联动',
+  'cassiopeia-stars': '仙后座五颗主星的三维光年纵深与天体物理观测台',
   'ws-teaser': '权重空间编程开场三格',
   'ws-traces': '模型读权重与写权重的完整记录',
   'ws-gohand': '从零写出的围棋网络的逐步改进',
@@ -39,6 +44,19 @@ const LABELS = {
   'bigym-tasks': '20 个任务与真人演示',
   'bigym-cost': '成功率与单次会话成本',
   'bigym-explorer': '每个程序在每个隐藏种子上的结果',
+  'geist-gallery': 'Geist 组件示例画廊',
+  'geist-palette': 'Geist 色彩系统',
+  'geist-type': 'Geist 字阶与字体',
+  'geist-materials': 'Geist 材质层级',
+  'geist-terminal': 'Geist 终端主题',
+  'geist-grid': 'Geist 网格系统',
+  // 精选收录《用 Claude Code：把投入花在刀刃上》的六个复刻演示。
+  'sye-curve': 'Terminal-Bench 3.0 的投入程度曲线',
+  'sye-failures': 'Terminal-Bench 3.0 每次尝试的失败原因方阵',
+  'sye-payoff': '各类任务的通过率与投入程度',
+  'sye-builds': '一句话提示词在四个投入档位下生成的健身应用',
+  'sye-config': 'Claude Code 配置菜单在四个投入档位下的重设计',
+  'sye-phone': '按访谈规格生成的健身应用与十一步演示',
 };
 
 /** 精选收录里那篇文章的 trace 数据集：值就是 public/data/weight-space/traces/ 下的文件名。 */
@@ -55,8 +73,13 @@ const WS_TRACES = new Set([
 const EMPTY_CONFIG_OK = new Set([
   'tree-levelorder',
   'expression-tree',
+  'rpn-eval',
+  'graph-dfs',
+  'graph-bfs',
+  'relation-anatomy',
   'omakase-curve',
   'panorama-lyrics',
+  'cassiopeia-stars',
   'ws-teaser',
   'ws-gohand',
   'bigym-film',
@@ -64,10 +87,35 @@ const EMPTY_CONFIG_OK = new Set([
   'bigym-tasks',
   'bigym-cost',
   'bigym-explorer',
+  'geist-palette',
+  'geist-type',
+  'geist-materials',
+  'geist-terminal',
+  'geist-grid',
+  'sye-curve',
+  'sye-failures',
+  'sye-payoff',
+  'sye-builds',
+  'sye-config',
+  'sye-phone',
 ]);
+
+/** 这六个演示都不需要配置项，写了配置直接报错。 */
+const syeNoConfig = (config) => (Object.keys(config).length === 0
+  ? null
+  : '这个演示不需要配置项。');
 
 const VALIDATORS = {
   kmp: () => null,
+  'geist-gallery': (config) => {
+    const allowed = new Set(['actions', 'inputs', 'choices', 'data', 'feedback', 'overlays', 'containers']);
+    const unknown = Object.keys(config).filter((key) => key !== 'group');
+    if (unknown.length > 0) return `组件画廊不支持配置项：${unknown.join('、')}。`;
+    if (!allowed.has(config.group)) {
+      return 'group 只能是 actions、inputs、choices、data、feedback、overlays 或 containers。';
+    }
+    return null;
+  },
   'tree-traversal': (config) => {
     const unknown = Object.keys(config).filter((key) => key !== 'order' && key !== 'method');
     if (unknown.length > 0) return `遍历动画不支持配置项：${unknown.join('、')}。`;
@@ -152,9 +200,48 @@ const VALIDATORS = {
     }
     return null;
   },
+  'rpn-eval': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'tokens');
+    if (unknown.length > 0) return `逆波兰求值演示不支持配置项：${unknown.join('、')}。`;
+    if (config.tokens !== undefined && typeof config.tokens !== 'string') {
+      return '逆波兰求值演示的 tokens 需为空格分隔的字符串，例如 3 4 2 * +。';
+    }
+    if (typeof config.tokens === 'string') {
+      // remark-smartypants 会把配置里的直引号改成弯引号，拆词前统一当空白处理，
+      // 这样写成 tokens: 3 4 2 * + 或者 tokens: "3 4 2 * +" 都能正常识别。
+      const normalized = config.tokens.replace(/[“”‘’"'`]/g, ' ').trim();
+      if (!normalized) return '逆波兰求值演示的 tokens 不能为空。';
+      if (normalized.length > 120) return '逆波兰求值演示的 tokens 过长。';
+      const tokens = normalized.split(/\s+/);
+      if (tokens.length > 24) return '逆波兰求值演示的 tokens 最多 24 个元素。';
+      for (const token of tokens) {
+        if (!/^-?\d+$/.test(token) && !['+', '-', '*', '/'].includes(token)) {
+          return `逆波兰求值演示的 tokens 里包含无法识别的元素 ${token}，只能是整数或 +、-、*、/。`;
+        }
+      }
+    }
+    return null;
+  },
+  'graph-dfs': (config) => (Object.keys(config).length === 0
+    ? null
+    : 'DFS 演示不需要配置项。'),
+  'graph-bfs': (config) => (Object.keys(config).length === 0
+    ? null
+    : 'BFS 演示不需要配置项。'),
+  'relation-anatomy': (config) => (Object.keys(config).length === 0
+    ? null
+    : '关系模型解剖演示不需要配置项。'),
   'omakase-curve': (config) => (Object.keys(config).length === 0
     ? null
     : '味觉曲线演示不需要配置项。'),
+  'cassiopeia-stars': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'view');
+    if (unknown.length > 0) return `仙后座观测台不支持配置项：${unknown.join('、')}。`;
+    if (config.view !== undefined && !['depth', 'polar', 'physics'].includes(String(config.view))) {
+      return 'view 只能是 depth、polar 或 physics。';
+    }
+    return null;
+  },
   'panorama-lyrics': (config) => {
     const allowed = new Set(['lines', 'stanza', 'title']);
     const unknown = Object.keys(config).filter((key) => !allowed.has(key));
@@ -213,6 +300,12 @@ const VALIDATORS = {
   'bigym-explorer': (config) => (Object.keys(config).length === 0
     ? null
     : '程序浏览器不需要配置项。'),
+  'sye-curve': syeNoConfig,
+  'sye-failures': syeNoConfig,
+  'sye-payoff': syeNoConfig,
+  'sye-builds': syeNoConfig,
+  'sye-config': syeNoConfig,
+  'sye-phone': syeNoConfig,
 };
 
 const TYPES = new Set(Object.keys(LABELS));
@@ -273,7 +366,7 @@ function buildAnimation(type, source) {
         'data-config': JSON.stringify(config),
       },
     },
-    children: [message(type.startsWith('ws-') || type.startsWith('bigym-')
+    children: [message(type.startsWith('ws-') || type.startsWith('bigym-') || type.startsWith('geist-') || type.startsWith('sye-')
       ? `交互演示：${LABELS[type]}。启用 JavaScript 后可以切换、展开和播放。`
       : `动画演示：${LABELS[type]}。启用 JavaScript 后可以播放，可以暂停，也可以单步查看。`)],
   };

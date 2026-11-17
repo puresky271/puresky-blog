@@ -17,8 +17,16 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'avl-rotate': async () => (await import('./AvlRotationDemo.svelte')).default,
   'thread-build': async () => (await import('./ThreadBuildDemo.svelte')).default,
   'thread-traverse': async () => (await import('./ThreadTraverseDemo.svelte')).default,
+  'rpn-eval': async () => (await import('./RpnEvalDemo.svelte')).default,
+  // 图论那篇的遍历原理演示：DFS 看调用栈与回溯，BFS 看队列与逐层扩散。
+  'graph-dfs': async () => (await import('./GraphDfsDemo.svelte')).default,
+  'graph-bfs': async () => (await import('./GraphBfsDemo.svelte')).default,
+  // 数据库那篇的关系模型演示：把 Artist 表拆成 relation / tuple / attribute / domain /
+  // schema / instance / primary key 七个概念，按步骤圈出对应的行、列和表头。
+  'relation-anatomy': async () => (await import('./RelationAnatomy.svelte')).default,
   'omakase-curve': async () => (await import('./OmakaseCurve.svelte')).default,
   'panorama-lyrics': async () => (await import('./PanoramaLyricsDemo.svelte')).default,
+  'cassiopeia-stars': async () => (await import('./CassiopeiaStarLab.svelte')).default,
   // 精选收录《Sparks of Weight-Space Programming》里四个实验演示：原站是手写的 JS，这里按原站的交互重做成
   // Svelte，数据仍在 public/data/weight-space/ 下按需取，不进 bundle。
   'ws-teaser': async () => (await import('./WsTeaser.svelte')).default,
@@ -32,6 +40,23 @@ const registry: Record<string, () => Promise<Component<AnimationProps>>> = {
   'bigym-tasks': async () => (await import('./BigymTasks.svelte')).default,
   'bigym-cost': async () => (await import('./BigymCost.svelte')).default,
   'bigym-explorer': async () => (await import('./BigymExplorer.svelte')).default,
+  // 精选收录《Geist 设计系统》的复刻：组件示例快照画廊和五个基础章节演示，
+  // 快照数据在 public/data/geist/ 下按分组懒加载，样式在 geist/ 目录里。
+  'geist-gallery': async () => (await import('./GeistGallery.svelte')).default,
+  'geist-palette': async () => (await import('./geist/foundations/GeistPalette.svelte')).default,
+  'geist-type': async () => (await import('./geist/foundations/GeistType.svelte')).default,
+  'geist-materials': async () => (await import('./geist/foundations/GeistMaterials.svelte')).default,
+  'geist-terminal': async () => (await import('./geist/foundations/GeistTerminal.svelte')).default,
+  'geist-grid': async () => (await import('./geist/foundations/GeistGrid.svelte')).default,
+  // 精选收录《用 Claude Code：把投入花在刀刃上》的六个复刻演示：
+  // 三张图表按原站 SVG 数据重画，三个应用演示按原站 DOM 录制重放，
+  // 数据在 public/data/spending-your-effort/ 下按需取，样式在 sye/ 目录里。
+  'sye-curve': async () => (await import('./sye/SyeCurve.svelte')).default,
+  'sye-failures': async () => (await import('./sye/SyeFailures.svelte')).default,
+  'sye-payoff': async () => (await import('./sye/SyePayoff.svelte')).default,
+  'sye-builds': async () => (await import('./sye/SyeBuilds.svelte')).default,
+  'sye-config': async () => (await import('./sye/SyeConfig.svelte')).default,
+  'sye-phone': async () => (await import('./sye/SyePhone.svelte')).default,
 };
 
 const mounted = new WeakSet<Element>();
