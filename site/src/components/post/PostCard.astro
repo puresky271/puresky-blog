@@ -10,7 +10,7 @@ import { Image } from 'astro:assets';
 import { render } from 'astro:content';
 
 import Icon from '@/components/ui/Icon.astro';
-import { categoryOf, subcategoryOf, postMinutes, postWords, type Post } from '@/lib/content';
+import { categoryOf, subcategoryOf, coverArt, postMinutes, postWords, type Post } from '@/lib/content';
 import { formatDate, postPath } from '@/lib/format';
 
 interface Props {
@@ -22,9 +22,10 @@ interface Props {
 
 const { post, size = 'md', index = 0 } = Astro.props;
 const { title, description, pubDate, category, subcategory, cover, coverAlt, featured } = post.data;
+const coverImage = coverArt(cover);
 const cat = categoryOf(category);
 
-const feature = size === 'lg' && !cover;
+const feature = size === 'lg' && !coverImage;
 // 导读卡的提纲：最多四个二级标题。标题里的锚点符号 # 会被收进文本，去掉。
 const outline = feature
   ? (await render(post)).headings
@@ -77,9 +78,9 @@ const outline = feature
   ) : (
     <article class:list={['card card-link post-card group', size]} data-reveal style={`--reveal-i: ${index}`}>
       <a href={postPath(post.id)} class="flex h-full flex-col">
-        {cover && (
+        {coverImage && (
           <div class="cover">
-            <Image src={cover} alt={coverAlt ?? ''} width={size === 'lg' ? 960 : 640} class="h-full w-full object-cover" />
+            <Image src={coverImage} alt={coverAlt ?? ''} width={size === 'lg' ? 960 : 640} class="h-full w-full object-cover" />
           </div>
         )}
         <div class="body">

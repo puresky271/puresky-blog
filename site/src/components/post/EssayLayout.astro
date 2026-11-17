@@ -20,7 +20,7 @@ import ReadingPrefs from '@/components/post/ReadingPrefs.astro';
 import Toc from '@/components/post/Toc.astro';
 import { AUTHOR } from '@/config';
 import type { Post } from '@/lib/content';
-import { categoryOf, getStream, postMinutes, postWords, subcategoryOf } from '@/lib/content';
+import { categoryOf, coverArt, getStream, postMinutes, postWords, subcategoryOf } from '@/lib/content';
 import { categoryPath, formatDate, formatDateWeekday, postPath, subcategoryPath, tagPath } from '@/lib/format';
 import type { MarkdownHeading } from 'astro';
 
@@ -33,6 +33,7 @@ interface Props {
 
 const { post, headings, adjacent, related } = Astro.props;
 const { title, description, pubDate, updatedDate, category, subcategory, tags, cover, coverAlt, archived } = post.data;
+const coverImage = coverArt(cover);
 const cat = categoryOf(category);
 const sub = subcategoryOf(subcategory);
 const byline = post.data.author ?? AUTHOR.name;
@@ -113,9 +114,9 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3).length;
         </div>
         {description && <p class="essay-lead">{description}</p>}
         {
-          cover && (
+          coverImage && (
             <figure class="essay-cover" data-zoom>
-              <Image src={cover} alt={coverAlt ?? ''} width={1280} loading="eager" fetchpriority="high" class="h-auto w-full" />
+              <Image src={coverImage} alt={coverAlt ?? ''} width={1280} loading="eager" fetchpriority="high" class="h-auto w-full" />
             </figure>
           )
         }

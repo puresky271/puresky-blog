@@ -21,6 +21,7 @@ import Base from '@/layouts/Base.astro';
 import {
   categoryOf,
   subcategoryOf,
+  coverArt,
   getAdjacent,
   getAllPosts,
   getRelated,
@@ -50,6 +51,7 @@ const noToc = tocItems < 2;
 // 正文里有行首的 :::bi 才是中英对照文章，头部才需要原文语言开关。
 const bilingual = /^ {0,3}:::bi\s*$/m.test(post.body ?? '');
 const { title, description, pubDate, updatedDate, category, subcategory, tags, cover, coverAlt, archived } = post.data;
+const coverImage = coverArt(cover);
 /*
  * 版式按分类分两套：随笔走「手记」（纸面 + 篇目流），其余分类（含文学创作）走默认的文档版式。
  */
@@ -66,7 +68,7 @@ const words = postWords(post);
 const minutes = postMinutes(post);
 ---
 
-<Base title={title} description={description} type="article" publishedTime={pubDate} image={cover?.src}>
+<Base title={title} description={description} type="article" publishedTime={pubDate} image={coverImage?.src}>
   {post.data.song && <span hidden data-post-song={post.data.song} />}
   <div class="reading-progress" aria-hidden="true"></div>
 
@@ -132,9 +134,9 @@ const minutes = postMinutes(post);
           </div>
         </dl>
         {
-          cover && (
+          coverImage && (
             <figure class="post-cover" data-zoom>
-              <Image src={cover} alt={coverAlt ?? ''} width={1280} loading="eager" fetchpriority="high" class="h-auto w-full" />
+              <Image src={coverImage} alt={coverAlt ?? ''} width={1280} loading="eager" fetchpriority="high" class="h-auto w-full" />
             </figure>
           )
         }
@@ -469,15 +471,27 @@ const minutes = postMinutes(post);
     min-width: 0;
     gap: 0.45rem;
   }
+  .post-tags li {
+    display: flex;
+  }
+  /*
+   * 标签名可能很长（论文那条「Google DeepMind团队·Alexander Sasha Vezhnevets 等」
+   * 就有六十来个字符），胶囊不锁死高度：一行时还是 1.7rem，放不下就换行自己长高。
+   * 同一排里的胶囊跟着一起拉伸，短标签不会在长标签旁边塌成一小截。
+   */
   .tag-pill {
     display: inline-flex;
     align-items: center;
-    height: 1.7rem;
+    max-width: 100%;
+    min-height: 1.7rem;
+    padding-block: 0.2rem;
     padding-inline: 0.65rem;
     border-radius: 8px;
     border: 1px solid var(--line-strong);
     font-size: 0.78rem;
     font-weight: 500;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
     color: var(--fg-muted);
     transition:
       color 160ms ease,

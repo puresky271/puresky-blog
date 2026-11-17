@@ -5,6 +5,7 @@
  * 页面不要直接调 getCollection，否则草稿会在某个角落漏出去。
  */
 
+import type { ImageMetadata } from 'astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 
 import { CATEGORIES, SUBCATEGORIES, SUBCATEGORIES_BY_CATEGORY, TAG_GROUPS, TAGS, type CategoryId, type SubcategoryId } from '@/config';
@@ -45,6 +46,24 @@ export function postMinutes(post: Post): number {
 
 export function postWords(post: Post): number {
   return wordCount(post.body ?? '');
+}
+
+/**
+ * 封面交给 <Image> 之前的一道检查。
+ *
+ * 正常情况内容集合的 image() 已经把 frontmatter 里的封面路径转成了 ImageMetadata。
+ * 但开发模式下 Astro 的图片资源表是异步重建的：刚往文章目录里放一张新封面、或者 dev 和构建
+ * 同时跑的时候，这一篇的 cover 还会停在字符串路径上。字符串传给 <Image> 会抛
+ * LocalImageUsedWrongly，整页变成 500。这时只跳过封面，别让一张图的时序问题打挂整篇文章；
+ * 资源表接上以后刷新一次，封面自己就回来了。
+ */
+export function coverArt(cover: unknown): ImageMetadata | undefined {
+  if (typeof cover === 'string') {
+    if (import.meta.env.DEV) console.warn(`[cover] 图片资源表还没接上，本次跳过封面：${cover}`);
+    return undefined;
+  }
+  if (!cover || typeof cover !== 'object') return undefined;
+  return typeof (cover as Partial<ImageMetadata>).src === 'string' ? (cover as ImageMetadata) : undefined;
 }
 
 export function categoryOf(id: CategoryId) {

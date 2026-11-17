@@ -66,16 +66,20 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
                   t.count > 0 ? (
                     <li>
                       <a href={tagPath(t.name)} class="tag" title={t.blurb} style={`--weight: ${(t.count / max).toFixed(3)}`}>
-                        <span class="hash">#</span>
-                        {t.name}
-                        <span class="count tabular">{t.count}</span>
+                        <span class="label">
+                          <span class="hash">#</span>
+                          {t.name}
+                          <span class="count tabular">{t.count}</span>
+                        </span>
                       </a>
                     </li>
                   ) : (
                     <li>
                       <span class="tag is-empty" title={`${t.blurb}（还没有文章）`}>
-                        <span class="hash">#</span>
-                        {t.name}
+                        <span class="label">
+                          <span class="hash">#</span>
+                          {t.name}
+                        </span>
                       </span>
                     </li>
                   )
@@ -184,13 +188,20 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
     align-content: flex-start;
     gap: 0.5rem;
   }
-  /* 写得越多，底色越深一点，而不是字号越大：一组里的标签保持同一个高度，读起来整齐。 */
+  .tags li {
+    display: flex;
+  }
+  /*
+   * 写得越多，底色越深一点，而不是字号越大：一组里的标签保持同一个高度，读起来整齐。
+   * 出处组（source）的标签名很长，一个就有三四十个字，窄屏放不下时胶囊跟着变高换行。
+   * 内容包在 .label 里，换行时 # 和标签名还是同一段文字，不会各占一边。
+   */
   .tag {
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.15em;
-    height: 2rem;
     align-items: center;
+    max-width: 100%;
+    min-height: 2rem;
+    padding-block: 0.25rem;
     padding-inline: 0.8rem;
     border-radius: 999px;
     border: 1px solid color-mix(in oklab, var(--accent) calc(12% + var(--weight, 0) * 30%), var(--line));
@@ -201,6 +212,10 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
       border-color 160ms ease,
       color 160ms ease,
       transform 200ms var(--ease-out-expo);
+  }
+  .label {
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
   a.tag:hover {
     color: var(--accent);
