@@ -1,0 +1,351 @@
+/**
+ * FIG C 类别通过率棒棒糖图的样式。
+ *
+ * 类名照抄原站（viz-*），统一挂在 .sye-payoff 下面。
+ * 模型系列色走 base.css 的 --fig-series-*，当前模型用强调色 --fig-focal，
+ * 非当前模型降成 --viz-g* 的灰调，和原站一样。
+ */
+
+.sye-payoff {
+  --fig-mark: 1px;
+  --fig-focal: #d97757; /* Fable 5.1 的系列色，两个主题都是原站这支橙，数据色不跟主题走 */
+  --viz-line: var(--sye-line-strong);
+  --viz-line-soft: var(--sye-line);
+
+  max-width: var(--fig-max);
+}
+
+.sye-payoff-fallback {
+  margin: 0;
+  padding: var(--fig-pad);
+  font-size: 0.9375rem;
+  color: var(--sye-ink-2);
+}
+
+/* ---------- 顶部控件 ---------- */
+
+.sye-payoff .viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 32px;
+  padding: var(--fig-tab-top) var(--fig-pad) 0;
+}
+
+.sye-payoff .viz-pills {
+  flex: 0 auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sye-payoff .viz-play {
+  min-height: 32px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  color: var(--fig-cap-ink);
+  text-transform: var(--fig-meta-case);
+  transition: color 0.15s;
+}
+
+.sye-payoff .viz-play:hover {
+  color: var(--sye-ink);
+}
+
+/* ---------- 画布 ---------- */
+
+.sye-payoff .viz-chart {
+  position: relative;
+}
+
+.sye-payoff .viz-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sye-payoff .viz-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.sye-payoff .viz-t-ink {
+  fill: var(--sye-ink);
+}
+
+.sye-payoff .viz-t-body {
+  fill: var(--sye-ink-2);
+}
+
+.sye-payoff .viz-t-muted {
+  fill: var(--fig-chart-ink);
+}
+
+.sye-payoff .viz-num {
+  font-variant-numeric: var(--fig-num-variant);
+}
+
+.sye-payoff .viz-rule {
+  stroke: var(--viz-line);
+  stroke-width: 1px;
+}
+
+.sye-payoff .viz-grid {
+  stroke: var(--viz-line-soft);
+  stroke-width: 1px;
+}
+
+/* ---------- 行底色与高亮 ---------- */
+
+.sye-payoff .viz-bg,
+.sye-payoff .viz-row {
+  --under: var(--sye-bg);
+}
+
+.sye-payoff .viz-bg.band,
+.sye-payoff .viz-row.band,
+.sye-payoff .viz-bg.hot,
+.sye-payoff .viz-row.hot {
+  --under: var(--viz-wash);
+}
+
+.sye-payoff .viz-bg.band.hot,
+.sye-payoff .viz-row.band.hot {
+  --under: var(--viz-wash-2);
+}
+
+.sye-payoff .viz-bg {
+  fill: var(--under);
+  transition: fill 0.15s;
+}
+
+.sye-payoff .viz-rows {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sye-payoff .viz-rowbtn {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-radius: var(--fig-radius, 0);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sye-payoff .viz-rowbtn:focus-visible {
+  border-radius: var(--fig-radius, 0);
+  outline-offset: -1px;
+}
+
+/* ---------- 棒棒糖 ---------- */
+
+.sye-payoff .m0 {
+  --c: var(--fig-focal);
+}
+
+.sye-payoff .m1 {
+  --c: var(--fig-series-1);
+  --dash: var(--fig-dash-1);
+}
+
+.sye-payoff .m2 {
+  --c: var(--fig-series-2);
+  --dash: var(--fig-dash-2);
+}
+
+.sye-payoff .m3 {
+  --c: var(--fig-series-3);
+  --dash: var(--fig-dash-3);
+}
+
+.sye-payoff .ghost.m0 {
+  --c: var(--viz-g0);
+}
+
+.sye-payoff .ghost.m1 {
+  --c: var(--viz-g1);
+}
+
+.sye-payoff .ghost.m2 {
+  --c: var(--viz-g2);
+}
+
+.sye-payoff .ghost.m3 {
+  --c: var(--viz-g3);
+}
+
+.sye-payoff .viz-mk line {
+  stroke: var(--c);
+  stroke-width: var(--fig-mark);
+  stroke-dasharray: var(--dash, none);
+}
+
+.sye-payoff .viz-mk .lo {
+  fill: var(--under);
+  stroke: var(--c);
+  stroke-width: var(--fig-mark);
+}
+
+.sye-payoff .viz-mk .hi {
+  fill: var(--c);
+}
+
+.sye-payoff .viz-halo {
+  stroke: var(--under);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.sye-payoff .viz-key-ring {
+  fill: var(--sye-bg);
+  stroke: var(--viz-muted);
+  stroke-width: var(--fig-mark);
+}
+
+.sye-payoff .viz-key-dot {
+  fill: var(--viz-muted);
+}
+
+/* ---------- 行 tooltip ---------- */
+
+.sye-payoff .viz-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  min-width: 140px;
+  max-width: 260px;
+  padding: 8px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--sye-ink-2);
+  pointer-events: none;
+  visibility: hidden;
+  background: var(--sye-panel);
+  border: 1px solid var(--sye-line-strong);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.12s,
+    transform 0.12s,
+    visibility 0s 0.12s;
+}
+
+.sye-payoff .viz-tip.on {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.12s,
+    transform 0.12s;
+}
+
+.sye-payoff .viz-tip b {
+  font-weight: 500;
+  color: var(--sye-ink);
+}
+
+.sye-payoff .viz-tip .k {
+  color: var(--viz-muted);
+}
+
+.sye-payoff .viz-tip.tasks {
+  width: min(460px, 100%);
+  max-width: none;
+  padding: 10px 14px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sye-payoff .viz-tip.tasks.pinned {
+  pointer-events: auto;
+}
+
+.sye-payoff .viz-tip .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sye-payoff .viz-tip .head {
+  color: var(--sye-ink);
+}
+
+.sye-payoff .viz-tip .x {
+  display: none;
+  min-height: 32px;
+  padding: 0 2px;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  color: var(--viz-muted);
+  text-transform: var(--fig-meta-case);
+}
+
+.sye-payoff .viz-tip .x:hover {
+  color: var(--sye-ink);
+}
+
+.sye-payoff .viz-tip.pinned .x {
+  display: inline-block;
+}
+
+.sye-payoff .viz-tip .sub {
+  margin: 2px 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--viz-muted);
+}
+
+.sye-payoff .viz-tip ol {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sye-payoff .viz-tip li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.sye-payoff .viz-tip li .n {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--sye-ink-2);
+  white-space: nowrap;
+}
+
+.sye-payoff .viz-tip li .n .lo {
+  color: var(--viz-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sye-payoff .viz-play {
+    display: none;
+  }
+
+  .sye-payoff .viz-bg,
+  .sye-payoff .viz-tip,
+  .sye-payoff .viz-tip.on {
+    transition: none;
+  }
+}

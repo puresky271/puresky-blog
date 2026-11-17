@@ -1,0 +1,961 @@
+/**
+ * FIG3（sye-config）的样式：四屏 Claude Code /config 重设计 + 横向滑动外框。
+ *
+ * 结构照抄原站：外框 .efx-view / .efx-rail / .efx-slot 用 --i 位移，四屏分别是
+ * .efc-low / .efc-medium / .efc-high / .efc-max，类名和原站一致，方便比对。
+ *
+ * 与原站的区别只有两点：
+ * 1. 所有选择器都挂在 .sye-config 下面，不会漏到正文。
+ * 2. 终端里的字体换成站内的 --font-mono（自带中文回退），原站用的是 Anthropic Mono。
+ * 终端是一块「应用自己的深色界面」，配色不跟站内亮暗主题走；外框和标签页走 base.css
+ * 里的站内语义令牌。
+ */
+
+/* ---------- 外框：四屏横向 rail ---------- */
+
+.sye-config .efx-view {
+  width: 100%;
+  overflow: hidden;
+}
+
+.sye-config .efx-rail {
+  display: flex;
+  transform: translateX(calc(var(--i, 0) * -100%));
+  transition: transform 0.42s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.sye-config .efx-slot {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 580px;
+  overflow: auto;
+  overscroll-behavior: auto;
+  container-type: size;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sye-config .efx-rail {
+    transition: none;
+  }
+}
+
+/* ---------- 四屏共用的复位 ---------- */
+
+.sye-config :is(.efc-low, .efc-medium, .efc-high, .efc-max),
+.sye-config :is(.efc-low, .efc-medium, .efc-high, .efc-max) *,
+.sye-config :is(.efc-low, .efc-medium, .efc-high, .efc-max) *::before,
+.sye-config :is(.efc-low, .efc-medium, .efc-high, .efc-max) *::after {
+  box-sizing: border-box;
+}
+
+.sye-config :is(.efc-low, .efc-medium, .efc-high, .efc-max) {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.sye-config :is(.efc-low, .efc-medium, .efc-high, .efc-max) .stage,
+.sye-config .efc-max .__stage {
+  display: grid;
+  place-items: start center;
+  min-height: 100cqh;
+  padding: 8px 16px 16px;
+}
+
+.sye-config :is(.efc-low, .efc-medium, .efc-high) .stage > * {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 !important;
+}
+
+/* ---------- 低档：草图 ---------- */
+
+.sye-config .efc-low {
+  --term: #1b1a18;
+  --tink: #e8e5dd;
+  --tdim: #7d7a72;
+  --accent: #d97757;
+  --ok: #7fb069;
+  color: #ece9e1;
+  font: 15px/1.5 var(--font-sans);
+}
+
+.sye-config .efc-low .term {
+  background: var(--term);
+  color: var(--tink);
+  border: 1px solid #33312d;
+  border-radius: 10px;
+  outline: none;
+  min-height: 460px;
+  padding: 16px 18px;
+  font: 13.5px/1.55 var(--font-mono);
+  overflow-x: auto;
+}
+
+.sye-config .efc-low .term:focus {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.sye-config .efc-low .efc-low-row {
+  white-space: pre;
+}
+
+.sye-config .efc-low .dim {
+  color: var(--tdim);
+}
+
+.sye-config .efc-low .acc {
+  color: var(--accent);
+}
+
+.sye-config .efc-low .ok {
+  color: var(--ok);
+}
+
+.sye-config .efc-low .b {
+  font-weight: 700;
+}
+
+.sye-config .efc-low .tabs span {
+  cursor: pointer;
+}
+
+.sye-config .efc-low .tabs .on {
+  color: var(--term);
+  background: var(--tink);
+}
+
+.sye-config .efc-low .item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 2px;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.sye-config .efc-low .item.cur {
+  background: #2e2c29;
+}
+
+.sye-config .efc-low .item.changed .lbl::after {
+  content: ' •';
+  color: var(--accent);
+}
+
+.sye-config .efc-low .help {
+  color: var(--tdim);
+  border-top: 1px solid #33312d;
+  min-height: 3em;
+  margin-top: 10px;
+  padding-top: 8px;
+}
+
+@container (max-width: 520px) {
+  .sye-config .efc-low .term {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+}
+
+/* ---------- 中档：带搜索框的设置盒子 ---------- */
+
+.sye-config .efc-medium {
+  --term-bg: #1b1a18;
+  --term-bar: #262522;
+  --term-text: #e8e6df;
+  --term-dim: #8d8a80;
+  --term-faint: #5c5a53;
+  --term-accent: #d97757;
+  --term-sel: #2f2d29;
+  --term-green: #8fbf7f;
+  color: var(--term-text);
+  font: 15px/1.55 var(--font-sans);
+}
+
+.sye-config .efc-medium .term {
+  background: var(--term-bg);
+  color: var(--term-text);
+  border-radius: 10px;
+  outline: none;
+  font: 13.5px/1.5 var(--font-mono);
+  overflow: hidden;
+  box-shadow: 0 8px 30px #0000002e;
+}
+
+.sye-config .efc-medium .term:focus-within {
+  box-shadow:
+    0 0 0 2px #c96442,
+    0 8px 30px #0000002e;
+}
+
+.sye-config .efc-medium .term-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--term-bar);
+}
+
+.sye-config .efc-medium .term-bar i {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #4a4843;
+}
+
+.sye-config .efc-medium .term-bar span {
+  margin-left: 10px;
+  color: var(--term-dim);
+  font-size: 12px;
+}
+
+.sye-config .efc-medium .screen {
+  display: flex;
+  flex-direction: column;
+  height: 468px;
+  padding: 14px 18px 12px;
+}
+
+@container (max-width: 520px) {
+  .sye-config .efc-medium .screen {
+    padding: 10px 10px 8px;
+  }
+  .sye-config .efc-medium .term {
+    font-size: 12px;
+  }
+}
+
+.sye-config .efc-medium .prompt-echo {
+  margin-bottom: 10px;
+  color: var(--term-dim);
+}
+
+.sye-config .efc-medium .box {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 8px 12px 6px;
+  border: 1px solid #3a3833;
+  border-radius: 6px;
+}
+
+.sye-config .efc-medium .head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sye-config .efc-medium .head .title {
+  overflow: hidden;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-medium .head .crumb {
+  color: var(--term-dim);
+  font-weight: 400;
+}
+
+.sye-config .efc-medium .efc-medium-search {
+  display: flex;
+  flex: 0 220px;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--term-dim);
+}
+
+.sye-config .efc-medium .efc-medium-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--term-text);
+  font: inherit;
+  caret-color: var(--term-accent);
+}
+
+.sye-config .efc-medium .efc-medium-search input::placeholder {
+  color: var(--term-faint);
+}
+
+.sye-config .efc-medium .list {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sye-config .efc-medium .efc-medium-row {
+  display: flex;
+  gap: 10px;
+  margin: 0 -6px;
+  padding: 0 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sye-config .efc-medium .efc-medium-row .ptr {
+  flex: none;
+  width: 1ch;
+  color: var(--term-accent);
+}
+
+.sye-config .efc-medium .efc-medium-row .label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-medium .efc-medium-row .val {
+  flex: none;
+  max-width: 48%;
+  overflow: hidden;
+  color: var(--term-dim);
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-medium .efc-medium-row .val.on {
+  color: var(--term-green);
+}
+
+.sye-config .efc-medium .efc-medium-row .dot {
+  flex: none;
+  width: 1ch;
+  color: var(--term-accent);
+}
+
+.sye-config .efc-medium .efc-medium-row.sel {
+  background: var(--term-sel);
+}
+
+.sye-config .efc-medium .efc-medium-row.sel .label {
+  color: #fff;
+}
+
+.sye-config .efc-medium .efc-medium-row .tag {
+  flex: none;
+  color: var(--term-faint);
+}
+
+.sye-config .efc-medium .efc-medium-nav .val {
+  color: var(--term-faint);
+}
+
+.sye-config .efc-medium .gap {
+  height: 1.5em;
+}
+
+.sye-config .efc-medium .more {
+  padding-left: calc(1ch + 10px);
+  color: var(--term-faint);
+}
+
+.sye-config .efc-medium .opt {
+  display: flex;
+  gap: 10px;
+  padding-left: calc(1ch + 24px);
+  color: var(--term-dim);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sye-config .efc-medium .opt.sel {
+  color: var(--term-text);
+}
+
+.sye-config .efc-medium .opt .mk {
+  width: 1ch;
+  color: var(--term-accent);
+}
+
+.sye-config .efc-medium .foot {
+  min-height: 3em;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #2f2d29;
+  color: var(--term-dim);
+  white-space: normal;
+}
+
+.sye-config .efc-medium .foot .flash {
+  color: var(--term-green);
+}
+
+.sye-config .efc-medium .empty {
+  padding: 4px 0;
+  color: var(--term-dim);
+}
+
+/* ---------- 高档：完整 Claude Code 外观 ---------- */
+
+.sye-config .efc-high {
+  color: #ecebe7;
+  font: 15px/1.55 var(--font-sans);
+  outline: none;
+}
+
+.sye-config .efc-high .term {
+  --t-bg: #141413;
+  --t-fg: #e6e4df;
+  --t-dim: #8b8880;
+  --t-faint: #4f4d49;
+  --t-focus: #b1b9f9;
+  --t-accent: #d77757;
+  --t-on: #86c994;
+  --t-warn: #e5b567;
+  --t-bar: #1f1e1c;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #34322e;
+  border-radius: 12px;
+  background: var(--t-bg);
+  color: var(--t-fg);
+  font: 13.5px/1.55 var(--font-mono);
+  outline: none;
+  box-shadow: 0 10px 30px -18px #00000073;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+
+.sye-config .efc-high .term.t-light {
+  --t-bg: #fbfaf7;
+  --t-fg: #1f1e1c;
+  --t-dim: #7d7a73;
+  --t-faint: #bdb9b0;
+  --t-focus: #4a5bd4;
+  --t-accent: #c4623f;
+  --t-on: #2f8a4a;
+  --t-warn: #9a6400;
+  --t-bar: #efece6;
+}
+
+.sye-config .efc-high .term.t-cb {
+  --t-on: #5ea0ef;
+  --t-accent: #e0a040;
+}
+
+.sye-config .efc-high .term.t-light.t-cb {
+  --t-on: #2767c4;
+  --t-accent: #b36b00;
+}
+
+.sye-config .efc-high .term.t-ansi {
+  --t-focus: #6c6cff;
+  --t-on: #00cd00;
+  --t-accent: #cd6600;
+}
+
+.sye-config .efc-high .term.t-light.t-ansi {
+  --t-focus: #00e;
+  --t-on: #00a000;
+  --t-accent: #b35900;
+}
+
+.sye-config .efc-high .term:focus-visible {
+  box-shadow: 0 0 0 2px #c4623f;
+}
+
+.sye-config .efc-high .tbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--t-bar);
+  color: var(--t-dim);
+  font-size: 12px;
+  transition: background 0.18s;
+}
+
+.sye-config .efc-high .dots {
+  display: flex;
+  gap: 6px;
+}
+
+.sye-config .efc-high .dots i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--t-faint);
+}
+
+.sye-config .efc-high .tbar .ttl {
+  flex: 1;
+  margin-right: 46px;
+  overflow: hidden;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-high .screen {
+  display: flex;
+  flex-direction: column;
+  height: calc(34.1em + 24px);
+  padding: 12px 14px;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+
+.sye-config .efc-high .list {
+  flex: 1;
+  min-height: 0;
+}
+
+.sye-config .efc-high .ln {
+  min-height: 1.55em;
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-high .efc-high-row {
+  display: grid;
+  grid-template-columns: 2ch 2ch minmax(0, min(31ch, 54%)) minmax(0, 1fr) auto;
+  min-height: 1.55em;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.sye-config .efc-high .efc-high-row > span {
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-high .efc-high-row .ptr {
+  color: var(--t-focus);
+  visibility: hidden;
+}
+
+.sye-config .efc-high .efc-high-row .mk {
+  color: var(--t-accent);
+}
+
+.sye-config .efc-high .efc-high-row .mk.fg-focus {
+  color: var(--t-focus);
+}
+
+.sye-config .efc-high .efc-high-row .val {
+  color: var(--t-fg);
+}
+
+.sye-config .efc-high .efc-high-row .val.off,
+.sye-config .efc-high .efc-high-row .val.dim,
+.sye-config .efc-high .efc-high-row .tag {
+  color: var(--t-dim);
+}
+
+.sye-config .efc-high .efc-high-row .val.on {
+  color: var(--t-on);
+}
+
+.sye-config .efc-high .efc-high-row .tag {
+  padding-left: 2ch;
+}
+
+.sye-config .efc-high .efc-high-row.focus .ptr {
+  visibility: visible;
+}
+
+.sye-config .efc-high .efc-high-row.focus .lab,
+.sye-config .efc-high .efc-high-row.focus .val:not(.on) {
+  color: var(--t-focus);
+}
+
+.sye-config .efc-high .efc-high-row.focus .val.dim {
+  opacity: 0.75;
+}
+
+.sye-config .efc-high .efc-high-row.locked .val {
+  color: var(--t-dim);
+}
+
+.sye-config .efc-high .efc-high-row .pulse {
+  animation: sye-high-pulse 0.5s ease-out;
+}
+
+.sye-config .efc-high .dimtxt {
+  color: var(--t-dim);
+}
+
+.sye-config .efc-high .faint {
+  color: var(--t-faint);
+}
+
+.sye-config .efc-high .fg-focus {
+  color: var(--t-focus);
+}
+
+.sye-config .efc-high .fg-accent {
+  color: var(--t-accent);
+}
+
+.sye-config .efc-high .fg-warn {
+  color: var(--t-warn);
+}
+
+.sye-config .efc-high .b {
+  font-weight: 700;
+}
+
+.sye-config .efc-high .tabs .on {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sye-config .efc-high .caret {
+  display: inline-block;
+  width: 1ch;
+  background: var(--t-fg);
+  animation: sye-high-blink 1s step-end infinite;
+}
+
+.sye-config .efc-high .foot {
+  min-height: 1.55em;
+  color: var(--t-dim);
+  white-space: pre-wrap;
+}
+
+@container (max-width: 560px) {
+  .sye-config .efc-high .term {
+    font-size: 11.5px;
+  }
+  .sye-config .efc-high .efc-high-row {
+    grid-template-columns: 2ch 1.5ch minmax(0, 58%) minmax(0, 1fr) 0;
+  }
+  .sye-config .efc-high .efc-high-row .tag {
+    display: none;
+  }
+  .sye-config .efc-high .tbar .ttl {
+    margin-right: 0;
+  }
+}
+
+@keyframes sye-high-pulse {
+  0% {
+    background: color-mix(in srgb, #d77757 35%, transparent);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+@keyframes sye-high-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---------- 最高档：会话记录 + 配置面板 ---------- */
+
+.sye-config .efc-max {
+  --t-bg: #141416;
+  --t-fg: #efefef;
+  --t-dim: #8c8c8c;
+  --t-acc: #b1b9f9;
+  --t-inv: #0b0b0c;
+  --t-ok: #4eba65;
+  --t-warn: #ffc107;
+  --t-umsg: #2c2c31;
+  --t-frame: #2c2c33;
+  --t-rule: #777;
+  --tsize: 13px;
+  color: #ebebf2;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.sye-config .efc-max .__stage {
+  display: grid;
+  place-items: start center;
+  min-height: 100cqh;
+  padding: 8px 16px 16px;
+}
+
+.sye-config .efc-max .term {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto hidden;
+  padding: 14px 16px;
+  border: 1px solid var(--t-frame);
+  border-radius: 12px;
+  background: var(--t-bg);
+  color: var(--t-fg);
+  font-family: var(--font-mono);
+  font-size: var(--tsize);
+  font-variant-ligatures: none;
+  font-feature-settings:
+    'calt' 0,
+    'liga' 0;
+  line-height: 1.5;
+  outline: none;
+  cursor: default;
+  box-shadow: 0 1px 2px #1010280f, 0 26px 50px -26px #10103c80;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.sye-config .efc-max .term:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--t-bg),
+    0 0 0 4px #5769f7,
+    0 1px 2px #1010280f,
+    0 26px 50px -26px #10103c80;
+}
+
+.sye-config .efc-max .term[data-t='light'] {
+  --t-bg: #fff;
+  --t-fg: #141414;
+  --t-dim: #6a6a6a;
+  --t-acc: #5769f7;
+  --t-inv: #fff;
+  --t-ok: #2c7a39;
+  --t-warn: #966c1e;
+  --t-umsg: #efefef;
+  --t-frame: #d5d5dc;
+  --t-rule: #9a9a9a;
+}
+
+.sye-config .efc-max .term[data-t='dark-daltonized'] {
+  --t-acc: #9cf;
+  --t-ok: #39f;
+  --t-warn: #fc0;
+}
+
+.sye-config .efc-max .term[data-t='light-daltonized'] {
+  --t-bg: #fff;
+  --t-fg: #141414;
+  --t-dim: #6a6a6a;
+  --t-acc: #36f;
+  --t-inv: #fff;
+  --t-ok: #069;
+  --t-warn: #cc7a00;
+  --t-umsg: #e6e6e6;
+  --t-frame: #d5d5dc;
+  --t-rule: #9a9a9a;
+}
+
+.sye-config .efc-max .term[data-t='dark-ansi'] {
+  --t-bg: #0c0c0c;
+  --t-fg: #f2f2f2;
+  --t-dim: #a6a6a6;
+  --t-acc: #3b78ff;
+  --t-inv: #f2f2f2;
+  --t-ok: #16c60c;
+  --t-warn: #f9f1a5;
+  --t-umsg: #262626;
+  --t-frame: #2a2a2a;
+  --t-rule: #767676;
+}
+
+.sye-config .efc-max .term[data-t='light-ansi'] {
+  --t-bg: #fff;
+  --t-fg: #0c0c0c;
+  --t-dim: #767676;
+  --t-acc: #0037da;
+  --t-inv: #fff;
+  --t-ok: #13a10e;
+  --t-warn: #c19c00;
+  --t-umsg: #eaeaea;
+  --t-frame: #d5d5dc;
+  --t-rule: #9a9a9a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sye-config .efc-max .term {
+    transition: none;
+  }
+}
+
+.sye-config .efc-max .screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 80ch;
+  height: 36em;
+  overflow: hidden;
+}
+
+.sye-config .efc-max .ln {
+  position: relative;
+  flex: none;
+  height: 1.5em;
+  overflow: hidden;
+  white-space: pre;
+}
+
+.sye-config .efc-max .fx,
+.sye-config .efc-max .efc-max-row {
+  display: flex;
+}
+
+.sye-config .efc-max .pl {
+  padding-left: 2ch;
+  padding-right: 2ch;
+}
+
+.sye-config .efc-max .d {
+  color: var(--t-dim);
+}
+
+.sye-config .efc-max .b {
+  font-weight: 700;
+}
+
+.sye-config .efc-max .i {
+  font-style: italic;
+}
+
+.sye-config .efc-max .a {
+  color: var(--t-acc);
+}
+
+.sye-config .efc-max .ok {
+  color: var(--t-ok);
+}
+
+.sye-config .efc-max .inv {
+  background: var(--t-acc);
+  color: var(--t-inv);
+}
+
+.sye-config .efc-max .cur {
+  background: var(--t-fg);
+  color: var(--t-bg);
+}
+
+.sye-config .efc-max .umsg {
+  background: var(--t-umsg);
+}
+
+.sye-config .efc-max .push {
+  margin-left: auto;
+}
+
+.sye-config .efc-max .gl {
+  display: inline-block;
+  width: 2ch;
+}
+
+.sye-config .efc-max .ind5 {
+  display: inline-block;
+  width: 5ch;
+  padding-left: 2ch;
+}
+
+.sye-config .efc-max .prule::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--t-acc);
+  content: '';
+}
+
+.sye-config .efc-max .hr::before {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--t-rule);
+  content: '';
+}
+
+.sye-config .efc-max .efc-max-row {
+  cursor: pointer;
+}
+
+.sye-config .efc-max .efc-max-row .p {
+  flex: none;
+  width: 2ch;
+}
+
+.sye-config .efc-max .efc-max-row .l {
+  flex: none;
+  overflow: hidden;
+  padding-right: 1ch;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-max .efc-max-row .v {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sye-config .efc-max .efc-max-row .vt {
+  flex: 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-max .efc-max-row .chev {
+  flex: none;
+  color: var(--t-acc);
+}
+
+.sye-config .efc-max .efc-max-row .g {
+  flex: none;
+  width: 14ch;
+  overflow: hidden;
+  color: var(--t-dim);
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+.sye-config .efc-max .efc-max-row .off {
+  color: var(--t-dim);
+}
+
+.sye-config .efc-max .efc-max-row.sel .p,
+.sye-config .efc-max .efc-max-row.sel .l,
+.sye-config .efc-max .efc-max-row.sel .v,
+.sye-config .efc-max .efc-max-row.sel .vt,
+.sye-config .efc-max .efc-max-row.sel .chev,
+.sye-config .efc-max .efc-max-row.sel .off {
+  color: var(--t-acc);
+}
+
+.sye-config .efc-max .efc-max-row.dimrow .l,
+.sye-config .efc-max .efc-max-row.dimrow .vt,
+.sye-config .efc-max .efc-max-row.dimrow .chev {
+  color: var(--t-dim);
+}
+
+.sye-config .efc-max .efc-max-row:not(.sel):hover .p::before {
+  color: var(--t-dim);
+  content: '❯';
+}
+
+.sye-config .efc-max .efc-max-row .hl {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.sye-config .efc-max .term {
+  --tsize: clamp(7px, calc((100cqw - 68px) / 48.5), 13px) !important;
+}

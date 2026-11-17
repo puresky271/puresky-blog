@@ -1,0 +1,1914 @@
+{
+  "models": [
+    "Fable 5.1",
+    "Opus 5",
+    "Fable 5"
+  ],
+  "categories": [
+    {
+      "name": "Security",
+      "zh": "安全",
+      "n": 7,
+      "pct": {
+        "Fable 5.1": {
+          "low": 64,
+          "high": 87
+        },
+        "Opus 5": {
+          "low": 53,
+          "high": 82
+        },
+        "Fable 5": {
+          "low": 33,
+          "high": 57
+        }
+      },
+      "tasks": [
+        {
+          "title": "Recover plaintext from a known-plaintext cipher attack",
+          "m": {
+            "Fable 5.1": [
+              4,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              7,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Strip JavaScript from HTML to prevent XSS",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              2,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Binary-patch an image service to reject invalid edits",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              11,
+              15
+            ],
+            "Opus 5": [
+              2,
+              10,
+              3,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              2,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Decrypt a classical cipher without the key",
+          "m": {
+            "Fable 5.1": [
+              8,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              4,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              4,
+              10,
+              10,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Find a backdoor in a memcached binary",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              9,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              8,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Investigate and decrypt an exfiltration capture",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              8,
+              10,
+              10,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Remove a UEFI firmware boot marker mechanism",
+          "m": {
+            "Fable 5.1": [
+              9,
+              10,
+              7,
+              15
+            ],
+            "Opus 5": [
+              9,
+              10,
+              10,
+              15
+            ],
+            "Fable 5": [
+              3,
+              10,
+              7,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hardware",
+      "zh": "硬件",
+      "n": 5,
+      "pct": {
+        "Fable 5.1": {
+          "low": 34,
+          "high": 75
+        },
+        "Opus 5": {
+          "low": 42,
+          "high": 68
+        },
+        "Fable 5": {
+          "low": 30,
+          "high": 61
+        }
+      },
+      "tasks": [
+        {
+          "title": "Build a STEP model from a PNG schematic",
+          "m": {
+            "Fable 5.1": [
+              1,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              1,
+              10,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Script parametric semi-open impeller FreeCAD bodies",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build a FreeCAD part from a PNG drawing",
+          "m": {
+            "Fable 5.1": [
+              5,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              6,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              4,
+              10,
+              13,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Script a parametric roller-chain spring clip",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              12,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              1,
+              10,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Write Verilog for an NES-style 8-bit SoC",
+          "m": {
+            "Fable 5.1": [
+              9,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              9,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              9,
+              10,
+              15,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ML",
+      "zh": "机器学习",
+      "n": 13,
+      "pct": {
+        "Fable 5.1": {
+          "low": 54,
+          "high": 73
+        },
+        "Opus 5": {
+          "low": 41,
+          "high": 64
+        },
+        "Fable 5": {
+          "low": 27,
+          "high": 43
+        }
+      },
+      "tasks": [
+        {
+          "title": "Make batched LM evaluation match single-example results",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              6,
+              15
+            ],
+            "Opus 5": [
+              2,
+              10,
+              4,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Debug an embedding-drift detection monitor",
+          "m": {
+            "Fable 5.1": [
+              9,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              8,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              2,
+              10,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build an AMC exam LLM evaluation harness",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              7,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              4,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Write a fused fp8 RMSNorm GEMM CUDA kernel",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              8,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              10,
+              10,
+              14,
+              14
+            ]
+          }
+        },
+        {
+          "title": "Write a tiny C GPT-2 inference program",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              9,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              10,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Train a JAX transformer to target loss fast",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              9,
+              15
+            ],
+            "Opus 5": [
+              0,
+              8,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              8,
+              2,
+              14
+            ]
+          }
+        },
+        {
+          "title": "Build a sympy grader for LaTeX math answers",
+          "m": {
+            "Fable 5.1": [
+              7,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              13,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              3,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Merge Megatron shards into one safetensors file",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              10,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Restore corrupted pretraining data examples",
+          "m": {
+            "Fable 5.1": [
+              8,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              8,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              2,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Reverse-engineer and replay a risk scorer",
+          "m": {
+            "Fable 5.1": [
+              7,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              8,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              2,
+              10,
+              11,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix SGLang streaming order under speculative decoding",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              9,
+              15
+            ],
+            "Fable 5": [
+              1,
+              10,
+              6,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix corrupted DeepSeek streaming in vLLM",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix a training framework's diverging loss trace",
+          "m": {
+            "Fable 5.1": [
+              3,
+              10,
+              8,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              2,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Science",
+      "zh": "科学",
+      "n": 15,
+      "pct": {
+        "Fable 5.1": {
+          "low": 41,
+          "high": 61
+        },
+        "Opus 5": {
+          "low": 24,
+          "high": 45
+        },
+        "Fable 5": {
+          "low": 32,
+          "high": 38
+        }
+      },
+      "tasks": [
+        {
+          "title": "Annotate ATRX variants and find nearest Cas9 cut",
+          "m": {
+            "Fable 5.1": [
+              1,
+              10,
+              7,
+              15
+            ],
+            "Opus 5": [
+              2,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              7,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Generate valid biped walk, jump, run trajectories",
+          "m": {
+            "Fable 5.1": [
+              5,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              4,
+              10,
+              13,
+              15
+            ],
+            "Fable 5": [
+              3,
+              10,
+              4,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Prove a Coq combinatorics bound theorem",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              10,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Compute foodstuff beta activity concentration",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Identify an IgG N-glycan from MS/MS data",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Run GSEA on up-regulated tissue proteins",
+          "m": {
+            "Fable 5.1": [
+              1,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              6,
+              15
+            ],
+            "Fable 5": [
+              8,
+              10,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Compute framework topology from CIF files",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              4,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              10,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Write a Kuramoto-Sivashinsky PDE solver in C++",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              4,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              1,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              1,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Train LakeLSTM to predict lake temperature profiles",
+          "m": {
+            "Fable 5.1": [
+              3,
+              10,
+              11,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              8,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              4,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Prove a Lean theorem from local axioms",
+          "m": {
+            "Fable 5.1": [
+              6,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              5,
+              10,
+              1,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Predict disulfide cysteine positions in proteins",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              4,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fit ROY polymorph dihedral angles to stretches",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              2,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              3,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Recover ordered sound-change rules from word pairs",
+          "m": {
+            "Fable 5.1": [
+              9,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              9,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              1,
+              10,
+              4,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Prove Takens' embedding theorem in Lean",
+          "m": {
+            "Fable 5.1": [
+              6,
+              10,
+              12,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              1,
+              15
+            ],
+            "Fable 5": [
+              7,
+              10,
+              12,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Inverse-design a photonic wavelength demultiplexer",
+          "m": {
+            "Fable 5.1": [
+              8,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              10,
+              15
+            ],
+            "Fable 5": [
+              4,
+              10,
+              10,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Software",
+      "zh": "软件",
+      "n": 20,
+      "pct": {
+        "Fable 5.1": {
+          "low": 43,
+          "high": 56
+        },
+        "Opus 5": {
+          "low": 38,
+          "high": 50
+        },
+        "Fable 5": {
+          "low": 22,
+          "high": 48
+        }
+      },
+      "tasks": [
+        {
+          "title": "Stop Bun release from leaking private sources",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build a two-phase simplex LP solver CLI",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              6,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              8,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              2,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Eliminate layout shift on a Next.js site",
+          "m": {
+            "Fable 5.1": [
+              5,
+              10,
+              12,
+              15
+            ],
+            "Opus 5": [
+              5,
+              10,
+              8,
+              15
+            ],
+            "Fable 5": [
+              5,
+              10,
+              11,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build a consistent CSV anonymization CLI",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              1,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build a Spark near-duplicate deduplication pipeline",
+          "m": {
+            "Fable 5.1": [
+              9,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              7,
+              10,
+              13,
+              15
+            ],
+            "Fable 5": [
+              6,
+              10,
+              11,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix a soundness bug in UAutomizer verifier",
+          "m": {
+            "Fable 5.1": [
+              1,
+              10,
+              11,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              10,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Replace a slow key-value server without dropping connections",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              9,
+              15
+            ],
+            "Opus 5": [
+              8,
+              10,
+              10,
+              15
+            ],
+            "Fable 5": [
+              2,
+              10,
+              14,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Migrate a live MySQL API to PostgreSQL",
+          "m": {
+            "Fable 5.1": [
+              8,
+              10,
+              12,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              3,
+              10,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix a post-crash MVCC LSM visibility bug",
+          "m": {
+            "Fable 5.1": [
+              5,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              4,
+              10,
+              13,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              11,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Cut latency across a Next.js warehouse app",
+          "m": {
+            "Fable 5.1": [
+              8,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              1,
+              10,
+              4,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Merge railway ontology graphs and query them",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Speed up a Kafka payment worker cold start",
+          "m": {
+            "Fable 5.1": [
+              4,
+              10,
+              4,
+              15
+            ],
+            "Opus 5": [
+              9,
+              10,
+              9,
+              15
+            ],
+            "Fable 5": [
+              4,
+              10,
+              12,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Route photonic waveguide nets around obstacles",
+          "m": {
+            "Fable 5.1": [
+              6,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              7,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              6,
+              10,
+              14,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Repair a React lead-intake submission pipeline",
+          "m": {
+            "Fable 5.1": [
+              4,
+              10,
+              10,
+              15
+            ],
+            "Opus 5": [
+              3,
+              10,
+              8,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              10,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Reimplement a Reed-Solomon archive tool",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              14,
+              15
+            ],
+            "Opus 5": [
+              2,
+              10,
+              14,
+              15
+            ],
+            "Fable 5": [
+              4,
+              10,
+              7,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix a session-window stream processor",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              1,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              1,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Link telecom billing records into person clusters",
+          "m": {
+            "Fable 5.1": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              10,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              6,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Port a VBA UserForm app to React and FastAPI",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              1,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build a fast NetworkX isomorphism subset",
+          "m": {
+            "Fable 5.1": [
+              6,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              8,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              7,
+              10,
+              14,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix write-ahead-log crash recovery ordering",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              7,
+              10,
+              1,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "zh": "多媒体",
+      "n": 4,
+      "pct": {
+        "Fable 5.1": {
+          "low": 18,
+          "high": 30
+        },
+        "Opus 5": {
+          "low": 10,
+          "high": 25
+        },
+        "Fable 5": {
+          "low": 28,
+          "high": 25
+        }
+      },
+      "tasks": [
+        {
+          "title": "Reverse-engineer a poster into an editable layout",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              2,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Reverse-engineer a design into a layer config",
+          "m": {
+            "Fable 5.1": [
+              7,
+              10,
+              15,
+              15
+            ],
+            "Opus 5": [
+              4,
+              10,
+              15,
+              15
+            ],
+            "Fable 5": [
+              10,
+              10,
+              15,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Complete a Bach-style SATB harmonization",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              1,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              1,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Transcribe SATB chorale audio to MusicXML",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Operations",
+      "zh": "运维",
+      "n": 10,
+      "pct": {
+        "Fable 5.1": {
+          "low": 12,
+          "high": 22
+        },
+        "Opus 5": {
+          "low": 2,
+          "high": 13
+        },
+        "Fable 5": {
+          "low": 3,
+          "high": 11
+        }
+      },
+      "tasks": [
+        {
+          "title": "Fix a cargo flight dispatch planner",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              1,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              3,
+              10,
+              7,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Tune ad campaign for target genuine-user CTR",
+          "m": {
+            "Fable 5.1": [
+              2,
+              10,
+              5,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              6,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              1,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Plan Odoo orders to fulfill transformer demand",
+          "m": {
+            "Fable 5.1": [
+              1,
+              10,
+              7,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              2,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              2,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Recompute SA-CCR exposure, RWA, and capital",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              1,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Build a stateful freight dispatch CLI",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Decide and submit heat-pump warranty claims",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Complete an Intrastat month-end filing",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Clear a utility billing queue via legacy GUI",
+          "m": {
+            "Fable 5.1": [
+              3,
+              10,
+              9,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Fix and review German medical claim decisions",
+          "m": {
+            "Fable 5.1": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Opus 5": [
+              0,
+              10,
+              0,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              0,
+              15
+            ]
+          }
+        },
+        {
+          "title": "Generate a multi-day ERP production plan",
+          "m": {
+            "Fable 5.1": [
+              6,
+              10,
+              11,
+              15
+            ],
+            "Opus 5": [
+              2,
+              10,
+              11,
+              15
+            ],
+            "Fable 5": [
+              0,
+              10,
+              7,
+              15
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "Fable 5.1": {
+      "low": [
+        "low",
+        "medium"
+      ],
+      "high": [
+        "xhigh",
+        "120",
+        "max"
+      ]
+    },
+    "Opus 5": {
+      "low": [
+        "low",
+        "15"
+      ],
+      "high": [
+        "80",
+        "120",
+        "max"
+      ]
+    },
+    "Fable 5": {
+      "low": [
+        "low",
+        "15"
+      ],
+      "high": [
+        "80",
+        "xhigh",
+        "max"
+      ]
+    }
+  },
+  "notes": {
+    "Operations": {
+      "en": "Rulebook-style work stays low",
+      "zh": "照手册办事的工作提不上去"
+    }
+  },
+  "labels": {
+    "replay": "重播",
+    "low": "低档投入",
+    "top": "最高档投入",
+    "tasksUnit": "个任务",
+    "model": "模型"
+  },
+  "caption": {
+    "zh": "每一行是一个任务类别，空心点是低档的通过率，实心点是最高档。先看两点之间拉开了多长，拉得越长说明这个类别越吃投入，再看行尾的任务数，任务少的类别比例容易大起大落。三个模型用上面的标签切换，同一行横着比过去就是模型之间的差距。",
+    "en": "Pass rate. Low effort pools each model's two lowest settings, top effort its three highest, since categories are small."
+  },
+  "aria": {
+    "zh": "七个任务类别在低档与最高档下的通过率对比。",
+    "en": "Where effort pays: pass rate by task category"
+  }
+}

@@ -1,0 +1,300 @@
+/**
+ * 精选收录《用 Claude Code：把投入花在刀刃上》交互演示的公共层。
+ *
+ * 六个演示（sye-curve / sye-failures / sye-payoff / sye-builds / sye-config / sye-phone）共用
+ * 原站 claude.dev 的图表外框语言：等宽小标签页、细边框、左对齐的 FIG 图注条。
+ * 原站只有浅色一套，这里按站内的语义令牌补了一套暗色（数据色保留原值，它们代表数据含义）。
+ *
+ * 所有选择器都挂在 .sye-demo 下面，不会漏到正文。
+ */
+
+.sye-demo {
+  /* 原站的浅色令牌 */
+  --sye-ink: #141413;
+  --sye-ink-2: #4c4b45;
+  --sye-ink-3: #7b7a72;
+  --sye-ink-4: #a8a69d;
+  --sye-line: #1414131c;
+  --sye-line-soft: #1414131c;
+  --sye-line-strong: #d8d5cb;
+  --sye-raised: #f1efe8;
+  --sye-panel: #ece9e0;
+  --sye-bg: #faf9f5;
+  --sye-accent: #d97757;
+  --sye-paper: #faf9f5;
+  /* 图表一二的系列色（原站视觉令牌，浅色一套） */
+  --viz-muted: #65645e;
+  --viz-wash: #f1efe8;
+  --viz-wash-2: #ece9e0;
+  --viz-b0: #788c5d;
+  --viz-b1: #b57da8;
+  --viz-b2: #955488;
+  --viz-b3: #763269;
+  --viz-b4: #501a47;
+  --viz-b5: #728eb7;
+  --viz-b6: #4f70a0;
+  --viz-b7: #31507e;
+  --viz-b8: #183053;
+  --viz-b9: #8e8c87;
+  --viz-m1: #3d3d3a;
+  --viz-g0: #b46d4f;
+  --viz-g1: #7a7973;
+  --viz-g2: #86847e;
+  --viz-g3: #9a9892;
+  --fig-series-1: var(--viz-m1);
+  --fig-series-2: var(--viz-muted);
+  --fig-series-3: var(--viz-b9);
+  --fig-dash-1: none;
+  --fig-dash-2: 5 3;
+  --fig-dash-3: 1.5 3;
+  --fig-chart-ink: var(--viz-muted);
+  /* 外框尺寸令牌，沿用原站值 */
+  --fig-pad: 16px;
+  --fig-tab-top: calc(var(--fig-pad) - 11px);
+  --fig-gap: 32px;
+  --fig-max: 660px;
+  --fig-edge: 1px solid var(--sye-line);
+  --fig-cap-rule: 1px solid var(--sye-line);
+  --fig-cap-py: 10px;
+  --fig-cap-ink: var(--sye-ink-3);
+  --fig-meta: 0.6667rem;
+  --fig-meta-case: uppercase;
+  --fig-meta-track: 0.03em;
+  --fig-title: 1rem;
+  --fig-title-weight: 500;
+  --fig-title-lh: 1.35;
+  --fig-chart-size: 0.6667rem;
+  --fig-chart-name: 0.7778rem;
+  --fig-num-variant: tabular-nums;
+  --fig-tab-gap: 18px;
+  --fig-tab-fade: 32px;
+
+  max-width: 100%;
+  margin: 2rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--sye-ink);
+  border: var(--fig-edge);
+  background: transparent;
+}
+
+:root[data-theme='dark'] .sye-demo {
+  --sye-ink: var(--fg);
+  --sye-ink-2: var(--fg-muted);
+  --sye-ink-3: var(--fg-subtle);
+  --sye-ink-4: color-mix(in oklab, var(--fg) 32%, var(--bg));
+  --sye-line: var(--line);
+  --sye-line-soft: var(--line);
+  --sye-line-strong: var(--line-strong);
+  --sye-raised: var(--surface-2);
+  --sye-panel: var(--surface-3);
+  --sye-bg: var(--bg);
+  --sye-accent: var(--accent);
+  /* 数据色：原站暗色一套 */
+  --viz-muted: #8f8e87;
+  --viz-wash: #1c1c1a;
+  --viz-wash-2: #20201e;
+  --viz-b1: #925786;
+  --viz-b2: #b776a9;
+  --viz-b3: #d59cc8;
+  --viz-b4: #f2c3e7;
+  --viz-b5: #51709d;
+  --viz-b6: #7191c0;
+  --viz-b7: #98b3db;
+  --viz-b8: #c2d6f2;
+  --viz-b9: #73716c;
+  --viz-m1: #d1cfc5;
+  --viz-g0: #9a5b44;
+  --viz-g1: #8a8983;
+  --viz-g2: #6f6e69;
+  --viz-g3: #5a5955;
+}
+
+/* 演示里的按钮不要继承正文的链接/按钮样式 */
+.sye-demo button {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+.sye-demo button:focus-visible {
+  outline: 1px solid var(--sye-ink);
+  outline-offset: 2px;
+}
+
+.sye-demo svg {
+  max-width: 100%;
+}
+
+/* ---------- 等宽小标签页（原站 .fig-tabs）---------- */
+
+.sye-demo .fig-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0 var(--fig-tab-gap);
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  line-height: 1.5;
+  list-style: none;
+  scrollbar-width: none;
+}
+.sye-demo .fig-tabs::-webkit-scrollbar {
+  display: none;
+}
+.sye-demo .fig-tabs > button {
+  position: relative;
+  display: grid;
+  flex: none;
+  align-content: center;
+  justify-items: start;
+  min-height: 32px;
+  padding: 7px 0 5px;
+  color: var(--fig-cap-ink);
+  white-space: nowrap;
+  text-align: start;
+  text-transform: var(--fig-meta-case);
+  letter-spacing: inherit;
+  transition: color 0.15s;
+}
+.sye-demo .fig-tabs > button:hover {
+  color: var(--sye-ink-2);
+}
+.sye-demo .fig-tabs > button:is([aria-pressed='true'], [aria-checked='true'], [aria-selected='true']) {
+  color: var(--sye-ink);
+}
+.sye-demo .fig-tabs > button:is([aria-pressed='true'], [aria-checked='true'], [aria-selected='true'])::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  content: '';
+  border-bottom: 1px solid;
+}
+.sye-demo .fig-tabs > button:focus-visible {
+  outline-offset: -1px;
+}
+.sye-demo .fig-tabs .tg {
+  font-variant-numeric: var(--fig-num-variant);
+}
+.sye-demo .fig-tabs.inline-tags > button {
+  grid-auto-flow: column;
+  column-gap: 1ch;
+}
+.sye-demo > .fig-tabs:first-child {
+  padding: var(--fig-tab-top) var(--fig-pad) 0;
+}
+
+/* ---------- 图表标题栏（原站 .fig-head / .fig-title / .fig-sub）---------- */
+
+.sye-demo .fig-head {
+  padding: var(--fig-pad) var(--fig-pad) 0;
+}
+.sye-demo .fig-head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.sye-demo .fig-title {
+  font-size: var(--fig-title);
+  font-weight: var(--fig-title-weight);
+  line-height: var(--fig-title-lh);
+  color: var(--sye-ink);
+}
+.sye-demo .fig-sub {
+  margin-top: 2px;
+  font-size: var(--fig-chart-size);
+  line-height: 1.5;
+  color: var(--fig-cap-ink);
+}
+.sye-demo .fig-dl {
+  flex: none;
+  margin: -6px 0;
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  color: var(--fig-cap-ink);
+  text-transform: var(--fig-meta-case);
+  transition: color 0.15s;
+}
+.sye-demo .fig-dl:hover {
+  color: var(--sye-ink);
+}
+
+/* ---------- FIG A / B / C 图注条（原站 .cap）---------- */
+
+.sye-demo .sye-cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--fig-cap-py) var(--fig-pad);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fig-cap-ink);
+  border-top: var(--fig-cap-rule);
+}
+.sye-demo .sye-cap b {
+  flex: none;
+  min-width: 3rem;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  font-weight: 500;
+  letter-spacing: var(--fig-meta-track);
+  color: var(--sye-ink-2);
+  white-space: nowrap;
+}
+.sye-demo .sye-cap-text {
+  flex: 1;
+}
+
+/* 图注和演示里的中英两半：默认中文，切到英文时显示英文，和正文 :::bi 同一套机制 */
+.sye-demo .sye-en {
+  display: none;
+}
+:root[data-paper-lang='en'] .sye-demo .sye-zh {
+  display: none;
+}
+:root[data-paper-lang='en'] .sye-demo .sye-en {
+  display: inline;
+}
+
+/* ---------- 演示区留白 ---------- */
+
+.sye-demo .sye-pad {
+  padding: var(--fig-pad);
+}
+
+/* 窄屏：演示区可以横向滚动，不撑破版心 */
+.sye-demo .sye-scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* 桌面宽屏时允许演示区伸出正文版心，看细节更清楚（原站正文列宽 660，这里版心 46rem） */
+@media (min-width: 80rem) {
+  .sye-demo.sye-wide {
+    width: min(58rem, calc(100vw - 27rem));
+    max-width: none;
+    margin-left: calc((100% - min(58rem, 100vw - 27rem)) / 2);
+  }
+}
+
+/* 尊重系统的减弱动效：自动播放、过渡、逐格点亮都停掉 */
+@media (prefers-reduced-motion: reduce) {
+  .sye-demo *,
+  .sye-demo *::before,
+  .sye-demo *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

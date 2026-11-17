@@ -1,0 +1,35 @@
+/**
+ * FIG4 演示里不属于原站外框的零星样式（加载 / 失败提示、正文里的排版复位）。
+ * 应用和手机外框的样式在 phone.css，公共令牌在 base.css。
+ */
+
+.sye-phone.sye-demo {
+  /* figure 和 .prose 的默认段落间距/边框分开，避免正文样式漏进演示区 */
+  margin: 2rem 0;
+}
+
+.sye-phone .efx-screen .sye-phone-note {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  color: rgb(255 255 255 / 55%);
+}
+
+/* 应用里的滚动条保持隐藏（原站手机屏内部滚动，不显示滚动条）。
+   只用 ::-webkit-scrollbar，不写 scrollbar-width（后者会让 Chromium 忽略全局滚动条样式） */
+.sye-phone .efx-screen::-webkit-scrollbar,
+.sye-phone .efx-vp::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.sye-phone .efx-vp :is(.efb-low, .efb-medium, .efb-high, .efb-max)::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

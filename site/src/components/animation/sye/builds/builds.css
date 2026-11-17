@@ -1,0 +1,201 @@
+/**
+ * FIG2「四档健身应用」演示的样式。
+ *
+ * 分三部分：
+ *   1. 应用本身的样式：原站四个 CSS chunk 整块拷贝，由 build-css.mjs 生成在 app.css 里，
+ *      作用域是应用自己的根类（.efa-low / .efa-medium / .efa-high / .efa-max），不会漏到正文
+ *   2. figure 外框：.efx-pad / .efx-desk / .efx-dpage / .efx-dvp / .efx-cur，规则抄原站 31ivmnw3073oy.css
+ *   3. 站内补的小控件（暂停 / 重播 / 状态），和原站 B/C 图的 Replay 一个语言：等宽小字，塞进标签行右侧
+ *
+ * 外框的等宽标签页、边距令牌在图注公共层 base.css 里。
+ */
+@import './app.css';
+
+.sye-builds {
+  /* 应用里的 --display / --body / --mono 在 app.css 里已经换成这两个站内字体族 */
+  --sye-sans: var(--font-sans);
+  --sye-mono: var(--font-mono);
+}
+
+/* ---------- 外框：1280 × 800 的桌面，按容器宽度等比缩放 ---------- */
+
+.sye-builds .efx-pad {
+  display: grid;
+  gap: 12px;
+  padding: var(--fig-pad);
+}
+
+.sye-builds .efx-desk {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: var(--sye-raised);
+  border: 1px solid var(--sye-line);
+}
+
+.sye-builds .efx-dpage {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.sye-builds .efx-dpage.on {
+  opacity: 1;
+  animation: sye-efx-fade-in 0.35s;
+}
+
+@keyframes sye-efx-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.sye-builds .efx-dvp {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+  background: #fff;
+  transform: scale(var(--s, 0.5));
+  transform-origin: 0 0;
+  /* 应用里的 @container 查询按这个盒子算，宽度永远是 1280 */
+  container-type: size;
+}
+
+.sye-builds .efx-dvp > :first-child {
+  scroll-behavior: auto !important;
+}
+
+/* 自动演示时在应用里画出来的假光标 */
+.sye-builds .efx-cur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  pointer-events: none;
+  opacity: 0;
+  background: rgb(30 30 30 / 28%);
+  border: 2px solid rgb(255 255 255 / 90%);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+  transform: translate(-40px, -40px);
+  transition:
+    transform 0.55s cubic-bezier(0.4, 0.1, 0.2, 1),
+    opacity 0.3s;
+}
+
+.sye-builds .efx-cur.show {
+  opacity: 1;
+}
+
+.sye-builds .efx-cur.press {
+  animation: sye-efx-press 0.28s;
+}
+
+@keyframes sye-efx-press {
+  from {
+    box-shadow: 0 0 0 0 rgb(30 30 30 / 35%);
+  }
+  to {
+    box-shadow: 0 0 0 14px rgb(30 30 30 / 0%);
+  }
+}
+
+/* ---------- 标签行 + 播放控件 ---------- */
+
+.sye-builds .sye-builds-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: var(--fig-tab-top) var(--fig-pad) 0;
+}
+
+.sye-builds .fig-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sye-builds .sye-builds-ctl {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  line-height: 1.5;
+  color: var(--fig-cap-ink);
+  text-transform: var(--fig-meta-case);
+}
+
+.sye-builds .sye-builds-state {
+  min-width: 4em;
+  text-align: end;
+}
+
+.sye-builds .sye-builds-btn {
+  min-height: 24px;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  color: var(--fig-cap-ink);
+  text-transform: uppercase;
+  transition: color 0.15s;
+}
+
+.sye-builds .sye-builds-btn:hover:not(:disabled) {
+  color: var(--sye-ink);
+}
+
+.sye-builds .sye-builds-btn:disabled {
+  color: var(--sye-ink-4);
+  cursor: default;
+}
+
+/* ---------- 演示区 ---------- */
+
+.sye-builds .sye-builds-stage {
+  position: relative;
+  min-width: 0;
+}
+
+.sye-builds .sye-builds-loading {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  margin: 0;
+  padding: var(--fig-pad);
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  color: var(--fig-cap-ink);
+  text-transform: var(--fig-meta-case);
+}
+
+/* 读屏专用的补充说明，视觉上不占位 */
+.sye-builds .sye-builds-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 窄屏：状态文字让位给标签和按钮 */
+@media (max-width: 30rem) {
+  .sye-builds .sye-builds-state {
+    display: none;
+  }
+}

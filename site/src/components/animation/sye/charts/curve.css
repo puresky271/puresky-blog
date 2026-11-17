@@ -1,0 +1,64 @@
+/**
+ * FIG A 投入程度曲线的样式。
+ *
+ * 图形本身是原站 SSR 的两张 SVG（宽版和窄版），坐标和路径逐字抽进 curve.json，
+ * 这里只负责外框、宽窄切换和文字字体。坐标轴颜色令牌已经在数据里换成站内语义令牌。
+ */
+
+.sye-curve {
+  /* 原站用 --fig-focal 指向强调色，base.css 里没有这一档，这里补上 */
+  --fig-focal: #d97757; /* Fable 5.1 的系列色，两个主题都是原站这支橙，数据色不跟主题走 */
+
+  /* 原站图表卡片最宽 660px（--fig-max），和论文图同一档 */
+  max-width: var(--fig-max);
+}
+
+.sye-curve .fig-draw {
+  padding: var(--fig-pad);
+}
+
+.sye-curve .fig-draw svg {
+  width: 100%;
+  height: auto;
+}
+
+.sye-curve .fig-draw svg text {
+  font-family: var(--font-sans);
+}
+
+.sye-curve .fig-draw svg .tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 原站是两个 svg，640px 以下换窄版（和原站断点一致） */
+.sye-curve .art-diagram-wide {
+  display: block;
+}
+
+.sye-curve .art-diagram-narrow {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .sye-curve .art-diagram-wide {
+    display: none;
+  }
+
+  .sye-curve .art-diagram-narrow {
+    display: block;
+    max-width: 420px;
+    margin-inline: auto;
+  }
+}
+
+.sye-curve .fig-dl[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.sye-curve .sye-curve-error {
+  margin: 0;
+  padding: var(--fig-pad);
+  font-size: 0.9375rem;
+  color: var(--sye-ink-2);
+}

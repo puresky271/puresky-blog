@@ -1,0 +1,387 @@
+/**
+ * FIG B 失败原因方阵的样式。
+ *
+ * 控件、方阵、图例和 tooltip 的类名都照抄原站（viz-*），统一挂在 .sye-failures 下面。
+ * 数据色用的 --viz-b0..--viz-b9 由 base.css 提供（原站浅暗两套），
+ * 这里只补原站根样式里定义的线条、字号、面板色和交互态。
+ */
+
+.sye-failures {
+  --fig-mark: 1px;
+  --fig-focal: #d97757; /* Fable 5.1 的系列色，两个主题都是原站这支橙，数据色不跟主题走 */
+  /* 原站 --line / --line-soft 换到站内语义令牌 */
+  --viz-line: var(--sye-line-strong);
+  --viz-line-soft: var(--sye-line);
+
+  max-width: var(--fig-max);
+}
+
+.sye-failures-fallback {
+  margin: 0;
+  padding: var(--fig-pad);
+  font-size: 0.9375rem;
+  color: var(--sye-ink-2);
+}
+
+/* ---------- 顶部控件 ---------- */
+
+.sye-failures .viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 32px;
+  padding: var(--fig-tab-top) var(--fig-pad) 0;
+}
+
+.sye-failures .viz-pills {
+  flex: 0 auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sye-failures .viz-play {
+  min-height: 32px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  color: var(--fig-cap-ink);
+  text-transform: var(--fig-meta-case);
+  transition: color 0.15s;
+}
+
+.sye-failures .viz-play:hover:not(:disabled) {
+  color: var(--sye-ink);
+}
+
+.sye-failures .viz-play:disabled {
+  opacity: 0.4;
+}
+
+.sye-failures .viz-effort {
+  display: flex;
+  flex: 260px;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.sye-failures .viz-effort > label {
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  letter-spacing: var(--fig-meta-track);
+  line-height: 32px;
+  color: var(--fig-cap-ink);
+  text-transform: var(--fig-meta-case);
+  white-space: nowrap;
+}
+
+.sye-failures .viz-track {
+  position: relative;
+  flex: auto;
+  min-width: 0;
+  padding-bottom: 20px;
+}
+
+/* ---------- 档位滑块 ---------- */
+
+.sye-failures .viz-track input[type='range'] {
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: pan-y;
+  appearance: none;
+}
+
+.sye-failures .viz-track input[type='range']::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--sye-line-strong);
+}
+
+.sye-failures .viz-track input[type='range']::-moz-range-track {
+  height: 1px;
+  background: var(--sye-line-strong);
+}
+
+.sye-failures .viz-track input[type='range']::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -8.5px;
+  background: var(--sye-ink);
+  border: 0;
+  border-radius: 50%;
+  -webkit-appearance: none;
+}
+
+.sye-failures .viz-track input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--sye-ink);
+  border: 0;
+  border-radius: 50%;
+}
+
+.sye-failures .viz-track input[type='range']:focus-visible {
+  outline: none;
+}
+
+.sye-failures .viz-track input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--sye-bg), 0 0 0 3px var(--sye-ink);
+}
+
+.sye-failures .viz-track input[type='range']:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--sye-bg), 0 0 0 3px var(--sye-ink);
+}
+
+.sye-failures .viz-ticks {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  left: 0;
+  height: 18px;
+  pointer-events: none;
+}
+
+.sye-failures .viz-ticks .tk {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--viz-line);
+  transform: translate(-50%);
+}
+
+.sye-failures .viz-ticks .tk.named {
+  width: auto;
+  height: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fig-meta);
+  line-height: 1;
+  color: var(--fig-chart-ink);
+  letter-spacing: var(--fig-meta-track);
+  text-transform: var(--fig-meta-case);
+  white-space: nowrap;
+  background: 0 0;
+}
+
+@media (max-width: 480px) {
+  .sye-failures .viz-effort {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .sye-failures .viz-effort > label {
+    flex: 100%;
+    line-height: 20px;
+  }
+}
+
+/* ---------- 画布 ---------- */
+
+.sye-failures .viz-chart {
+  position: relative;
+}
+
+.sye-failures .viz-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-sans);
+}
+
+.sye-failures .viz-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.sye-failures .viz-t-ink {
+  fill: var(--sye-ink);
+}
+
+.sye-failures .viz-t-body {
+  fill: var(--sye-ink-2);
+}
+
+.sye-failures .viz-t-muted {
+  fill: var(--fig-chart-ink);
+}
+
+.sye-failures .viz-num {
+  font-variant-numeric: var(--fig-num-variant);
+}
+
+.sye-failures .viz-rule {
+  stroke: var(--viz-line);
+  stroke-width: 1px;
+}
+
+.sye-failures .viz-grid {
+  stroke: var(--viz-line-soft);
+  stroke-width: 1px;
+}
+
+/* ---------- 方阵 ---------- */
+
+.sye-failures .viz-sq {
+  transition: fill 0.28s;
+}
+
+.sye-failures .viz-sq.b0 {
+  fill: var(--viz-b0);
+}
+
+.sye-failures .viz-sq.b1 {
+  fill: var(--viz-b1);
+}
+
+.sye-failures .viz-sq.b2 {
+  fill: var(--viz-b2);
+}
+
+.sye-failures .viz-sq.b3 {
+  fill: var(--viz-b3);
+}
+
+.sye-failures .viz-sq.b4 {
+  fill: var(--viz-b4);
+}
+
+.sye-failures .viz-sq.b5 {
+  fill: var(--viz-b5);
+}
+
+.sye-failures .viz-sq.b6 {
+  fill: var(--viz-b6);
+}
+
+.sye-failures .viz-sq.b7 {
+  fill: var(--viz-b7);
+}
+
+.sye-failures .viz-sq.b8 {
+  fill: var(--viz-b8);
+}
+
+.sye-failures .viz-sq.b9 {
+  fill: var(--viz-b9);
+}
+
+.sye-failures .viz-sq.bx {
+  fill: #0000;
+}
+
+.sye-failures .viz-hl {
+  fill: none;
+  stroke: var(--sye-ink);
+  stroke-width: var(--fig-mark);
+  pointer-events: none;
+}
+
+.sye-failures .viz-panel {
+  cursor: default;
+}
+
+.sye-failures .viz-panel:focus {
+  outline: none;
+}
+
+.sye-failures .viz-focus {
+  fill: none;
+  stroke: var(--sye-ink);
+  stroke-width: 1px;
+  opacity: 0;
+}
+
+.sye-failures .viz-panel:focus-visible .viz-focus {
+  opacity: 1;
+}
+
+/* 面板标题前的空心圈／实心点，颜色跟模型序号走（原站 .m0/.m1/.m2） */
+.sye-failures .m0 {
+  --c: var(--fig-focal);
+}
+
+.sye-failures .m1 {
+  --c: var(--fig-series-1);
+}
+
+.sye-failures .m2 {
+  --c: var(--fig-series-2);
+}
+
+.sye-failures .viz-ring {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: var(--fig-mark);
+}
+
+.sye-failures .viz-dot {
+  fill: var(--c);
+}
+
+/* ---------- 悬停 tooltip ---------- */
+
+.sye-failures .viz-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  min-width: 140px;
+  max-width: 260px;
+  padding: 8px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--sye-ink-2);
+  pointer-events: none;
+  visibility: hidden;
+  background: var(--sye-panel);
+  border: 1px solid var(--sye-line-strong);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.12s,
+    transform 0.12s,
+    visibility 0s 0.12s;
+}
+
+.sye-failures .viz-tip.on {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.12s,
+    transform 0.12s;
+}
+
+.sye-failures .viz-tip b {
+  font-weight: 500;
+  color: var(--sye-ink);
+}
+
+.sye-failures .viz-tip .k {
+  color: var(--viz-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sye-failures .viz-play {
+    display: none;
+  }
+
+  .sye-failures .viz-sq,
+  .sye-failures .viz-tip,
+  .sye-failures .viz-tip.on {
+    transition: none;
+  }
+}

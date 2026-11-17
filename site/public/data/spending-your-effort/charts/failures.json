@@ -1,0 +1,7903 @@
+{
+  "models": [
+    "Fable 5.1",
+    "Opus 5",
+    "Fable 5"
+  ],
+  "settings": [
+    {
+      "model": "Opus 5",
+      "order": 0,
+      "raw": "10",
+      "label": "low",
+      "attempts": 369,
+      "passes": 108,
+      "medianTokens": 75655,
+      "counts": {
+        "passed": 108,
+        "missEnv": 3,
+        "missOverfit": 12,
+        "missExact": 10,
+        "missBug": 38,
+        "misread": 53,
+        "badFix": 36,
+        "badRule": 23,
+        "badRead": 28,
+        "other": 58,
+        "missedCase": 63,
+        "wrongCall": 140
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 1,
+      "raw": "15",
+      "label": null,
+      "attempts": 369,
+      "passes": 121,
+      "medianTokens": 94068,
+      "counts": {
+        "passed": 121,
+        "missEnv": 2,
+        "missOverfit": 8,
+        "missExact": 12,
+        "missBug": 40,
+        "misread": 44,
+        "badFix": 28,
+        "badRule": 24,
+        "badRead": 35,
+        "other": 55,
+        "missedCase": 62,
+        "wrongCall": 131
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 2,
+      "raw": "20",
+      "label": "medium",
+      "attempts": 369,
+      "passes": 141,
+      "medianTokens": 118795,
+      "counts": {
+        "passed": 141,
+        "missEnv": 3,
+        "missOverfit": 4,
+        "missExact": 10,
+        "missBug": 33,
+        "misread": 39,
+        "badFix": 20,
+        "badRule": 25,
+        "badRead": 39,
+        "other": 55,
+        "missedCase": 50,
+        "wrongCall": 123
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 3,
+      "raw": "30",
+      "label": null,
+      "attempts": 370,
+      "passes": 137,
+      "medianTokens": 135617,
+      "counts": {
+        "passed": 137,
+        "missEnv": 2,
+        "missOverfit": 6,
+        "missExact": 6,
+        "missBug": 29,
+        "misread": 39,
+        "badFix": 16,
+        "badRule": 26,
+        "badRead": 37,
+        "other": 72,
+        "missedCase": 43,
+        "wrongCall": 118
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 4,
+      "raw": "40",
+      "label": null,
+      "attempts": 370,
+      "passes": 170,
+      "medianTokens": 185176,
+      "counts": {
+        "passed": 170,
+        "missEnv": 2,
+        "missOverfit": 3,
+        "missExact": 9,
+        "missBug": 19,
+        "misread": 35,
+        "badFix": 14,
+        "badRule": 28,
+        "badRead": 46,
+        "other": 44,
+        "missedCase": 33,
+        "wrongCall": 123
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 5,
+      "raw": "80",
+      "label": null,
+      "attempts": 370,
+      "passes": 177,
+      "medianTokens": 229392,
+      "counts": {
+        "passed": 177,
+        "missEnv": 2,
+        "missOverfit": 3,
+        "missExact": 9,
+        "missBug": 15,
+        "misread": 27,
+        "badFix": 17,
+        "badRule": 26,
+        "badRead": 47,
+        "other": 47,
+        "missedCase": 29,
+        "wrongCall": 117
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 6,
+      "raw": "120",
+      "label": "max",
+      "attempts": 370,
+      "passes": 178,
+      "medianTokens": 253980,
+      "counts": {
+        "passed": 178,
+        "missEnv": 3,
+        "missOverfit": 1,
+        "missExact": 8,
+        "missBug": 27,
+        "misread": 31,
+        "badFix": 6,
+        "badRule": 28,
+        "badRead": 41,
+        "other": 47,
+        "missedCase": 39,
+        "wrongCall": 106
+      }
+    },
+    {
+      "model": "Opus 5",
+      "order": 7,
+      "raw": "max",
+      "label": "max",
+      "attempts": 370,
+      "passes": 193,
+      "medianTokens": 308346,
+      "counts": {
+        "passed": 193,
+        "missEnv": 0,
+        "missOverfit": 1,
+        "missExact": 6,
+        "missBug": 17,
+        "misread": 37,
+        "badFix": 13,
+        "badRule": 23,
+        "badRead": 45,
+        "other": 35,
+        "missedCase": 24,
+        "wrongCall": 118
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 0,
+      "raw": "10",
+      "label": "low",
+      "attempts": 368,
+      "passes": 80,
+      "medianTokens": 61551,
+      "counts": {
+        "passed": 80,
+        "missEnv": 2,
+        "missOverfit": 15,
+        "missExact": 10,
+        "missBug": 59,
+        "misread": 51,
+        "badFix": 39,
+        "badRule": 29,
+        "badRead": 31,
+        "other": 52,
+        "missedCase": 86,
+        "wrongCall": 150
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 1,
+      "raw": "15",
+      "label": null,
+      "attempts": 370,
+      "passes": 99,
+      "medianTokens": 73590,
+      "counts": {
+        "passed": 99,
+        "missEnv": 2,
+        "missOverfit": 16,
+        "missExact": 8,
+        "missBug": 44,
+        "misread": 53,
+        "badFix": 43,
+        "badRule": 26,
+        "badRead": 38,
+        "other": 41,
+        "missedCase": 70,
+        "wrongCall": 160
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 2,
+      "raw": "20",
+      "label": "medium",
+      "attempts": 367,
+      "passes": 123,
+      "medianTokens": 85220,
+      "counts": {
+        "passed": 123,
+        "missEnv": 2,
+        "missOverfit": 12,
+        "missExact": 8,
+        "missBug": 45,
+        "misread": 45,
+        "badFix": 35,
+        "badRule": 30,
+        "badRead": 33,
+        "other": 34,
+        "missedCase": 67,
+        "wrongCall": 143
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 3,
+      "raw": "40",
+      "label": "high",
+      "attempts": 369,
+      "passes": 134,
+      "medianTokens": 111515,
+      "counts": {
+        "passed": 134,
+        "missEnv": 3,
+        "missOverfit": 16,
+        "missExact": 9,
+        "missBug": 27,
+        "misread": 47,
+        "badFix": 31,
+        "badRule": 31,
+        "badRead": 37,
+        "other": 34,
+        "missedCase": 55,
+        "wrongCall": 146
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 4,
+      "raw": "80",
+      "label": null,
+      "attempts": 369,
+      "passes": 137,
+      "medianTokens": 129287,
+      "counts": {
+        "passed": 137,
+        "missEnv": 0,
+        "missOverfit": 10,
+        "missExact": 8,
+        "missBug": 28,
+        "misread": 43,
+        "badFix": 29,
+        "badRule": 29,
+        "badRead": 37,
+        "other": 48,
+        "missedCase": 46,
+        "wrongCall": 138
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 5,
+      "raw": "120",
+      "label": "xhigh",
+      "attempts": 370,
+      "passes": 153,
+      "medianTokens": 136702,
+      "counts": {
+        "passed": 153,
+        "missEnv": 3,
+        "missOverfit": 9,
+        "missExact": 7,
+        "missBug": 13,
+        "misread": 45,
+        "badFix": 22,
+        "badRule": 32,
+        "badRead": 46,
+        "other": 40,
+        "missedCase": 32,
+        "wrongCall": 145
+      }
+    },
+    {
+      "model": "Fable 5",
+      "order": 6,
+      "raw": "max",
+      "label": "max",
+      "attempts": 369,
+      "passes": 161,
+      "medianTokens": 193808,
+      "counts": {
+        "passed": 161,
+        "missEnv": 1,
+        "missOverfit": 11,
+        "missExact": 9,
+        "missBug": 11,
+        "misread": 38,
+        "badFix": 20,
+        "badRule": 27,
+        "badRead": 54,
+        "other": 37,
+        "missedCase": 32,
+        "wrongCall": 139
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 0,
+      "raw": "10",
+      "label": "low",
+      "attempts": 370,
+      "passes": 140,
+      "medianTokens": 72982,
+      "counts": {
+        "passed": 140,
+        "missEnv": 2,
+        "missOverfit": 7,
+        "missExact": 10,
+        "missBug": 40,
+        "misread": 45,
+        "badFix": 31,
+        "badRule": 32,
+        "badRead": 25,
+        "other": 38,
+        "missedCase": 59,
+        "wrongCall": 133
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 1,
+      "raw": "15",
+      "label": "medium",
+      "attempts": 370,
+      "passes": 158,
+      "medianTokens": 92970,
+      "counts": {
+        "passed": 158,
+        "missEnv": 1,
+        "missOverfit": 8,
+        "missExact": 8,
+        "missBug": 28,
+        "misread": 38,
+        "badFix": 19,
+        "badRule": 27,
+        "badRead": 38,
+        "other": 45,
+        "missedCase": 45,
+        "wrongCall": 122
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 2,
+      "raw": "20",
+      "label": null,
+      "attempts": 370,
+      "passes": 168,
+      "medianTokens": 112254,
+      "counts": {
+        "passed": 168,
+        "missEnv": 0,
+        "missOverfit": 4,
+        "missExact": 5,
+        "missBug": 27,
+        "misread": 35,
+        "badFix": 26,
+        "badRule": 24,
+        "badRead": 42,
+        "other": 39,
+        "missedCase": 36,
+        "wrongCall": 127
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 3,
+      "raw": "30",
+      "label": null,
+      "attempts": 370,
+      "passes": 189,
+      "medianTokens": 135042,
+      "counts": {
+        "passed": 189,
+        "missEnv": 2,
+        "missOverfit": 3,
+        "missExact": 5,
+        "missBug": 20,
+        "misread": 36,
+        "badFix": 16,
+        "badRule": 24,
+        "badRead": 35,
+        "other": 40,
+        "missedCase": 30,
+        "wrongCall": 111
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 4,
+      "raw": "40",
+      "label": null,
+      "attempts": 370,
+      "passes": 201,
+      "medianTokens": 156271,
+      "counts": {
+        "passed": 201,
+        "missEnv": 3,
+        "missOverfit": 5,
+        "missExact": 5,
+        "missBug": 16,
+        "misread": 23,
+        "badFix": 12,
+        "badRule": 29,
+        "badRead": 46,
+        "other": 30,
+        "missedCase": 29,
+        "wrongCall": 110
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 5,
+      "raw": "80",
+      "label": "xhigh",
+      "attempts": 370,
+      "passes": 217,
+      "medianTokens": 177400,
+      "counts": {
+        "passed": 217,
+        "missEnv": 1,
+        "missOverfit": 3,
+        "missExact": 4,
+        "missBug": 12,
+        "misread": 31,
+        "badFix": 12,
+        "badRule": 24,
+        "badRead": 40,
+        "other": 26,
+        "missedCase": 20,
+        "wrongCall": 107
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 6,
+      "raw": "120",
+      "label": null,
+      "attempts": 370,
+      "passes": 214,
+      "medianTokens": 188059,
+      "counts": {
+        "passed": 214,
+        "missEnv": 3,
+        "missOverfit": 2,
+        "missExact": 4,
+        "missBug": 14,
+        "misread": 26,
+        "badFix": 14,
+        "badRule": 25,
+        "badRead": 31,
+        "other": 37,
+        "missedCase": 23,
+        "wrongCall": 96
+      }
+    },
+    {
+      "model": "Fable 5.1",
+      "order": 7,
+      "raw": "max",
+      "label": "max",
+      "attempts": 370,
+      "passes": 214,
+      "medianTokens": 222480,
+      "counts": {
+        "passed": 214,
+        "missEnv": 1,
+        "missOverfit": 3,
+        "missExact": 6,
+        "missBug": 14,
+        "misread": 26,
+        "badFix": 10,
+        "badRule": 24,
+        "badRead": 47,
+        "other": 25,
+        "missedCase": 24,
+        "wrongCall": 107
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Annotate ATRX variants and find nearest Cas9 cut",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          3,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          3,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          2,
+          5
+        ],
+        "Fable 5.1|4": [
+          2,
+          5
+        ],
+        "Fable 5.1|5": [
+          1,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Make batched LM evaluation match single-example results",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          1,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          2,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          2,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          1,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Generate valid biped walk, jump, run trajectories",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          4,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          2,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          2,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          3,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          2,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Stop Bun release from leaking private sources",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a STEP model from a PNG schematic",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          2,
+          5
+        ],
+        "Opus 5|3": [
+          3,
+          5
+        ],
+        "Opus 5|4": [
+          2,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          1,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          3,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix a cargo flight dispatch planner",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          2,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a two-phase simplex LP solver CLI",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          1,
+          5
+        ],
+        "Opus 5|7": [
+          3,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          2,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          2,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Prove a Coq combinatorics bound theorem",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          5,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Tune ad campaign for target genuine-user CTR",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          3,
+          5
+        ],
+        "Opus 5|4": [
+          1,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          3,
+          5
+        ],
+        "Opus 5|7": [
+          3,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          2,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|7": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Eliminate layout shift on a Next.js site",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          1,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          2,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          3,
+          5
+        ],
+        "Fable 5|2": [
+          3,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          3,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a consistent CSV anonymization CLI",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a Spark near-duplicate deduplication pipeline",
+      "cells": {
+        "Opus 5|0": [
+          3,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          3,
+          5
+        ],
+        "Fable 5|1": [
+          3,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          3,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Debug an embedding-drift detection monitor",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Plan Odoo orders to fulfill transformer demand",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          1,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          2,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          1,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          2,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build an AMC exam LLM evaluation harness",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          1,
+          5
+        ],
+        "Opus 5|4": [
+          1,
+          5
+        ],
+        "Opus 5|5": [
+          2,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          3,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          1,
+          5
+        ],
+        "Fable 5.1|4": [
+          2,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          2,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Recompute SA-CCR exposure, RWA, and capital",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          1,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix a soundness bug in UAutomizer verifier",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          2,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          3,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          3,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          2,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Compute foodstuff beta activity concentration",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Recover plaintext from a known-plaintext cipher attack",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          1,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          2,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Write a fused fp8 RMSNorm GEMM CUDA kernel",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          5,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          4
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          4
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Script parametric semi-open impeller FreeCAD bodies",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a FreeCAD part from a PNG drawing",
+      "cells": {
+        "Opus 5|0": [
+          3,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          3,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          2,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Script a parametric roller-chain spring clip",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          3,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          1,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          3,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a stateful freight dispatch CLI",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Identify an IgG N-glycan from MS/MS data",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Write a tiny C GPT-2 inference program",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          5,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Run GSEA on up-regulated tissue proteins",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          1,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          2,
+          5
+        ],
+        "Opus 5|6": [
+          1,
+          5
+        ],
+        "Opus 5|7": [
+          3,
+          5
+        ],
+        "Fable 5|0": [
+          3,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          4,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Decide and submit heat-pump warranty claims",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Compute framework topology from CIF files",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          4,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          5,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Strip JavaScript from HTML to prevent XSS",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Binary-patch an image service to reject invalid edits",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          2,
+          5
+        ],
+        "Opus 5|5": [
+          1,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          1,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Decrypt a classical cipher without the key",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          3,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          3,
+          5
+        ],
+        "Fable 5|1": [
+          1,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          4,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Complete an Intrastat month-end filing",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Train a JAX transformer to target loss fast",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          4
+        ],
+        "Opus 5|1": [
+          0,
+          4
+        ],
+        "Opus 5|2": [
+          0,
+          4
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          3
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          3
+        ],
+        "Fable 5|3": [
+          0,
+          4
+        ],
+        "Fable 5|4": [
+          0,
+          4
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          1,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          2,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Write a Kuramoto-Sivashinsky PDE solver in C++",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          1,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          1,
+          5
+        ],
+        "Fable 5.1|4": [
+          1,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Replace a slow key-value server without dropping connections",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          3,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          2,
+          5
+        ],
+        "Fable 5|2": [
+          3,
+          5
+        ],
+        "Fable 5|3": [
+          2,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          2,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Train LakeLSTM to predict lake temperature profiles",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          2,
+          5
+        ],
+        "Opus 5|5": [
+          2,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          2,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Reverse-engineer a poster into an editable layout",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|7": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Reverse-engineer a design into a layer config",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          5,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          3,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Prove a Lean theorem from local axioms",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          4,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          2,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Clear a utility billing queue via legacy GUI",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          2,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          2,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Migrate a live MySQL API to PostgreSQL",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          2,
+          5
+        ],
+        "Opus 5|3": [
+          4,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          2,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          2,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          2,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a sympy grader for LaTeX math answers",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          4,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix and review German medical claim decisions",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Find a backdoor in a memcached binary",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          4,
+          5
+        ],
+        "Fable 5|1": [
+          4,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Merge Megatron shards into one safetensors file",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          5,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Complete a Bach-style SATB harmonization",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix a post-crash MVCC LSM visibility bug",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          2,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          1,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Cut latency across a Next.js warehouse app",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          2,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          2,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Merge railway ontology graphs and query them",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Speed up a Kafka payment worker cold start",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          1,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          3,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          4,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          3,
+          5
+        ],
+        "Fable 5.1|1": [
+          1,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          2,
+          5
+        ],
+        "Fable 5.1|5": [
+          1,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Route photonic waveguide nets around obstacles",
+      "cells": {
+        "Opus 5|0": [
+          2,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          3,
+          5
+        ],
+        "Opus 5|3": [
+          4,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          4,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          3,
+          5
+        ],
+        "Fable 5.1|1": [
+          3,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Restore corrupted pretraining data examples",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          2,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          2,
+          5
+        ],
+        "Opus 5|5": [
+          2,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Generate a multi-day ERP production plan",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          1,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          1,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          2,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Predict disulfide cysteine positions in proteins",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          2,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Repair a React lead-intake submission pipeline",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          3,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          1,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          3,
+          5
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          4,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          2,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Write Verilog for an NES-style 8-bit SoC",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          3,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          4,
+          5
+        ],
+        "Opus 5|6": [
+          3,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          4,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          3,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Reverse-engineer and replay a risk scorer",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          3,
+          5
+        ],
+        "Fable 5|3": [
+          2,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          3,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fit ROY polymorph dihedral angles to stretches",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          1,
+          5
+        ],
+        "Opus 5|5": [
+          1,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          1,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          2,
+          5
+        ],
+        "Fable 5.1|4": [
+          1,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Reimplement a Reed-Solomon archive tool",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          1,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          3,
+          5
+        ],
+        "Fable 5|2": [
+          1,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          2,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Transcribe SATB chorale audio to MusicXML",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix a session-window stream processor",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          1,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix SGLang streaming order under speculative decoding",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          2,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          2,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          2,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          4,
+          5
+        ],
+        "Fable 5.1|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|7": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Investigate and decrypt an exfiltration capture",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          4,
+          5
+        ],
+        "Fable 5|1": [
+          4,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          3,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Recover ordered sound-change rules from word pairs",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          4,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          1,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          2,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          1,
+          5
+        ],
+        "Fable 5|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Prove Takens' embedding theorem in Lean",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          2,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          1,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          4,
+          5
+        ],
+        "Fable 5|4": [
+          4,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|0": [
+          2,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          3,
+          5
+        ],
+        "Fable 5.1|6": [
+          4,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Link telecom billing records into person clusters",
+      "cells": {
+        "Opus 5|0": [
+          5,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          4,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          5,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          5,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Remove a UEFI firmware boot marker mechanism",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          5,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          3,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          1,
+          5
+        ],
+        "Fable 5|2": [
+          3,
+          5
+        ],
+        "Fable 5|3": [
+          3,
+          5
+        ],
+        "Fable 5|4": [
+          1,
+          5
+        ],
+        "Fable 5|5": [
+          3,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          5,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          4,
+          5
+        ],
+        "Fable 5.1|3": [
+          3,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          1,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Port a VBA UserForm app to React and FastAPI",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Build a fast NetworkX isomorphism subset",
+      "cells": {
+        "Opus 5|0": [
+          3,
+          5
+        ],
+        "Opus 5|1": [
+          5,
+          5
+        ],
+        "Opus 5|2": [
+          4,
+          5
+        ],
+        "Opus 5|3": [
+          5,
+          5
+        ],
+        "Opus 5|4": [
+          5,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          5,
+          5
+        ],
+        "Opus 5|7": [
+          5,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          5,
+          5
+        ],
+        "Fable 5|2": [
+          5,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          5,
+          5
+        ],
+        "Fable 5|5": [
+          4,
+          5
+        ],
+        "Fable 5|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          2,
+          5
+        ],
+        "Fable 5.1|2": [
+          3,
+          5
+        ],
+        "Fable 5.1|3": [
+          4,
+          5
+        ],
+        "Fable 5.1|4": [
+          5,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix corrupted DeepSeek streaming in vLLM",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          0,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix a training framework's diverging loss trace",
+      "cells": {
+        "Opus 5|0": [
+          0,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          1,
+          5
+        ],
+        "Opus 5|3": [
+          2,
+          5
+        ],
+        "Opus 5|4": [
+          4,
+          5
+        ],
+        "Opus 5|5": [
+          3,
+          5
+        ],
+        "Opus 5|6": [
+          4,
+          5
+        ],
+        "Opus 5|7": [
+          4,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          1,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          3,
+          5
+        ],
+        "Fable 5.1|2": [
+          1,
+          5
+        ],
+        "Fable 5.1|3": [
+          2,
+          5
+        ],
+        "Fable 5.1|4": [
+          3,
+          5
+        ],
+        "Fable 5.1|5": [
+          2,
+          5
+        ],
+        "Fable 5.1|6": [
+          2,
+          5
+        ],
+        "Fable 5.1|7": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Fix write-ahead-log crash recovery ordering",
+      "cells": {
+        "Opus 5|0": [
+          4,
+          5
+        ],
+        "Opus 5|1": [
+          3,
+          5
+        ],
+        "Opus 5|2": [
+          0,
+          5
+        ],
+        "Opus 5|3": [
+          0,
+          5
+        ],
+        "Opus 5|4": [
+          0,
+          5
+        ],
+        "Opus 5|5": [
+          0,
+          5
+        ],
+        "Opus 5|6": [
+          1,
+          5
+        ],
+        "Opus 5|7": [
+          0,
+          5
+        ],
+        "Fable 5|0": [
+          0,
+          5
+        ],
+        "Fable 5|1": [
+          0,
+          5
+        ],
+        "Fable 5|2": [
+          0,
+          5
+        ],
+        "Fable 5|3": [
+          0,
+          5
+        ],
+        "Fable 5|4": [
+          0,
+          5
+        ],
+        "Fable 5|5": [
+          0,
+          5
+        ],
+        "Fable 5|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|0": [
+          0,
+          5
+        ],
+        "Fable 5.1|1": [
+          0,
+          5
+        ],
+        "Fable 5.1|2": [
+          0,
+          5
+        ],
+        "Fable 5.1|3": [
+          0,
+          5
+        ],
+        "Fable 5.1|4": [
+          0,
+          5
+        ],
+        "Fable 5.1|5": [
+          0,
+          5
+        ],
+        "Fable 5.1|6": [
+          0,
+          5
+        ],
+        "Fable 5.1|7": [
+          0,
+          5
+        ]
+      }
+    },
+    {
+      "title": "Inverse-design a photonic wavelength demultiplexer",
+      "cells": {
+        "Opus 5|0": [
+          1,
+          5
+        ],
+        "Opus 5|1": [
+          0,
+          5
+        ],
+        "Opus 5|2": [
+          2,
+          5
+        ],
+        "Opus 5|3": [
+          1,
+          5
+        ],
+        "Opus 5|4": [
+          3,
+          5
+        ],
+        "Opus 5|5": [
+          5,
+          5
+        ],
+        "Opus 5|6": [
+          3,
+          5
+        ],
+        "Opus 5|7": [
+          2,
+          5
+        ],
+        "Fable 5|0": [
+          2,
+          5
+        ],
+        "Fable 5|1": [
+          2,
+          5
+        ],
+        "Fable 5|2": [
+          4,
+          5
+        ],
+        "Fable 5|3": [
+          5,
+          5
+        ],
+        "Fable 5|4": [
+          2,
+          5
+        ],
+        "Fable 5|5": [
+          5,
+          5
+        ],
+        "Fable 5|6": [
+          3,
+          5
+        ],
+        "Fable 5.1|0": [
+          4,
+          5
+        ],
+        "Fable 5.1|1": [
+          4,
+          5
+        ],
+        "Fable 5.1|2": [
+          5,
+          5
+        ],
+        "Fable 5.1|3": [
+          2,
+          5
+        ],
+        "Fable 5.1|4": [
+          4,
+          5
+        ],
+        "Fable 5.1|5": [
+          5,
+          5
+        ],
+        "Fable 5.1|6": [
+          5,
+          5
+        ],
+        "Fable 5.1|7": [
+          5,
+          5
+        ]
+      }
+    }
+  ],
+  "kinds": [
+    {
+      "id": "passed",
+      "fam": "passed",
+      "color": "b0",
+      "label": {
+        "en": "passed",
+        "zh": "通过"
+      },
+      "detail": null
+    },
+    {
+      "id": "missEnv",
+      "fam": "missedCase",
+      "color": "b1",
+      "label": {
+        "en": "works on my machine",
+        "zh": "在我机器上能跑"
+      },
+      "detail": {
+        "en": "It ran in the model's own container and failed in the grader's.",
+        "zh": "在模型自己的容器里能跑，到评测容器里就失败了。"
+      },
+      "modes": [
+        "works_locally_only"
+      ]
+    },
+    {
+      "id": "missOverfit",
+      "fam": "missedCase",
+      "color": "b2",
+      "label": {
+        "en": "overfit to the examples",
+        "zh": "过拟合示例"
+      },
+      "detail": {
+        "en": "Tuned until the visible examples passed. The hidden ones did not.",
+        "zh": "调到可见示例都通过，隐藏示例没过。"
+      },
+      "modes": [
+        "overfit_visible_examples"
+      ]
+    },
+    {
+      "id": "missExact",
+      "fam": "missedCase",
+      "color": "b3",
+      "label": {
+        "en": "close, but not exact",
+        "zh": "接近但不完全一致"
+      },
+      "detail": {
+        "en": "Equivalent output, where the grader wanted an exact match.",
+        "zh": "输出等价，但评测要求完全一致。"
+      },
+      "modes": [
+        "approximate_not_exact"
+      ]
+    },
+    {
+      "id": "missBug",
+      "fam": "missedCase",
+      "color": "b4",
+      "label": {
+        "en": "a bug its tests missed",
+        "zh": "测试没抓到的 bug"
+      },
+      "detail": {
+        "en": "The right design with a real bug. Its own tests never hit the case that breaks it.",
+        "zh": "设计对了但有真实 bug，它自己的测试没跑到出问题的场景。"
+      },
+      "modes": [
+        "untested_scenario"
+      ]
+    },
+    {
+      "id": "misread",
+      "fam": "wrongCall",
+      "color": "b5",
+      "label": {
+        "en": "misread a requirement",
+        "zh": "误读需求"
+      },
+      "detail": {
+        "en": "Broke something the brief or the task's docs said.",
+        "zh": "破坏了任务说明或文档里写明的东西。"
+      },
+      "modes": [
+        "ignored_stated_requirement"
+      ]
+    },
+    {
+      "id": "badFix",
+      "fam": "wrongCall",
+      "color": "b6",
+      "label": {
+        "en": "wrong or incomplete fix",
+        "zh": "修复错误或不完整"
+      },
+      "detail": {
+        "en": "Asked to fix something, it changed the wrong place or not enough of it.",
+        "zh": "让它修东西，改错了地方或改得不够。"
+      },
+      "modes": [
+        "wrong_or_incomplete_fix"
+      ]
+    },
+    {
+      "id": "badRule",
+      "fam": "wrongCall",
+      "color": "b7",
+      "label": {
+        "en": "got the domain rule wrong",
+        "zh": "弄错领域规则"
+      },
+      "detail": {
+        "en": "Chose the wrong formula, threshold or convention for the field.",
+        "zh": "选了错的公式、阈值或行业惯例。"
+      },
+      "modes": [
+        "wrong_method_choice"
+      ]
+    },
+    {
+      "id": "badRead",
+      "fam": "wrongCall",
+      "color": "b8",
+      "label": {
+        "en": "picked the wrong reading",
+        "zh": "选错理解"
+      },
+      "detail": {
+        "en": "The brief allowed two readings. It chose the one the tests did not.",
+        "zh": "需求允许两种理解，它选了测试不要的那种。"
+      },
+      "modes": [
+        "wrong_call_on_ambiguity"
+      ]
+    },
+    {
+      "id": "other",
+      "fam": "other",
+      "color": "b9",
+      "label": {
+        "en": "other failures",
+        "zh": "其他失败"
+      },
+      "detail": {
+        "en": "Nothing working delivered, a number short of its target, or unclear from the record.",
+        "zh": "没交付能用的东西，数字没达标，或记录里看不清楚。"
+      }
+    }
+  ],
+  "families": [
+    {
+      "id": "missedCase",
+      "label": {
+        "en": "missed a case",
+        "zh": "漏掉情况"
+      }
+    },
+    {
+      "id": "wrongCall",
+      "label": {
+        "en": "made the wrong call",
+        "zh": "判断错了"
+      }
+    }
+  ],
+  "labels": {
+    "effort": "投入档位",
+    "replay": "重播",
+    "model": "模型",
+    "attempt": "次尝试",
+    "medianEach": "每次中位",
+    "tokens": "token"
+  },
+  "caption": {
+    "zh": "左格固定是低档，右格跟着上方的档位滑块走。一档档往上推，盯住紫色格子（漏掉情况）明显变少，蓝色格子（判断错了）几乎不动，这张图想说的差别就在这里。上面的标签可以切模型，鼠标停在格子上能看这一次具体败在哪。",
+    "en": "Each square is one attempt. Failure kinds come from a model judge and are approximate."
+  },
+  "aria": {
+    "zh": "Terminal-Bench 3.0 各模型各档位每一次尝试的失败原因方阵。",
+    "en": "Terminal-Bench 3.0 attempts by outcome"
+  }
+}

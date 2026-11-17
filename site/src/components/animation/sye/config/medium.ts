@@ -1,0 +1,488 @@
+/**
+ * 中档 effort 的 /config 重设计：像 Claude Code 的配置菜单，带搜索和分组子页。
+ *
+ * 原站数据在 assets/3e_nhrupds886.js 里。首页列出 8 个常用设置，其余设置收进
+ * 六个分组子页和「已修改的设置」页。搜索会跨分组匹配，行尾带上分组名。
+ * 这里只做数据，界面和交互在 ConfigMedium.svelte。
+ */
+
+export type MediumSettingType = 'bool' | 'enum';
+
+export interface MediumSetting {
+  id: string;
+  label: string;
+  type: MediumSettingType;
+  /** enum 的选项 */
+  options?: string[];
+  /** bool 是布尔，enum 是选项字符串 */
+  def: string | boolean;
+  /** 所属分组 id */
+  group: string;
+  /** 首页是否直接列出 */
+  essential?: boolean;
+  desc: string;
+  /** 区分不同页面的导航项标签（分组页名用 MEDIUM_GROUPS 里的 name） */
+  page?: string;
+}
+
+export interface MediumGroup {
+  id: string;
+  name: string;
+}
+
+export const MEDIUM_GROUPS: MediumGroup[] = [
+  { id: 'display', name: '显示' },
+  { id: 'input', name: '输入' },
+  { id: 'behavior', name: '行为' },
+  { id: 'connections', name: '连接' },
+  { id: 'plugins', name: '插件' },
+  { id: 'advanced', name: '高级' },
+];
+
+export const MEDIUM_SETTINGS: MediumSetting[] = [
+  {
+    id: 'model',
+    label: '模型',
+    type: 'enum',
+    options: ['默认（Opus 5.5）', 'Opus 5.5', 'Sonnet 5', 'Haiku 5'],
+    def: '默认（Opus 5.5）',
+    group: 'behavior',
+    essential: true,
+    desc: '这个会话以及之后会话中新消息使用的模型。',
+  },
+  {
+    id: 'permissionMode',
+    label: '默认权限模式',
+    type: 'enum',
+    options: ['编辑前询问', '接受编辑', '计划', '自动'],
+    def: '编辑前询问',
+    group: 'behavior',
+    essential: true,
+    desc: '会话开始时 Claude 编辑文件或运行命令前如何询问。',
+  },
+  {
+    id: 'theme',
+    label: '主题',
+    type: 'enum',
+    options: ['深色', '浅色', '深色（色盲友好）', '浅色（色盲友好）', '深色（ANSI）', '浅色（ANSI）'],
+    def: '深色',
+    group: 'display',
+    essential: true,
+    desc: '终端界面的配色。',
+  },
+  {
+    id: 'outputStyle',
+    label: '输出风格',
+    type: 'enum',
+    options: ['默认', '解释型', '学习型'],
+    def: '默认',
+    group: 'behavior',
+    essential: true,
+    desc: 'Claude 如何书写回复。',
+  },
+  {
+    id: 'thinking',
+    label: '思考模式',
+    type: 'bool',
+    def: true,
+    group: 'behavior',
+    essential: true,
+    desc: '让 Claude 回答前先推理。更慢，但难题上更好。',
+  },
+  {
+    id: 'autoCompact',
+    label: '自动压缩',
+    type: 'bool',
+    def: true,
+    group: 'behavior',
+    essential: true,
+    desc: '上下文快用完时自动总结对话。',
+  },
+  {
+    id: 'notifChannel',
+    label: '通知',
+    type: 'enum',
+    options: ['自动', '终端响铃', 'iTerm2', '关闭'],
+    def: '自动',
+    group: 'connections',
+    essential: true,
+    desc: '终端在后台时如何通知你 Claude 需要你。',
+  },
+  {
+    id: 'editor',
+    label: '编辑器模式',
+    type: 'enum',
+    options: ['普通', 'Vim'],
+    def: '普通',
+    group: 'input',
+    essential: true,
+    desc: '输入框的按键绑定。',
+  },
+  {
+    id: 'language',
+    label: '语言',
+    type: 'enum',
+    options: ['自动', '英语', '西班牙语', '日语', '德语'],
+    def: '自动',
+    group: 'display',
+    desc: 'Claude 回复使用的语言。',
+  },
+  {
+    id: 'reduceMotion',
+    label: '减少动效',
+    type: 'bool',
+    def: false,
+    group: 'display',
+    desc: '关闭旋转动画和动画文字。',
+  },
+  {
+    id: 'verbose',
+    label: '详细输出',
+    type: 'bool',
+    def: false,
+    group: 'display',
+    desc: '显示完整工具输出而不是摘要。',
+  },
+  {
+    id: 'defaultView',
+    label: '默认视图',
+    type: 'enum',
+    options: ['对话', '完整记录'],
+    def: '对话',
+    group: 'display',
+    desc: '新会话打开时使用的视图。',
+  },
+  {
+    id: 'autoScroll',
+    label: '自动滚动',
+    type: 'bool',
+    def: true,
+    group: 'display',
+    desc: '有新输出时自动跟随。',
+  },
+  {
+    id: 'progressBar',
+    label: '终端进度条',
+    type: 'bool',
+    def: true,
+    group: 'display',
+    desc: 'Claude 工作时在终端标签页或程序坞图标里显示进度。',
+  },
+  {
+    id: 'tips',
+    label: '显示提示',
+    type: 'bool',
+    def: true,
+    group: 'display',
+    desc: 'Claude 工作时在旋转指示器下方显示一条提示。',
+  },
+  {
+    id: 'turnDuration',
+    label: '显示回合耗时',
+    type: 'bool',
+    def: false,
+    group: 'display',
+    desc: '显示每个回合花了多久。',
+  },
+  {
+    id: 'timeFormat',
+    label: '时间格式',
+    type: 'enum',
+    options: ['自动', '12 小时制', '24 小时制'],
+    def: '自动',
+    group: 'display',
+    desc: '界面里时间的显示格式。',
+  },
+  {
+    id: 'prStatus',
+    label: '显示 PR 状态',
+    type: 'bool',
+    def: true,
+    group: 'display',
+    desc: '在底部显示当前分支的拉取请求。',
+  },
+  {
+    id: 'copyOnSelect',
+    label: '选中即复制',
+    type: 'bool',
+    def: false,
+    group: 'input',
+    desc: '选中文字后立即复制到剪贴板。',
+  },
+  {
+    id: 'promptSuggestions',
+    label: '提示词建议',
+    type: 'bool',
+    def: true,
+    group: 'input',
+    desc: 'Claude 完成后建议下一句提示。',
+  },
+  {
+    id: 'askTimeout',
+    label: '问题自动继续超时',
+    type: 'enum',
+    options: ['从不', '1 分钟', '5 分钟', '15 分钟'],
+    def: '从不',
+    group: 'input',
+    desc: '不回答 Claude 的问题时，多久后自动继续。',
+  },
+  {
+    id: 'goals',
+    label: 'Claude 提出的目标',
+    type: 'enum',
+    options: ['询问', '关闭'],
+    def: '询问',
+    group: 'input',
+    desc: '允许 Claude 为长任务提出目标。',
+  },
+  {
+    id: 'externalEditorContext',
+    label: '发送编辑器选区',
+    type: 'bool',
+    def: true,
+    group: 'input',
+    desc: '每次提示都带上编辑器里的文件和选区。',
+  },
+  {
+    id: 'fast',
+    label: '快速模式',
+    type: 'bool',
+    def: false,
+    group: 'behavior',
+    desc: '更快回复，用量成本更高。',
+  },
+  {
+    id: 'autoContinue',
+    label: '到达用量上限后继续',
+    type: 'bool',
+    def: false,
+    group: 'behavior',
+    desc: '到达套餐上限后继续用额外用量工作。',
+  },
+  {
+    id: 'autoPlan',
+    label: '计划阶段使用自动模式',
+    type: 'bool',
+    def: false,
+    group: 'behavior',
+    desc: '计划时允许 Claude 不经询问运行只读工具。',
+  },
+  {
+    id: 'checkpoints',
+    label: '回退代码（检查点）',
+    type: 'bool',
+    def: true,
+    group: 'behavior',
+    desc: '保存文件快照，以便回退 Claude 的修改。',
+  },
+  {
+    id: 'workflows',
+    label: '动态工作流',
+    type: 'bool',
+    def: true,
+    group: 'behavior',
+    desc: '让 Claude 为大型任务运行多智能体工作流。',
+  },
+  {
+    id: 'artifacts',
+    label: '产物',
+    type: 'bool',
+    def: true,
+    group: 'behavior',
+    desc: '让 Claude 发布可以在浏览器打开的页面。',
+  },
+  {
+    id: 'recap',
+    label: '会话回顾',
+    type: 'bool',
+    def: true,
+    group: 'behavior',
+    desc: '总结你离开期间发生了什么。',
+  },
+  {
+    id: 'pushInput',
+    label: '需要操作时推送',
+    type: 'bool',
+    def: false,
+    group: 'connections',
+    desc: 'Claude 被你阻塞时发送手机通知。',
+  },
+  {
+    id: 'pushDecides',
+    label: 'Claude 判断时推送',
+    type: 'bool',
+    def: false,
+    group: 'connections',
+    desc: '让 Claude 认为你该看一眼时发送手机通知。',
+  },
+  {
+    id: 'autoConnectIde',
+    label: '自动连接 IDE',
+    type: 'bool',
+    def: false,
+    group: 'connections',
+    desc: '在外部终端启动 Claude 时连接正在运行的 IDE。',
+  },
+  {
+    id: 'autoInstallIde',
+    label: '自动安装 IDE 扩展',
+    type: 'bool',
+    def: true,
+    group: 'connections',
+    desc: '在支持的 IDE 里安装 Claude Code 扩展。',
+  },
+  {
+    id: 'diffTool',
+    label: '差异工具',
+    type: 'enum',
+    options: ['自动', '终端', 'IDE'],
+    def: '自动',
+    group: 'connections',
+    desc: '评审时文件差异在哪里打开。',
+  },
+  {
+    id: 'chrome',
+    label: 'Chrome 中的 Claude',
+    type: 'bool',
+    def: false,
+    group: 'connections',
+    desc: '让 Claude 通过扩展使用你的 Chrome 浏览器。',
+  },
+  {
+    id: 'remoteControl',
+    label: '远程控制',
+    type: 'enum',
+    options: ['关闭', '所有会话开启'],
+    def: '关闭',
+    group: 'connections',
+    desc: '从 claude.ai 或手机应用继续会话。',
+  },
+  {
+    id: 'remoteHome',
+    label: '云端使用本机设置',
+    type: 'bool',
+    def: false,
+    group: 'connections',
+    desc: '把本机设置应用到从这里启动的云端会话。',
+  },
+  {
+    id: 'crossSession',
+    label: '其他会话的消息',
+    type: 'enum',
+    options: ['询问', '允许', '阻止'],
+    def: '询问',
+    group: 'connections',
+    desc: '其他 Claude 会话是否可以给这个会话发消息。',
+  },
+  {
+    id: 'apiKey',
+    label: '使用自定义 API 密钥',
+    type: 'bool',
+    def: false,
+    group: 'connections',
+    desc: '使用环境变量里的 ANTHROPIC_API_KEY 而不是登录态。',
+  },
+  {
+    id: 'plugin.lint.strict',
+    label: 'lint-helper › 严格模式',
+    type: 'bool',
+    def: false,
+    group: 'plugins',
+    desc: '来自 lint-helper 插件：警告也按错误处理。',
+  },
+  {
+    id: 'plugin.lint.fmt',
+    label: 'lint-helper › 格式化工具',
+    type: 'enum',
+    options: ['prettier', 'biome', 'none'],
+    def: 'prettier',
+    group: 'plugins',
+    desc: '来自 lint-helper 插件：编辑后运行哪个格式化工具。',
+  },
+  {
+    id: 'plugin.deploy.env',
+    label: 'deploy › 默认目标',
+    type: 'enum',
+    options: ['staging', 'production'],
+    def: 'staging',
+    group: 'plugins',
+    desc: '来自 deploy 插件：未指定环境时使用的环境。',
+  },
+  {
+    id: 'autoUpdates',
+    label: '自动更新通道',
+    type: 'enum',
+    options: ['latest', 'stable', '关闭'],
+    def: 'latest',
+    group: 'advanced',
+    desc: 'Claude Code 从哪个发布通道更新。',
+  },
+  {
+    id: 'worktreeBase',
+    label: '工作树基础引用',
+    type: 'enum',
+    options: ['当前分支', '默认分支'],
+    def: '当前分支',
+    group: 'advanced',
+    desc: '新工作树从哪里分叉。',
+  },
+  {
+    id: 'gitignore',
+    label: '文件选择器遵循 .gitignore',
+    type: 'bool',
+    def: true,
+    group: 'advanced',
+    desc: '在 @ 提及里隐藏被忽略的文件。',
+  },
+  {
+    id: 'copyFull',
+    label: '跳过 /copy 选择器',
+    type: 'bool',
+    def: false,
+    group: 'advanced',
+    desc: '/copy 直接复制上一条完整回复。',
+  },
+  {
+    id: 'timestamps',
+    label: '显示消息时间戳',
+    type: 'bool',
+    def: false,
+    group: 'advanced',
+    desc: '在每条消息旁显示时间。',
+  },
+  {
+    id: 'tabStatus',
+    label: '在终端标签页显示状态',
+    type: 'bool',
+    def: false,
+    group: 'advanced',
+    desc: '把 Claude 的状态放进终端标签页标题。',
+  },
+  {
+    id: 'precompute',
+    label: '预先计算压缩',
+    type: 'bool',
+    def: false,
+    group: 'advanced',
+    desc: '在后台准备摘要，让压缩瞬间完成。',
+  },
+  {
+    id: 'teammateMode',
+    label: '队友模式',
+    type: 'enum',
+    options: ['自动', '进程内', 'tmux'],
+    def: '自动',
+    group: 'advanced',
+    desc: '智能体队友如何显示。',
+  },
+];
+
+/** 按 id 取设置，方便子页和搜索共用。 */
+export const MEDIUM_BY_ID: Record<string, MediumSetting> = Object.fromEntries(
+  MEDIUM_SETTINGS.map((item) => [item.id, item]),
+);
+
+/** 分组 id 到显示名。 */
+export const MEDIUM_GROUP_NAME: Record<string, string> = Object.fromEntries(
+  MEDIUM_GROUPS.map((item) => [item.id, item.name]),
+);
