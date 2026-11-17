@@ -1,0 +1,72 @@
+/**
+ * 外部示例快照的共享样式层。
+ *
+ * 做「把外部站点的组件示例搬进文章」这类复刻时，真正难的不是渲染，而是让快照在
+ * `.prose` 的排版环境里长得和原站一样。文章正文有一套自己的规则（标题左侧竖条、
+ * 代码块的底色、图片的圆角边框、段落两端对齐……），演示挂在这套规则里面会被顺手改掉。
+ *
+ * 用法：
+ * - 演示根节点加 class `snapshot-root`（和站点自己的作用域类并存，比如 `geist-demo snapshot-root`），
+ *   下面这些规则才会生效；
+ * - 离屏测量容器用 `.snapshot-measure`（见 @/lib/snapshot 的 filterRenderableSections）；
+ * - 这个文件只管「挡住正文排版外溢」和测量容器，卡片外壳、颜色、字体由各自的复刻样式决定。
+ *
+ * 这里的特异度按 `.snapshot-root.snapshot-root`（0,2,0）写，刻意高于 `.prose p` 这类
+ * （0,1,1）规则；新增规则时保持这个约定。
+ */
+
+/* 标题：正文给 h2 画了通栏细线、给 h3 画了左侧主色竖条，还会给标题后的首个元素加一次上边距。 */
+.snapshot-root.snapshot-root :where(h1, h2, h3, h4, h5, h6) {
+  border: 0;
+}
+
+.snapshot-root.snapshot-root :where(h1, h2, h3, h4, h5, h6)::before,
+.snapshot-root.snapshot-root :where(h1, h2, h3, h4, h5, h6)::after {
+  content: none !important;
+  display: none !important;
+}
+
+.snapshot-root.snapshot-root :where(h1, h2, h3, h4, h5, h6) + * {
+  margin-top: 0;
+}
+
+/* 正文段落被两端对齐，演示里的段落通常要按组件自己的排版来。 */
+.snapshot-root.snapshot-root :where(p) {
+  text-align: left;
+}
+
+/* 正文图片带圆角、边框和放大光标，示例截图和头像不需要。 */
+.snapshot-root.snapshot-root :where(img) {
+  border: 0;
+  border-radius: 0;
+  cursor: inherit;
+}
+
+/*
+ * 正文给代码块强制加了底色（其实是 !important），示例里的代码块要按原站样式来。
+ * 原站的代码块背景一般是页面底色，透明即可。
+ */
+.snapshot-root.snapshot-root :where(pre) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* ---------- 离屏测量容器 ---------- */
+
+/*
+ * filterRenderableSections 会把可疑的示例渲染到这里量尺寸和颜色。
+ * 不能用 display:none，否则量不到排版；用绝对定位移出视口。
+ */
+.snapshot-measure {
+  position: absolute;
+  top: 0;
+  left: -99999px;
+  width: 360px;
+  visibility: hidden;
+  pointer-events: none;
+}

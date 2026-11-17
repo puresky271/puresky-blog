@@ -1,0 +1,347 @@
+{
+ "groups": [
+  {
+   "id": "headings",
+   "nameZh": "标题",
+   "items": [
+    {
+     "class": "text-heading-72",
+     "label": "Heading 72",
+     "size": "72px",
+     "lineHeight": "72px",
+     "weight": "600",
+     "letterSpacing": "-4.32px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-64",
+     "label": "Heading 64",
+     "size": "64px",
+     "lineHeight": "64px",
+     "weight": "600",
+     "letterSpacing": "-3.84px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-56",
+     "label": "Heading 56",
+     "size": "56px",
+     "lineHeight": "56px",
+     "weight": "600",
+     "letterSpacing": "-3.36px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-48",
+     "label": "Heading 48",
+     "size": "48px",
+     "lineHeight": "56px",
+     "weight": "600",
+     "letterSpacing": "-2.88px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-40",
+     "label": "Heading 40",
+     "size": "40px",
+     "lineHeight": "48px",
+     "weight": "600",
+     "letterSpacing": "-2.4px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-32",
+     "label": "Heading 32",
+     "size": "32px",
+     "lineHeight": "40px",
+     "weight": "600",
+     "letterSpacing": "-1.28px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-24",
+     "label": "Heading 24",
+     "size": "24px",
+     "lineHeight": "32px",
+     "weight": "600",
+     "letterSpacing": "-.96px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-20",
+     "label": "Heading 20",
+     "size": "20px",
+     "lineHeight": "26px",
+     "weight": "600",
+     "letterSpacing": "-.4px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-16",
+     "label": "Heading 16",
+     "size": "16px",
+     "lineHeight": "24px",
+     "weight": "600",
+     "letterSpacing": "-.32px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-heading-14",
+     "label": "Heading 14",
+     "size": "14px",
+     "lineHeight": "20px",
+     "weight": "600",
+     "letterSpacing": "-.28px",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    }
+   ]
+  },
+  {
+   "id": "buttons",
+   "nameZh": "按钮",
+   "items": [
+    {
+     "class": "text-button-16",
+     "label": "Button 16",
+     "size": "16px",
+     "lineHeight": "20px",
+     "weight": "500",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Largest button.",
+     "usageZh": "最大的按钮。"
+    },
+    {
+     "class": "text-button-14",
+     "label": "Button 14",
+     "size": "14px",
+     "lineHeight": "20px",
+     "weight": "500",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Default button.",
+     "usageZh": "默认按钮。"
+    },
+    {
+     "class": "text-button-12",
+     "label": "Button 12",
+     "size": "12px",
+     "lineHeight": "16px",
+     "weight": "500",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Only used when a tiny button is placed inside an input field.",
+     "usageZh": "只有把超小按钮放进输入框里时才用。"
+    }
+   ]
+  },
+  {
+   "id": "labels",
+   "nameZh": "标签",
+   "items": [
+    {
+     "class": "text-label-20",
+     "label": "Label 20",
+     "size": "20px",
+     "lineHeight": "32px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-label-18",
+     "label": "Label 18",
+     "size": "18px",
+     "lineHeight": "20px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "—",
+     "usageZh": "—"
+    },
+    {
+     "class": "text-label-16",
+     "label": "Label 16",
+     "size": "16px",
+     "lineHeight": "20px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Used in titles to help differentiate from regular",
+     "usageZh": "用在标题里，和常规文本拉开区别。"
+    },
+    {
+     "class": "text-label-14",
+     "label": "Label 14",
+     "size": "14px",
+     "lineHeight": "20px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Most common text style of all. Used in many menus.",
+     "usageZh": "所有文本样式里最常见的一种，大量用在各种菜单里。"
+    },
+    {
+     "class": "text-label-14-mono",
+     "label": "Label 14 Mono",
+     "size": "14px",
+     "lineHeight": "20px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-mono)",
+     "usage": "Largest form of mono, to pair with larger (>14) text.",
+     "usageZh": "等宽字体里最大的一档，用来搭配更大的文本（大于 14）。"
+    },
+    {
+     "class": "text-label-13",
+     "label": "Label 13",
+     "size": "13px",
+     "lineHeight": "16px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Used as a secondary line next to other labels. Tabular is used when conveying numbers for consistent spacing.",
+     "usageZh": "作为次级文本行，放在其他标签旁边。展示数字时转用 Tabular 字形，让各位数字的间距保持一致。"
+    },
+    {
+     "class": "text-label-13-mono",
+     "label": "Label 13 Mono",
+     "size": "13px",
+     "lineHeight": "20px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-mono)",
+     "usage": "Used to pair with Label 14, as the smaller mono size looks better in that pairing.",
+     "usageZh": "用来搭配 Label 14，这种组合里更小一号的等宽字看起来更协调。"
+    },
+    {
+     "class": "text-label-12",
+     "label": "Label 12",
+     "size": "12px",
+     "lineHeight": "16px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Used for tertiary level text in busy views, like Comments, Show More and the capitals in Calendars.",
+     "usageZh": "用在信息密集的界面里做三级文本，比如评论，Show More，以及日历里的全大写标签。"
+    },
+    {
+     "class": "text-label-12-mono",
+     "label": "Label 12 Mono",
+     "size": "12px",
+     "lineHeight": "16px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-mono)",
+     "usage": "—",
+     "usageZh": "—"
+    }
+   ]
+  },
+  {
+   "id": "copy",
+   "nameZh": "正文",
+   "items": [
+    {
+     "class": "text-copy-24",
+     "label": "Copy 24",
+     "size": "24px",
+     "lineHeight": "36px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "For hero areas on marketing pages.",
+     "usageZh": "用于营销页的首屏主视觉区。"
+    },
+    {
+     "class": "text-copy-20",
+     "label": "Copy 20",
+     "size": "20px",
+     "lineHeight": "36px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "For hero areas on marketing pages.",
+     "usageZh": "用于营销页的首屏主视觉区。"
+    },
+    {
+     "class": "text-copy-18",
+     "label": "Copy 18",
+     "size": "18px",
+     "lineHeight": "28px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Mainly for marketing, big quotes.",
+     "usageZh": "主要用于营销场景，比如大段引言。"
+    },
+    {
+     "class": "text-copy-16",
+     "label": "Copy 16",
+     "size": "16px",
+     "lineHeight": "24px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Used in simpler, larger views like Modals where text can breathe.",
+     "usageZh": "用在更简单也更宽松的界面里，比如文字有呼吸空间的模态框。"
+    },
+    {
+     "class": "text-copy-14",
+     "label": "Copy 14",
+     "size": "14px",
+     "lineHeight": "20px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "Most commonly used text style.",
+     "usageZh": "最常用的文本样式。"
+    },
+    {
+     "class": "text-copy-13",
+     "label": "Copy 13",
+     "size": "13px",
+     "lineHeight": "18px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-geist-sans)",
+     "usage": "For secondary text and views where space is a premium.",
+     "usageZh": "用于次级文本，以及空间紧张的界面。"
+    },
+    {
+     "class": "text-copy-13-mono",
+     "label": "Copy 13 Mono",
+     "size": "13px",
+     "lineHeight": "18px",
+     "weight": "400",
+     "letterSpacing": "",
+     "family": "var(--font-mono)",
+     "usage": "Used for inline code mentions.",
+     "usageZh": "用于行内提及代码的地方。"
+    }
+   ]
+  }
+ ]
+}

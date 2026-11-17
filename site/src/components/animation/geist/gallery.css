@@ -1,0 +1,114 @@
+/**
+ * Geist 组件画廊自己的布局层。
+ *
+ * 卡片外壳、元素重置在 base.css，原站工具类在 utilities.css，
+ * 这里只写画廊布局：卡片宽度、小节标题、加载与失败提示、宽内容的横向滚动。
+ * 选择器统一用 .geist-demo.geist-demo.geist-gallery 开头（0,4,0），稳稳压过前两层。
+ */
+
+/* ---------- 根节点与卡片 ---------- */
+
+.geist-demo.geist-demo.geist-gallery {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 卡片撑满版心，不因为示例里的宽内容把整列顶开；卡片间距沿用 base.css 的 .geist-card + .geist-card */
+.geist-demo.geist-demo.geist-gallery .geist-card {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ---------- 小节标题 ---------- */
+
+.geist-demo.geist-demo.geist-gallery .geist-gallery-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+
+.geist-demo.geist-demo.geist-gallery .geist-gallery-subhead-zh {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo.geist-gallery .geist-gallery-subhead-en {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 宽内容横向滚动 ---------- */
+
+/*
+ * 原站演示区最宽 1376px，文章版心只有 46rem，宽表格和代码块在原站是放宽显示的。
+ * 这里让内容在卡片里横滑，卡片本身保持 100% 宽，不撑破版心。
+ */
+.geist-demo.geist-demo.geist-gallery .geist-card-body {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* ---------- 加载与失败提示 ---------- */
+
+.geist-demo.geist-demo .geist-gallery-state {
+  padding: 20px 16px;
+  font-size: 13px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .geist-gallery-retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 6px;
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.geist-demo.geist-demo .geist-gallery-retry:hover {
+  background: var(--ds-gray-200);
+}
+
+.geist-demo.geist-demo .geist-gallery-retry:active {
+  background: var(--ds-gray-300);
+}
+
+/* ---------- 可交互版本 ---------- */
+
+/* 可交互组件自己带样式，这里只负责给占位提示一点呼吸空间，挂载后不留痕迹 */
+.geist-demo.geist-demo.geist-gallery .geist-gallery-interactive {
+  min-height: 80px;
+}
+
+/* ---------- 空示例 ---------- */
+
+/* 整张卡都是 Suspense 占位这类空壳时，body 里只有这一行小字 */
+.geist-demo.geist-demo.geist-gallery .geist-gallery-empty {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+}
+
+/*
+ * 判断 section 渲染后有没有可见内容用的离屏测量容器：
+ * 挂在画廊根节点里继承字体和令牌，移出视口、不可见但保留排版。
+ */
+.geist-demo.geist-demo.geist-gallery .geist-gallery-measure {
+  position: absolute;
+  top: 0;
+  left: -20000px;
+  width: 100%;
+  visibility: hidden;
+  pointer-events: none;
+}
+

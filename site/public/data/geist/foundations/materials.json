@@ -1,0 +1,52 @@
+{
+ "materials": [
+  {
+   "name": "Material Base",
+   "class": "material-base",
+   "usage": "Everyday use. Radius 6px.",
+   "usageZh": "日常使用。圆角 6px。"
+  },
+  {
+   "name": "Material Small",
+   "class": "material-small",
+   "usage": "Slightly raised. Radius 6px.",
+   "usageZh": "略微抬起。圆角 6px。"
+  },
+  {
+   "name": "Material Medium",
+   "class": "material-medium",
+   "usage": "Further raised. Radius 12px.",
+   "usageZh": "再抬一层。圆角 12px。"
+  },
+  {
+   "name": "Material Large",
+   "class": "material-large",
+   "usage": "Further raised. Radius 12px.",
+   "usageZh": "再抬一层。圆角 12px。"
+  },
+  {
+   "name": "Material Tooltip",
+   "class": "material-tooltip",
+   "usage": "Lightest shadow. Corner 6px. Tooltips will be the only floating element with a triangular stem.",
+   "usageZh": "最轻的阴影。圆角 6px。提示气泡是唯一带三角形小尖的浮起元素。"
+  },
+  {
+   "name": "Material Menu",
+   "class": "material-menu",
+   "usage": "Lift from page. Radius 12px.",
+   "usageZh": "从页面上抬起。圆角 12px。"
+  },
+  {
+   "name": "Material Modal",
+   "class": "material-modal",
+   "usage": "Further lift. Radius 12px.",
+   "usageZh": "再高一级。圆角 12px。"
+  },
+  {
+   "name": "Material Fullscreen",
+   "class": "material-fullscreen",
+   "usage": "Biggest lift. Radius 16px.",
+   "usageZh": "抬得最高。圆角 16px。"
+  }
+ ]
+}

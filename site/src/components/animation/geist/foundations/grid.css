@@ -1,0 +1,208 @@
+/**
+ * 网格演示的样式。
+ *
+ * 参考线用绝对定位的 1px 虚线画在单元格下面，单元格是 CSS grid；
+ * 实心色块会盖住参考线（和原站 solid 行为一致），十字交叉点画在最上层。
+ * 选择器从 .geist-demo.geist-demo .gf-grid（0,4,0）起步。
+ */
+
+.geist-demo.geist-demo .gf-grid {
+  --gf-grid-guide: rgba(255, 204, 109, 0.75);
+  --gf-grid-cross: var(--ds-gray-600);
+  --gf-grid-dash: var(--ds-gray-500);
+  min-width: 0;
+}
+
+/* 暗色下参考线亮一点、饱和一点，和原站暗色截图一致 */
+.gf-root[data-theme='dark'] .geist-demo.geist-demo .gf-grid {
+  --gf-grid-guide: rgba(255, 178, 36, 0.8);
+}
+
+/* ---------- 控件 ---------- */
+
+.geist-demo.geist-demo .gf-grid .gf-grid-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+  min-width: 0;
+}
+
+/* ---------- 预览台 ---------- */
+
+.geist-demo.geist-demo .gf-grid .gf-grid-stage {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 16px 14px;
+  overflow: hidden;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 12px;
+  background: var(--ds-background-100);
+}
+
+.geist-demo.geist-demo .gf-grid .gf-grid-canvas {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+/* 三个断点的预览宽度 */
+.geist-demo.geist-demo .gf-grid[data-preview='tablet'] .gf-grid-canvas {
+  width: min(100%, 560px);
+}
+
+.geist-demo.geist-demo .gf-grid[data-preview='phone'] .gf-grid-canvas {
+  width: min(100%, 320px);
+}
+
+/* ---------- 参考线 ---------- */
+
+.geist-demo.geist-demo .gf-grid .gf-grid-guides {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.geist-demo.geist-demo .gf-grid .gf-guide {
+  position: absolute;
+  display: block;
+}
+
+.geist-demo.geist-demo .gf-grid .gf-guide--y {
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--gf-grid-guide);
+}
+
+.geist-demo.geist-demo .gf-grid .gf-guide--x {
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--gf-grid-guide);
+}
+
+/* ---------- 单元格 ---------- */
+
+.geist-demo.geist-demo .gf-grid .gf-grid-cells {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--gf-cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--gf-rows), 76px);
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-grid .gf-grid-cell {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 9px 10px;
+}
+
+.geist-demo.geist-demo .gf-grid .gf-grid-cell-index {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ds-gray-900);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 实心色块：盖住下层参考线 */
+.geist-demo.geist-demo .gf-grid[data-cell-style='solid'] .gf-grid-cell {
+  background: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-grid[data-cell-style='solid'] .gf-grid-cell-index {
+  color: var(--ds-background-100);
+}
+
+/* dashed：每个单元格一圈 1px 虚线 */
+.geist-demo.geist-demo .gf-grid[data-cell-style='dashed'] .gf-grid-cell {
+  border: 1px dashed var(--gf-grid-dash);
+}
+
+/* ---------- 十字交叉点 ---------- */
+
+.geist-demo.geist-demo .gf-grid .gf-grid-crosses {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.geist-demo.geist-demo .gf-grid .gf-cross {
+  position: absolute;
+  display: block;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+}
+
+.geist-demo.geist-demo .gf-grid .gf-cross::before,
+.geist-demo.geist-demo .gf-grid .gf-cross::after {
+  content: '';
+  position: absolute;
+  background: var(--gf-grid-cross);
+}
+
+.geist-demo.geist-demo .gf-grid .gf-cross::before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  margin-top: -0.5px;
+}
+
+.geist-demo.geist-demo .gf-grid .gf-cross::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  margin-left: -0.5px;
+}
+
+/* ---------- 当前配置摘要 ---------- */
+
+.geist-demo.geist-demo .gf-grid .gf-grid-meta {
+  margin-top: 12px;
+  font-family: var(--font-geist-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 平板预览时行高略收 ---------- */
+
+.geist-demo.geist-demo .gf-grid[data-preview='tablet'] .gf-grid-cells {
+  grid-template-rows: repeat(var(--gf-rows), 64px);
+}
+
+.geist-demo.geist-demo .gf-grid[data-preview='phone'] .gf-grid-cells {
+  grid-template-rows: repeat(var(--gf-rows), 46px);
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 40rem) {
+  .geist-demo.geist-demo .gf-grid .gf-grid-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .geist-demo.geist-demo .gf-grid .gf-grid-stage {
+    padding: 12px 10px;
+  }
+
+  .geist-demo.geist-demo .gf-grid .gf-grid-cells {
+    grid-template-rows: repeat(var(--gf-rows), 58px);
+  }
+
+  .geist-demo.geist-demo .gf-grid .gf-grid-cell {
+    padding: 7px 8px;
+  }
+}

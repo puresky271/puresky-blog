@@ -1,0 +1,349 @@
+/**
+ * Geist 基础演示的公共层。
+ *
+ * 五个演示（色彩 / 字阶 / 材质 / 终端 / 网格）共用的东西都放这里：
+ * 工具栏、亮暗分段控件、普通按钮、下拉框、字段标签、加载与失败提示、
+ * 以及「站点是暗色时局部切回亮色」需要的令牌覆盖。
+ *
+ * 特异性：所有规则都写到 .geist-demo.geist-demo .gf-x（0,4,0），
+ * 稳稳压过 base.css 的重置（0,2,0）和 utilities.css 的工具类（0,3,0）。
+ */
+
+/* ---------- 根节点 ---------- */
+
+.gf-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+/*
+ * 每个演示自带一块表面：演示主题可以跟站点主题相反，文字颜色跟着演示主题走，
+ * 所以必须有自己的底色，不然暗色站点里局部切亮色会出现深色字压在深色页面上。
+ * 令牌声明在 .geist-demo 上，背景和描边只能也写在它身上才能读到当前主题的值。
+ */
+.gf-root .geist-demo.geist-demo {
+  padding: 16px;
+  border: 1px solid var(--ds-gray-alpha-300);
+  border-radius: 12px;
+  background: var(--ds-background-100);
+}
+
+/*
+ * tokens.css 的暗色令牌写在 [data-theme='dark'] .geist-demo 里，
+ * 站点是暗色时即使组件根节点改成 data-theme='light' 也匹配得到祖先 html。
+ * 这里在 (0,3,0) 这一档把五个演示用到的亮色令牌改回来：灰阶、透明灰、背景和阴影。
+ * 只覆盖实际用到的部分，颜色取 tokens.css 里亮色那一档的原值。
+ */
+.gf-root[data-theme='light'] .geist-demo {
+  --ds-gray-100-value: 0, 0%, 95%;
+  --ds-gray-200-value: 0, 0%, 92%;
+  --ds-gray-300-value: 0, 0%, 90%;
+  --ds-gray-400-value: 0, 0%, 92%;
+  --ds-gray-500-value: 0, 0%, 79%;
+  --ds-gray-600-value: 0, 0%, 66%;
+  --ds-gray-700-value: 0, 0%, 56%;
+  --ds-gray-800-value: 0, 0%, 49%;
+  --ds-gray-900-value: 0, 0%, 30%;
+  --ds-gray-1000-value: 0, 0%, 9%;
+  --ds-gray-alpha-100: #0000000d;
+  --ds-gray-alpha-200: #00000014;
+  --ds-gray-alpha-300: #0000001a;
+  --ds-gray-alpha-400: #00000014;
+  --ds-gray-alpha-500: #00000036;
+  --ds-gray-alpha-600: #00000057;
+  --ds-gray-alpha-700: #00000070;
+  --ds-gray-alpha-800: #00000082;
+  --ds-gray-alpha-900: #000000b3;
+  --ds-gray-alpha-1000: #000000e8;
+  --ds-background-100-value: 0, 0%, 100%;
+  --ds-background-200-value: 0, 0%, 98%;
+  --ds-shadow-background-border: 0 0 0 1px var(--ds-background-200);
+  --ds-shadow-border-base: 0 0 0 1px #00000014;
+  --ds-shadow-xs: 0px 1px 2px #0000000a;
+  --ds-shadow-small: 0px 2px 2px #0000000a;
+  --ds-shadow-medium: 0px 2px 2px #0000000a, 0px 8px 8px -8px #0000000a;
+  --ds-focus-ring: 0 0 0 2px var(--ds-background-100), 0 0 0 4px var(--ds-focus-color);
+  --ds-focus-color: var(--ds-blue-700);
+  --ds-focus-border: 0 0 0 1px var(--ds-gray-alpha-600), 0px 0px 0px 4px #00000029;
+  --ds-overlay-backdrop-color: var(--ds-gray-100);
+  /* 材质演示的渐变背景板用到的四个强调色 */
+  --ds-blue-400: hsla(209, 100%, 90%, 1);
+  --ds-purple-400: hsla(276, 71%, 92%, 1);
+  --ds-teal-400: hsla(170, 70%, 85%, 1);
+  --ds-pink-400: hsla(341, 76%, 91%, 1);
+}
+
+/* ---------- 工具栏 ---------- */
+
+.geist-demo.geist-demo .gf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.geist-demo.geist-demo .gf-toolbar-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-toolbar-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-toolbar-zh {
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ---------- 分段控件 ---------- */
+
+.geist-demo.geist-demo .gf-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 8px;
+  background: var(--ds-background-200);
+}
+
+.geist-demo.geist-demo .gf-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 6px;
+  color: var(--ds-gray-900);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-seg-btn:hover {
+  background: var(--ds-gray-alpha-100);
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-seg-btn[aria-pressed='true'] {
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-400), var(--ds-shadow-xs);
+}
+
+.geist-demo.geist-demo .gf-seg-btn[aria-pressed='true']:hover {
+  background: var(--ds-background-100);
+}
+
+/* 紧凑一档，用在终端标题栏里 */
+.geist-demo.geist-demo .gf-seg--small {
+  padding: 1px;
+  border-radius: 7px;
+}
+
+.geist-demo.geist-demo .gf-seg--small .gf-seg-btn {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+/* ---------- 按钮 ---------- */
+
+.geist-demo.geist-demo .gf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 6px;
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-btn:hover {
+  background: var(--ds-gray-100);
+}
+
+.geist-demo.geist-demo .gf-btn:active {
+  background: var(--ds-gray-200);
+}
+
+.geist-demo.geist-demo .gf-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.geist-demo.geist-demo .gf-btn--primary {
+  border-color: transparent;
+  background: var(--ds-gray-1000);
+  color: var(--ds-background-100);
+}
+
+.geist-demo.geist-demo .gf-btn--primary:hover {
+  background: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-btn--primary:active {
+  background: var(--ds-gray-800);
+}
+
+.geist-demo.geist-demo .gf-btn__icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+/* ---------- 下拉框 ---------- */
+
+.geist-demo.geist-demo .gf-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid var(--ds-gray-900);
+  border-bottom: 1.5px solid var(--ds-gray-900);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.geist-demo.geist-demo .gf-select {
+  height: 28px;
+  max-width: 100%;
+  padding: 0 26px 0 10px;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 6px;
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  appearance: none;
+  cursor: pointer;
+}
+
+.geist-demo.geist-demo .gf-select:hover {
+  background: var(--ds-gray-100);
+}
+
+/* ---------- 字段 ---------- */
+
+.geist-demo.geist-demo .gf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-field-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 状态与提示 ---------- */
+
+.geist-demo.geist-demo .gf-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  font-size: 13px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-state--error {
+  color: var(--ds-red-900);
+}
+
+.geist-demo.geist-demo .gf-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ds-gray-alpha-300);
+  border-top-color: var(--ds-gray-900);
+  border-radius: 50%;
+  animation: gf-spin 0.8s linear infinite;
+}
+
+@keyframes gf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.geist-demo.geist-demo .gf-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-code {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  color: var(--ds-gray-900);
+}
+
+/* 屏幕阅读器专用，复制反馈这类动态文案用它播报 */
+.geist-demo.geist-demo .gf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+  .geist-demo.geist-demo .gf-toolbar {
+    margin-bottom: 10px;
+  }
+
+  .geist-demo.geist-demo .gf-seg-btn {
+    padding: 0 8px;
+  }
+}

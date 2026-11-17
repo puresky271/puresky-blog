@@ -1,0 +1,679 @@
+{
+ "scales": [
+  {
+   "key": "gray",
+   "name": "Gray",
+   "nameZh": "灰色阶",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-gray-100",
+     "light": "#f2f2f2",
+     "dark": "#f2f2f2"
+    },
+    {
+     "step": 200,
+     "token": "--ds-gray-200",
+     "light": "#ebebeb",
+     "dark": "#ebebeb"
+    },
+    {
+     "step": 300,
+     "token": "--ds-gray-300",
+     "light": "#e6e6e6",
+     "dark": "#e6e6e6"
+    },
+    {
+     "step": 400,
+     "token": "--ds-gray-400",
+     "light": "#ebebeb",
+     "dark": "#ebebeb"
+    },
+    {
+     "step": 500,
+     "token": "--ds-gray-500",
+     "light": "#c9c9c9",
+     "dark": "#c9c9c9"
+    },
+    {
+     "step": 600,
+     "token": "--ds-gray-600",
+     "light": "#a8a8a8",
+     "dark": "#a8a8a8"
+    },
+    {
+     "step": 700,
+     "token": "--ds-gray-700",
+     "light": "#8f8f8f",
+     "dark": "#8f8f8f"
+    },
+    {
+     "step": 800,
+     "token": "--ds-gray-800",
+     "light": "#7d7d7d",
+     "dark": "#7d7d7d"
+    },
+    {
+     "step": 900,
+     "token": "--ds-gray-900",
+     "light": "#4c4c4c",
+     "dark": "#4c4c4c"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-gray-1000",
+     "light": "#171717",
+     "dark": "#171717"
+    }
+   ]
+  },
+  {
+   "key": "gray-alpha",
+   "name": "Gray alpha",
+   "nameZh": "带透明度的灰",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-gray-alpha-100",
+     "light": "#0000000d",
+     "dark": "#ffffff0f"
+    },
+    {
+     "step": 200,
+     "token": "--ds-gray-alpha-200",
+     "light": "#00000014",
+     "dark": "#ffffff17"
+    },
+    {
+     "step": 300,
+     "token": "--ds-gray-alpha-300",
+     "light": "#0000001a",
+     "dark": "#ffffff21"
+    },
+    {
+     "step": 400,
+     "token": "--ds-gray-alpha-400",
+     "light": "#00000014",
+     "dark": "#ffffff24"
+    },
+    {
+     "step": 500,
+     "token": "--ds-gray-alpha-500",
+     "light": "#00000036",
+     "dark": "#ffffff3d"
+    },
+    {
+     "step": 600,
+     "token": "--ds-gray-alpha-600",
+     "light": "#00000057",
+     "dark": "#ffffff82"
+    },
+    {
+     "step": 700,
+     "token": "--ds-gray-alpha-700",
+     "light": "#00000070",
+     "dark": "#ffffff8a"
+    },
+    {
+     "step": 800,
+     "token": "--ds-gray-alpha-800",
+     "light": "#00000082",
+     "dark": "#ffffff78"
+    },
+    {
+     "step": 900,
+     "token": "--ds-gray-alpha-900",
+     "light": "#000000b3",
+     "dark": "#ffffff9c"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-gray-alpha-1000",
+     "light": "#000000e8",
+     "dark": "#ffffffeb"
+    }
+   ]
+  },
+  {
+   "key": "blue",
+   "name": "Blue",
+   "nameZh": "蓝",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-blue-100",
+     "light": "#f0f7ff",
+     "dark": "oklch(22.17% .069 259.89)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-blue-200",
+     "light": "#ebf5ff",
+     "dark": "oklch(25.45% .0811 255.8)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-blue-300",
+     "light": "#e0f0ff",
+     "dark": "oklch(30.86% .1022 255.21)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-blue-400",
+     "light": "#cce6ff",
+     "dark": "oklch(34.1% .121 254.74)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-blue-500",
+     "light": "#99ceff",
+     "dark": "oklch(38.5% .1403 254.4)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-blue-600",
+     "light": "#52aeff",
+     "dark": "oklch(64.94% .1982 251.813)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-blue-700",
+     "light": "#0072f5",
+     "dark": "oklch(57.61% .2321 258.23)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-blue-800",
+     "light": "#0062d1",
+     "dark": "oklch(51.51% .2307 257.85)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-blue-900",
+     "light": "#0068d6",
+     "dark": "oklch(71.7% .1648 250.794)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-blue-1000",
+     "light": "#00254c",
+     "dark": "oklch(96.75% .0179 242.423)"
+    }
+   ]
+  },
+  {
+   "key": "red",
+   "name": "Red",
+   "nameZh": "红",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-red-100",
+     "light": "#fff0f0",
+     "dark": "oklch(22.1% .0657 15.11)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-red-200",
+     "light": "#ffebeb",
+     "dark": "oklch(25.93% .0834 19.02)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-red-300",
+     "light": "#ffe5e5",
+     "dark": "oklch(31.47% .1105 20.96)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-red-400",
+     "light": "#fdd8d8",
+     "dark": "oklch(35.27% .1273 21.23)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-red-500",
+     "light": "#f8b9b9",
+     "dark": "oklch(40.68% .1479 23.16)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-red-600",
+     "light": "#f87275",
+     "dark": "oklch(62.56% .2277 23.03)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-red-700",
+     "light": "#e5484d",
+     "dark": "oklch(62.56% .2234 23.03)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-red-800",
+     "light": "#da2f35",
+     "dark": "oklch(58.01% .227 25.12)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-red-900",
+     "light": "#cb2a2f",
+     "dark": "oklch(69.96% .2136 22.03)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-red-1000",
+     "light": "#391417",
+     "dark": "oklch(95.6% .0293 6.61)"
+    }
+   ]
+  },
+  {
+   "key": "amber",
+   "name": "Amber",
+   "nameZh": "琥珀",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-amber-100",
+     "light": "#fff6e5",
+     "dark": "oklch(22.46% .0538 76.04)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-amber-200",
+     "light": "#fff4d6",
+     "dark": "oklch(24.95% .0642 64.78)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-amber-300",
+     "light": "#fef0cd",
+     "dark": "oklch(32.34% .0837 63.83)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-amber-400",
+     "light": "#ffdd8f",
+     "dark": "oklch(35.53% .0903 66.2971)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-amber-500",
+     "light": "#ffc96b",
+     "dark": "oklch(41.55% .1044 67.98)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-amber-600",
+     "light": "#f5b047",
+     "dark": "oklch(75.04% .1737 74.49)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-amber-700",
+     "light": "#ffb224",
+     "dark": "oklch(81.87% .1969 76.46)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-amber-800",
+     "light": "#ff990a",
+     "dark": "oklch(77.21% .1991 64.28)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-amber-900",
+     "light": "#a35200",
+     "dark": "oklch(77.21% .1991 64.28)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-amber-1000",
+     "light": "#4e2009",
+     "dark": "oklch(96.7% .0418 84.59)"
+    }
+   ]
+  },
+  {
+   "key": "green",
+   "name": "Green",
+   "nameZh": "绿",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-green-100",
+     "light": "#effbef",
+     "dark": "oklch(23.09% .0716 149.68)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-green-200",
+     "light": "#ebfaeb",
+     "dark": "oklch(27.12% .0895 150.09)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-green-300",
+     "light": "#daf6da",
+     "dark": "oklch(29.84% .096 149.25)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-green-400",
+     "light": "#c6f1c7",
+     "dark": "oklch(34.39% .1039 147.78)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-green-500",
+     "light": "#99e69e",
+     "dark": "oklch(44.19% .1484 147.2)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-green-600",
+     "light": "#6cda75",
+     "dark": "oklch(58.11% .1815 146.55)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-green-700",
+     "light": "#45a557",
+     "dark": "oklch(64.58% .199 147.27)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-green-800",
+     "light": "#398e4a",
+     "dark": "oklch(57.81% .1776 147.5)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-green-900",
+     "light": "#297a3a",
+     "dark": "oklch(73.1% .2158 148.29)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-green-1000",
+     "light": "#1b311e",
+     "dark": "oklch(96.76% .056 154.18)"
+    }
+   ]
+  },
+  {
+   "key": "teal",
+   "name": "Teal",
+   "nameZh": "青绿",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-teal-100",
+     "light": "#eefcf9",
+     "dark": "oklch(22.1% .0544 178.74)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-teal-200",
+     "light": "#e5faf6",
+     "dark": "oklch(25.06% .062 178.76)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-teal-300",
+     "light": "#d4f7f0",
+     "dark": "oklch(31.5% .0767 180.99)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-teal-400",
+     "light": "#bef4eb",
+     "dark": "oklch(32.43% .0763 180.13)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-teal-500",
+     "light": "#86ead9",
+     "dark": "oklch(43.35% .1055 180.97)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-teal-600",
+     "light": "#45dec5",
+     "dark": "oklch(60.71% .1485 180.24)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-teal-700",
+     "light": "#12a594",
+     "dark": "oklch(64.92% .1403 181.95)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-teal-800",
+     "light": "#0d8c7d",
+     "dark": "oklch(57.53% .1392 181.66)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-teal-900",
+     "light": "#067a6e",
+     "dark": "oklch(74.56% .1765 182.8)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-teal-1000",
+     "light": "#073c34",
+     "dark": "oklch(96.46% .056 180.29)"
+    }
+   ]
+  },
+  {
+   "key": "purple",
+   "name": "Purple",
+   "nameZh": "紫",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-purple-100",
+     "light": "#f9f0ff",
+     "dark": "oklch(22.34% .0779 316.87)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-purple-200",
+     "light": "#f9f1fe",
+     "dark": "oklch(25.91% .0921 314.41)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-purple-300",
+     "light": "#f4e8fc",
+     "dark": "oklch(31.98% .1219 312.41)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-purple-400",
+     "light": "#eddcf9",
+     "dark": "oklch(35.93% .1504 309.78)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-purple-500",
+     "light": "#d5b1f1",
+     "dark": "oklch(40.99% .1721 307.92)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-purple-600",
+     "light": "#bf89ec",
+     "dark": "oklch(55.5% .2191 306.12)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-purple-700",
+     "light": "#8e4ec6",
+     "dark": "oklch(55.5% .2186 306.12)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-purple-800",
+     "light": "#763da9",
+     "dark": "oklch(48.58% .2102 305.73)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-purple-900",
+     "light": "#7820bc",
+     "dark": "oklch(69.87% .2037 309.51)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-purple-1000",
+     "light": "#2e004c",
+     "dark": "oklch(96.1% .0304 316.46)"
+    }
+   ]
+  },
+  {
+   "key": "pink",
+   "name": "Pink",
+   "nameZh": "粉",
+   "steps": [
+    {
+     "step": 100,
+     "token": "--ds-pink-100",
+     "light": "#ffebf5",
+     "dark": "oklch(22.67% .0628 354.73)"
+    },
+    {
+     "step": 200,
+     "token": "--ds-pink-200",
+     "light": "#feecf2",
+     "dark": "oklch(26.2% .0859 356.68)"
+    },
+    {
+     "step": 300,
+     "token": "--ds-pink-300",
+     "light": "#fce3ec",
+     "dark": "oklch(31.15% .1067 355.93)"
+    },
+    {
+     "step": 400,
+     "token": "--ds-pink-400",
+     "light": "#f9d7e2",
+     "dark": "oklch(32.13% .1174 356.71)"
+    },
+    {
+     "step": 500,
+     "token": "--ds-pink-500",
+     "light": "#f5b8cc",
+     "dark": "oklch(37.01% .1453 358.39)"
+    },
+    {
+     "step": 600,
+     "token": "--ds-pink-600",
+     "light": "#ee87a7",
+     "dark": "oklch(50.33% .2089 4.33)"
+    },
+    {
+     "step": 700,
+     "token": "--ds-pink-700",
+     "light": "#ea3e83",
+     "dark": "oklch(63.52% .2346 1.01)"
+    },
+    {
+     "step": 800,
+     "token": "--ds-pink-800",
+     "light": "#df2670",
+     "dark": "oklch(59.51% .2429 4.21)"
+    },
+    {
+     "step": 900,
+     "token": "--ds-pink-900",
+     "light": "#bd2864",
+     "dark": "oklch(69.36% .2223 3.91)"
+    },
+    {
+     "step": 1000,
+     "token": "--ds-pink-1000",
+     "light": "#430a23",
+     "dark": "oklch(95.74% .0326 350.08)"
+    }
+   ]
+  }
+ ],
+ "semantic": [
+  {
+   "id": "color-1",
+   "label": "Color 1",
+   "token": "--ds-gray-100",
+   "light": "#f2f2f2",
+   "dark": "#f2f2f2"
+  },
+  {
+   "id": "color-2",
+   "label": "Color 2",
+   "token": "--ds-gray-200",
+   "light": "#ebebeb",
+   "dark": "#ebebeb"
+  },
+  {
+   "id": "color-3",
+   "label": "Color 3",
+   "token": "--ds-gray-300",
+   "light": "#e6e6e6",
+   "dark": "#e6e6e6"
+  },
+  {
+   "id": "color-4",
+   "label": "Color 4",
+   "token": "--ds-gray-400",
+   "light": "#ebebeb",
+   "dark": "#ebebeb"
+  },
+  {
+   "id": "color-5",
+   "label": "Color 5",
+   "token": "--ds-gray-500",
+   "light": "#c9c9c9",
+   "dark": "#c9c9c9"
+  },
+  {
+   "id": "color-6",
+   "label": "Color 6",
+   "token": "--ds-gray-600",
+   "light": "#a8a8a8",
+   "dark": "#a8a8a8"
+  },
+  {
+   "id": "color-7",
+   "label": "Color 7",
+   "token": "--ds-gray-700",
+   "light": "#8f8f8f",
+   "dark": "#8f8f8f"
+  },
+  {
+   "id": "color-8",
+   "label": "Color 8",
+   "token": "--ds-gray-800",
+   "light": "#7d7d7d",
+   "dark": "#7d7d7d"
+  },
+  {
+   "id": "color-9",
+   "label": "Color 9",
+   "token": "--ds-gray-900",
+   "light": "#4c4c4c",
+   "dark": "#4c4c4c"
+  },
+  {
+   "id": "color-10",
+   "label": "Color 10",
+   "token": "--ds-gray-1000",
+   "light": "#171717",
+   "dark": "#171717"
+  }
+ ]
+}

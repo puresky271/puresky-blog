@@ -1,0 +1,490 @@
+/**
+ * 色彩演示的样式。
+ *
+ * 色阶、语义色、背景三块。选择器统一 .geist-demo.geist-demo .gf-x（0,4,0）起步，
+ * 色阶那一排还会再叠一层 .gf-* 保证压过 utilities.css。
+ */
+
+/* ---------- 工具栏里的值模式标记 ---------- */
+
+.geist-demo.geist-demo .gf-value-mode {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--ds-gray-alpha-100);
+  color: var(--ds-gray-900);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---------- 标签页 ---------- */
+
+.geist-demo.geist-demo .gf-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: 18px;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 8px;
+  background: var(--ds-background-200);
+}
+
+.geist-demo.geist-demo .gf-tabs .gf-tab {
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--ds-gray-900);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-tabs .gf-tab:hover {
+  background: var(--ds-gray-alpha-100);
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-tabs .gf-tab[aria-selected='true'] {
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-400), var(--ds-shadow-xs);
+}
+
+/* ---------- 色阶 ---------- */
+
+.geist-demo.geist-demo .gf-panel {
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-scales {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-scales .gf-scale {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-scales .gf-scale-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 4px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-scales .gf-scale-name {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-scales .gf-scale-zh {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-scales .gf-swatches {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 7px;
+  background: var(--ds-background-100);
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch:hover {
+  border-color: var(--ds-gray-alpha-600);
+  box-shadow: var(--ds-shadow-small);
+  transform: translateY(-1px);
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch:active {
+  transform: translateY(0);
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch-color {
+  display: block;
+  width: 100%;
+  height: 44px;
+  background-color: var(--gf-swatch);
+}
+
+/* 带透明度的灰要透出棋盘格，才能看出透明度本身 */
+.geist-demo.geist-demo .gf-swatches .gf-swatch--alpha .gf-swatch-color {
+  background-image: repeating-conic-gradient(rgba(128, 128, 128, 0.16) 0% 25%, transparent 0% 50%);
+  background-size: 8px 8px;
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 5px 4px 6px;
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch-line {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch-step {
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch-hex {
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-geist-mono);
+  font-size: 8.5px;
+  line-height: 1.2;
+  color: var(--ds-gray-900);
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.geist-demo.geist-demo .gf-swatches .gf-swatch-token {
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-geist-mono);
+  font-size: 8px;
+  line-height: 1.25;
+  color: var(--ds-gray-900);
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* 复制成功的覆盖层 */
+.geist-demo.geist-demo .gf-swatches .gf-copied {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  background: color-mix(in oklab, var(--ds-background-100) 84%, transparent);
+  color: var(--ds-gray-1000);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  animation: gf-copied-in 0.12s ease-out;
+}
+
+@keyframes gf-copied-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.geist-demo.geist-demo .gf-scales-note {
+  margin-top: 16px;
+}
+
+/* ---------- 语义色 ---------- */
+
+.geist-demo.geist-demo .gf-sem-group {
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-sem-group + .gf-sem-group {
+  margin-top: 22px;
+}
+
+.geist-demo.geist-demo .gf-sem-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-sem-group-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-sem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    'color name'
+    'color usage'
+    'token token'
+    'value value';
+  align-items: center;
+  gap: 2px 9px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ds-gray-alpha-300);
+  border-radius: 8px;
+  background: var(--ds-background-100);
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-card:hover {
+  border-color: var(--ds-gray-alpha-500);
+  background: var(--ds-gray-100);
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-color {
+  grid-area: color;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--gf-swatch);
+  box-shadow: inset 0 0 0 1px var(--ds-gray-alpha-300);
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-name {
+  grid-area: name;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-usage {
+  grid-area: usage;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-token {
+  grid-area: token;
+  margin-top: 6px;
+  font-family: var(--font-geist-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ds-gray-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-sem-value {
+  grid-area: value;
+  font-family: var(--font-geist-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ds-gray-1000);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geist-demo.geist-demo .gf-sem-grid .gf-copied--sem {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--ds-background-100) 86%, transparent);
+  color: var(--ds-gray-1000);
+  font-size: 11px;
+  font-weight: 600;
+  animation: gf-copied-in 0.12s ease-out;
+}
+
+/* ---------- 背景 ---------- */
+
+.geist-demo.geist-demo .gf-bg-note {
+  max-width: 60ch;
+  margin-bottom: 16px;
+}
+
+.geist-demo.geist-demo .gf-bg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-card {
+  overflow: hidden;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 10px;
+  background: var(--ds-background-100);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 132px;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-preview--1 {
+  background: var(--ds-background-100);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-preview--2 {
+  background: var(--ds-background-200);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ds-gray-alpha-200);
+  color: var(--ds-gray-900);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-sample {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58%;
+  height: 56px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-sample--1 {
+  border: 1px solid var(--ds-gray-alpha-300);
+  background: var(--ds-background-100);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-sample--2 {
+  border: 1px solid var(--ds-gray-alpha-300);
+  background: var(--ds-background-100);
+  box-shadow: var(--ds-shadow-small);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 10px 12px 12px;
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-zh {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-bg-grid .gf-bg-value {
+  font-family: var(--font-geist-mono);
+  font-size: 10px;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 40rem) {
+  .geist-demo.geist-demo .gf-tabs {
+    display: flex;
+    width: 100%;
+  }
+
+  .geist-demo.geist-demo .gf-tabs .gf-tab {
+    flex: 1 1 0;
+    padding: 0 8px;
+  }
+
+  .geist-demo.geist-demo .gf-scales .gf-scale {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .geist-demo.geist-demo .gf-scales .gf-scale-label {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+    padding-top: 0;
+  }
+
+  .geist-demo.geist-demo .gf-scales .gf-swatches {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .geist-demo.geist-demo .gf-swatches .gf-swatch-color {
+    height: 36px;
+  }
+
+  .geist-demo.geist-demo .gf-swatches .gf-copied {
+    height: 36px;
+  }
+
+  .geist-demo.geist-demo .gf-sem-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .geist-demo.geist-demo .gf-bg-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

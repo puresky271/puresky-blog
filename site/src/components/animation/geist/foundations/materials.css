@@ -1,0 +1,181 @@
+/**
+ * 材质演示的样式。
+ *
+ * 一块彩色渐变背景板，Surface 和 Floating 两档卡片浮在上面。
+ * 每张卡的阴影和圆角是内联写进去的（用 tokens.css 的真实令牌），这里只管布局和文字。
+ * 选择器从 .geist-demo.geist-demo .gf-x（0,4,0）起步。
+ */
+
+/* ---------- 背景板 ---------- */
+
+.geist-demo.geist-demo .gf-materials .gf-mat-board {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 24px 28px;
+  border: 1px solid var(--ds-gray-alpha-300);
+  border-radius: 14px;
+  background:
+    radial-gradient(90% 130% at 0% 0%, color-mix(in oklab, var(--ds-blue-400) 82%, transparent) 0%, transparent 62%),
+    radial-gradient(80% 120% at 100% 8%, color-mix(in oklab, var(--ds-purple-400) 78%, transparent) 0%, transparent 60%),
+    radial-gradient(90% 130% at 45% 115%, color-mix(in oklab, var(--ds-teal-400) 85%, transparent) 0%, transparent 66%),
+    radial-gradient(70% 100% at 8% 100%, color-mix(in oklab, var(--ds-pink-400) 72%, transparent) 0%, transparent 60%),
+    var(--ds-background-200);
+}
+
+/* 一层很淡的网格纹理，让背景板不至于太空 */
+.geist-demo.geist-demo .gf-materials .gf-mat-board::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--ds-gray-alpha-200) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ds-gray-alpha-200) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.5;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-section {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-section + .gf-mat-section {
+  margin-top: 30px;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 12px;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-section-zh {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-section-desc {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 卡片 ---------- */
+
+.geist-demo.geist-demo .gf-materials .gf-mat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  min-height: 108px;
+  padding: 14px;
+  background: var(--ds-background-100);
+  overflow-wrap: break-word;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-class {
+  font-family: var(--font-geist-mono);
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: var(--ds-gray-900);
+  word-break: break-all;
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-usage {
+  flex: 1 1 auto;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-meta {
+  font-family: var(--font-geist-mono);
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: var(--ds-gray-800);
+}
+
+/* 提示气泡是唯一带三角形小尖的浮起元素，这里给它一个朝上的小尖 */
+.geist-demo.geist-demo .gf-materials .gf-mat-card[data-material='material-tooltip']::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 26px;
+  width: 12px;
+  height: 6px;
+  background: var(--ds-background-100);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.geist-demo.geist-demo .gf-materials .gf-mat-note {
+  margin-top: 14px;
+  max-width: 62ch;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 60rem) {
+  .geist-demo.geist-demo .gf-materials .gf-mat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .geist-demo.geist-demo .gf-materials .gf-mat-board {
+    padding: 18px 14px 20px;
+  }
+
+  .geist-demo.geist-demo .gf-materials .gf-mat-grid {
+    gap: 10px;
+  }
+
+  .geist-demo.geist-demo .gf-materials .gf-mat-card {
+    min-height: 0;
+    padding: 11px;
+  }
+
+  .geist-demo.geist-demo .gf-materials .gf-mat-section + .gf-mat-section {
+    margin-top: 22px;
+  }
+}

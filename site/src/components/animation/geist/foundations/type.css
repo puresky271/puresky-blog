@@ -1,0 +1,233 @@
+/**
+ * 字体排印演示的样式。
+ *
+ * 四组规格表：左侧实时样张，右侧三列（类名 / 数值 / 中文用法）。
+ * 所有选择器从 .geist-demo.geist-demo .gf-x（0,4,0）起步。
+ */
+
+/* ---------- 顶部控件 ---------- */
+
+.geist-demo.geist-demo .gf-type-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+/* 加粗开关 */
+.geist-demo.geist-demo .gf-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  color: var(--ds-gray-1000);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.geist-demo.geist-demo .gf-switch-track {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--ds-gray-300);
+  transition: background-color 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ds-background-100);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.geist-demo.geist-demo .gf-switch[aria-checked='true'] .gf-switch-track {
+  background: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-switch[aria-checked='true'] .gf-switch-thumb {
+  transform: translateX(14px);
+}
+
+.geist-demo.geist-demo .gf-switch:hover .gf-switch-track {
+  background: var(--ds-gray-400);
+}
+
+.geist-demo.geist-demo .gf-switch[aria-checked='true']:hover .gf-switch-track {
+  background: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-switch-text {
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 分组 ---------- */
+
+.geist-demo.geist-demo .gf-type-group {
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-type-group + .gf-type-group {
+  margin-top: 24px;
+}
+
+.geist-demo.geist-demo .gf-type-group-head {
+  margin-bottom: 8px;
+}
+
+.geist-demo.geist-demo .gf-type-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-type-group-en {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-type-group-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 规格表 ---------- */
+
+.geist-demo.geist-demo .gf-type-table {
+  border-top: 1px solid var(--ds-gray-alpha-300);
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-type-head,
+.geist-demo.geist-demo .gf-type-row {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+/* 表头四列，列宽和下面的行对齐 */
+.geist-demo.geist-demo .gf-type-head {
+  grid-template-columns: minmax(0, 1fr) 128px 148px minmax(0, 180px);
+  padding: 8px 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-type-row {
+  grid-template-columns: minmax(0, 1fr) 480px;
+  padding: 12px 0;
+}
+
+/* 行内右侧三列，和表头列宽一致 */
+.geist-demo.geist-demo .gf-type-meta {
+  display: grid;
+  grid-template-columns: 128px 148px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-type-sample {
+  min-width: 0;
+  color: var(--ds-gray-1000);
+  overflow-wrap: break-word;
+}
+
+/* 盖过 .prose strong 的 800 字重和主题色 */
+.geist-demo.geist-demo .gf-type-sample strong {
+  font-weight: 700;
+  color: inherit;
+}
+
+.geist-demo.geist-demo .gf-type-class {
+  min-width: 0;
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+  word-break: break-all;
+}
+
+.geist-demo.geist-demo .gf-type-spec {
+  min-width: 0;
+  font-family: var(--font-geist-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-type-usage {
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-type-note {
+  margin-top: 20px;
+  max-width: 62ch;
+}
+
+/* ---------- 中等宽度：右侧三列收窄 ---------- */
+
+@media (max-width: 60rem) {
+  .geist-demo.geist-demo .gf-type-head {
+    grid-template-columns: minmax(0, 1fr) 112px 128px minmax(0, 140px);
+  }
+
+  .geist-demo.geist-demo .gf-type-row {
+    grid-template-columns: minmax(0, 1fr) 404px;
+  }
+
+  .geist-demo.geist-demo .gf-type-meta {
+    grid-template-columns: 112px 128px minmax(0, 1fr);
+  }
+}
+
+/* ---------- 窄屏：样张独占一行，元信息换行排 ---------- */
+
+@media (max-width: 45rem) {
+  .geist-demo.geist-demo .gf-type-head {
+    display: none;
+  }
+
+  .geist-demo.geist-demo .gf-type-table {
+    border-top: 0;
+  }
+
+  .geist-demo.geist-demo .gf-type-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 12px 0;
+  }
+
+  .geist-demo.geist-demo .gf-type-meta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    align-items: start;
+  }
+
+  .geist-demo.geist-demo .gf-type-usage {
+    margin-top: 2px;
+  }
+}

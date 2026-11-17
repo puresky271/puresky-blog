@@ -1,0 +1,383 @@
+/**
+ * 终端演示的样式。
+ *
+ * 终端窗口的配色是窗口自己的主题（Vercel Light / Dark），和卡片外面的演示亮暗解耦：
+ * 浅色值来自 terminal.json（背景 #FBFBFA 与调色板），深色值来自原站暗色终端预览
+ * （纯黑底、#EDEDED 主文本、提亮过的强调色）。
+ * 选择器从 .geist-demo.geist-demo .gf-x（0,4,0）起步。
+ */
+
+/* ---------- 窗口 ---------- */
+
+.geist-demo.geist-demo .gf-terminal {
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-window {
+  --gf-term-bg: #fbfbfa;
+  --gf-term-fg: #24292f;
+  --gf-term-dim: #656a70;
+  --gf-term-red: #cf2f36;
+  --gf-term-amber: #8a5300;
+  --gf-term-green: #18703a;
+  --gf-term-blue: #1a5fb4;
+  --gf-term-teal: #0b7268;
+  --gf-term-purple: #7e3ab8;
+  --gf-term-accent: var(--gf-term-blue);
+  --gf-term-hl-bg: #dce3ec;
+  --gf-term-bar-bg: #f2f2f2;
+  --gf-term-bar-border: #e6e6e6;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 12px;
+  background: var(--gf-term-bg);
+  color: var(--gf-term-fg);
+  box-shadow: var(--ds-shadow-medium);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-window[data-window-theme='dark'] {
+  --gf-term-bg: #000000;
+  --gf-term-fg: #ededed;
+  --gf-term-dim: #8f8f8f;
+  --gf-term-red: #e5484d;
+  --gf-term-amber: #f1a10d;
+  --gf-term-green: #63c174;
+  --gf-term-blue: #52a9ff;
+  --gf-term-teal: #0ac5b3;
+  --gf-term-purple: #bf7af0;
+  --gf-term-accent: var(--gf-term-blue);
+  --gf-term-hl-bg: #2e2e2e;
+  --gf-term-bar-bg: #0a0a0a;
+  --gf-term-bar-border: #1f1f1f;
+}
+
+/* 标题栏 */
+.geist-demo.geist-demo .gf-terminal .gf-term-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 10px 0 12px;
+  border-bottom: 1px solid var(--gf-term-bar-border);
+  background: var(--gf-term-bar-bg);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-dots {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-dot--red {
+  background: #ff5f57;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-dot--yellow {
+  background: #febc2e;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-dot--green {
+  background: #28c840;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-geist-mono);
+  font-size: 11.5px;
+  line-height: 1;
+  color: var(--gf-term-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 标题栏里的窗口主题切换 */
+.geist-demo.geist-demo .gf-terminal .gf-term-theme {
+  flex: none;
+  margin-left: auto;
+  border-color: transparent;
+  background: transparent;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-theme .gf-seg-btn {
+  color: var(--gf-term-dim);
+  box-shadow: none;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-theme .gf-seg-btn:hover {
+  background: rgba(128, 128, 128, 0.14);
+  color: var(--gf-term-fg);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-theme .gf-seg-btn[aria-pressed='true'] {
+  background: rgba(128, 128, 128, 0.18);
+  color: var(--gf-term-fg);
+  box-shadow: 0 0 0 1px rgba(128, 128, 128, 0.28);
+}
+
+/* ---------- 终端内容 ---------- */
+
+.geist-demo.geist-demo .gf-terminal .gf-term-body {
+  padding: 16px 18px 18px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-lines {
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 100%;
+  min-height: 372px;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-line {
+  white-space: pre;
+  font-family: var(--font-geist-mono);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-line--tail {
+  margin-top: 14px;
+}
+
+/* 各行的颜色 */
+.geist-demo.geist-demo .gf-terminal .gf-term-arrow {
+  color: var(--gf-term-accent);
+  font-weight: 700;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-cmd {
+  color: var(--gf-term-fg);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-del {
+  color: var(--gf-term-red);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-mod {
+  color: var(--gf-term-amber);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-plain {
+  color: var(--gf-term-fg);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-dim {
+  color: var(--gf-term-dim);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-warning {
+  color: var(--gf-term-amber);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-warnbold {
+  color: var(--gf-term-amber);
+  font-weight: 700;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-error {
+  color: var(--gf-term-red);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-pass {
+  color: var(--gf-term-green);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-info {
+  color: var(--gf-term-blue);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-file {
+  color: var(--gf-term-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-hl {
+  background: var(--gf-term-hl-bg);
+  color: var(--gf-term-fg);
+}
+
+/* 光标 */
+.geist-demo.geist-demo .gf-terminal .gf-term-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  vertical-align: text-bottom;
+  background: var(--gf-term-fg);
+  animation: gf-term-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes gf-term-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- ANSI 调色板 ---------- */
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi {
+  overflow: hidden;
+  margin-top: 20px;
+  border: 1px solid var(--ds-gray-alpha-300);
+  border-radius: 10px;
+  background: var(--ds-background-100);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-table {
+  padding: 2px 16px 8px;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-row {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-row:last-child {
+  border-bottom: 0;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-row--head {
+  padding: 8px 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-name {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-zh {
+  font-size: 11px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-swatch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  font-family: var(--font-geist-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-hex {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-ansi-contrast {
+  font-family: var(--font-geist-mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo.geist-demo .gf-terminal .gf-term-note {
+  margin-top: 16px;
+  max-width: 62ch;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 40rem) {
+  .geist-demo.geist-demo .gf-terminal .gf-term-vlabel {
+    display: none;
+  }
+
+  .geist-demo.geist-demo .gf-terminal .gf-term-body {
+    padding: 12px 12px 14px;
+  }
+
+  .geist-demo.geist-demo .gf-terminal .gf-term-lines {
+    min-height: 340px;
+  }
+
+  .geist-demo.geist-demo .gf-terminal .gf-term-line {
+    font-size: 12px;
+  }
+
+  .geist-demo.geist-demo .gf-terminal .gf-ansi-row {
+    grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .geist-demo.geist-demo .gf-terminal .gf-ansi-table {
+    padding: 2px 12px 8px;
+  }
+
+  .geist-demo.geist-demo .gf-terminal .gf-ansi-head {
+    padding: 10px 12px;
+  }
+}

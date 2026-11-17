@@ -1,0 +1,179 @@
+{
+ "demo": [
+  {
+   "kind": "prompt",
+   "text": "Color themes for your terminal, built from Geist. Available for Ghostty, iTerm2, Alacritty, and Windows Terminal."
+  },
+  {
+   "kind": "command",
+   "text": "~/vercel/website main"
+  },
+  {
+   "kind": "diff-del",
+   "text": "▲ git status --short"
+  },
+  {
+   "kind": "diff-mod",
+   "text": "D app/legacy.tsx"
+  },
+  {
+   "kind": "command",
+   "text": "M app/page.js"
+  },
+  {
+   "kind": "output",
+   "text": "▲ pnpm --silent check"
+  },
+  {
+   "kind": "warning",
+   "text": "app/page.js"
+  },
+  {
+   "kind": "error",
+   "text": "1:1 warning Unexpected console statement no-console"
+  },
+  {
+   "kind": "test-pass",
+   "text": "✖ 1 problem (0 errors, 1 warning)"
+  },
+  {
+   "kind": "test-pass",
+   "text": "✔ navigation renders the home page (0.38ms)"
+  },
+  {
+   "kind": "test-pass",
+   "text": "✔ navigation follows internal links (0.05ms)"
+  },
+  {
+   "kind": "test-skip",
+   "text": "✔ checkout redirects to payment (0.05ms)"
+  },
+  {
+   "kind": "summary",
+   "text": "﹣ checkout integration (0.04ms) # API_URL is not set"
+  },
+  {
+   "kind": "summary",
+   "text": "tests 4"
+  },
+  {
+   "kind": "summary",
+   "text": "pass 3"
+  },
+  {
+   "kind": "summary",
+   "text": "skipped 1"
+  },
+  {
+   "kind": "prompt",
+   "text": "duration_ms 55.04"
+  }
+ ],
+ "palette": [
+  {
+   "name": "BlackNeutral",
+   "normal": {
+    "hex": "#24292F",
+    "contrast": "14.15:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#656A70",
+    "contrast": "5.27:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "RedFailure",
+   "normal": {
+    "hex": "#CF2F36",
+    "contrast": "4.93:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#A8242B",
+    "contrast": "6.87:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "GreenSuccess",
+   "normal": {
+    "hex": "#18703A",
+    "contrast": "5.93:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#0F5A2C",
+    "contrast": "8.05:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "AmberWarning",
+   "normal": {
+    "hex": "#8A5300",
+    "contrast": "6.11:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#6B3F00",
+    "contrast": "8.68:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "BlueInformation",
+   "normal": {
+    "hex": "#1A5FB4",
+    "contrast": "6.07:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#124A8C",
+    "contrast": "8.51:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "PurpleAccent",
+   "normal": {
+    "hex": "#7E3AB8",
+    "contrast": "6.37:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#622A92",
+    "contrast": "8.95:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "TealSecondary accent",
+   "normal": {
+    "hex": "#0B7268",
+    "contrast": "5.60:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#085A52",
+    "contrast": "7.82:1",
+    "bg": "#FBFBFA"
+   }
+  },
+  {
+   "name": "WhiteNeutral",
+   "normal": {
+    "hex": "#4F5359",
+    "contrast": "7.47:1",
+    "bg": "#FBFBFA"
+   },
+   "bright": {
+    "hex": "#171717",
+    "contrast": "17.31:1",
+    "bg": "#FBFBFA"
+   }
+  }
+ ],
+ "background": "#FBFBFA"
+}

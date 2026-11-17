@@ -1,0 +1,315 @@
+/**
+ * Geist 组件演示的公共层。
+ *
+ * 原站每个示例是一张卡片：演示区白底，底部一条灰条放 Show code。
+ * 这里把那套卡片外壳和正文区域的重置样式集中在这里，三个画廊和五个基础演示共用。
+ *
+ * 特异性约定（重要）：
+ * - 重置样式一律写到 .geist-demo.geist-demo :where(元素) 这一档（0,2,0），
+ *   刚好压过文章正文的 .prose p / .prose table（0,1,1），
+ * - 工具类（utilities.css）是 .geist-demo.geist-demo .类名（0,3,0），比重置高一档，
+ *   所以从原站抄来的 class 一定能覆盖重置。
+ * - 各画廊自己的组件样式类建议也写到 (0,3,0) 或更高，并在 base.css 之后 import。
+ * - 链接用 [data-geist-link] 标记（0,3,0），专门压过 .prose a:not(.heading-anchor)。
+ *
+ * 「挡住文章正文排版外溢」的那组通用规则在 ../snapshot/base.css，所有复刻外部站点的
+ * 演示都可以直接用，详见 @/lib/snapshot。
+ */
+
+@import './tokens.css';
+@import '../snapshot/base.css';
+
+/* ---------- 容器与排版 ---------- */
+
+.geist-demo {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-geist-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ds-gray-1000);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.geist-demo *,
+.geist-demo *::before,
+.geist-demo *::after {
+  box-sizing: border-box;
+}
+
+.geist-demo.geist-demo :where(p, ul, ol, li, figure, blockquote, h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.geist-demo.geist-demo :where(ul, ol) {
+  list-style: none;
+}
+
+.geist-demo.geist-demo :where(li)::before {
+  content: none;
+}
+
+.geist-demo.geist-demo [data-geist-link] {
+  color: inherit;
+  text-decoration: none;
+  background: none;
+  border: 0;
+}
+
+.geist-demo.geist-demo :where(button) {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.geist-demo.geist-demo :where(button:disabled) {
+  cursor: not-allowed;
+}
+
+.geist-demo.geist-demo :where(input, textarea, select) {
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+}
+
+.geist-demo.geist-demo :where(pre, code, kbd, samp) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-geist-mono);
+  font-size: inherit;
+  color: inherit;
+  white-space: pre;
+}
+
+.geist-demo.geist-demo :where(img, svg) {
+  display: block;
+  max-width: 100%;
+}
+
+.geist-demo.geist-demo :where(svg) {
+  flex-shrink: 0;
+}
+
+.geist-demo.geist-demo :where(hr) {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--ds-gray-alpha-300);
+}
+
+.geist-demo.geist-demo :where(table) {
+  display: table;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border-radius: 0;
+  font-size: inherit;
+  font-variant-numeric: inherit;
+}
+
+.geist-demo.geist-demo :where(th, td) {
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+  background: none;
+  color: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  text-align: left;
+}
+
+.geist-demo.geist-demo :where(tr:last-child td) {
+  border-bottom: 0;
+}
+
+.geist-demo [hidden] {
+  display: none !important;
+}
+
+/* 正文排版外溢的拦截规则在 ../snapshot/base.css，用 .snapshot-root 作用域，
+   本组件的根节点带 snapshot-root 类。 */
+
+/* ---------- 卡片外壳（原站示例卡片） ---------- */
+
+.geist-card {
+  overflow: hidden;
+  background: var(--ds-background-100);
+  border: 1px solid var(--ds-gray-alpha-400);
+  border-radius: 12px;
+}
+
+.geist-card + .geist-card {
+  margin-top: 16px;
+}
+
+.geist-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ds-gray-1000);
+}
+
+.geist-card-zh {
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+.geist-card-note {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+.geist-card-subhead {
+  padding: 10px 16px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ds-gray-900);
+}
+
+.geist-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 24px;
+}
+
+.geist-card-body--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.geist-card-body--plain {
+  display: block;
+}
+
+.geist-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--ds-background-200);
+  border-top: 1px solid var(--ds-gray-alpha-300);
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- 画廊骨架 ---------- */
+
+.geist-gallery-note {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+  background: var(--ds-background-200);
+  border: 1px solid var(--ds-gray-alpha-300);
+  border-radius: 10px;
+}
+
+.geist-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.geist-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.geist-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.geist-caption {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+.geist-mono {
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+.geist-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--ds-gray-alpha-300);
+}
+
+/* 原站的焦点环：内圈背景色隔开，外圈主色 */
+.geist-demo :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--ds-focus-color);
+  outline-offset: 2px;
+}
+
+/* ---------- 移动端与桌面宽度 ---------- */
+
+/*
+ * 原站演示区最宽 1376px，文章版心 46rem。桌面端把演示放宽到 58rem，
+ * 占用版心右侧的空白，目录在左边不会被压到。窄屏保持 100%。
+ */
+@media (min-width: 80rem) {
+  .prose .animation-demo[data-animation^='geist-'] {
+    width: min(58rem, calc(100vw - 27rem));
+    max-width: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .geist-card-body {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .geist-demo *,
+  .geist-demo *::before,
+  .geist-demo *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,1345 @@
+/**
+ * Geist 可交互复刻的公共样式。
+ *
+ * 这些组件挂在 GeistGallery 的 .geist-demo 卡片里，所有颜色、圆角、阴影、字体
+ * 都取 tokens.css 的 --ds-* 变量，暗色由 [data-theme='dark'] .geist-demo 自动切换。
+ * 根节点统一是 .gi-demo，类名一律 gi- 前缀，避免和正文与 Tailwind 工具类撞名。
+ *
+ * 选择器都写成 .geist-demo .gi-demo 起头（0,2,0 起步），
+ * 是为了稳稳压过 base.css 里 .geist-demo.geist-demo :where(元素) 这一档重置（0,2,0），
+ * 不依赖两份 CSS 的加载顺序。
+ */
+
+/* ---------- 根节点与排版 ---------- */
+
+.geist-demo .gi-demo {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-geist-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ds-gray-1000);
+  text-align: left;
+}
+
+.geist-demo .gi-demo *,
+.geist-demo .gi-demo *::before,
+.geist-demo .gi-demo *::after {
+  box-sizing: border-box;
+}
+
+.geist-demo .gi-demo :where(p) {
+  margin: 0;
+}
+
+/* 每个演示下面那行 12px 中文操作说明 */
+.geist-demo .gi-demo .gi-hint {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.geist-demo .gi-demo .gi-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.geist-demo .gi-demo .gi-label {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-value {
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  color: var(--ds-gray-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.geist-demo .gi-demo .gi-status {
+  margin-top: 12px;
+  min-height: 18px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 焦点环统一用 tokens 里的内圈背景 + 外圈主色 */
+.geist-demo .gi-demo :is(button, [tabindex], input, a):focus-visible {
+  outline: none;
+  box-shadow: var(--ds-focus-ring);
+}
+
+/* ---------- 图标 ---------- */
+
+.geist-demo .gi-demo .gi-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.geist-demo .gi-demo .gi-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- 按钮 ---------- */
+
+.geist-demo .gi-demo .gi-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--gi-h, 36px);
+  padding: 0 var(--gi-px, 16px);
+  border: 0;
+  border-radius: 6px;
+  background: var(--ds-gray-1000);
+  color: var(--ds-background-100);
+  font-family: var(--font-geist-sans);
+  font-size: var(--gi-fs, 14px);
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-btn:hover:not(:disabled):not([data-loading='true']) {
+  background: color-mix(in oklab, var(--ds-gray-1000) 86%, var(--ds-background-100));
+}
+
+.geist-demo .gi-demo .gi-btn:active:not(:disabled):not([data-loading='true']) {
+  filter: brightness(0.92);
+  transform: translateY(1px) scale(0.99);
+}
+
+.geist-demo .gi-demo .gi-btn:disabled,
+.geist-demo .gi-demo .gi-btn[aria-disabled='true'] {
+  background: var(--ds-gray-100);
+  color: var(--ds-gray-700);
+  box-shadow: 0 0 0 1px var(--ds-gray-400);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 尺寸：32 / 36 / 40 三档，横向内边距按原站 padding 累加 */
+.geist-demo .gi-demo .gi-btn--sm {
+  --gi-h: 32px;
+  --gi-px: 12px;
+  --gi-fs: 14px;
+}
+
+.geist-demo .gi-demo .gi-btn--md {
+  --gi-h: 36px;
+  --gi-px: 16px;
+  --gi-fs: 14px;
+}
+
+.geist-demo .gi-demo .gi-btn--lg {
+  --gi-h: 40px;
+  --gi-px: 20px;
+  --gi-fs: 16px;
+}
+
+/* 变体 */
+.geist-demo .gi-demo .gi-btn--secondary {
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  box-shadow: 0 0 0 1px var(--ds-gray-400);
+}
+
+.geist-demo .gi-demo .gi-btn--secondary:hover:not(:disabled):not([data-loading='true']) {
+  background: var(--ds-gray-100);
+}
+
+.geist-demo .gi-demo .gi-btn--tertiary {
+  background: transparent;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-btn--tertiary:hover:not(:disabled):not([data-loading='true']) {
+  background: var(--ds-gray-alpha-200);
+}
+
+.geist-demo .gi-demo .gi-btn--error {
+  background: var(--ds-red-800);
+  color: var(--ds-contrast-fg);
+}
+
+.geist-demo .gi-demo .gi-btn--error:hover:not(:disabled):not([data-loading='true']) {
+  background: var(--ds-red-900);
+}
+
+.geist-demo .gi-demo .gi-btn--warning {
+  background: var(--ds-amber-800);
+  color: #0a0a0a;
+}
+
+.geist-demo .gi-demo .gi-btn--warning:hover:not(:disabled):not([data-loading='true']) {
+  background: color-mix(in oklab, var(--ds-amber-800) 86%, var(--ds-gray-1000));
+}
+
+/* 形状 */
+.geist-demo .gi-demo .gi-btn--rounded {
+  border-radius: 999px;
+}
+
+.geist-demo .gi-demo .gi-btn--rounded.gi-btn--secondary {
+  box-shadow:
+    0 0 0 1px var(--ds-gray-400),
+    var(--ds-shadow-small);
+}
+
+.geist-demo .gi-demo .gi-btn--square {
+  width: var(--gi-h, 36px);
+  padding: 0;
+}
+
+.geist-demo .gi-demo .gi-btn--circle {
+  width: var(--gi-h, 36px);
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* 加载中：原站把按钮降为灰底灰字，左侧转一个小圈 */
+.geist-demo .gi-demo .gi-btn[data-loading='true'] {
+  background: var(--ds-gray-100);
+  color: var(--ds-gray-700);
+  box-shadow: 0 0 0 1px var(--ds-gray-400);
+  cursor: progress;
+}
+
+.geist-demo .gi-demo .gi-spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: gi-spin 0.8s linear infinite;
+}
+
+@keyframes gi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 按钮演示里那排小开关 */
+.geist-demo .gi-demo .gi-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px 0 8px;
+  border-radius: 999px;
+  background: var(--ds-background-100);
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-400);
+  color: var(--ds-gray-1000);
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.geist-demo .gi-demo .gi-ctl:hover {
+  background: var(--ds-gray-100);
+}
+
+.geist-demo .gi-demo .gi-ctl-track {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--ds-gray-400);
+  transition: background-color 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-ctl-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ds-background-100);
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-400);
+  transition: transform 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-ctl[aria-checked='true'] .gi-ctl-track {
+  background: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-ctl[aria-checked='true'] .gi-ctl-knob {
+  transform: translateX(12px);
+}
+
+/* ---------- 浮层（菜单、选择器、提示气泡的公共壳） ---------- */
+
+.geist-demo .gi-demo .gi-popover {
+  z-index: var(--ds-z-menu);
+  min-width: 180px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--ds-background-100);
+  box-shadow: var(--ds-shadow-menu);
+}
+
+.geist-demo .gi-demo .gi-popover--fixed {
+  position: fixed;
+}
+
+/* 菜单行 */
+.geist-demo .gi-demo .gi-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.geist-demo .gi-demo .gi-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--ds-gray-1000);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.geist-demo .gi-demo .gi-menu-item:hover:not(:disabled),
+.geist-demo .gi-demo .gi-menu-item:focus-visible,
+.geist-demo .gi-demo .gi-menu-item[data-active='true'] {
+  background: var(--ds-gray-alpha-200);
+  outline: none;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-menu-item:disabled {
+  color: var(--ds-gray-700);
+  cursor: not-allowed;
+}
+
+.geist-demo .gi-demo .gi-menu-item--danger {
+  color: var(--ds-red-900);
+}
+
+.geist-demo .gi-demo .gi-menu-item--danger:disabled {
+  color: var(--ds-gray-700);
+}
+
+.geist-demo .gi-demo .gi-menu-icon {
+  display: inline-flex;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-menu-check {
+  margin-left: auto;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-menu-sep {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ds-gray-alpha-300);
+}
+
+/* ---------- Tabs ---------- */
+
+.geist-demo .gi-demo .gi-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-demo .gi-demo .gi-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 2px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--ds-gray-900);
+  font-size: 14px;
+  line-height: 20px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-tab:hover:not(:disabled) {
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-tab[aria-selected='true'] {
+  border-bottom-color: var(--ds-gray-1000);
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-tab:disabled {
+  color: var(--ds-gray-700);
+  cursor: not-allowed;
+}
+
+.geist-demo .gi-demo .gi-tab-panel {
+  padding-top: 16px;
+  min-height: 62px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-tab-panel p + p {
+  margin-top: 8px;
+}
+
+/* ---------- 模态框（画在演示区里，不用 fixed 全屏） ---------- */
+
+.geist-demo .gi-demo .gi-modal-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+  padding: 24px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ds-background-200);
+}
+
+.geist-demo .gi-demo .gi-modal-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in oklab, var(--ds-overlay-backdrop-color) 82%, transparent);
+  animation: gi-fade-in 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-modal {
+  width: min(400px, 100%);
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--ds-background-100);
+  box-shadow: var(--ds-shadow-modal);
+  animation: gi-modal-in 0.3s var(--ds-motion-overlay-timing);
+}
+
+.geist-demo .gi-demo .gi-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-modal-desc {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-modal-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+@keyframes gi-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gi-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Toast ---------- */
+
+.geist-demo .gi-demo .gi-toast-stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  min-height: 200px;
+}
+
+.geist-demo .gi-demo .gi-toast-layer {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  max-width: 320px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.geist-demo .gi-demo .gi-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--ds-background-100);
+  box-shadow: var(--ds-shadow-menu);
+  animation: gi-toast-in 0.2s ease;
+}
+
+.geist-demo .gi-demo .gi-toast--leave {
+  animation: gi-toast-out 0.18s ease forwards;
+}
+
+.geist-demo .gi-demo .gi-toast-icon {
+  display: inline-flex;
+  margin-top: 1px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-toast-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.geist-demo .gi-demo .gi-toast-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-toast-desc {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-toast-close {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-toast-close:hover {
+  background: var(--ds-gray-alpha-200);
+  color: var(--ds-gray-1000);
+}
+
+@keyframes gi-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gi-toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(16px) scale(0.98);
+  }
+}
+
+/* ---------- Tooltip ---------- */
+
+.geist-demo .gi-demo .gi-tooltip {
+  position: fixed;
+  z-index: var(--ds-z-tooltip);
+  max-width: 260px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--ds-gray-1000);
+  color: var(--ds-background-100);
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  white-space: normal;
+  pointer-events: none;
+  box-shadow: var(--ds-shadow-tooltip);
+  transform: translate(-50%, -100%);
+  animation: gi-tooltip-in 0.12s ease;
+}
+
+.geist-demo .gi-demo .gi-tooltip::after {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background: inherit;
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.geist-demo .gi-demo .gi-tooltip--below {
+  transform: translate(-50%, 0);
+  animation-name: gi-tooltip-in-below;
+}
+
+.geist-demo .gi-demo .gi-tooltip--below::after {
+  top: -3px;
+  bottom: auto;
+}
+
+@keyframes gi-tooltip-in-below {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -3px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes gi-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 3px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
+/* ---------- Select ---------- */
+
+.geist-demo .gi-demo .gi-select {
+  position: relative;
+  width: min(240px, 100%);
+}
+
+.geist-demo .gi-demo .gi-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px 0 12px;
+  border-radius: 6px;
+  background: var(--ds-background-100);
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-400);
+  color: var(--ds-gray-1000);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+  transition: box-shadow 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-select-trigger:hover {
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-500);
+}
+
+.geist-demo .gi-demo .gi-select-trigger[aria-expanded='true'] {
+  box-shadow: var(--ds-focus-border);
+}
+
+.geist-demo .gi-demo .gi-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geist-demo .gi-demo .gi-select-placeholder {
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-select-chevron {
+  color: var(--ds-gray-900);
+  transition: transform 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-select-trigger[aria-expanded='true'] .gi-select-chevron {
+  transform: rotate(180deg);
+}
+
+.geist-demo .gi-demo .gi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--ds-gray-1000);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.geist-demo .gi-demo .gi-select-option:hover,
+.geist-demo .gi-demo .gi-select-option:focus-visible {
+  background: var(--ds-gray-alpha-200);
+  outline: none;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-select-option[aria-selected='true'] {
+  font-weight: 500;
+}
+
+.geist-demo .gi-demo .gi-select-check {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--ds-gray-1000);
+}
+
+/* ---------- Switch（原站是分段选择器） ---------- */
+
+.geist-demo .gi-demo .gi-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--ds-gray-100);
+}
+
+.geist-demo .gi-demo .gi-seg-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ds-gray-900);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-seg-option:hover:not([aria-checked='true']):not(:disabled) {
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-seg-option[aria-checked='true'] {
+  background: var(--ds-background-100);
+  color: var(--ds-gray-1000);
+  font-weight: 500;
+  box-shadow:
+    0 0 0 1px var(--ds-gray-alpha-200),
+    var(--ds-shadow-small);
+}
+
+.geist-demo .gi-demo .gi-seg-option:disabled {
+  color: var(--ds-gray-800);
+  cursor: not-allowed;
+}
+
+.geist-demo .gi-demo .gi-seg-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- Checkbox ---------- */
+
+.geist-demo .gi-demo .gi-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.geist-demo .gi-demo .gi-checks-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 24px;
+}
+
+.geist-demo .gi-demo .gi-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--ds-gray-1000);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.geist-demo .gi-demo .gi-check-box {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--ds-gray-700);
+  border-radius: 4px;
+  background: var(--ds-background-100);
+  color: var(--ds-background-100);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-check:hover:not(:disabled) .gi-check-box {
+  background: var(--ds-gray-200);
+}
+
+.geist-demo .gi-demo .gi-check[aria-checked='true'] .gi-check-box,
+.geist-demo .gi-demo .gi-check[aria-checked='mixed'] .gi-check-box {
+  border-color: var(--ds-gray-1000);
+  background: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-check[aria-checked='true']:hover .gi-check-box,
+.geist-demo .gi-demo .gi-check[aria-checked='mixed']:hover .gi-check-box {
+  background: color-mix(in oklab, var(--ds-gray-1000) 88%, var(--ds-background-100));
+}
+
+.geist-demo .gi-demo .gi-check:disabled {
+  color: var(--ds-gray-700);
+  cursor: not-allowed;
+}
+
+.geist-demo .gi-demo .gi-check:disabled .gi-check-box {
+  border-color: var(--ds-gray-500);
+  background: var(--ds-gray-100);
+}
+
+.geist-demo .gi-demo .gi-check:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-check:focus-visible .gi-check-box {
+  box-shadow: var(--ds-focus-ring);
+}
+
+.geist-demo .gi-demo .gi-check-mark {
+  display: inline-flex;
+}
+
+.geist-demo .gi-demo .gi-check-dash {
+  width: 8px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--ds-background-100);
+}
+
+/* ---------- Radio ---------- */
+
+.geist-demo .gi-demo .gi-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.geist-demo .gi-demo .gi-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--ds-gray-1000);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.geist-demo .gi-demo .gi-radio-dot {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--ds-gray-700);
+  border-radius: 50%;
+  background: var(--ds-background-100);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-radio:hover:not(:disabled) .gi-radio-dot {
+  background: var(--ds-gray-200);
+}
+
+.geist-demo .gi-demo .gi-radio[aria-checked='true'] .gi-radio-dot {
+  border-color: var(--ds-gray-1000);
+  background: var(--ds-background-100);
+}
+
+.geist-demo .gi-demo .gi-radio[aria-checked='true'] .gi-radio-dot::after {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ds-gray-1000);
+  content: '';
+}
+
+.geist-demo .gi-demo .gi-radio[aria-checked='true']:hover .gi-radio-dot {
+  background: var(--ds-gray-200);
+}
+
+.geist-demo .gi-demo .gi-radio:disabled {
+  color: var(--ds-gray-700);
+  cursor: not-allowed;
+}
+
+.geist-demo .gi-demo .gi-radio:disabled .gi-radio-dot {
+  border-color: var(--ds-gray-500);
+  background: var(--ds-gray-100);
+}
+
+.geist-demo .gi-demo .gi-radio:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-radio:focus-visible .gi-radio-dot {
+  box-shadow: var(--ds-focus-ring);
+}
+
+/* ---------- Slider ---------- */
+
+.geist-demo .gi-demo .gi-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 400px;
+}
+
+.geist-demo .gi-demo .gi-slider-label {
+  flex-shrink: 0;
+  min-width: 32px;
+  font-size: 13px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-slider {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  height: 24px;
+  min-width: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.geist-demo .gi-demo .gi-slider:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-slider-track {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ds-gray-300);
+}
+
+.geist-demo .gi-demo .gi-slider-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ds-blue-700);
+}
+
+.geist-demo .gi-demo .gi-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ds-background-100);
+  box-shadow:
+    0 0 0 1px var(--ds-gray-alpha-500),
+    var(--ds-shadow-small);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: box-shadow 0.15s ease;
+}
+
+.geist-demo .gi-demo .gi-slider:focus-visible .gi-slider-thumb {
+  box-shadow: var(--ds-focus-ring);
+}
+
+.geist-demo .gi-demo .gi-slider-value {
+  flex-shrink: 0;
+  width: 36px;
+  font-family: var(--font-geist-mono);
+  font-size: 13px;
+  color: var(--ds-gray-1000);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Collapse ---------- */
+
+.geist-demo .gi-demo .gi-collapse {
+  border-top: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-demo .gi-demo .gi-collapse-item {
+  border-bottom: 1px solid var(--ds-gray-alpha-300);
+}
+
+.geist-demo .gi-demo .gi-collapse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 2px;
+  background: transparent;
+  color: var(--ds-gray-1000);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  text-align: left;
+}
+
+.geist-demo .gi-demo .gi-collapse-head:hover {
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-collapse-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--ds-gray-900);
+  transition: transform 0.2s ease;
+}
+
+.geist-demo .gi-demo .gi-collapse-head[aria-expanded='true'] .gi-collapse-chevron {
+  transform: rotate(90deg);
+}
+
+.geist-demo .gi-demo .gi-collapse-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease;
+}
+
+.geist-demo .gi-demo .gi-collapse-body--open {
+  grid-template-rows: 1fr;
+}
+
+.geist-demo .gi-demo .gi-collapse-inner {
+  overflow: hidden;
+}
+
+.geist-demo .gi-demo .gi-collapse-text {
+  padding: 0 2px 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ds-gray-900);
+}
+
+/* ---------- Pagination ---------- */
+
+.geist-demo .gi-demo .gi-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.geist-demo .gi-demo .gi-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ds-gray-1000);
+  font-size: 14px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.geist-demo .gi-demo .gi-page:hover:not(:disabled):not([aria-current='page']) {
+  background: var(--ds-gray-alpha-200);
+}
+
+.geist-demo .gi-demo .gi-page[aria-current='page'] {
+  background: var(--ds-gray-1000);
+  color: var(--ds-background-100);
+  font-weight: 500;
+}
+
+.geist-demo .gi-demo .gi-page:disabled {
+  color: var(--ds-gray-700);
+  cursor: not-allowed;
+}
+
+/* ---------- Copy button ---------- */
+
+.geist-demo .gi-demo .gi-copy-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 6px;
+  background: var(--ds-background-100);
+  box-shadow: 0 0 0 1px var(--ds-gray-alpha-400);
+}
+
+.geist-demo .gi-demo .gi-copy-text {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  font-family: var(--font-geist-mono);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ds-gray-1000);
+  white-space: nowrap;
+  overflow-y: hidden;
+}
+
+.geist-demo .gi-demo .gi-copy-btn {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-copy-btn:hover {
+  background: var(--ds-gray-alpha-200);
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-copy-btn[data-copied='true'] {
+  color: var(--ds-green-800);
+}
+
+.geist-demo .gi-demo .gi-copy-icon {
+  display: inline-flex;
+  animation: gi-pop-in 0.18s ease;
+}
+
+@keyframes gi-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Split button ---------- */
+
+.geist-demo .gi-demo .gi-split {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.geist-demo .gi-demo .gi-split-toggle {
+  padding: 0 8px;
+}
+
+/* ---------- Calendar ---------- */
+
+.geist-demo .gi-demo .gi-cal {
+  width: min(340px, 100%);
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--ds-background-100);
+  box-shadow: var(--ds-shadow-menu);
+}
+
+.geist-demo .gi-demo .gi-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.geist-demo .gi-demo .gi-cal-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--ds-gray-1000);
+  white-space: nowrap;
+}
+
+.geist-demo .gi-demo .gi-cal-nav {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--ds-gray-900);
+}
+
+.geist-demo .gi-demo .gi-cal-nav:hover {
+  background: var(--ds-gray-alpha-200);
+  color: var(--ds-gray-1000);
+}
+
+.geist-demo .gi-demo .gi-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: 2px 0 6px;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--ds-gray-900);
+  text-align: center;
+}
+
+.geist-demo .gi-demo .gi-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.geist-demo .gi-demo .gi-cal-grid:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-cal-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border-radius: 6px;
+  color: var(--ds-gray-1000);
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.geist-demo .gi-demo .gi-cal-day:hover:not(.gi-cal-day--empty):not(.gi-cal-day--selected) {
+  background: var(--ds-gray-alpha-200);
+}
+
+.geist-demo .gi-demo .gi-cal-day--today {
+  color: var(--ds-blue-700);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--ds-blue-700);
+}
+
+.geist-demo .gi-demo .gi-cal-day--selected {
+  background: var(--ds-blue-700);
+  color: var(--ds-contrast-fg);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.geist-demo .gi-demo .gi-cal-day:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-focus-ring);
+}
+
+.geist-demo .gi-demo .gi-cal-day--empty {
+  cursor: default;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 480px) {
+  .geist-demo .gi-demo .gi-modal {
+    padding: 20px;
+  }
+
+  .geist-demo .gi-demo .gi-modal-foot {
+    justify-content: stretch;
+  }
+
+  .geist-demo .gi-demo .gi-modal-foot .gi-btn {
+    flex: 1;
+  }
+}
