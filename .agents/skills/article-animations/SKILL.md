@@ -61,6 +61,14 @@ order: preorder
 :::
 ```
 
+`rpn-eval` 可选配置 `tokens`（空格分隔的整数与 `+`、`-`、`*`、`/`，最多 24 个元素，默认 `3 4 2 * +`），演示逆波兰表达式求值：从左向右读，数字压入栈，运算符弹出右操作数再弹左操作数，算完压回。输入可编辑，应用新输入会重建快照。配置别加引号，`remark-smartypants` 会把直引号改成弯引号（插件里已经做了容错，但写成裸值最稳）：
+
+```md
+:::animation rpn-eval
+tokens: 3 4 2 * +
+:::
+```
+
 `lowerbit` 配置 `value` 为 1 到 255 的整数，用 8 位二进制演示 `x & -x` 取出最低位的 1，以及 `x - lowbit(x)` 清除这一位：
 
 ```md
@@ -120,6 +128,30 @@ order: inorder
 :::
 ```
 
+`graph-dfs` 不需要配置，演示文章里那棵一般树的深度优先遍历：A 是根，B、C、D 是第二层，B 下面有 E、F、G，D 下面有 I、K。树图沿用二叉树那套 `TreeDiagram`，主色实线标出当前路径，虚线标出走过又退回的边，右侧是调用栈和访问序列，用来解释“一条路走到黑”和回溯：
+
+```md
+:::animation graph-dfs
+
+:::
+```
+
+`graph-bfs` 不需要配置，在同一棵一般树上演示广度优先遍历。主色实线标出已经发现的树边，虚线圆圈表示仍在队列里的结点，右侧展示队列和访问序列，用来解释“先近后远，层层推进”和先进先出：
+
+```md
+:::animation graph-bfs
+
+:::
+```
+
+`relation-anatomy` 不需要配置，用 CMU 15-445 Lecture #01 的 `Artist(id, name, year, country)` 表（101 Wu-Tang Clan 1992 USA / 102 Notorious BIG 1992 USA / 103 GZA 1990 USA）解剖关系模型：七步依次高亮整张 relation、一行 tuple、`year` 这一列 attribute、这一列允许取值的 domain 集合、表头与类型组成的 schema、全部数据行的 instance，最后高亮 `id` 列这个 primary key。表格下方有一条观察窗，随步骤显示当前概念对应的具体数据，主键列始终带钥匙图标、PK 标记和下划线：
+
+```md
+:::animation relation-anatomy
+
+:::
+```
+
 `panorama-lyrics` 用于《端程山》随笔的日文原文、B站版翻译与网易云版翻译对照及音频/MV 分镜联动。不带参数时展示全曲 45 行工作台；可选配置 `lines`（如 `"16-19"`）、`stanza`（`verse-1` 至 `outro`）或 `title` 以展示局部精读卡：
 
 ```md
@@ -129,7 +161,42 @@ title: "主歌 B · 磨薄的鞋底与抬起头的视线"
 :::
 ```
 
+`cassiopeia-stars` 用于《仙后座五曜》随笔的定制星空观测台，包含三维光年纵深倾角变换、北天极周日视运动罗盘与恒星天体物理剖面三个视图。不带参数时展示完整三视图切换工作台；可选配置 `view`（`depth`、`polar` 或 `physics`）以锁定展示单一视图：
+
+```md
+:::animation cassiopeia-stars
+
+:::
+```
+
+`geist-gallery` 是《Geist 设计系统》收录里渲染原站组件示例快照的画廊，必须配置 `group`（`actions`、`inputs`、`choices`、`data`、`feedback`、`overlays`、`containers`）：
+
+```md
+:::animation geist-gallery
+group: actions
+:::
+```
+
+`geist-palette`、`geist-type`、`geist-materials`、`geist-terminal`、`geist-grid` 是同一篇文章里的五个基础演示，都不需要配置：
+
+```md
+:::animation geist-palette
+
+:::
+```
+
+它们的样式分层在 `components/animation/geist/`：`tokens.css` 是从原站抽出的设计令牌（`--ds-*`），`base.css` 是卡片外壳和元素重置，`utilities.css` 是按需筛出的原站 Tailwind 工具类和 CSS Modules 类。新增 Geist 演示时先把样式挂进 `.geist-demo` 作用域，再用 `geist-` 前缀的类名，别去改 `prose.css`。示例快照数据在 `public/data/geist/`（按分组懒加载），手写的可交互版本在 `components/animation/geist/interactive/`，用 `registry.ts` 按 slug 登记，画廊检测到就多挂一张可交互卡片。
+
+这一套里有两层是通用的，别的「外部示例复刻」也能直接用：
+
+- `@/lib/snapshot`：按组懒加载 JSON、自闭合标签展开、空示例离屏实测、媒体路径补 base、模拟 React Aria 的 `data-hover` / `data-pressed` / `data-focus`、`mountInteractiveComponents`。新写一个 `<Name>Gallery.svelte` 时照抄 `GeistGallery.svelte` 改数据路径和注册表即可。
+- `components/animation/snapshot/base.css`：挡住文章正文排版外溢的规则（标题竖条、`pre` 强制底色、图片圆角边框、段落两端对齐、离屏测量容器），挂在演示根节点的 `snapshot-root` 类下面。新演示根节点记得同时带 `snapshot-root`。
+
+从零复刻一套外部站点的示例，完整流程（抓页面、抽令牌和工具类、生成分组 JSON、脱敏、验收）见项目 skill `.agents/skills/external-snapshot-replica/SKILL.md`。
+
 需要配置时，容器正文必须是单个 YAML 对象，不能混放 Markdown。未闭合容器、未知类型和非法配置不会被当作可执行内容。页面没有 JavaScript 时只显示静态提示。
+
+配置值尽量写成裸标量，别用引号。`remark-smartypants` 会在 `remark-animation` 之前把直引号换成弯引号（`"3 4 2 * +"` 会变成 `“3 4 2 * +”`），带引号的值到了插件里已经不是原来的字符串。确实需要引号时，在校验器里先做容错。
 
 ## 新增动画类型
 

@@ -106,9 +106,11 @@ def check_pair(src_path, zh_path, label):
             if ch in b:
                 errs.append('%s 出现%s「%s」' % (k, why, ch))
 
-        # 整块几乎没有汉字，且不是标题/图占位，基本就是没译
+        # 整块几乎没有汉字，且不是标题/图占位/行间公式，基本就是没译
         if (cjk_count(b) < 8 and len(b) > 40
-                and not b.lstrip().startswith('#') and '@@FIG' not in b):
+                and not b.lstrip().startswith('#')
+                and '@@FIG' not in b
+                and not b.lstrip().startswith('$$')):
             errs.append('%s 几乎没有汉字，疑似没译' % k)
 
     stat = {

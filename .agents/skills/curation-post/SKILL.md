@@ -162,6 +162,18 @@ Invoke-WebRequest -Uri '<url>' -Headers @{'User-Agent'='Mozilla/5.0'} -TimeoutSe
 - **视频验证要用系统 Chrome**（`C:/Program Files/Google/Chrome/Application/chrome.exe`）。`ChromiumForTesting` 不带 H.264，mp4 的 `readyState` 永远是 0，画面全黑，会把你引向错误结论。
 - 原站如果用第三方 3D 播放器（viser、Three.js iframe）或视频流，站内做不了就换成同数据驱动的替代交互（时间轴、逐帧高亮），并在注解里诚实说明差异。
 
+## 外部页面是设计系统或组件库时
+
+如果原文本身是一套文档（几十个组件、每个组件带示例卡片和 Show code），逐段翻译加截图会变成流水账，「1:1 复刻」也做不完整。这种情况改走「示例快照 + 手写交互」的路线，完整流程见项目 skill `.agents/skills/external-snapshot-replica/SKILL.md`，这里只记和精选收录相关的取舍：
+
+- **正文仍然用 `:::bi` 逐段对照**，组件页的描述、示例说明、三段最佳实践照原文结构翻译，标题写成 `## 色彩系统（Colors）` 这种双语形式。
+- **示例不截图，直接搬 HTML + CSS 快照**，放在 `public/data/<name>/` 按组懒加载；通用工具在 `@/lib/snapshot`，正文排版隔离层在 `components/animation/snapshot/base.css`。
+- **操作感强的组件手写 Svelte 版本**，注册表在 `components/animation/<name>/interactive/registry.ts`，画廊按 slug 自动挂载。
+- **版权先查再写**：字体许可证（OFL 等）、文档正文版权、示例代码依赖的包是否公开、品牌与商标。结论写进文章末尾的「版权与许可」。
+- **第三方素材脱敏**：真人头像、第三方品牌 logo 换本地占位图，视频不搬进仓库。
+- 原文里的 `<Input>`、`$` 这类字符在 Markdown 里有特殊含义，拼装脚本里统一转义，别让它们消失或被当成公式。
+- 验收用 `scripts/audit_replica.mjs` 跑一遍卡片数、可交互挂载、图片、悬停、溢出和语言开关，再人工看亮暗主题和手机宽度。
+
 ## 常见坑
 
 - **图不显示、`<img>` 里是 `__ASTRO_IMAGE_`**：新图目录在 dev 启动之后才加进来。`astro dev --force` 重启，不是清浏览器缓存。
