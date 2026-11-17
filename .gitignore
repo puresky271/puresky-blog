@@ -43,6 +43,7 @@ npm-debug.log*
 
 # local scratch
 _scratch/
+.tmp/
 .serena/
 .workbuddy/
 *.local.*
