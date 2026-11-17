@@ -108,7 +108,7 @@ function stripBilingualEnglish(markdown: string): string {
 function countText(markdown: string): { cjk: number; latin: number } {
   const text = stripBilingualEnglish(markdown)
     .replace(/^---[\s\S]*?---/, '')
-    .replace(/<[^>]+>/g, ' ')
+    .replace(/<![^<>]*>|<\/?[a-zA-Z][^<>]*>/g, ' ')
     .replace(/[#>*_`~[\]()!|-]/g, ' ');
   const cjk = text.match(/[㐀-鿿豈-﫿]/g)?.length ?? 0;
   const latin = text.replace(/[㐀-鿿豈-﫿]/g, ' ').match(/[A-Za-z0-9]+/g)?.length ?? 0;
