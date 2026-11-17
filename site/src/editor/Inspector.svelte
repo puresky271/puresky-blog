@@ -11,6 +11,7 @@
   import { iArchive, iGlobe, iImage, iPencilSimple, iPlus, iTrash, iUploadSimple, iWarning, iX } from '@/lib/icons.generated';
 
   import { api, assetUrl } from './client';
+  import LeetCodePicker from './LeetCodePicker.svelte';
   import { ed, SLUG, today } from './store.svelte';
   import TagPicker from './TagPicker.svelte';
 
@@ -27,7 +28,9 @@
     pubDate: 'f-pub',
     category: 'f-category',
     subcategory: 'f-subcategory',
-    leetcodeSlug: 'f-leetcode',
+    leetcodeSlugs: 'f-leetcode',
+    problemSource: 'f-problem-source',
+    problemUrl: 'f-problem-url',
     tags: 'f-tags',
     series: 'f-series',
     cover: 'f-cover',
@@ -234,11 +237,20 @@
         {#if subcategories.length === 0}<p class="ed-hint">这个分类还没有子类，请在「整理」里新建。</p>{/if}
       </section>
 
+      {#if fm.category === 'algorithms' || (fm.leetcodeSlugs?.length ?? 0) > 0}
+        <section>
+          <h3>力扣题目 <span class="ed-hint">{fm.leetcodeSlugs?.length ?? 0} 道</span></h3>
+          <LeetCodePicker />
+          <p class="ed-hint">关联力扣题目的文章在这里填，或者填下面的题目出处，两者至少有一个。可以关联多道，回车添加；粘贴题目链接或一次贴多条（用逗号、空格隔开）也行。</p>
+        </section>
+      {/if}
+
       {#if fm.category === 'algorithms'}
         <section>
-          <h3>力扣题目</h3>
-          <label class="f" for="f-leetcode"><span class="ed-label">题目 slug</span><input id="f-leetcode" class="ed-input mono" bind:value={fm.leetcodeSlug} placeholder="例如 two-sum" spellcheck="false" /></label>
-          <p class="ed-hint">算法解题文章需要关联一道题，填写力扣 URL 中的 slug。</p>
+          <h3>题目出处 <span class="ed-hint">非力扣题目填这里</span></h3>
+          <label class="f" for="f-problem-source"><span class="ed-label">出处</span><input id="f-problem-source" class="ed-input" bind:value={fm.problemSource} placeholder="例如 东京大学創造情報学専攻 2026 年度夏入试 编程实技" /></label>
+          <label class="f" for="f-problem-url"><span class="ed-label">原文链接</span><input id="f-problem-url" class="ed-input mono" bind:value={fm.problemUrl} placeholder="https://…（可选）" spellcheck="false" /></label>
+          <p class="ed-hint">力扣题目和题目出处至少要有一个。填了出处，文章正文上方会显示一条来源提示条。</p>
         </section>
       {/if}
 

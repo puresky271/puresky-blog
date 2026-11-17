@@ -119,6 +119,7 @@ export const SUBCATEGORIES = [
   { id: 'dynamic-programming', category: 'algorithms', label: '动态规划', blurb: '状态设计、转移和优化。' },
   { id: 'graph-theory', category: 'algorithms', label: '图论', blurb: '图遍历、最短路、并查集和拓扑排序。' },
   { id: 'greedy-backtracking', category: 'algorithms', label: '贪心与回溯', blurb: '贪心证明、搜索和剪枝。' },
+  { id: 'algorithm-exam', category: 'algorithms', label: '入试真题', blurb: '竞赛与入学考试的整题拆解，从读题到可运行的实现。' },
   { id: 'mathematics', category: 'algorithms', label: '数学', blurb: '数论、组合、几何和模拟。' },
   { id: 'algorithms-unclassified', category: 'algorithms', label: '待归类', blurb: '暂时无法确定子类的算法文章。' },
   { id: 'paper-llm', category: 'papers', label: '大模型', blurb: '预训练、对齐、推理与智能体方向的论文。' },
@@ -354,6 +355,7 @@ export const SERIES = [
   { name: '字符串匹配笔记', blurb: 'KMP 这类在主串中查找模式串的算法。' },
   { name: 'GitHub Actions 笔记', blurb: 'GitHub Actions 的用法与自动化实践。' },
   { name: '数据库基础', blurb: '跟着 CMU 15-445 从关系模型走到存储、索引、查询与事务。' },
+  { name: '东大创造情报入试', blurb: '东京大学情報理工学系研究科 創造情報学専攻 入试真题的完整拆解与实现。' },
 ] as const;
 
 /** 每页文章数。 */

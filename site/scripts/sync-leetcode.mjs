@@ -46,12 +46,43 @@ async function readJson(file, fallback) {
   try { return JSON.parse(await readFile(file, 'utf8')); } catch { return fallback; }
 }
 
+/**
+ * 从文章 frontmatter 里取关联的题目 slug。现在是 leetcodeSlugs 数组（编辑器写成行内数组），
+ * 手写的块状数组和以前的单值 leetcodeSlug 也认。这里不引 YAML 依赖，脚本在 CI 里裸 node 就能跑。
+ */
+function slugsOf(source) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(source);
+  if (!match) return [];
+  const lines = match[1].split(/\r?\n/);
+  const found = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const flow = /^leetcodeSlugs:\s*\[/.exec(line);
+    if (flow) {
+      let body = line.slice(flow[0].length);
+      while (!body.includes(']') && i + 1 < lines.length) body += ` ${lines[(i += 1)]}`;
+      const end = body.indexOf(']');
+      const list = end < 0 ? body : body.slice(0, end);
+      found.push(...(list.match(/[a-z0-9]+(?:-[a-z0-9]+)*/g) ?? []));
+      continue;
+    }
+    if (/^leetcodeSlugs:\s*(?:#.*)?$/.test(line)) {
+      for (i += 1; i < lines.length; i += 1) {
+        const item = /^\s*-\s*['"]?([a-z0-9-]{1,120})['"]?\s*(?:#.*)?$/.exec(lines[i]);
+        if (!item) break;
+        found.push(item[1]);
+      }
+      continue;
+    }
+    const single = /^leetcodeSlug:\s*['"]?([a-z0-9-]{1,120})['"]?\s*(?:#.*)?$/.exec(line);
+    if (single) found.push(single[1]);
+  }
+  return found;
+}
+
 const postsDir = path.join(root, 'src/content/posts');
 const postFiles = (await readdir(postsDir)).filter((file) => file.endsWith('.md') || file.endsWith('.mdx'));
-const slugs = [...new Set((await Promise.all(postFiles.map(async (file) => {
-  const source = await readFile(path.join(postsDir, file), 'utf8');
-  return /^leetcodeSlug:\s*['"]?([a-z0-9-]+)['"]?\s*$/m.exec(source)?.[1] ?? null;
-}))).filter(Boolean))];
+const slugs = [...new Set((await Promise.all(postFiles.map(async (file) => slugsOf(await readFile(path.join(postsDir, file), 'utf8'))))).flat())];
 const previousCalendar = await readJson(calendarFile, { username, fetchedAt: '', total: 0, days: [] });
 const fetchedAt = new Date().toISOString();
 

@@ -1,18 +1,20 @@
 ---
 /**
- * PostNotices.astro — 正文上方的提示条：已归档、结论可能过时、关联力扣题目。
- * 三套文章版式共用。
+ * PostNotices.astro — 正文上方的提示条：已归档、结论可能过时、题目出处、关联力扣题目（可以关联多道）。
+ * 四套文章版式共用。
  */
 import Icon from '@/components/ui/Icon.astro';
 import type { Post } from '@/lib/content';
-import { questionOf } from '@/lib/leetcode';
+import { questionsOf } from '@/lib/leetcode';
 
 interface Props {
   post: Post;
 }
 
-const { archived, mayBeStale, leetcodeSlug } = Astro.props.post.data;
-const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
+const { archived, mayBeStale, leetcodeSlugs, problemSource, problemUrl } = Astro.props.post.data;
+const problems = questionsOf(leetcodeSlugs);
+const metaOf = (question: { frontendId: string; difficulty: string; acRate: number | null }) =>
+  `（${question.frontendId} · ${question.difficulty} · ${question.acRate == null ? '暂无通过率' : `${question.acRate.toFixed(1)}% 通过率`}）`;
 ---
 
 {
@@ -34,10 +36,32 @@ const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
 }
 
 {
-  leetcodeSlug && (
+  problemSource && (
+    <aside class="stale source" role="note">
+      <Icon name="book-open" size={17} />
+      <p>
+        题目出自{' '}
+        {problemUrl ? (
+          <a class="link" href={problemUrl} target="_blank" rel="noopener noreferrer">{problemSource}</a>
+        ) : (
+          problemSource
+        )}
+        。原文是考试题目，本文是拆解和实现。
+      </p>
+    </aside>
+  )
+}
+
+{
+  problems.length > 0 && (
     <aside class="stale" role="note">
       <Icon name="code" size={17} />
-      <p>这篇文章关联力扣题目 <a class="link" href={`https://leetcode.cn/problems/${leetcodeSlug}/`} target="_blank" rel="noopener noreferrer">{leetcode?.titleCn ?? leetcodeSlug}</a>{leetcode ? `（${leetcode.frontendId} · ${leetcode.difficulty} · ${leetcode.acRate == null ? '暂无通过率' : `${leetcode.acRate.toFixed(1)}% 通过率`}）` : ''}。代码风格因人而异，文中的题解代码以力扣官方题解为准。</p>
+      <p>
+        这篇文章关联力扣题目{' '}
+        {problems.map(({ slug, question }, index) => (
+          <span class="problem">{index > 0 && '、'}<a class="link" href={`https://leetcode.cn/problems/${slug}/`} target="_blank" rel="noopener noreferrer">{question?.titleCn ?? slug}</a>{question ? metaOf(question) : ''}</span>
+        ))}。代码风格因人而异，文中的题解代码以力扣官方题解为准。
+      </p>
     </aside>
   )
 }
@@ -66,5 +90,13 @@ const leetcode = leetcodeSlug ? questionOf(leetcodeSlug) : undefined;
   }
   .stale.archived :global(svg) {
     color: var(--fg-subtle);
+  }
+  /* 题目出处不是提醒，而是来源说明，用强调色区分一下。 */
+  .stale.source {
+    border-color: color-mix(in oklab, var(--accent) 30%, var(--line));
+    background: color-mix(in oklab, var(--accent) 7%, var(--surface));
+  }
+  .stale.source :global(svg) {
+    color: var(--accent-strong);
   }
 </style>

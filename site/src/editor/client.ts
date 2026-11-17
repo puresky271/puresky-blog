@@ -32,7 +32,9 @@ export type Frontmatter = Record<string, unknown> & {
   updatedDate?: string;
   category?: string;
   subcategory?: string;
-  leetcodeSlug?: string;
+  leetcodeSlugs?: string[];
+  problemSource?: string;
+  problemUrl?: string;
   tags?: string[];
   series?: string;
   seriesOrder?: number;

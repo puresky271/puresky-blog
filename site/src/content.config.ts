@@ -33,8 +33,18 @@ const posts = defineCollection({
       author: z.string().max(80).optional(),
       category: z.enum(CATEGORY_IDS),
       subcategory: z.enum(SUBCATEGORY_IDS),
-      /** 子类必须属于当前一级分类。 */
-      leetcodeSlug: z.string().regex(/^[a-z0-9-]{1,120}$/).optional(),
+      /**
+       * 关联的力扣题目 slug。一篇算法解题笔记可以同时关联多道题，
+       * 页面按这里的顺序列出；算法解题分类至少要有一个题源（力扣题目或 problemSource）。
+       */
+      leetcodeSlugs: z.array(z.string().regex(/^[a-z0-9-]{1,120}$/)).default([]),
+      /**
+       * 非力扣题目的出处。整题拆解类的算法文章（比如东大入试真题）没有对应的力扣题，
+       * 就用这个字段记来源，页面顶部会显示一条出处提示条。
+       */
+      problemSource: z.string().max(160).optional(),
+      /** 题目原文链接。有 problemSource 时才会显示。 */
+      problemUrl: z.url().optional(),
       /** 三到五个，只能从 config.ts 的 TAGS 里选。 */
       tags: z.array(z.enum(TAG_NAMES)).max(6).default([]),
 
@@ -64,8 +74,11 @@ const posts = defineCollection({
       if (!subcategory || subcategory.category !== data.category) {
         ctx.addIssue({ code: 'custom', path: ['subcategory'], message: '子类不属于当前一级分类' });
       }
-      if (data.category === 'algorithms' && !data.leetcodeSlug) {
-        ctx.addIssue({ code: 'custom', path: ['leetcodeSlug'], message: '算法解题文章需要关联 leetcodeSlug' });
+      if (data.category === 'algorithms' && data.leetcodeSlugs.length === 0 && !(data.problemSource ?? '').trim()) {
+        ctx.addIssue({ code: 'custom', path: ['leetcodeSlugs'], message: '算法解题文章要有关联的力扣题目或 problemSource 题目出处' });
+      }
+      if (new Set(data.leetcodeSlugs).size !== data.leetcodeSlugs.length) {
+        ctx.addIssue({ code: 'custom', path: ['leetcodeSlugs'], message: '同一道力扣题目不要重复关联' });
       }
     }),
 });

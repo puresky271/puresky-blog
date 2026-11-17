@@ -219,7 +219,11 @@ class EditorStore {
     if (!fm.pubDate) list.push({ field: 'pubDate', text: '缺少发布日期', level: 'error' });
     if (this.vocab.categories.length && !this.vocab.categories.some((c) => c.id === fm.category)) list.push({ field: 'category', text: '选一个分类', level: 'error' });
     if (this.vocab.subcategories.length && !this.vocab.subcategories.some((c) => c.id === fm.subcategory && c.category === fm.category)) list.push({ field: 'subcategory', text: '选一个属于当前分类的子类', level: 'error' });
-    if (fm.category === 'algorithms' && !String(fm.leetcodeSlug ?? '').trim()) list.push({ field: 'leetcodeSlug', text: '算法解题文章需要填写力扣题目 slug', level: 'error' });
+    const leetcodeSlugs = (fm.leetcodeSlugs ?? []).map((slug) => String(slug).trim()).filter(Boolean);
+    const badLeetcode = leetcodeSlugs.filter((slug) => !/^[a-z0-9-]{1,120}$/.test(slug));
+    if (badLeetcode.length) list.push({ field: 'leetcodeSlugs', text: `题目 slug 不合法：${badLeetcode.join('、')}`, level: 'error' });
+    else if (new Set(leetcodeSlugs).size !== leetcodeSlugs.length) list.push({ field: 'leetcodeSlugs', text: '同一道力扣题目只能关联一次', level: 'error' });
+    if (fm.category === 'algorithms' && leetcodeSlugs.length === 0 && !String(fm.problemSource ?? '').trim()) list.push({ field: 'leetcodeSlugs', text: '算法解题文章至少要关联一道力扣题目，或者填题目出处', level: 'error' });
     const unknown = this.vocab.tags.length ? chosen.filter((t) => !this.vocab.tags.some((x) => x.name === t)) : [];
     if (unknown.length) list.push({ field: 'tags', text: `词表里没有：${unknown.join('、')}`, level: 'error' });
     if (chosen.length > 6) list.push({ field: 'tags', text: '标签最多 6 个', level: 'error' });
