@@ -315,6 +315,7 @@ export const TAGS = [
   { name: '创意', slug: 'creative', group: 'model', blurb: '写东西的时候敢往意外处走。' },
   // 出处
   { name: 'Anthropic团队·Addy Osmani 等', slug: 'anthropic-addy-osmani', group: 'source', blurb: 'Anthropic 官方工程博客，作者是 Addy Osmani，Morgan Westlee Lunt 和 Qing Wang。' },
+  { name: 'Anthropic团队·Addy Osmani', slug: 'anthropic-addy-osmani-solo', group: 'source', blurb: 'Anthropic 官方博客 claude.dev 的工程文章，作者是 Addy Osmani。' },
   { name: 'Anthropic团队·Prithvi Rajasekaran 等', slug: 'anthropic-prithvi-rajasekaran', group: 'source', blurb: 'Anthropic 研究博客，作者是应用 AI 团队的 Prithvi Rajasekaran，Ethan Dixon，Carly Ryan 和 Jeremy Hadfield。' },
   { name: 'Cognition团队·Walden Yan', slug: 'cognition-walden-yan', group: 'source', blurb: 'Cognition 官方博客，作者是 Walden Yan。' },
   { name: 'Anthropic团队·Wes Gurnee 等', slug: 'anthropic-wes-gurnee', group: 'source', blurb: 'Anthropic 可解释性研究，配套论文的作者是 Wes Gurnee 和 Nicholas Sofroniew 等十六人。' },
