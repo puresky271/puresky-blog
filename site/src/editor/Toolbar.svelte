@@ -18,6 +18,7 @@
     iLink,
     iListBullets,
     iListNumbers,
+    iList,
     iMinus,
     iQuotes,
     iTable,
@@ -147,6 +148,9 @@
       </div>
     {/if}
   </div>
+  <button type="button" class="tb wide" onclick={() => void ed.cm?.formatCode()} title="格式化当前代码块" aria-label="格式化代码块">
+    <Icon icon={iList} size={16} /><span>格式化</span>
+  </button>
   <button type="button" class="tb" onclick={() => ed.cm?.insert('| 列 | 列 | 列 |\n| --- | --- | --- |\n|  |  |  |', true)} title="表格" aria-label="表格"><Icon icon={iTable} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.footnote()} title="脚注：插入引用，并在文末加上定义" aria-label="脚注"><Icon icon={iTextSuperscript} size={16} /></button>
   <button type="button" class="tb" onclick={() => ed.cm?.insert('---', true)} title="分隔线" aria-label="分隔线"><Icon icon={iMinus} size={16} /></button>

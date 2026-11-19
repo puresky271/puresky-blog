@@ -18,6 +18,7 @@ import path from 'node:path';
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
 import { countWords, parse, serialize } from './frontmatter.mjs';
+import { formatCode } from './format-code.mjs';
 import { createGit } from './git.mjs';
 import { guard, guardAsset, HttpError, json, readBody, send } from './http.mjs';
 import { rehypePreviewImages } from './preview-images.mjs';
@@ -658,6 +659,10 @@ export function createEditorApi({ root, markdown }) {
         case 'POST /preview': {
           const { slug, body } = await json(req);
           return send(res, 200, await preview(slug, String(body ?? '')));
+        }
+        case 'POST /format-code': {
+          const { language, source } = await json(req);
+          return send(res, 200, { source: await formatCode(language, source) });
         }
         case 'POST /upload':
           return send(res, 200, await upload(q('slug'), q('name') ?? '', await readBody(req)));

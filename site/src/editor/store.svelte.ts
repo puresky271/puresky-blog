@@ -39,6 +39,7 @@ export interface CodeEditorHandle {
   insert(text: string, block?: boolean): void;
   heading(level: number): void;
   codeBlock(lang: string): void;
+  formatCode(): Promise<void>;
   callout(kind: string): void;
   annotation(): void;
   photo(layout: PhotoLayout): void;

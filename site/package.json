@@ -49,7 +49,13 @@
     "@iconify-json/simple-icons": "^1.2.99",
     "@lezer/highlight": "^1.2.5",
     "@types/qrcode": "^1.5.6",
+    "@wasm-fmt/clang-format": "^23.1.1",
+    "@wasm-fmt/gofmt": "^0.7.3",
+    "@wasm-fmt/ruff_fmt": "^0.15.20",
+    "@wasm-fmt/shfmt": "^0.2.7",
+    "diff": "^9.0.0",
     "pagefind": "^1.5.2",
+    "prettier": "^3.10.1",
     "svelte-check": "^4.7.6",
     "typescript": "^6.0.0",
     "yaml": "^2.9.1"

@@ -8,10 +8,10 @@
    * 颜色全部走站点的 CSS 变量，亮暗主题切换时编辑器跟着变，不需要重建。
    *
    * 对外的方法（bind:this 后调用）：load 换文档（清空撤销历史）；wrap / prefix / insert / heading / codeBlock /
-   * callout / annotation / photo / photoWidth / footnote 给工具栏用；jumpTo 给大纲用；undo / redo / focus。
+   * formatCode / callout / annotation / photo / photoWidth / footnote 给工具栏用；jumpTo 给大纲用；undo / redo / focus。
    */
   import { acceptCompletion, autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
-  import { defaultKeymap, history, historyKeymap, indentWithTab, redo as redoCommand, undo as undoCommand } from '@codemirror/commands';
+  import { defaultKeymap, history, historyKeymap, indentWithTab, isolateHistory, redo as redoCommand, undo as undoCommand } from '@codemirror/commands';
   import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
   import { bracketMatching, HighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
   import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
@@ -28,8 +28,9 @@
   import { tags as t } from '@lezer/highlight';
   import { onMount } from 'svelte';
 
-  import { codeBodyAt, fencedCodeCompletion } from './code-completion';
-  import { codeLanguage } from './code-languages';
+  import { api } from './client';
+  import { codeBodyAt, fencedCodeAt, fencedCodeCompletion } from './code-completion';
+  import { codeLanguage, normalizeCodeLanguage } from './code-languages';
   import {
     clampWidth,
     countImages,
@@ -65,6 +66,7 @@
 
   let host = $state<HTMLDivElement>();
   let view: EditorView | null = null;
+  let formatting = false;
 
   const highlight = HighlightStyle.define([
     { tag: t.heading1, fontSize: '1.42em', fontWeight: '700', color: 'var(--fg)' },
@@ -247,7 +249,10 @@
   onMount(() => {
     view = new EditorView({ parent: host!, state: EditorState.create({ doc: initial, extensions: extensions() }) });
     report(view.state);
-    return () => view?.destroy();
+    return () => {
+      view?.destroy();
+      view = null;
+    };
   });
 
   /** 换一篇文章：整个状态重建，撤销历史不会跨文章。 */
@@ -384,6 +389,69 @@
     const lines = selectedLines();
     if (lines.empty) insertBlock(`${fence}${lang}\n`, `\n${fence}`);
     else insertBlock(`${fence}${lang}\n`, `\n${fence}`, view.state.sliceDoc(lines.from, lines.to), lines.from, lines.to);
+  }
+
+  /** 格式化一次事务只替换围栏之间的内容。 */
+  export async function formatCode() {
+    if (!view || formatting) return;
+    const state = view.state;
+    const { from: selectionStart, to: selectionEnd } = state.selection.main;
+    const fence = fencedCodeAt(state, selectionStart);
+    const opening = fence?.firstChild;
+    const closing = fence?.lastChild;
+    if (!fence || !opening || !closing || closing.name !== 'CodeMark' || closing.from === opening.from || selectionEnd > fence.to) {
+      onnotice?.('info', '请把光标放在一个已闭合的代码块中');
+      return;
+    }
+    const info = fence.getChild('CodeInfo');
+    if (!info) {
+      onnotice?.('info', '请先为代码块指定语言');
+      return;
+    }
+    const openLine = state.doc.lineAt(opening.from);
+    const closeLine = state.doc.lineAt(closing.from);
+    const from = openLine.to + 1;
+    const to = closeLine.from;
+    const openingPrefix = state.sliceDoc(openLine.from, opening.from);
+    const prefix = openingPrefix.replace(/(?:[-+*]|\d{1,9}[.)])(?=[ \t])/g, (mark) => ' '.repeat(mark.length));
+    const source = state.sliceDoc(from, to);
+    const language = normalizeCodeLanguage(state.sliceDoc(info.from, info.to));
+    // 引用和列表的续行前缀由 Markdown 解析器区分。
+    let code = fence.getChildren('CodeText').map((node) => state.sliceDoc(node.from, node.to)).join('');
+    if (/^ +$/.test(openingPrefix)) {
+      const indent = new RegExp('^ {1,' + openingPrefix.length + '}', 'gm');
+      code = code.replace(indent, '');
+    }
+    view.focus();
+    if (!code.trim()) return;
+
+    formatting = true;
+    try {
+      const { source: formatted } = await api.formatCode(language, code);
+      if (!view || view.state.doc !== state.doc) return;
+      const body = formatted.replace(/\n$/, '');
+      const marker = state.sliceDoc(opening.from, opening.to);
+      if (body.split('\n').some((line) => {
+        const trimmed = line.trim();
+        return trimmed.startsWith(marker) && [...trimmed].every((ch) => ch === marker[0]);
+      })) {
+        onnotice?.('info', '格式化结果包含与外层冲突的围栏，请先加长外层围栏');
+        return;
+      }
+      const insert = body ? body.split('\n').map((line) => prefix + line).join('\n') + '\n' : '';
+      if (source === insert) return;
+      const cursor = view.state.selection.main;
+      const changes = view.state.changes({ from, to, insert });
+      const selection = view.state.selection.map(changes);
+      const nextSelection = cursor.empty && cursor.head >= from && cursor.head < to
+        ? EditorSelection.cursor(from + Math.min(cursor.head - from, Math.max(0, insert.length - 1)))
+        : selection;
+      view.dispatch({ changes, selection: nextSelection, annotations: isolateHistory.of('full') });
+    } catch (error) {
+      if (view?.state.doc === state.doc) onnotice?.('error', '格式化失败：' + (error as Error).message.split('\n')[0]);
+    } finally {
+      formatting = false;
+    }
   }
 
   /** 插入提示块（> [!NOTE] 之类）；有选区时把选中的行变成提示块的内容。 */

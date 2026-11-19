@@ -197,6 +197,7 @@ export const api = {
     post<{ slug: string; ext: string; mtime: number; body: string; frontmatter: Frontmatter }>('/post', payload),
   remove: (slug: string) => call<{ ok: true }>(`/post?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }),
   preview: (slug: string, body: string) => post<{ html: string; headings: { depth: number; slug: string; text: string }[] }>('/preview', { slug, body }),
+  formatCode: (language: string, source: string) => post<{ source: string }>('/format-code', { language, source }),
   upload: (slug: string, file: File) =>
     call<{ path: string }>(`/upload?slug=${encodeURIComponent(slug)}&name=${encodeURIComponent(file.name || 'image.png')}`, {
       method: 'POST',
