@@ -10,12 +10,12 @@
    * 对外的方法（bind:this 后调用）：load 换文档（清空撤销历史）；wrap / prefix / insert / heading / codeBlock /
    * callout / annotation / photo / photoWidth / footnote 给工具栏用；jumpTo 给大纲用；undo / redo / focus。
    */
+  import { acceptCompletion, autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
   import { defaultKeymap, history, historyKeymap, indentWithTab, redo as redoCommand, undo as undoCommand } from '@codemirror/commands';
   import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
   import { bracketMatching, HighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
-  import { languages } from '@codemirror/language-data';
   import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
-  import { EditorSelection, EditorState, type Extension } from '@codemirror/state';
+  import { EditorSelection, EditorState, Prec, type Extension } from '@codemirror/state';
   import {
     drawSelection,
     dropCursor,
@@ -28,6 +28,8 @@
   import { tags as t } from '@lezer/highlight';
   import { onMount } from 'svelte';
 
+  import { codeBodyAt, fencedCodeCompletion } from './code-completion';
+  import { codeLanguage } from './code-languages';
   import {
     clampWidth,
     countImages,
@@ -88,6 +90,11 @@
     { tag: [t.typeName, t.className, t.namespace], color: 'var(--cm-type)' },
     { tag: [t.propertyName, t.attributeName], color: 'var(--cm-property)' },
     { tag: [t.tagName], color: 'var(--cm-keyword)' },
+    { tag: [t.operator, t.punctuation], color: 'var(--fg-muted)' },
+    { tag: [t.character, t.attributeValue, t.escape], color: 'var(--cm-string)' },
+    { tag: [t.macroName, t.annotation, t.standard(t.variableName)], color: 'var(--cm-function)' },
+    { tag: t.inserted, color: 'var(--success)' },
+    { tag: t.deleted, color: 'var(--danger)' },
   ]);
 
   const theme = EditorView.theme({
@@ -111,6 +118,8 @@
     '.cm-button': { backgroundImage: 'none', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: '8px', color: 'var(--fg)', padding: '3px 10px' },
     '.cm-searchMatch': { backgroundColor: 'color-mix(in oklab, var(--warning) 30%, transparent)' },
     '.cm-searchMatch-selected': { backgroundColor: 'color-mix(in oklab, var(--warning) 55%, transparent)' },
+    '.cm-tooltip-autocomplete': { backgroundColor: 'var(--surface)', color: 'var(--fg)', borderColor: 'var(--line-strong)', borderRadius: '8px' },
+    '.cm-tooltip-autocomplete ul li[aria-selected]': { backgroundColor: 'var(--accent-soft)', color: 'var(--fg)' },
   });
 
   async function insertImages(files: File[], at?: number) {
@@ -151,8 +160,13 @@
       bracketMatching(),
       EditorState.allowMultipleSelections.of(true),
       EditorView.lineWrapping,
-      markdown({ base: markdownLanguage, codeLanguages: languages, addKeymap: true }),
+      markdown({ base: markdownLanguage, codeLanguages: codeLanguage, addKeymap: true, completeHTMLTags: false }),
       syntaxHighlighting(highlight),
+      autocompletion({ override: [fencedCodeCompletion], defaultKeymap: false, interactionDelay: 0 }),
+      closeBrackets(),
+      Prec.high(EditorState.languageData.of((state, pos) => [
+        { closeBrackets: { brackets: codeBodyAt(state, pos) ? ['{'] : [] } },
+      ])),
       search({ top: true }),
       placeholder('从这里开始写。支持 Markdown，粘贴或拖进图片会自动上传。'),
       keymap.of([
@@ -164,6 +178,9 @@
         { key: 'Mod-Alt-2', run: () => (heading(2), true) },
         { key: 'Mod-Alt-3', run: () => (heading(3), true) },
         { key: 'Mod-Alt-4', run: () => (heading(4), true) },
+        ...completionKeymap,
+        ...closeBracketsKeymap,
+        { key: 'Tab', run: acceptCompletion },
         indentWithTab,
         ...searchKeymap,
         ...historyKeymap,

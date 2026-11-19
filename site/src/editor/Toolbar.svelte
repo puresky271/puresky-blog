@@ -30,6 +30,7 @@
   } from '@/lib/icons.generated';
 
   import { PHOTO_LABELS, PHOTO_PRESETS, PHOTO_WIDTH_MAX, PHOTO_WIDTH_MIN, type PhotoLayout } from './photo';
+  import { CODE_PRESETS } from './code-languages';
   import { ed } from './store.svelte';
 
   const HEADINGS: [number, string, string][] = [
@@ -37,20 +38,6 @@
     [2, '二级标题', 'Ctrl Alt 2'],
     [3, '三级标题', 'Ctrl Alt 3'],
     [4, '四级标题', 'Ctrl Alt 4'],
-  ];
-  const LANGS: [string, string][] = [
-    ['ts', 'TypeScript'],
-    ['js', 'JavaScript'],
-    ['python', 'Python'],
-    ['bash', 'Bash'],
-    ['json', 'JSON'],
-    ['yaml', 'YAML'],
-    ['toml', 'TOML'],
-    ['sql', 'SQL'],
-    ['html', 'HTML'],
-    ['css', 'CSS'],
-    ['diff', 'Diff'],
-    ['text', '纯文本'],
   ];
   const CALLOUTS: [string, string, string][] = [
     ['NOTE', '说明', '补充背景'],
@@ -154,7 +141,7 @@
     </button>
     {#if menu === 'code'}
       <div class="ed-menu cols" role="menu">
-        {#each LANGS as [lang, label]}
+        {#each CODE_PRESETS as [lang, label]}
           <button type="button" class="ed-menu-item" role="menuitem" onclick={() => run(() => ed.cm?.codeBlock(lang))}>{label}<span class="aside">{lang}</span></button>
         {/each}
       </div>
