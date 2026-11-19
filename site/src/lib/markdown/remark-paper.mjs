@@ -104,7 +104,11 @@ function splitParagraph(paragraph) {
 
   const flush = () => {
     trimEdges(buffer);
-    if (buffer.length > 0) pieces.push({ type: 'paragraph', children: buffer });
+    if (buffer.length > 0) {
+      const start = buffer.find((node) => node.position)?.position.start;
+      const end = buffer.findLast((node) => node.position)?.position.end;
+      pieces.push({ type: 'paragraph', children: buffer, ...(start && end ? { position: { start, end } } : {}) });
+    }
     buffer = [];
   };
 
@@ -115,16 +119,22 @@ function splitParagraph(paragraph) {
       continue;
     }
     const lines = child.value.split('\n');
+    const origin = child.position?.start;
     for (let i = 0; i < lines.length; i += 1) {
       const atLineStart = i === 0 ? lineStart : true;
       const last = i === lines.length - 1;
       const line = lines[i];
+      const column = i === 0 ? origin?.column ?? 1 : 1;
+      const position = origin ? {
+        start: { line: origin.line + i, column },
+        end: { line: origin.line + i, column: column + line.trimEnd().length },
+      } : undefined;
       if (atLineStart && MARKER_LINE.test(line)) {
         flush();
-        pieces.push({ type: 'paragraph', children: [{ type: 'text', value: line.trim() }] });
+        pieces.push({ type: 'paragraph', children: [{ type: 'text', value: line.trim() }], position });
         continue;
       }
-      buffer.push({ type: 'text', value: last ? line : `${line}\n` });
+      buffer.push({ type: 'text', value: last ? line : `${line}\n`, position });
     }
     lineStart = lines.length > 1 && lines[lines.length - 1] === '';
   }
@@ -144,7 +154,7 @@ function takeTailTableMarker(table) {
   const value = text.value.trim();
   if (!MARKER_LINE.test(value)) return null;
   table.children.pop();
-  return { type: 'paragraph', children: [{ type: 'text', value }] };
+  return { type: 'paragraph', children: [{ type: 'text', value }], position: last.position };
 }
 
 /**

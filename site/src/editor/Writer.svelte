@@ -48,6 +48,7 @@
   let previewHtml = $state('');
   let previewError = $state('');
   let previewBusy = $state(false);
+  let renderedBody: string | null = null;
 
   $effect(() => {
     ed.cm = editor ?? null;
@@ -73,10 +74,16 @@
   $effect(() => {
     void ed.docVersion;
     untrack(() => {
+      cleanupAnimations?.();
+      cleanupAnimations = undefined;
       cleanupStrip?.();
       cleanupStrip = undefined;
       previewHtml = '';
       previewError = '';
+      renderedBody = null;
+      previewAnchors = null;
+      syncAfterPreview = false;
+      setPreviewTop(0);
       if (ed.doc?.isNew) void tick().then(() => titleEl?.focus());
     });
   });
@@ -89,6 +96,9 @@
   /** 预览里 :::photo row 左右切换按钮的清理函数，预览重建前要先调掉。 */
   let cleanupStrip: (() => void) | undefined;
   onDestroy(() => {
+    clearTimeout(previewTimer);
+    previewToken++;
+    if (scrollFrame) cancelAnimationFrame(scrollFrame);
     cleanupAnimations?.();
     cleanupStrip?.();
   });
@@ -98,6 +108,11 @@
     const token = ++previewToken;
     const doc = ed.doc;
     if (!doc || ed.view === 'write') {
+      cleanupAnimations?.();
+      cleanupAnimations = undefined;
+      cleanupStrip?.();
+      cleanupStrip = undefined;
+      syncAfterPreview = false;
       previewBusy = false;
       return;
     }
@@ -111,11 +126,18 @@
         cleanupAnimations = undefined;
         cleanupStrip?.();
         cleanupStrip = undefined;
+        const previousTop = previewEl?.scrollTop ?? 0;
         previewHtml = html;
         previewError = '';
         await tick();
+        if (token !== previewToken) return;
+        renderedBody = body;
+        previewAnchors = null;
         if (previewEl) cleanupStrip = setupPhotoStrip(previewEl);
-        await enhancePreview(token);
+        const enhancement = enhancePreview(token);
+        setPreviewTop(previousTop);
+        if (syncAfterPreview) queuePreviewScroll();
+        await enhancement;
       } catch (error) {
         if (token === previewToken) previewError = (error as Error).message;
       } finally {
@@ -126,12 +148,14 @@
 
   // 换了文章立刻渲染，边写边改时稍等一下再渲染。
   let lastVersion = -1;
+  let lastView: View | undefined;
   $effect(() => {
     void ed.doc?.body;
-    void ed.view;
+    const mode = ed.view;
     const version = ed.docVersion;
-    schedulePreview(version !== lastVersion ? 0 : 320);
+    schedulePreview(version !== lastVersion || lastView !== mode ? 0 : 320);
     lastVersion = version;
+    lastView = mode;
   });
 
   /** 和站点一样增强代码块，并挂载当前预览里的动画。 */
@@ -161,16 +185,97 @@
     else cleanupAnimations = cleanup;
   }
 
-  function syncScroll(ratio: number) {
+  // 预览滚动时在相邻锚点间插值，把对应的源行放到编辑器顶部。
+  type Anchor = { line: number; top: number };
+  let previewAnchors: Anchor[] | null = null;
+  let scrollFrame = 0;
+  let syncAfterPreview = false;
+  let expectedPreviewTop: number | null = null;
+
+  function invalidatePreviewAnchors() {
+    previewAnchors = null;
+  }
+
+  function setPreviewTop(top: number) {
+    if (!previewEl) return;
+    previewEl.scrollTop = top;
+    expectedPreviewTop = previewEl.scrollTop;
+  }
+
+  $effect(() => {
+    const inner = previewEl?.firstElementChild;
+    if (!inner) return;
+    const observer = new ResizeObserver(invalidatePreviewAnchors);
+    observer.observe(inner);
+    if (previewEl) observer.observe(previewEl);
+    return () => {
+      observer.disconnect();
+      previewAnchors = null;
+    };
+  });
+
+  function getPreviewAnchors(pane: HTMLElement): Anchor[] {
+    if (previewAnchors) return previewAnchors;
+    const paneTop = pane.getBoundingClientRect().top + pane.clientTop - pane.scrollTop;
+    const cursorOffset = 24;
+    const anchors: Anchor[] = [{ line: 0, top: 0 }];
+    const addAnchor = (line: number, top: number) => {
+      const previous = anchors[anchors.length - 1];
+      if (line > previous.line && top > previous.top) anchors.push({ line, top });
+    };
+    for (const block of pane.querySelectorAll<HTMLElement>('.pv-body [data-source-line]')) {
+      if (!block.getClientRects().length) continue;
+      const rect = block.getBoundingClientRect();
+      addAnchor(Number(block.dataset.sourceLine), rect.top - paneTop - cursorOffset);
+      if (block.dataset.sourceEndLine) {
+        addAnchor(Number(block.dataset.sourceEndLine) + 0.75, rect.bottom - paneTop - cursorOffset);
+      }
+    }
+    const body = pane.querySelector('.pv-body');
+    if (body && editor) {
+      addAnchor(editor.lineCount() + 1, body.getBoundingClientRect().bottom - paneTop - cursorOffset);
+    }
+    return (previewAnchors = anchors);
+  }
+
+  function previewSourceLine(anchors: Anchor[], top: number) {
+    const index = anchors.findIndex((anchor) => anchor.top >= top);
+    if (index < 0) return anchors[anchors.length - 1].line;
+    if (index === 0) return anchors[0].line;
+    const left = anchors[index - 1];
+    const right = anchors[index];
+    return left.line + (right.line - left.line) * (top - left.top) / (right.top - left.top);
+  }
+
+  function onPreviewScroll() {
     if (ed.view !== 'split' || !previewEl) return;
-    previewEl.scrollTop = ratio * (previewEl.scrollHeight - previewEl.clientHeight);
+    if (expectedPreviewTop !== null && Math.abs(expectedPreviewTop - previewEl.scrollTop) < 1) return;
+    expectedPreviewTop = null;
+    queuePreviewScroll();
+  }
+
+  function queuePreviewScroll() {
+    if (scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = 0;
+      if (!previewEl || !editor || ed.view !== 'split') return;
+      syncAfterPreview = renderedBody !== ed.doc?.body;
+      if (syncAfterPreview) return;
+      editor.scrollToLine(previewSourceLine(getPreviewAnchors(previewEl), previewEl.scrollTop));
+    });
   }
 
   // 大纲点到第 index 个标题时，预览也滚到那里。
   $effect(() => {
     ed.revealHeading = (index) => {
       const heading = previewEl?.querySelectorAll<HTMLElement>('.pv-body :is(h1, h2, h3, h4, h5, h6)')[index];
-      if (heading && previewEl) previewEl.scrollTo({ top: heading.offsetTop - 16, behavior: 'smooth' });
+      if (!heading || !previewEl) return;
+      const top = heading.getBoundingClientRect().top - previewEl.getBoundingClientRect().top + previewEl.scrollTop - 24;
+      if (ed.view === 'split') {
+        setPreviewTop(top);
+      } else {
+        previewEl.scrollTo({ top, behavior: 'smooth' });
+      }
     };
     return () => (ed.revealHeading = null);
   });
@@ -235,7 +340,7 @@
 
       <div class="ed-seg" role="tablist" aria-label="视图">
         {#each VIEWS as [id, label, icon]}
-          <button type="button" role="tab" aria-selected={ed.view === id} onclick={() => (ed.view = id)} title={`${label}（Ctrl+\\ 切换）`}>
+          <button type="button" role="tab" aria-label={label} aria-selected={ed.view === id} onclick={() => (ed.view = id)} title={`${label}（Ctrl+\\ 切换）`}>
             <Icon {icon} size={14} /><span class="seg-label">{label}</span>
           </button>
         {/each}
@@ -284,9 +389,8 @@
           <CodeEditor
             bind:this={editor}
             initial={doc.body}
-            onchange={(value) => ed.doc && (ed.doc.body = value)}
-            oncursor={(pos) => (ed.cursor = pos)}
-            onscrollratio={syncScroll}
+            onchange={(value) => { if (ed.doc) ed.doc.body = value; }}
+            oncursor={(pos) => { ed.cursor = pos; }}
             onimage={uploadImage}
             onphoto={(context) => {
               ed.photo = context;
@@ -297,7 +401,7 @@
       </section>
 
       {#if ed.view !== 'write'}
-        <section class="pane preview" bind:this={previewEl}>
+        <section class="pane preview" bind:this={previewEl} onscroll={onPreviewScroll} onchange={invalidatePreviewAnchors} onloadcapture={invalidatePreviewAnchors}>
           <div class="preview-inner">
             <h1 class="pv-title">{doc.frontmatter.title || '未命名'}</h1>
             {#if doc.frontmatter.description}<p class="pv-lead">{doc.frontmatter.description}</p>{/if}
@@ -475,6 +579,7 @@
   }
   .preview {
     overflow-y: auto;
+    overflow-anchor: none;
     background: color-mix(in oklab, var(--surface) 60%, var(--bg));
   }
   .preview-inner {

@@ -31,6 +31,49 @@ const CATALOG_TTL = 5 * 60 * 1000;
 const CANDIDATE_DAYS = 30;
 const CANDIDATE_LIMIT = 60;
 
+function remarkCodeSourceLines() {
+  return (tree) => visit(tree);
+
+  function visit(node) {
+    if (node.type === 'code' && node.position?.start?.line) {
+      node.meta = `${node.meta ?? ''} source-line:${node.position.start.line}`.trim();
+    }
+    for (const child of node.children ?? []) visit(child);
+  }
+}
+
+function shikiSourceLineTransformer() {
+  return {
+    name: 'puresky-editor-source-lines',
+    pre(node) {
+      const meta = this.options.meta?.__raw ?? '';
+      const marker = /(?:^|\s)source-line:(\d+)$/;
+      const line = marker.exec(meta)?.[1];
+      if (line) {
+        node.properties['data-source-line'] = Number(line);
+        const original = meta.replace(marker, '').trimEnd();
+        if (original) node.properties.metastring = original;
+        else delete node.properties.metastring;
+      }
+    },
+  };
+}
+
+function rehypeSourceLines() {
+  return (tree) => visit(tree);
+
+  function visit(node) {
+    if (node.type === 'element' && /^(?:address|article|aside|blockquote|dd|div|dl|dt|fieldset|figure|figcaption|footer|form|h[1-6]|header|hr|li|main|nav|ol|p|pre|section|table|ul)$/.test(node.tagName)) {
+      const line = node.position?.start?.line;
+      if (Number.isInteger(line)) {
+        node.properties = { ...node.properties, 'data-source-line': line };
+        if (node.properties['data-animation']) node.properties['data-source-end-line'] = node.position.end.line;
+      }
+    }
+    for (const child of node.children ?? []) visit(child);
+  }
+}
+
 /*
  * 下面这一段是 src/lib/leaderboard.ts 和 src/lib/models.ts 的纯 JS 等价实现。
  *
@@ -561,7 +604,12 @@ export function createEditorApi({ root, markdown }) {
   async function preview(slug, body) {
     renderer ??= await createMarkdownProcessor({
       ...markdown,
-      rehypePlugins: [...(markdown.rehypePlugins ?? []), rehypePreviewImages],
+      remarkPlugins: [...(markdown.remarkPlugins ?? []), remarkCodeSourceLines],
+      shikiConfig: {
+        ...markdown.shikiConfig,
+        transformers: [...(markdown.shikiConfig?.transformers ?? []), shikiSourceLineTransformer()],
+      },
+      rehypePlugins: [...(markdown.rehypePlugins ?? []), rehypePreviewImages, rehypeSourceLines],
     });
     const { code, metadata } = await renderer.render(body, { fileURL: new URL(`file:///${inPosts(`${slug || 'preview'}.md`).replace(/\\/g, '/')}`) });
     // 正文里的相对图片路径在预览里换成经 asset 接口读取。

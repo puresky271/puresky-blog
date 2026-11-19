@@ -386,7 +386,7 @@ export function remarkAnimation() {
           : '';
         const inline = text.match(INLINE);
         if (inline) {
-          children.splice(i, 1, buildAnimation(inline[1], inline[2]));
+          children.splice(i, 1, { ...buildAnimation(inline[1], inline[2]), position: current.position });
           continue;
         }
 
@@ -400,7 +400,10 @@ export function remarkAnimation() {
         while (end < children.length && !isMarker(children[end], CLOSE)) end++;
         if (end === children.length) continue;
         const source = configSource(children.slice(i + 1, end));
-        children.splice(i, end - i + 1, buildAnimation(match[1], source));
+        const startPoint = current.position?.start;
+        const endPoint = children[end].position?.end;
+        const position = startPoint && endPoint ? { start: startPoint, end: endPoint } : current.position;
+        children.splice(i, end - i + 1, { ...buildAnimation(match[1], source), position });
       }
     }
   };

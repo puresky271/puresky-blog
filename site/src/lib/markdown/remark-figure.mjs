@@ -262,6 +262,7 @@ export function remarkFigure() {
             continue;
           }
           const result = photoFigure(parseArgs(open[1], warn), children.slice(i + 1, end), warn);
+          if (result) result.position = child.position;
           // 图全被 remark-local-images 摘掉了（干净 clone 的构建）或者容器里本来就没有图：
           // photoFigure 会打一条 warning，这里整个容器不输出。
           children.splice(i, end - i + 1, ...(result ? [result] : []));
@@ -271,7 +272,7 @@ export function remarkFigure() {
 
         const images = imagesOnly(child);
         if (images && images.length === 1) {
-          children[i] = plainFigure(images[0]);
+          children[i] = { ...plainFigure(images[0]), position: child.position };
           continue;
         }
         walk(child);

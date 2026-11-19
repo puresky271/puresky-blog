@@ -46,7 +46,6 @@
     initial = '',
     onchange,
     oncursor,
-    onscrollratio,
     onimage,
     onphoto,
     onnotice,
@@ -55,7 +54,6 @@
     initial?: string;
     onchange: (value: string) => void;
     oncursor?: (pos: { line: number; col: number; lines: number; selected: number }) => void;
-    onscrollratio?: (ratio: number) => void;
     onimage?: (file: File) => Promise<string>;
     /** 光标位置的 :::photo 容器现状，工具栏的图片容器面板据此回填。 */
     onphoto?: (context: PhotoContext) => void;
@@ -200,12 +198,6 @@
           const pos = v.posAtCoords({ x: event.clientX, y: event.clientY }) ?? undefined;
           void insertImages(files, pos);
           return true;
-        },
-        scroll(_event, v) {
-          const el = v.scrollDOM;
-          const max = el.scrollHeight - el.clientHeight;
-          onscrollratio?.(max > 0 ? el.scrollTop / max : 0);
-          return false;
         },
       }),
     ];
@@ -494,6 +486,25 @@
     const target = view.state.doc.line(Math.min(Math.max(1, line), view.state.doc.lines));
     view.dispatch({ selection: { anchor: target.from }, effects: EditorView.scrollIntoView(target.from, { y: 'start', yMargin: 24 }) });
     view.focus();
+  }
+
+  export function scrollToLine(line: number) {
+    if (!view || !view.scrollDOM.clientHeight) return;
+    const scroller = view.scrollDOM;
+    if (line <= 0) {
+      scroller.scrollTop = 0;
+      return;
+    }
+    const number = Math.min(Math.max(1, Math.floor(line)), view.state.doc.lines);
+    const position = view.state.doc.line(number).from;
+    const block = view.lineBlockAt(position);
+    const margin = 24 - (line % 1) * block.height;
+    // 让 CodeMirror 先测量目标行的实际换行高度，再定位到文档位置。
+    view.dispatch({ effects: EditorView.scrollIntoView(position, { y: 'start', yMargin: margin }) });
+  }
+
+  export function lineCount() {
+    return view?.state.doc.lines ?? 0;
   }
 
   export function undo() {
