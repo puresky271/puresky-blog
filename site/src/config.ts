@@ -280,6 +280,10 @@ export const TAGS = [
   { name: '树状数组', slug: 'fenwick-tree', group: 'dsa', blurb: '区间和的轻量维护。' },
   { name: '线段树', slug: 'segment-tree', group: 'dsa', blurb: '区间查询与懒惰标记。' },
   { name: '迭代', slug: 'iteration', group: 'dsa', blurb: '按步推进、循环求解，和递归互为对照。' },
+  { name: '排序算法', slug: 'sorting-algorithms', group: 'dsa', blurb: '把无序序列变成有序序列的做法，以及各自的时间和空间代价。' },
+  { name: '比较排序', slug: 'comparison-sort', group: 'dsa', blurb: '只靠两两比较决定先后，下界是 n log n。' },
+  { name: '非比较排序', slug: 'non-comparison-sort', group: 'dsa', blurb: '计数排序和基数排序这类绕开比较的做法。' },
+  { name: '排序稳定性', slug: 'sorting-stability', group: 'dsa', blurb: '相等元素在排序后是否保持原来的相对顺序。' },
   // 体裁
   { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
   { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
@@ -329,11 +333,13 @@ export const TAGS = [
   { name: 'Tianyu Ding 等四人', slug: 'tianyu-ding', group: 'source', blurb: 'arXiv 综述《Always-On Agents》，作者是 Tianyu Ding，Aditya Nannapaneni，Bingfan Liu 和 Ling Zhang。' },
   { name: 'Vercel设计团队·Geist', slug: 'vercel-geist', group: 'source', blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。' },
   { name: 'Anthropic团队·Thariq Shihipar', slug: 'anthropic-thariq-shihipar', group: 'source', blurb: 'Anthropic 官方博客 claude.dev，作者是 Claude Code 团队的 Thariq Shihipar。' },
+  { name: 'Anthropic团队·Vivek Nair', slug: 'anthropic-vivek-nair', group: 'source', blurb: 'Anthropic 官方博客 claude.dev 的工程文章，作者是 Claude Docs 服务团队的 Vivek Nair。' },
   { name: '华盛顿大学·Jacob O. Wobbrock 与 Julie A. Kientz', slug: 'uw-wobbrock-kientz', group: 'source', blurb: '华盛顿大学人机交互方向的两位作者 Jacob O. Wobbrock 与 Julie A. Kientz，文章发表于 ACM Interactions。' },
   { name: 'Lisa Anthony', slug: 'lisa-anthony', group: 'source', blurb: '人机交互研究者，CHI 的长期作者与程序委员会成员，博客写 CHI 投稿与论文写作。' },
   { name: '微软研究院·Saleema Amershi 等', slug: 'msr-amershi', group: 'source', blurb: '微软研究院的人机交互团队，作者是 Saleema Amershi，Dan Weld，Mihaela Vorvoreanu 等十三人。' },
   { name: 'KAIST·Yewon Kim 等', slug: 'kaist-yewon-kim', group: 'source', blurb: 'KAIST 与卡内基梅隆大学的人机交互与音乐计算团队，作者是 Yewon Kim，Sung-Ju Lee 和 Chris Donahue。' },
   { name: '复旦团队·Jiangjie Chen 等', slug: 'fudan-jiangjie-chen', group: 'source', blurb: '复旦大学的角色扮演语言智能体综述，作者是 Jiangjie Chen，Xintao Wang，Rui Xu 等十八人，发表于 TMLR 2024。' },
+  { name: 'Google DeepMind团队·Chao Zhang 等', slug: 'deepmind-chao-zhang', group: 'source', blurb: 'Google DeepMind 与康奈尔大学的人机交互研究，作者是 Chao Zhang，Abe Davis，Chih-Wei Chen 和 Chin-Chia Hsu。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
@@ -354,6 +360,7 @@ export const SERIES = [
   { name: '平衡树与索引笔记', blurb: 'AVL 树、红黑树、B 树、B+ 树和树状数组。' },
   { name: '图与集合笔记', blurb: '并查集这类维护元素之间连通与归属关系的结构。' },
   { name: '字符串匹配笔记', blurb: 'KMP 这类在主串中查找模式串的算法。' },
+  { name: '排序', blurb: '从比较排序的下界讲到非比较排序，以及标准库里的混合策略。' },
   { name: 'GitHub Actions 笔记', blurb: 'GitHub Actions 的用法与自动化实践。' },
   { name: '数据库基础', blurb: '跟着 CMU 15-445 从关系模型走到存储、索引、查询与事务。' },
   { name: '东大创造情报入试', blurb: '东京大学情報理工学系研究科 創造情報学専攻 入试真题的完整拆解与实现。' },
