@@ -59,3 +59,6 @@ site/public/media/panorama/
 
 # playwright 输出
 output/
+
+# DSH 本地工作树（隔离副本，不提交）
+.agents/worktrees/
