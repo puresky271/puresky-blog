@@ -18,7 +18,7 @@
     ],
     "acRate": 76.6,
     "url": "https://leetcode.cn/problems/reverse-linked-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "swap-nodes-in-pairs",
@@ -39,7 +39,7 @@
     ],
     "acRate": 75.1,
     "url": "https://leetcode.cn/problems/swap-nodes-in-pairs/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "reorder-list",
@@ -68,7 +68,7 @@
     ],
     "acRate": 68,
     "url": "https://leetcode.cn/problems/reorder-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "trapping-rain-water",
@@ -101,7 +101,7 @@
     ],
     "acRate": 66.2,
     "url": "https://leetcode.cn/problems/trapping-rain-water/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "shortest-palindrome",
@@ -142,7 +142,7 @@
     ],
     "acRate": 41.4,
     "url": "https://leetcode.cn/problems/shortest-palindrome/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "range-sum-query-mutable",
@@ -179,7 +179,7 @@
     ],
     "acRate": 54.5,
     "url": "https://leetcode.cn/problems/range-sum-query-mutable/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "remove-nth-node-from-end-of-list",
@@ -200,7 +200,7 @@
     ],
     "acRate": 54,
     "url": "https://leetcode.cn/problems/remove-nth-node-from-end-of-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "linked-list-cycle",
@@ -229,7 +229,7 @@
     ],
     "acRate": 55.3,
     "url": "https://leetcode.cn/problems/linked-list-cycle/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "linked-list-cycle-ii",
@@ -258,7 +258,7 @@
     ],
     "acRate": 63.5,
     "url": "https://leetcode.cn/problems/linked-list-cycle-ii/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "maximum-depth-of-binary-tree",
@@ -287,7 +287,7 @@
     ],
     "acRate": 79.1,
     "url": "https://leetcode.cn/problems/maximum-depth-of-binary-tree/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "kth-smallest-element-in-a-bst",
@@ -316,7 +316,7 @@
     ],
     "acRate": 79.8,
     "url": "https://leetcode.cn/problems/kth-smallest-element-in-a-bst/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "binary-tree-maximum-path-sum",
@@ -349,7 +349,7 @@
     ],
     "acRate": 48.6,
     "url": "https://leetcode.cn/problems/binary-tree-maximum-path-sum/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "count-complete-tree-nodes",
@@ -378,7 +378,7 @@
     ],
     "acRate": 81.5,
     "url": "https://leetcode.cn/problems/count-complete-tree-nodes/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "palindrome-linked-list",
@@ -407,7 +407,7 @@
     ],
     "acRate": 58.8,
     "url": "https://leetcode.cn/problems/palindrome-linked-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "sort-list",
@@ -440,7 +440,7 @@
     ],
     "acRate": 67.7,
     "url": "https://leetcode.cn/problems/sort-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "evaluate-reverse-polish-notation",
@@ -465,7 +465,7 @@
     ],
     "acRate": 57.4,
     "url": "https://leetcode.cn/problems/evaluate-reverse-polish-notation/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "partition-list",
@@ -486,7 +486,7 @@
     ],
     "acRate": 65.9,
     "url": "https://leetcode.cn/problems/partition-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "odd-even-linked-list",
@@ -503,7 +503,7 @@
     ],
     "acRate": 64.4,
     "url": "https://leetcode.cn/problems/odd-even-linked-list/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   },
   {
     "slug": "find-first-and-last-position-of-element-in-sorted-array",
@@ -524,6 +524,48 @@
     ],
     "acRate": 47.2,
     "url": "https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/",
-    "fetchedAt": "2026-11-20T00:41:27.784Z"
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
+  },
+  {
+    "slug": "koko-eating-bananas",
+    "questionId": "907",
+    "frontendId": "875",
+    "title": "Koko Eating Bananas",
+    "titleCn": "爱吃香蕉的珂珂",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Binary Search",
+        "slug": "binary-search"
+      }
+    ],
+    "acRate": 50.6,
+    "url": "https://leetcode.cn/problems/koko-eating-bananas/",
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
+  },
+  {
+    "slug": "capacity-to-ship-packages-within-d-days",
+    "questionId": "1056",
+    "frontendId": "1011",
+    "title": "Capacity To Ship Packages Within D Days",
+    "titleCn": "在 D 天内送达包裹的能力",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Binary Search",
+        "slug": "binary-search"
+      }
+    ],
+    "acRate": 63.7,
+    "url": "https://leetcode.cn/problems/capacity-to-ship-packages-within-d-days/",
+    "fetchedAt": "2026-11-21T00:01:34.817Z"
   }
 ]
