@@ -76,7 +76,7 @@ export const WEATHER = {
 export const API_BASE: string = import.meta.env.PUBLIC_API_BASE ?? 'https://api.pureskyblog.dpdns.org';
 
 export const NAV_LINKS = [
-  { href: '/posts/', label: '文章', match: ['/posts/', '/tags/', '/categories/'] },
+  { href: '/tags/', label: '分类', match: ['/tags/', '/categories/', '/posts/'] },
   { href: '/archive/', label: '归档', match: ['/archive/'] },
   { href: '/projects/', label: '项目', match: ['/projects/'] },
   { href: '/gallery/', label: '画廊', match: ['/gallery/'] },
@@ -368,9 +368,6 @@ export const SERIES = [
   { name: '数据库基础', blurb: '跟着 CMU 15-445 从关系模型走到存储、索引、查询与事务。' },
   { name: '东大创造情报入试', blurb: '东京大学情報理工学系研究科 創造情報学専攻 入试真题的完整拆解与实现。' },
 ] as const;
-
-/** 每页文章数。 */
-export const POSTS_PER_PAGE = 12;
 
 /** 中文平均阅读速度，字/分钟。 */
 export const CJK_CHARS_PER_MINUTE = 380;

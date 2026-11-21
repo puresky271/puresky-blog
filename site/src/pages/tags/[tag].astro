@@ -33,7 +33,7 @@ const related = await getRelatedTags(tag.name);
 
 <Base title={`#${tag.name}`} description={`${tag.blurb}「${tag.name}」标签下的 ${posts.length} 篇文章。`}>
   <PageHeader title={`#${tag.name}`} count={posts.length} description={tag.blurb}>
-    <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签', href: withBase('/tags/') }, { label: group.label }]} />
+    <Breadcrumb items={[{ label: '分类与标签', href: withBase('/tags/') }, { label: group.label }]} />
     {
       related.length > 0 && (
         <div class="related">

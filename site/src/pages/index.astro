@@ -54,7 +54,7 @@ const avatar = github?.user?.avatarUrl
   {
     latest && (
       <section class="container-page mt-14" aria-labelledby="posts-title">
-        <SectionHeader title="最近的文章" id="posts-title" href={withBase('/posts/')} linkLabel="全部文章" />
+        <SectionHeader title="最近的文章" id="posts-title" href={withBase('/archive/')} linkLabel="全部归档" />
         <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <PostCard post={latest} size="lg" />
           {rest.length > 0 && (

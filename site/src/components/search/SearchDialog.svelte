@@ -48,9 +48,8 @@
   let pagefind: Pagefind | null = null;
 
   const shortcuts = [
-    { href: '/posts/', label: '全部文章', icon: iArticle },
+    { href: '/tags/', label: '分类与标签', icon: iTag },
     { href: '/archive/', label: '归档', icon: iCalendarBlank },
-    { href: '/tags/', label: '标签', icon: iTag },
     { href: '/activity/', label: 'GitHub 动态', icon: iGitCommit },
     { href: '/card/', label: '名片', icon: iIdentificationCard },
   ];

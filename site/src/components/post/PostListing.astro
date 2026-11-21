@@ -1,54 +1,22 @@
 ---
 /**
- * PostListing.astro — 文章列表的主体：分类筛选条 + 条目 + 分页。
- * 全部文章、分类页、标签页共用。
+ * PostListing.astro — 文章列表的主体：条目 + 分页（供标签页使用）。
  */
 import Icon from '@/components/ui/Icon.astro';
-import { getCategories, type Post } from '@/lib/content';
-import { categoryPath, withBase } from '@/lib/format';
+import { type Post } from '@/lib/content';
+import { withBase } from '@/lib/format';
 
 import PostListItem from './PostListItem.astro';
 
 interface Props {
   posts: Post[];
-  /** 当前高亮的分类；全部文章页传 'all'，标签页不传。 */
-  active?: string;
   page?: { current: number; total: number; base: string };
 }
 
-const { posts, active, page } = Astro.props;
-const categories = (await getCategories()).filter((c) => c.count > 0);
+const { posts, page } = Astro.props;
 
 const pageHref = (n: number) => (n === 1 ? withBase(page!.base) : withBase(`${page!.base}page/${n}/`));
 ---
-
-{
-  active !== undefined && (
-    <nav class="container-page mb-6" aria-label="按分类筛选">
-      <ul class="flex flex-wrap gap-2">
-        <li>
-          <a href={withBase('/posts/')} class="chip" aria-current={active === 'all' ? 'page' : undefined}>
-            全部
-          </a>
-        </li>
-        {categories.map((c) => (
-          <li>
-            <a href={categoryPath(c.id)} class="chip" aria-current={active === c.id ? 'page' : undefined}>
-              {c.label}
-              <span class="tabular opacity-60">{c.count}</span>
-            </a>
-          </li>
-        ))}
-        <li>
-          <a href={withBase('/tags/')} class="chip">
-            <Icon name="hash" size={13} />
-            标签
-          </a>
-        </li>
-      </ul>
-    </nav>
-  )
-}
 
 <div class="container-page">
   {
