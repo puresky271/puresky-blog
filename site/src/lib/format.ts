@@ -144,6 +144,10 @@ const TAG_SLUGS = new Map<string, string>(TAGS.map((t) => [t.name, t.slug]));
 export const tagPath = (tag: string) => withBase(`tags/${TAG_SLUGS.get(tag) ?? encodeURIComponent(tag)}/`);
 export const categoryPath = (id: string) => withBase(`categories/${id}/`);
 export const subcategoryPath = (category: string, subcategory: string) => withBase(`categories/${category}/${subcategory}/`);
+/** 系列在分类页卷宗抽屉里的稳定锚点 id。保留中文，空白归一为连字符。 */
+export const seriesAnchor = (name: string) => `series-${name.trim().replace(/\s+/g, '-')}`;
+export const categorySeriesPath = (category: string, seriesName: string) =>
+  `${categoryPath(category)}#${encodeURIComponent(seriesAnchor(seriesName))}`;
 
 /** 去掉 base 前缀后的路径，用于导航高亮比较。 */
 export function stripBase(pathname: string): string {

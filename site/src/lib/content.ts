@@ -8,8 +8,8 @@
 import type { ImageMetadata } from 'astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 
-import { CATEGORIES, SUBCATEGORIES, SUBCATEGORIES_BY_CATEGORY, TAG_GROUPS, TAGS, type CategoryId, type SubcategoryId } from '@/config';
-import { formatDateISO, readingMinutes, wordCount } from '@/lib/format';
+import { CATEGORIES, SERIES, SUBCATEGORIES, SUBCATEGORIES_BY_CATEGORY, TAG_GROUPS, TAGS, type CategoryId, type SubcategoryId } from '@/config';
+import { formatDateISO, readingMinutes, seriesAnchor, wordCount } from '@/lib/format';
 
 export type Post = CollectionEntry<'posts'>;
 export type Illustration = CollectionEntry<'illustrations'>;
@@ -156,6 +156,93 @@ export async function getCategoryTags(id: CategoryId, limit = 8): Promise<TagSta
 
 export async function getSubcategoryPosts(id: SubcategoryId): Promise<Post[]> {
   return (await getPosts()).filter((post) => post.data.subcategory === id);
+}
+
+export interface CategorySeries {
+  name: string;
+  anchor: string;
+  blurb: string;
+  posts: Post[];
+  subcategories: SubcategoryId[];
+  latestDate: Date;
+}
+
+const SERIES_BLURBS = new Map<string, string>(SERIES.map((item) => [item.name, item.blurb]));
+
+/**
+ * 从一组文章里聚合出成规模的系列（至少 minCount 篇）。
+ * 系列内按 seriesOrder 升序排列，没标序号时按发布时间升序（从头读到尾）；
+ * 系列之间按篇数降序，同篇数按最近更新降序。
+ */
+export function buildSeriesGroups(posts: Post[], minCount = 2): CategorySeries[] {
+  const buckets = new Map<string, Post[]>();
+  for (const post of posts) {
+    const name = post.data.series?.trim();
+    if (!name) continue;
+    const list = buckets.get(name);
+    if (list) list.push(post);
+    else buckets.set(name, [post]);
+  }
+  const result: CategorySeries[] = [];
+  for (const [name, group] of buckets) {
+    if (group.length < minCount) continue;
+    const ordered = [...group].sort((a, b) => {
+      const ao = a.data.seriesOrder ?? Number.POSITIVE_INFINITY;
+      const bo = b.data.seriesOrder ?? Number.POSITIVE_INFINITY;
+      if (ao !== bo) return ao - bo;
+      return a.data.pubDate.getTime() - b.data.pubDate.getTime();
+    });
+    const latestDate = ordered.reduce(
+      (latest, post) => (post.data.pubDate.getTime() > latest.getTime() ? post.data.pubDate : latest),
+      ordered[0].data.pubDate
+    );
+    const subcategories = [...new Set(ordered.map((post) => post.data.subcategory))];
+    result.push({
+      name,
+      anchor: seriesAnchor(name),
+      blurb: SERIES_BLURBS.get(name) ?? '',
+      posts: ordered,
+      subcategories,
+      latestDate,
+    });
+  }
+  return result.sort(
+    (a, b) => b.posts.length - a.posts.length || b.latestDate.getTime() - a.latestDate.getTime()
+  );
+}
+
+/** 某个一级分类下成规模的系列（默认至少 2 篇）。 */
+export async function getCategorySeries(id: CategoryId, minCount = 2): Promise<CategorySeries[]> {
+  const posts = (await getPosts()).filter((post) => post.data.category === id);
+  return buildSeriesGroups(posts, minCount);
+}
+
+/** 某个二级分类下成规模的系列（默认至少 2 篇）。 */
+export async function getSubcategorySeries(id: SubcategoryId, minCount = 2): Promise<CategorySeries[]> {
+  const posts = await getSubcategoryPosts(id);
+  return buildSeriesGroups(posts, minCount);
+}
+
+/** 总览页用的分类信息：文章数、有文章的子类、成规模的系列与最新两篇标题。 */
+export async function getCategoryOverview() {
+  const posts = await getPosts();
+  return CATEGORIES.map((c) => {
+    const catPosts = posts.filter((p) => p.data.category === c.id);
+    const subcategories = SUBCATEGORIES_BY_CATEGORY[c.id]
+      .map((subcategory) => ({
+        ...subcategory,
+        count: catPosts.filter((p) => p.data.subcategory === subcategory.id).length,
+      }))
+      .filter((subcategory) => subcategory.count > 0);
+    const series = buildSeriesGroups(catPosts, 2);
+    return {
+      ...c,
+      count: catPosts.length,
+      subcategories,
+      series,
+      recent: catPosts.slice(0, 2),
+    };
+  });
 }
 
 /** 时间上相邻的两篇。newer 是更新的那篇。归档的文章不在时间线上，没有相邻。 */
