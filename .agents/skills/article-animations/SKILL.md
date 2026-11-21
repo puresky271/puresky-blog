@@ -100,6 +100,14 @@ method: sacrifice
 :::
 ```
 
+`sorting-trace` 配置 `algo` 为 `selection`、`insertion`、`bubble`、`shell`、`heap`、`merge` 或 `quick`，用同一组默认数据 `[5, 2, 8, 1, 9, 3, 7, 4]` 演示七种比较排序的推进过程，七种算法共用同一组数据，方便读者横向比较。画面里有柱子、数值、下标、指针标签、有序区着色、比较与移动次数计数器，每一步都有一句中文说明。选择排序和插入排序看有序区怎么从左往右长，冒泡排序看相邻交换怎么把最大值一轮一轮沉到末尾以及没有交换时的提前退出，希尔排序按减半的增量分组做插入排序并在侧栏显示当前增量，堆排序用色条标出有效堆区间，归并排序多一行辅助数组输出行，快速排序用挖坑法标出基准值和左右指针：
+
+```md
+:::animation sorting-trace
+algo: selection
+:::
+```
+
 `avl-rotate` 配置 `kind` 为 `right`、`left`、`lr` 或 `rl`，演示 AVL 树在失衡结点上的旋转：右旋处理 LL 型、左旋处理 RR 型（B 上位、A 下沉、夹在中间的 β 换边）；`lr` / `rl` 演示 LR / RL 型折角失衡的双旋，先对 B 转一次把折角扳直，再对 A 转一次让折角点 C 上位：
 
 ```md
@@ -165,6 +173,14 @@ title: "主歌 B · 磨薄的鞋底与抬起头的视线"
 
 ```md
 :::animation cassiopeia-stars
+
+:::
+```
+
+`tempura` 用于《天妇罗：水与油的四百年》的 lieflat 风四卡数据图版，不需要配置。整块图版按 lieflat-charts 的 porcelain 青瓷蓝绘制四张图：下锅油温区间（F12 哑铃图）、衣的含水率与吸油率随时间变化（F2 发丝折线）、八种食材的十二月旬期弧线矩阵（L4 Arc Matrix）和六种炸物的脂质对照（F1 Rung Bars）。卡片滚入视野才播，卡片右下角可重播，亮暗主题各自一套蓝阶，数据在 `site/src/lib/animations/tempura.ts`：
+
+```md
+:::animation tempura
 
 :::
 ```

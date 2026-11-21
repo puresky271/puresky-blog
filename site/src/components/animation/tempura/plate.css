@@ -1,0 +1,456 @@
+/*
+ * plate.css — 《天妇罗：水与油的四百年》lieflat 四卡图版的共享层。
+ *
+ * 设计正本是 lieflat-charts 的 Basics / Lupi gallery：卡片四件套（结论式标题、副标题、
+ * 图、来源行）、无边框无阴影、靠留白分卡、明度即数据、发丝线、quarticOut 入场。
+ *
+ * 和 skill 的独立页面不同，这里嵌在随笔纸面里，所以不套外层容器：没有底色、没有圆角、
+ * 没有内边距，图表直接排在正文版心上。配色锁定 porcelain 青瓷蓝的单色相蓝阶：
+ * 数据色全部是蓝阶明度，标题与主要读数用最深的 --tf-ink，辅助文字复用站点语义令牌。
+ * 暗色主题只反转明度，色相不变，语义也不变：最重要的数据最深（暗色下最亮）。
+ */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter/inter-latin-wght-normal.woff2') format('woff2');
+}
+
+/* ── 色彩系统：porcelain 青瓷蓝，亮暗各一套 ─────────────── */
+
+.tempura-plate {
+  --tf-ink: #081f5c;
+  --tf-data: #334eac;
+  /* spec 锁的 #7096d1 对纸面是 2.99:1，只压深三个色阶到 3.1:1，肉眼看不出差别。 */
+  --tf-data-2: #6d91cd;
+  --tf-data-3: #bad6eb;
+  --tf-faint: #d0e3ff;
+  --tf-hero: #081f5c;
+  --tf-grid: rgba(51, 78, 172, 0.18);
+  /* 空轨与底板：只做环境结构，不承担读数 */
+  --tf-track: rgba(51, 78, 172, 0.14);
+  /* 参照料理的柱子比天妇罗浅一档 */
+  --tf-bar-ref: #6d91cd;
+  --tf-muted: var(--fg-muted);
+  --tf-subtle: var(--fg-subtle);
+  --tf-font: 'Inter', var(--font-sans, sans-serif);
+
+  display: block;
+  /* 外层 .animation-demo 已经给了上下留白，这里不再叠加 */
+  margin-block: 0;
+  color: var(--fg);
+  font-family: var(--tf-font);
+  font-feature-settings: 'tnum' 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-theme='dark'] .tempura-plate {
+  --tf-ink: #edeff1;
+  --tf-data: #9eb3cd;
+  --tf-data-2: #7096d1;
+  --tf-data-3: rgba(237, 239, 241, 0.34);
+  --tf-faint: rgba(237, 239, 241, 0.2);
+  --tf-hero: #d0e3ff;
+  --tf-grid: rgba(158, 179, 205, 0.22);
+  --tf-track: rgba(158, 179, 205, 0.18);
+  --tf-bar-ref: #7096d1;
+  /* 站点 fg-subtle 在暗底上只有 4.43:1，往 fg 方向调一档到 5:1 以上。 */
+  --tf-subtle: color-mix(in oklab, var(--fg-subtle) 82%, var(--fg));
+}
+
+/* ── 图版网格与卡片 ───────────────────────────────────── */
+
+.tempura-plate .tf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.6rem 2rem;
+  align-items: start;
+}
+
+.tempura-plate .tf-card {
+  position: relative;
+  min-width: 0;
+}
+
+.tempura-plate .tf-wide {
+  grid-column: 1 / -1;
+}
+
+/*
+ * 随笔的 .prose h2 带章节线和大字号，这里的卡片标题要退回 lieflat 的卡片标题。
+ * 选择器故意写成三级类 + 元素，压过 .prose.prose-essay h2。
+ */
+.tempura-plate .tf-card h2.tf-title {
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+  font-family: var(--tf-font);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 1.45;
+  color: var(--tf-ink);
+}
+
+.tempura-plate .tf-sub {
+  margin: 0 0 14px;
+  padding: 0;
+  font-family: var(--tf-font);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.65;
+  text-align: start;
+  text-indent: 0;
+  color: var(--tf-muted);
+}
+
+.tempura-plate .tf-plot {
+  position: relative;
+  min-width: 0;
+}
+
+.tempura-plate .tf-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.tempura-plate .tf-src {
+  margin: 0;
+  padding: 0;
+  font-family: var(--tf-font);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  text-align: start;
+  text-indent: 0;
+  /* 来源行是 9px 小字，用 muted 而不是 subtle，暗色下才够 4.5:1。 */
+  color: var(--tf-muted);
+}
+
+.tempura-plate .tf-replay {
+  flex: none;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-family: var(--tf-font);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--tf-muted);
+  cursor: pointer;
+}
+
+.tempura-plate .tf-replay:hover,
+.tempura-plate .tf-replay:focus-visible {
+  color: var(--tf-ink);
+}
+
+.tempura-plate .tf-replay:focus-visible {
+  outline: 1px dashed var(--tf-data);
+  outline-offset: 3px;
+}
+
+/* ── 图区 ─────────────────────────────────────────────── */
+
+.tempura-plate .tf-chart {
+  position: relative;
+  min-width: 0;
+}
+
+.tempura-plate .tf-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.tempura-plate .tf-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* 通栏卡在手机上不压缩，改成横向滚动，保住 5.5px 的最小字号。 */
+.tempura-plate .tf-wide .tf-scroll > svg {
+  min-width: 620px;
+}
+
+/* 全站隐藏了滚动条，窄屏的通栏卡要明说可以滑，否则读者以为图被裁掉了。 */
+.tempura-plate .tf-wide .tf-plot::after {
+  display: none;
+  content: '';
+}
+
+@media (width < 40rem) {
+  .tempura-plate .tf-wide .tf-plot::after {
+    display: block;
+    content: '左右滑动看完整图表';
+    margin-top: 6px;
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--tf-muted);
+  }
+}
+
+/* ── 读数条与控件：颜色不是唯一线索，字也把状态说清楚 ──── */
+
+.tempura-plate .tf-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 20px;
+  min-height: 34px;
+  margin-top: 10px;
+  font-size: 10.5px;
+  color: var(--tf-muted);
+}
+
+.tempura-plate .tf-readout-main {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.tempura-plate .tf-readout-num {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--tf-ink);
+}
+
+.tempura-plate .tf-readout-unit {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--tf-muted);
+}
+
+.tempura-plate .tf-readout-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tempura-plate .tf-readout-key {
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--tf-muted);
+}
+
+.tempura-plate .tf-readout-val {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--tf-ink);
+}
+
+.tempura-plate .tf-readout-note {
+  flex: 1 1 200px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--tf-muted);
+}
+
+.tempura-plate .tf-hint {
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--tf-muted);
+}
+
+/* 卡 3 的读数条：月份读数和八项评分分成两段，评分用 4 × 2 网格排齐。 */
+.tempura-plate .tf-season-readout {
+  align-items: baseline;
+  gap: 2px 20px;
+}
+.tempura-plate .tf-season-summary {
+  flex: 1 1 200px;
+  text-align: end;
+}
+.tempura-plate .tf-season-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  flex: 1 1 100%;
+  gap: 6px 20px;
+  margin-top: 2px;
+}
+
+.tempura-plate .tf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tempura-plate .tf-chip {
+  padding: 3px 9px;
+  border: 1px solid color-mix(in oklab, var(--tf-data) 30%, transparent);
+  border-radius: 999px;
+  background: none;
+  font-family: var(--tf-font);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--tf-muted);
+  cursor: pointer;
+}
+
+.tempura-plate .tf-chip:hover {
+  color: var(--tf-ink);
+  border-color: color-mix(in oklab, var(--tf-data) 55%, transparent);
+}
+
+.tempura-plate .tf-chip[aria-pressed='true'] {
+  background: var(--tf-ink);
+  border-color: var(--tf-ink);
+  color: var(--bg);
+}
+
+.tempura-plate .tf-chip:focus-visible {
+  outline: 2px solid var(--tf-data);
+  outline-offset: 2px;
+}
+
+.tempura-plate .tf-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 图内可聚焦的行：键盘焦点用虚线下划线标出来，不只靠颜色。 */
+.tempura-plate .tf-row {
+  cursor: pointer;
+  outline: none;
+}
+
+.tempura-plate .tf-row:focus-visible .tf-row-label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tempura-plate .tf-col {
+  cursor: pointer;
+}
+
+.tempura-plate .tf-col:hover {
+  fill: var(--tf-data);
+  fill-opacity: 0.05;
+}
+
+.tempura-plate .tf-col:focus-visible {
+  outline: none;
+  fill: var(--tf-data);
+  fill-opacity: 0.07;
+  stroke: var(--tf-data);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+/* ── 入场动画：滚入才播，重播时先移除再挂上 ────────────── */
+
+.tempura-plate .tf-chart .tf-fade {
+  opacity: 0;
+}
+.tempura-plate .tf-chart .tf-pop {
+  opacity: 0;
+}
+
+.tempura-plate .tf-in .tf-fade {
+  animation: tf-fade 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+.tempura-plate .tf-in .tf-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tf-pop 0.46s cubic-bezier(0.2, 0.7, 0.3, 1.15) both;
+  animation-delay: var(--d, 0s);
+}
+.tempura-plate .tf-in .tf-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: tf-draw 1.1s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: var(--d, 0s);
+}
+.tempura-plate .tf-in .tf-grow-x {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: tf-grow-x 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes tf-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tf-pop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes tf-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes tf-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tempura-plate .tf-chart .tf-fade,
+  .tempura-plate .tf-chart .tf-pop {
+    opacity: 1;
+  }
+  .tempura-plate .tf-in .tf-fade,
+  .tempura-plate .tf-in .tf-pop,
+  .tempura-plate .tf-in .tf-draw,
+  .tempura-plate .tf-in .tf-grow-x {
+    animation: none;
+  }
+  .tempura-plate .tf-in .tf-draw {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── 移动端：单列，通栏卡横向滚动，不挤破版心 ──────────── */
+
+@media (width < 40rem) {
+  .tempura-plate .tf-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.2rem;
+  }
+  .tempura-plate .tf-card h2.tf-title {
+    font-size: 15.5px;
+  }
+  .tempura-plate .tf-sub {
+    font-size: 10.5px;
+  }
+  /* 窄屏的卡 3 读数条：覆盖必须写在基础的 4 列规则之后，否则同特异度会被后者压回去。 */
+  .tempura-plate .tf-season-summary {
+    flex-basis: 100%;
+    text-align: start;
+    margin-top: 2px;
+  }
+  .tempura-plate .tf-season-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

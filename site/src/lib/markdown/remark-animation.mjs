@@ -32,9 +32,11 @@ const LABELS = {
   'graph-dfs': '图的深度优先遍历：一条路走到黑',
   'graph-bfs': '图的广度优先遍历：一层一层向外扩散',
   'relation-anatomy': '解剖关系模型的一张表',
+  'sorting-trace': '七种比较排序的推进过程',
   'omakase-curve': '一席 Omakase 的风味递进弧线',
   'panorama-lyrics': '《端程山》双版本歌词对照与音画联动',
   'cassiopeia-stars': '仙后座五颗主星的三维光年纵深与天体物理观测台',
+  tempura: '天妇罗的油温区间、水油交替、食材旬期与脂质对照图版',
   'ws-teaser': '权重空间编程开场三格',
   'ws-traces': '模型读权重与写权重的完整记录',
   'ws-gohand': '从零写出的围棋网络的逐步改进',
@@ -57,6 +59,8 @@ const LABELS = {
   'sye-builds': '一句话提示词在四个投入档位下生成的健身应用',
   'sye-config': 'Claude Code 配置菜单在四个投入档位下的重设计',
   'sye-phone': '按访谈规格生成的健身应用与十一步演示',
+  // 精选收录《对抗蒸馏》里那张两个标签页的交互折线图。
+  'advd-chart': '两个网络安全基准上的推理轨迹蒸馏对比',
 };
 
 /** 精选收录里那篇文章的 trace 数据集：值就是 public/data/weight-space/traces/ 下的文件名。 */
@@ -80,6 +84,7 @@ const EMPTY_CONFIG_OK = new Set([
   'omakase-curve',
   'panorama-lyrics',
   'cassiopeia-stars',
+  'tempura',
   'ws-teaser',
   'ws-gohand',
   'bigym-film',
@@ -98,6 +103,7 @@ const EMPTY_CONFIG_OK = new Set([
   'sye-builds',
   'sye-config',
   'sye-phone',
+  'advd-chart',
 ]);
 
 /** 这六个演示都不需要配置项，写了配置直接报错。 */
@@ -231,6 +237,14 @@ const VALIDATORS = {
   'relation-anatomy': (config) => (Object.keys(config).length === 0
     ? null
     : '关系模型解剖演示不需要配置项。'),
+  'sorting-trace': (config) => {
+    const unknown = Object.keys(config).filter((key) => key !== 'algo');
+    if (unknown.length > 0) return `排序动画不支持配置项：${unknown.join('、')}。`;
+    if (!['selection', 'insertion', 'bubble', 'shell', 'heap', 'merge', 'quick'].includes(config.algo)) {
+      return '排序动画的 algo 只能是 selection、insertion、bubble、shell、heap、merge 或 quick。';
+    }
+    return null;
+  },
   'omakase-curve': (config) => (Object.keys(config).length === 0
     ? null
     : '味觉曲线演示不需要配置项。'),
@@ -242,6 +256,9 @@ const VALIDATORS = {
     }
     return null;
   },
+  tempura: (config) => (Object.keys(config).length === 0
+    ? null
+    : '天妇罗数据图版不需要配置项。'),
   'panorama-lyrics': (config) => {
     const allowed = new Set(['lines', 'stanza', 'title']);
     const unknown = Object.keys(config).filter((key) => !allowed.has(key));
@@ -306,6 +323,9 @@ const VALIDATORS = {
   'sye-builds': syeNoConfig,
   'sye-config': syeNoConfig,
   'sye-phone': syeNoConfig,
+  'advd-chart': (config) => (Object.keys(config).length === 0
+    ? null
+    : '这个图表不需要配置项。'),
 };
 
 const TYPES = new Set(Object.keys(LABELS));
@@ -366,7 +386,7 @@ function buildAnimation(type, source) {
         'data-config': JSON.stringify(config),
       },
     },
-    children: [message(type.startsWith('ws-') || type.startsWith('bigym-') || type.startsWith('geist-') || type.startsWith('sye-')
+    children: [message(type.startsWith('ws-') || type.startsWith('bigym-') || type.startsWith('geist-') || type.startsWith('sye-') || type.startsWith('advd-') || type === 'tempura'
       ? `交互演示：${LABELS[type]}。启用 JavaScript 后可以切换、展开和播放。`
       : `动画演示：${LABELS[type]}。启用 JavaScript 后可以播放，可以暂停，也可以单步查看。`)],
   };

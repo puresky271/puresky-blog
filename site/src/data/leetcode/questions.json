@@ -567,5 +567,234 @@
     "acRate": 63.7,
     "url": "https://leetcode.cn/problems/capacity-to-ship-packages-within-d-days/",
     "fetchedAt": "2026-11-21T00:01:34.817Z"
+  },
+  {
+    "slug": "permutations",
+    "questionId": "46",
+    "frontendId": "46",
+    "title": "Permutations",
+    "titleCn": "全排列",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Backtracking",
+        "slug": "backtracking"
+      }
+    ],
+    "acRate": 80,
+    "url": "https://leetcode.cn/problems/permutations/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "minimum-depth-of-binary-tree",
+    "questionId": "111",
+    "frontendId": "111",
+    "title": "Minimum Depth of Binary Tree",
+    "titleCn": "二叉树的最小深度",
+    "difficulty": "Easy",
+    "topicTags": [
+      {
+        "name": "Tree",
+        "slug": "tree"
+      },
+      {
+        "name": "Depth-First Search",
+        "slug": "depth-first-search"
+      },
+      {
+        "name": "Breadth-First Search",
+        "slug": "breadth-first-search"
+      },
+      {
+        "name": "Binary Tree",
+        "slug": "binary-tree"
+      }
+    ],
+    "acRate": 57.1,
+    "url": "https://leetcode.cn/problems/minimum-depth-of-binary-tree/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "reverse-linked-list-ii",
+    "questionId": "92",
+    "frontendId": "92",
+    "title": "Reverse Linked List II",
+    "titleCn": "反转链表 II",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Linked List",
+        "slug": "linked-list"
+      }
+    ],
+    "acRate": 58.5,
+    "url": "https://leetcode.cn/problems/reverse-linked-list-ii/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "diameter-of-binary-tree",
+    "questionId": "543",
+    "frontendId": "543",
+    "title": "Diameter of Binary Tree",
+    "titleCn": "二叉树的直径",
+    "difficulty": "Easy",
+    "topicTags": [
+      {
+        "name": "Tree",
+        "slug": "tree"
+      },
+      {
+        "name": "Depth-First Search",
+        "slug": "depth-first-search"
+      },
+      {
+        "name": "Binary Tree",
+        "slug": "binary-tree"
+      },
+      {
+        "name": "树形 DP",
+        "slug": "dp-on-trees"
+      }
+    ],
+    "acRate": 64.5,
+    "url": "https://leetcode.cn/problems/diameter-of-binary-tree/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "basic-calculator",
+    "questionId": "224",
+    "frontendId": "224",
+    "title": "Basic Calculator",
+    "titleCn": "基本计算器",
+    "difficulty": "Hard",
+    "topicTags": [
+      {
+        "name": "Stack",
+        "slug": "stack"
+      },
+      {
+        "name": "Recursion",
+        "slug": "recursion"
+      },
+      {
+        "name": "Math",
+        "slug": "math"
+      },
+      {
+        "name": "String",
+        "slug": "string"
+      }
+    ],
+    "acRate": 43.9,
+    "url": "https://leetcode.cn/problems/basic-calculator/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "basic-calculator-ii",
+    "questionId": "227",
+    "frontendId": "227",
+    "title": "Basic Calculator II",
+    "titleCn": "基本计算器 II",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Stack",
+        "slug": "stack"
+      },
+      {
+        "name": "Math",
+        "slug": "math"
+      },
+      {
+        "name": "String",
+        "slug": "string"
+      }
+    ],
+    "acRate": 46.5,
+    "url": "https://leetcode.cn/problems/basic-calculator-ii/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "next-greater-element-i",
+    "questionId": "496",
+    "frontendId": "496",
+    "title": "Next Greater Element I",
+    "titleCn": "下一个更大元素 I",
+    "difficulty": "Easy",
+    "topicTags": [
+      {
+        "name": "Stack",
+        "slug": "stack"
+      },
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Hash Table",
+        "slug": "hash-table"
+      },
+      {
+        "name": "Monotonic Stack",
+        "slug": "monotonic-stack"
+      }
+    ],
+    "acRate": 72.6,
+    "url": "https://leetcode.cn/problems/next-greater-element-i/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "daily-temperatures",
+    "questionId": "739",
+    "frontendId": "739",
+    "title": "Daily Temperatures",
+    "titleCn": "每日温度",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Stack",
+        "slug": "stack"
+      },
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Monotonic Stack",
+        "slug": "monotonic-stack"
+      }
+    ],
+    "acRate": 69.7,
+    "url": "https://leetcode.cn/problems/daily-temperatures/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
+  },
+  {
+    "slug": "next-greater-element-ii",
+    "questionId": "503",
+    "frontendId": "503",
+    "title": "Next Greater Element II",
+    "titleCn": "下一个更大元素 II",
+    "difficulty": "Medium",
+    "topicTags": [
+      {
+        "name": "Stack",
+        "slug": "stack"
+      },
+      {
+        "name": "Array",
+        "slug": "array"
+      },
+      {
+        "name": "Monotonic Stack",
+        "slug": "monotonic-stack"
+      }
+    ],
+    "acRate": 69.3,
+    "url": "https://leetcode.cn/problems/next-greater-element-ii/",
+    "fetchedAt": "2026-11-20T07:27:36.611Z"
   }
 ]
