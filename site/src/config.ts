@@ -284,6 +284,7 @@ export const TAGS = [
   { name: '比较排序', slug: 'comparison-sort', group: 'dsa', blurb: '只靠两两比较决定先后，下界是 n log n。' },
   { name: '非比较排序', slug: 'non-comparison-sort', group: 'dsa', blurb: '计数排序和基数排序这类绕开比较的做法。' },
   { name: '排序稳定性', slug: 'sorting-stability', group: 'dsa', blurb: '相等元素在排序后是否保持原来的相对顺序。' },
+  { name: '插值查找', slug: 'interpolation-search', group: 'dsa', blurb: '按值离两端的远近估一个下标，数据均匀时平均只需 log log n 次比较。' },
   // 体裁
   { name: '排障复盘', slug: 'postmortem', group: 'kind', blurb: '一个具体问题从发现、定位到修好的完整过程。' },
   { name: '实验', slug: 'experiment', group: 'kind', blurb: '带对照和数字的实验记录。' },
@@ -340,6 +341,7 @@ export const TAGS = [
   { name: 'KAIST·Yewon Kim 等', slug: 'kaist-yewon-kim', group: 'source', blurb: 'KAIST 与卡内基梅隆大学的人机交互与音乐计算团队，作者是 Yewon Kim，Sung-Ju Lee 和 Chris Donahue。' },
   { name: '复旦团队·Jiangjie Chen 等', slug: 'fudan-jiangjie-chen', group: 'source', blurb: '复旦大学的角色扮演语言智能体综述，作者是 Jiangjie Chen，Xintao Wang，Rui Xu 等十八人，发表于 TMLR 2024。' },
   { name: 'Google DeepMind团队·Chao Zhang 等', slug: 'deepmind-chao-zhang', group: 'source', blurb: 'Google DeepMind 与康奈尔大学的人机交互研究，作者是 Chao Zhang，Abe Davis，Chih-Wei Chen 和 Chin-Chia Hsu。' },
+  { name: 'OpenAI团队', slug: 'openai-team', group: 'source', blurb: 'OpenAI 官方博客 openai.com/index 的安全与研究报告，按 OpenAI 统一署名，没有个人作者。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
@@ -360,6 +362,7 @@ export const SERIES = [
   { name: '平衡树与索引笔记', blurb: 'AVL 树、红黑树、B 树、B+ 树和树状数组。' },
   { name: '图与集合笔记', blurb: '并查集这类维护元素之间连通与归属关系的结构。' },
   { name: '字符串匹配笔记', blurb: 'KMP 这类在主串中查找模式串的算法。' },
+  { name: '哈希表笔记', blurb: '哈希函数的由来、冲突处理与哈希表的实现原理。' },
   { name: '排序', blurb: '从比较排序的下界讲到非比较排序，以及标准库里的混合策略。' },
   { name: 'GitHub Actions 笔记', blurb: 'GitHub Actions 的用法与自动化实践。' },
   { name: '数据库基础', blurb: '跟着 CMU 15-445 从关系模型走到存储、索引、查询与事务。' },
