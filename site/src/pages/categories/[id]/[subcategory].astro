@@ -1,11 +1,18 @@
 ---
-import PostListing from '@/components/post/PostListing.astro';
-import Breadcrumb from '@/components/ui/Breadcrumb.astro';
-import PageHeader from '@/components/ui/PageHeader.astro';
+/**
+ * 二级分类页（与正文页 posts/[slug].astro 同构的双栏布局）。
+ * 桌面端上方版头落在右侧 48rem 主栏（像素变形切换 + 均匀三列事实栏 + └ 系列书架），
+ * 全宽细分隔线下方左侧为带当前方向篇目滚动高亮与点阵进度条的同级方向树，右侧为主栏篇目流。
+ */
+import CategoryHero from '@/components/category/CategoryHero.astro';
+import CategoryTree from '@/components/category/CategoryTree.astro';
+import PostIndexRow from '@/components/category/PostIndexRow.astro';
+import SeriesShelf from '@/components/category/SeriesShelf.astro';
+import Icon from '@/components/ui/Icon.astro';
 import { CATEGORIES, SUBCATEGORIES } from '@/config';
 import Base from '@/layouts/Base.astro';
-import { getSubcategoryPosts, type Post } from '@/lib/content';
-import { categoryPath, withBase } from '@/lib/format';
+import { getSubcategories, getSubcategoryPosts, getSubcategorySeries, type Post } from '@/lib/content';
+import { categoryPath, subcategoryPath } from '@/lib/format';
 
 export async function getStaticPaths() {
   const paths = [];
@@ -27,18 +34,241 @@ interface Props {
 }
 
 const { category, subcategory, posts } = Astro.props;
+const [allSiblings, series] = await Promise.all([
+  getSubcategories(category.id),
+  getSubcategorySeries(subcategory.id),
+]);
+const siblings = allSiblings.filter((item) => item.count > 0 || item.id === subcategory.id);
+const shelfSeries = new Set(series.map((s) => s.name));
+const hasAside = siblings.length > 1 || posts.length > 1;
 ---
 
 <Base title={`${category.label} / ${subcategory.label}`} description={subcategory.blurb}>
-  <PageHeader title={subcategory.label} count={posts.length} description={subcategory.blurb}>
-    <Breadcrumb
-      items={[
-        { label: '文章', href: withBase('/posts/') },
-        { label: '分类与标签', href: withBase('/tags/') },
-        { label: category.label, href: categoryPath(category.id) },
-        { label: subcategory.label },
-      ]}
-    />
-  </PageHeader>
-  <PostListing posts={posts} active={category.id} />
+  <div class:list={['container-page', 'cat-shell', { 'is-centered': !hasAside }]} data-category={category.id}>
+    <CategoryHero
+      category={category}
+      subcategory={subcategory}
+      postCount={posts.length}
+      seriesCount={series.length}
+      latestDate={posts[0]?.data.pubDate}
+      centered={!hasAside}
+    >
+      <SeriesShelf categoryId={category.id} series={series} showSubcategory={false} />
+    </CategoryHero>
+
+    <div class="cat-body">
+      {
+        hasAside && (
+          <aside class="cat-aside" aria-label="同级方向导航">
+            <CategoryTree
+              categoryId={category.id}
+              categoryLabel={category.label}
+              mode="navigate"
+              totalCount={posts.length}
+              siblings={siblings}
+              activeSubcategoryId={subcategory.id}
+              activePosts={posts}
+            />
+          </aside>
+        )
+      }
+
+      <div class="cat-main">
+        {
+          siblings.length > 1 && (
+            <nav class="cat-inline-nav" aria-label="同级方向切换">
+              <span class="aside-title">同级方向</span>
+              <ul class="inline-links">
+                <li>
+                  <a href={categoryPath(category.id)} class="inline-link">
+                    <span>全部{category.label}</span>
+                  </a>
+                </li>
+                {siblings.map((item) => (
+                  <li>
+                    <a
+                      href={subcategoryPath(category.id, item.id)}
+                      class="inline-link"
+                      aria-current={item.id === subcategory.id ? 'page' : undefined}
+                    >
+                      <span>{item.label}</span>
+                      <span class="inline-num tabular">{item.count}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )
+        }
+
+        <section aria-label={`${subcategory.label}文章列表`}>
+          {
+            posts.length > 0 ? (
+              <ol class="sub-flow">
+                {posts.map((post, i) => (
+                  <PostIndexRow post={post} index={i} shelfSeries={shelfSeries} />
+                ))}
+              </ol>
+            ) : (
+              <div class="sub-empty">
+                <Icon name="article" size={28} class="text-fg-subtle" />
+                <p>这个方向还没有文章。</p>
+              </div>
+            )
+          }
+        </section>
+      </div>
+    </div>
+  </div>
 </Base>
+
+<style>
+  .cat-shell {
+    --cat-tint: var(--accent);
+    max-width: 1320px;
+  }
+  .cat-shell[data-category='technology'] {
+    --cat-tint: var(--cat-technology);
+  }
+  .cat-shell[data-category='algorithms'] {
+    --cat-tint: var(--cat-algorithms);
+  }
+  .cat-shell[data-category='papers'] {
+    --cat-tint: var(--cat-papers);
+  }
+  .cat-shell[data-category='curation'] {
+    --cat-tint: var(--cat-curation);
+  }
+  .cat-shell[data-category='essays'] {
+    --cat-tint: var(--cat-essays);
+  }
+  .cat-shell[data-category='literature'] {
+    --cat-tint: var(--cat-literature);
+  }
+
+  .cat-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 2.25rem;
+  }
+  .cat-main {
+    min-width: 0;
+  }
+  .cat-aside {
+    display: none;
+  }
+
+  @media (width >= 64rem) {
+    .cat-body {
+      grid-template-columns: 17rem minmax(0, 48rem);
+      justify-content: start;
+      column-gap: 2.75rem;
+      padding-top: 2.5rem;
+    }
+    .cat-aside {
+      display: block;
+    }
+    .cat-shell.is-centered .cat-body {
+      grid-template-columns: minmax(0, 48rem);
+      justify-content: center;
+    }
+    .cat-inline-nav {
+      display: none;
+    }
+  }
+  @media (width >= 80rem) {
+    .cat-body {
+      grid-template-columns: 19rem minmax(0, 48rem);
+      column-gap: 3.5rem;
+    }
+  }
+
+  .aside-title {
+    display: block;
+    margin: 0 0 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--fg-subtle);
+  }
+
+  .cat-inline-nav {
+    margin-bottom: 2rem;
+  }
+  .inline-links {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 1.1rem;
+    margin: 0;
+    padding: 0 0 0 1.15em;
+    list-style: none;
+  }
+  .inline-links::before {
+    content: '└';
+    position: absolute;
+    left: 0;
+    top: 0.05em;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--fg-subtle);
+  }
+  .inline-link {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    padding: 0.12rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .inline-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1.5px;
+    background: var(--cat-tint);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms var(--ease-out-expo);
+  }
+  .inline-link[aria-current='page'] {
+    color: var(--cat-tint);
+    font-weight: 650;
+  }
+  .inline-link[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+  .inline-num {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-subtle);
+  }
+  .inline-link[aria-current='page'] .inline-num {
+    color: var(--cat-tint);
+  }
+
+  .sub-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sub-empty {
+    display: grid;
+    place-items: center;
+    gap: 0.75rem;
+    padding: 4.5rem 0;
+    text-align: center;
+    color: var(--fg-muted);
+  }
+</style>

@@ -1,0 +1,202 @@
+---
+/**
+ * CategoryExplorer.astro — 双栏主栏里的按二级分类分组篇目流。
+ *
+ * 不再自己套 container-page，由外层页面的 .cat-body > .cat-main 统一控宽在 48rem；
+ * 筛选状态、?sub= 同步与滚动追踪全部统一由 CategoryTree.astro 接管。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import type { CategoryId, SUBCATEGORIES } from '@/config';
+import type { Post } from '@/lib/content';
+import { subcategoryPath } from '@/lib/format';
+
+import PostIndexRow from './PostIndexRow.astro';
+
+export interface SubcategoryBucket {
+  subcategory: (typeof SUBCATEGORIES)[number];
+  posts: Post[];
+}
+
+interface Props {
+  categoryId: CategoryId;
+  buckets: SubcategoryBucket[];
+  /** 当前页面上方书架里存在的系列名，用于行内系列挂链联动展开。 */
+  shelfSeries?: ReadonlySet<string>;
+}
+
+const { categoryId, buckets, shelfSeries } = Astro.props;
+const nonEmpty = buckets.filter((b) => b.posts.length > 0);
+const showMultiGroup = nonEmpty.length > 1;
+---
+
+<div
+  class="cat-explorer"
+  data-cat-explorer
+  data-category={categoryId}
+  aria-label="按二级分类浏览文章"
+>
+  {
+    nonEmpty.length > 0 ? (
+      <div class="sub-groups">
+        {nonEmpty.map(({ subcategory, posts }) => (
+          <section
+            class="sub-group"
+            data-sub-group={subcategory.id}
+            aria-labelledby={`sub-${subcategory.id}`}
+          >
+            <header class="sub-group-head">
+              <div class="sub-group-text">
+                <div class="sub-group-name-row">
+                  <span class="sub-group-dot" aria-hidden="true"></span>
+                  <h2 id={`sub-${subcategory.id}`} class="sub-group-name">
+                    {subcategory.label}
+                  </h2>
+                  <span class="sub-group-count tabular">{posts.length} 篇</span>
+                </div>
+                <p class="sub-group-blurb">{subcategory.blurb}</p>
+              </div>
+
+              {showMultiGroup && (
+                <a
+                  href={subcategoryPath(categoryId, subcategory.id)}
+                  class="sub-group-link"
+                  title={`打开「${subcategory.label}」独立页`}
+                >
+                  <span>独立页</span>
+                  <Icon name="arrow-up-right" size={14} />
+                </a>
+              )}
+            </header>
+
+            <ol class="idx-flow">
+              {posts.map((post, i) => (
+                <PostIndexRow post={post} index={i} shelfSeries={shelfSeries} />
+              ))}
+            </ol>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <div class="cat-empty">
+        <Icon name="article" size={28} class="text-fg-subtle" />
+        <p>这里还没有文章。</p>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .cat-explorer {
+    --cat-tint: var(--accent);
+  }
+  .cat-explorer[data-category='technology'] {
+    --cat-tint: var(--cat-technology);
+  }
+  .cat-explorer[data-category='algorithms'] {
+    --cat-tint: var(--cat-algorithms);
+  }
+  .cat-explorer[data-category='papers'] {
+    --cat-tint: var(--cat-papers);
+  }
+  .cat-explorer[data-category='curation'] {
+    --cat-tint: var(--cat-curation);
+  }
+  .cat-explorer[data-category='essays'] {
+    --cat-tint: var(--cat-essays);
+  }
+  .cat-explorer[data-category='literature'] {
+    --cat-tint: var(--cat-literature);
+  }
+
+  .sub-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 2.85rem;
+  }
+
+  .sub-group-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .sub-group-text {
+    min-width: 0;
+  }
+
+  .sub-group-name-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .sub-group-dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    background: var(--cat-tint);
+  }
+
+  .sub-group-name {
+    margin: 0;
+    font-size: 1.22rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+  }
+
+  .sub-group-count {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--fg-subtle);
+  }
+
+  .sub-group-blurb {
+    margin: 0.28rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--fg-muted);
+  }
+
+  .sub-group-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.825rem;
+    color: var(--fg-subtle);
+    white-space: nowrap;
+    transition: color 160ms ease;
+  }
+  .sub-group-link:hover {
+    color: var(--cat-tint);
+  }
+
+  .idx-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cat-empty {
+    display: grid;
+    place-items: center;
+    gap: 0.75rem;
+    padding: 4.5rem 0;
+    text-align: center;
+    color: var(--fg-muted);
+  }
+
+  @media (width < 40rem) {
+    .sub-groups {
+      gap: 2.25rem;
+    }
+  }
+</style>

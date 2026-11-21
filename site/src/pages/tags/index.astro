@@ -2,82 +2,141 @@
 /**
  * 分类与标签总览。
  *
- * 上半部分是文章分类（一篇文章只属于一个）：说明、篇数、这个分类里最常用的几个标签。
- * 下半部分是完整的标签词表，按「主题 / 技术 / 体裁」分组；还没写过的标签也列出来但淡显，
- * 读者能一眼看出这个博客关心哪些东西、哪些还没来得及写。
+ * 上半部分恢复原先左 3 右 3 的对称双列排版，回归与全站一致的清爽 .card 卡片：
+ * 直角像素方章 + 标题与篇数 + 简介，下方直接用简洁文字露出非空二级方向与系列直达链；
+ * 下半部分是完整的标签词表，按分组用圆角卡片面板 + 全圆角热力胶囊展示。
  */
-import Icon from '@/components/ui/Icon.astro';
 import Breadcrumb from '@/components/ui/Breadcrumb.astro';
+import CategoryIcon from '@/components/ui/CategoryIcon.astro';
+import Icon from '@/components/ui/Icon.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import Base from '@/layouts/Base.astro';
-import { getCategories, getCategoryTags, getTagGroups } from '@/lib/content';
-import { categoryPath, tagPath, withBase } from '@/lib/format';
+import { getCategoryOverview, getTagGroups } from '@/lib/content';
+import { categoryPath, categorySeriesPath, subcategoryPath, tagPath, withBase } from '@/lib/format';
 
-const [categories, groups] = await Promise.all([getCategories(), getTagGroups()]);
-const withTags = await Promise.all(categories.map(async (c) => ({ ...c, tags: await getCategoryTags(c.id, 4) })));
-const used = groups.reduce((sum, g) => sum + g.tags.filter((t) => t.count > 0).length, 0);
-const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
+const [categories, groups] = await Promise.all([getCategoryOverview(), getTagGroups()]);
+const usedTags = groups.reduce((sum, g) => sum + g.tags.filter((t) => t.count > 0).length, 0);
+const maxTagCount = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
 ---
 
-<Base title="分类与标签" description="文章分类和完整的标签词表。">
-  <PageHeader title="分类与标签" count={used} description="分类回答「属于哪个方向」，一篇只有一个；标签回答「涉及哪些具体的东西」，一篇三到五个。">
-    <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签' }]} />
+<Base title="分类与标签" description="文章分类、二级方向、系列合集与完整的标签词表。">
+  <PageHeader
+    title="分类与标签"
+    count={usedTags}
+    description="分类回答「属于哪个方向」，一篇只有一个；二级方向与系列把零散文章收拢成体系；标签回答「涉及哪些具体的东西」。"
+  >
+    <Breadcrumb items={[{ label: '首页', href: withBase('/') }, { label: '分类与标签' }]} />
   </PageHeader>
 
   <div class="container-page">
     <section aria-labelledby="cat-title">
-      <h2 id="cat-title" class="section-title">分类</h2>
+      <h2 id="cat-title" class="section-title mb-5">分类</h2>
+
       <ul class="cats">
         {
-          withTags.map((c, i) => (
-            <li data-reveal style={`--reveal-i: ${i}`}>
-              <a href={categoryPath(c.id)} class="card card-link cat-card" aria-disabled={c.count === 0 ? 'true' : undefined}>
-                <span class="cat-head">
-                  <span class="cat-name">{c.label}</span>
-                  <span class="cat-count tabular">{c.count} 篇</span>
-                </span>
-                <span class="cat-blurb">{c.blurb}</span>
-                {c.tags.length > 0 && (
-                  <span class="cat-tags">
-                    {c.tags.map((t) => (
-                      <span>#{t.name}</span>
-                    ))}
-                  </span>
-                )}
-              </a>
-            </li>
-          ))
+          categories.map((c, i) => {
+            const shownSeries = c.series.slice(0, 4);
+            const extraSeries = Math.max(0, c.series.length - shownSeries.length);
+            return (
+              <li data-reveal style={`--reveal-i: ${i}`} data-category={c.id}>
+                <article class="card cat-card" data-empty={c.count === 0 ? 'true' : undefined}>
+                  <a href={categoryPath(c.id)} class="cat-head">
+                    <CategoryIcon category={c.id} size="sm" />
+                    <div class="cat-head-copy">
+                      <span class="cat-title-row">
+                        <span class="cat-name">{c.label}</span>
+                        <span class="cat-count tabular">{c.count} 篇</span>
+                      </span>
+                      <span class="cat-blurb">{c.blurb}</span>
+                    </div>
+                    <span class="cat-go" aria-hidden="true">
+                      <Icon name="arrow-right" size={15} />
+                    </span>
+                  </a>
+
+                  {c.subcategories.length > 0 && (
+                    <div class="cat-mount">
+                      <span class="cat-mount-label">方向</span>
+                      <ul class="cat-mount-list">
+                        {c.subcategories.map((sub) => (
+                          <li>
+                            <a href={subcategoryPath(c.id, sub.id)} class="cat-sub-link" title={sub.blurb}>
+                              <span>{sub.label}</span>
+                              <span class="cat-sub-num tabular">{sub.count}</span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {shownSeries.length > 0 && (
+                    <div class="cat-mount cat-mount-series">
+                      <span class="cat-mount-label">系列</span>
+                      <ul class="cat-mount-list">
+                        {shownSeries.map((s) => (
+                          <li>
+                            <a
+                              href={categorySeriesPath(c.id, s.name)}
+                              class="cat-series-link"
+                              title={s.blurb || `${s.name}（${s.posts.length} 篇）`}
+                            >
+                              <span>{s.name}</span>
+                              <span class="cat-sub-num tabular">{s.posts.length}</span>
+                            </a>
+                          </li>
+                        ))}
+                        {extraSeries > 0 && (
+                          <li>
+                            <a href={categoryPath(c.id)} class="cat-series-more tabular">
+                              +{extraSeries} 套
+                            </a>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </article>
+              </li>
+            );
+          })
         }
       </ul>
     </section>
 
     <section class="mt-16" aria-labelledby="tag-title">
-      <h2 id="tag-title" class="section-title">标签</h2>
-      <div class="groups">
+      <h2 id="tag-title" class="section-title mb-5">标签</h2>
+
+      <div class="tag-groups">
         {
           groups.map((g) => (
-            <section class="group" aria-label={g.label}>
-              <header class="group-head">
+            <section class="tag-group" aria-label={g.label}>
+              <header class="tag-group-head">
                 <h3>{g.label}</h3>
                 <p>{g.blurb}</p>
               </header>
-              <ul class="tags">
+              <ul class="tag-list">
                 {g.tags.map((t) =>
                   t.count > 0 ? (
                     <li>
-                      <a href={tagPath(t.name)} class="tag" title={t.blurb} style={`--weight: ${(t.count / max).toFixed(3)}`}>
-                        <span class="label">
-                          <span class="hash">#</span>
+                      <a
+                        href={tagPath(t.name)}
+                        class="tag-pill"
+                        title={t.blurb}
+                        style={`--weight: ${(t.count / maxTagCount).toFixed(3)}`}
+                      >
+                        <span class="tag-label">
+                          <span class="tag-hash">#</span>
                           {t.name}
-                          <span class="count tabular">{t.count}</span>
+                          <span class="tag-count tabular">{t.count}</span>
                         </span>
                       </a>
                     </li>
                   ) : (
                     <li>
-                      <span class="tag is-empty" title={`${t.blurb}（还没有文章）`}>
-                        <span class="label">
-                          <span class="hash">#</span>
+                      <span class="tag-pill is-empty" title={`${t.blurb}（还没有文章）`}>
+                        <span class="tag-label">
+                          <span class="tag-hash">#</span>
                           {t.name}
                         </span>
                       </span>
@@ -89,120 +148,241 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
           ))
         }
       </div>
-      <p class="hint">
+
+      <p class="tag-hint">
         <Icon name="info" size={14} />
-        淡色的标签还没有文章。标签只能从固定的词表里选，所以不会出现两个意思相同的标签。
+        虚线淡色的标签还没有文章。标签只能从受控词表里选，不会长出意思重复的别名。
       </p>
     </section>
   </div>
 </Base>
 
 <style>
-  .section-title {
-    margin-bottom: 1.1rem;
-  }
+  /* ── 分类：左 3 右 3 对称双列排版 ───────────────────────────────────── */
   .cats {
     display: grid;
-    gap: 0.9rem;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  @media (width >= 40rem) {
+  @media (width >= 48rem) {
     .cats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
+
+  [data-category] {
+    --cat-tint: var(--accent);
+  }
+  [data-category='technology'] {
+    --cat-tint: var(--cat-technology);
+  }
+  [data-category='algorithms'] {
+    --cat-tint: var(--cat-algorithms);
+  }
+  [data-category='papers'] {
+    --cat-tint: var(--cat-papers);
+  }
+  [data-category='curation'] {
+    --cat-tint: var(--cat-curation);
+  }
+  [data-category='essays'] {
+    --cat-tint: var(--cat-essays);
+  }
+  [data-category='literature'] {
+    --cat-tint: var(--cat-literature);
+  }
+
   .cat-card {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.9rem;
     height: 100%;
-    padding: 1.15rem 1.25rem 1.2rem;
+    padding: 1.25rem 1.35rem;
+    transition:
+      border-color 200ms var(--ease-out-expo),
+      box-shadow 260ms var(--ease-out-expo);
   }
-  .cat-card[aria-disabled='true'] {
+  .cat-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
+  .cat-card[data-empty='true'] {
     opacity: 0.55;
   }
+
   .cat-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.9rem;
+  }
+  .cat-head-copy {
     display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .cat-title-row {
+    display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    justify-content: space-between;
+    gap: 0.55rem;
   }
   .cat-name {
     font-size: 1.125rem;
-    font-weight: 650;
+    font-weight: 680;
     color: var(--fg);
     transition: color 160ms ease;
   }
-  .cat-card:hover .cat-name {
-    color: var(--accent);
+  .cat-head:hover .cat-name {
+    color: var(--cat-tint);
   }
   .cat-count {
-    font-size: 0.8125rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
     color: var(--fg-subtle);
   }
   .cat-blurb {
     font-size: 0.875rem;
-    line-height: 1.65;
+    line-height: 1.62;
     color: var(--fg-muted);
   }
-  .cat-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.7rem;
-    margin-top: auto;
-    padding-top: 0.4rem;
-    font-size: 0.78rem;
-    color: var(--accent);
+  .cat-go {
+    padding-top: 0.25rem;
+    color: var(--fg-subtle);
+    transition:
+      color 160ms ease,
+      transform 200ms var(--ease-out-expo);
+  }
+  .cat-head:hover .cat-go {
+    color: var(--cat-tint);
+    transform: translateX(3px);
   }
 
-  .groups {
+  .cat-mount {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.4rem 0.65rem;
+  }
+  .cat-mount-series {
+    margin-top: auto;
+    padding-top: 0.65rem;
+    border-top: 1px dashed var(--line);
+  }
+  .cat-mount-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--fg-subtle);
+  }
+
+  .cat-mount-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cat-sub-link,
+  .cat-series-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.28rem;
+    font-size: 0.835rem;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .cat-sub-link:hover,
+  .cat-series-link:hover {
+    color: var(--cat-tint);
+  }
+  .cat-series-link {
+    color: var(--fg);
+    font-weight: 520;
+  }
+  .cat-sub-num {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--fg-subtle);
+  }
+  .cat-sub-link:hover .cat-sub-num,
+  .cat-series-link:hover .cat-sub-num {
+    color: var(--cat-tint);
+  }
+
+  .cat-series-more {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+    transition: color 160ms ease;
+  }
+  .cat-series-more:hover {
+    color: var(--cat-tint);
+  }
+
+  /* ── 标签词表（与全站一致的圆润卡片面板 + 全圆角胶囊） ──────────────── */
+  .tag-groups {
     display: grid;
     gap: 1rem;
   }
-  .group {
+  .tag-group {
     display: grid;
     gap: 0.85rem;
-    padding: 1.1rem 1.25rem 1.25rem;
+    padding: 1.2rem 1.35rem 1.3rem;
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
     background: var(--surface);
+    box-shadow: var(--shadow-sm);
   }
   @media (width >= 48rem) {
-    .group {
-      grid-template-columns: 9rem minmax(0, 1fr);
+    .tag-group {
+      grid-template-columns: 9.5rem minmax(0, 1fr);
       gap: 1.5rem;
     }
   }
-  .group-head h3 {
+
+  .tag-group-head h3 {
+    margin: 0;
     font-size: 1rem;
-    font-weight: 650;
+    font-weight: 660;
     color: var(--fg);
   }
-  .group-head p {
-    margin-top: 0.3rem;
+  .tag-group-head p {
+    margin: 0.3rem 0 0;
     font-size: 0.8125rem;
     line-height: 1.6;
     color: var(--fg-subtle);
   }
-  .tags {
+
+  .tag-list {
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
     gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .tags li {
+  .tag-list li {
     display: flex;
   }
+
   /*
-   * 写得越多，底色越深一点，而不是字号越大：一组里的标签保持同一个高度，读起来整齐。
-   * 出处组（source）的标签名很长，一个就有三四十个字，窄屏放不下时胶囊跟着变高换行。
-   * 内容包在 .label 里，换行时 # 和标签名还是同一段文字，不会各占一边。
+   * 写得越多，底色越深一点，而不是字号越大：一组里的标签保持同一高度，读起来整齐。
+   * 出处组（source）的标签名很长，窄屏放不下时胶囊跟着变高换行。
    */
-  .tag {
+  .tag-pill {
     display: inline-flex;
     align-items: center;
     max-width: 100%;
     min-height: 2rem;
     padding-block: 0.25rem;
-    padding-inline: 0.8rem;
+    padding-inline: 0.82rem;
     border-radius: 999px;
     border: 1px solid color-mix(in oklab, var(--accent) calc(12% + var(--weight, 0) * 30%), var(--line));
     background: color-mix(in oklab, var(--accent) calc(var(--weight, 0) * 14%), var(--surface));
@@ -213,30 +393,32 @@ const max = Math.max(1, ...groups.flatMap((g) => g.tags.map((t) => t.count)));
       color 160ms ease,
       transform 200ms var(--ease-out-expo);
   }
-  .label {
+  .tag-label {
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
-  a.tag:hover {
+  a.tag-pill:hover {
     color: var(--accent);
     border-color: color-mix(in oklab, var(--accent) 50%, var(--line));
     transform: translateY(-1px);
   }
-  .hash {
+  .tag-hash {
     color: var(--fg-subtle);
   }
-  .count {
+  .tag-count {
     margin-left: 0.35em;
+    font-family: var(--font-mono);
     font-size: 0.72rem;
     color: var(--fg-subtle);
   }
-  .tag.is-empty {
+  .tag-pill.is-empty {
     border-style: dashed;
     border-color: var(--line);
     background: transparent;
     color: var(--fg-subtle);
   }
-  .hint {
+
+  .tag-hint {
     display: flex;
     align-items: center;
     gap: 0.4rem;

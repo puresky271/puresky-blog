@@ -1,0 +1,523 @@
+---
+/**
+ * SeriesShelf.astro — 文字挂载式系列书架与原地展开目录。
+ *
+ * 直接以正文版头的等宽小标 + `└` 挂接文字列表呈现系列合集，不包多余卡片外壳；
+ * 点击任意系列文字，在下方原地展开简洁克制的目录面板，支持 #series-xxx 深链、Esc 收起、
+ * 与下方篇目流系列标联动，无 JS 时所有目录也保持可读。
+ */
+import Icon from '@/components/ui/Icon.astro';
+import type { CategoryId } from '@/config';
+import { postMinutes, subcategoryOf, type CategorySeries } from '@/lib/content';
+import { formatDateISO, postPath } from '@/lib/format';
+
+interface Props {
+  categoryId: CategoryId;
+  series: CategorySeries[];
+  /** 是否在展开目录里显示所属二级分类名（一级分类页开启，二级分类页关闭）。 */
+  showSubcategory?: boolean;
+}
+
+const { categoryId, series, showSubcategory = true } = Astro.props;
+---
+
+{
+  series.length > 0 && (
+    <div class="shelf-mount" data-series-shelf data-category={categoryId}>
+      <div class="shelf-label-row">
+        <span class="shelf-label">系列书架</span>
+        <span class="shelf-count tabular">{series.length} 套</span>
+      </div>
+
+      <ul class="shelf-links" aria-label="系列书架">
+        {series.map((item) => (
+          <li>
+            <button
+              type="button"
+              class="shelf-text-btn"
+              data-shelf-trigger={item.anchor}
+              aria-expanded="false"
+              aria-controls={item.anchor}
+              title={item.blurb || `展开「${item.name}」目录（${item.posts.length} 篇）`}
+            >
+              <span class="shelf-text-name">{item.name}</span>
+              <span class="shelf-text-num tabular">{item.posts.length}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <div class="shelf-drawer-host" data-shelf-host>
+        {series.map((item) => {
+          const firstPost = item.posts[0];
+          return (
+            <div
+              id={item.anchor}
+              class="shelf-drawer"
+              data-shelf-panel={item.anchor}
+              role="region"
+              aria-label={`${item.name} 章节目录`}
+              hidden
+            >
+              <div class="shelf-drawer-head">
+                <div class="shelf-drawer-meta">
+                  <div class="shelf-drawer-kicker">
+                    <span>系列目录</span>
+                    <span aria-hidden="true">·</span>
+                    <span class="tabular">{item.posts.length} 篇</span>
+                    <span aria-hidden="true">·</span>
+                    <span class="tabular">更新于 {formatDateISO(item.latestDate)}</span>
+                  </div>
+                  <h2 class="shelf-drawer-title">{item.name}</h2>
+                  {item.blurb && <p class="shelf-drawer-blurb">{item.blurb}</p>}
+                </div>
+
+                <div class="shelf-drawer-actions">
+                  <a href={postPath(firstPost.id)} class="shelf-start-link">
+                    <span>从第一篇读起</span>
+                    <Icon name="arrow-right" size={14} />
+                  </a>
+                  <button type="button" class="icon-btn" data-shelf-close aria-label="收起系列目录">
+                    <Icon name="x" size={17} />
+                  </button>
+                </div>
+              </div>
+
+              <ol class="shelf-chapters">
+                {item.posts.map((post, orderIdx) => {
+                  const num = post.data.seriesOrder ?? orderIdx + 1;
+                  const subLabel = subcategoryOf(post.data.subcategory).label;
+                  const mins = postMinutes(post);
+                  return (
+                    <li class="shelf-chapter">
+                      <a href={postPath(post.id)} class="shelf-chapter-link">
+                        <span class="shelf-chapter-num tabular">{num}.</span>
+                        <span class="shelf-chapter-body">
+                          <span class="shelf-chapter-title">{post.data.title}</span>
+                          <span class="shelf-chapter-desc">{post.data.description}</span>
+                        </span>
+                        <span class="shelf-chapter-meta">
+                          {showSubcategory && <span class="shelf-chapter-sub">{subLabel}</span>}
+                          <span class="tabular">{mins} min</span>
+                          <time datetime={post.data.pubDate.toISOString()} class="tabular">
+                            {formatDateISO(post.data.pubDate)}
+                          </time>
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          );
+        })}
+      </div>
+
+      <script is:inline data-astro-rerun>
+        (() => {
+          const root = document.querySelector('[data-series-shelf]');
+          if (!root || root.dataset.shelfBound === '1') return;
+          root.dataset.shelfBound = '1';
+
+          const triggers = Array.from(root.querySelectorAll('[data-shelf-trigger]'));
+          const panels = Array.from(root.querySelectorAll('[data-shelf-panel]'));
+          const panelMap = new Map(panels.map((el) => [el.dataset.shelfPanel, el]));
+          let activeId = null;
+
+          const syncHash = (id) => {
+            const url = new URL(location.href);
+            url.hash = id ? encodeURIComponent(id) : '';
+            history.replaceState(history.state, '', url);
+          };
+
+          const setOpen = (id, opts = {}) => {
+            const { updateHash = true, scroll = false } = opts;
+            const targetId = id && panelMap.has(id) ? id : null;
+            activeId = targetId;
+
+            for (const btn of triggers) {
+              const isOpen = btn.dataset.shelfTrigger === targetId;
+              btn.setAttribute('aria-expanded', String(isOpen));
+            }
+            for (const panel of panels) {
+              const isOpen = panel.dataset.shelfPanel === targetId;
+              panel.hidden = !isOpen;
+            }
+
+            if (updateHash) syncHash(targetId);
+
+            if (scroll && targetId) {
+              const panel = panelMap.get(targetId);
+              if (panel) {
+                requestAnimationFrame(() => {
+                  panel.scrollIntoView({
+                    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                    block: 'nearest',
+                  });
+                });
+              }
+            }
+          };
+
+          const openFromHash = (scroll) => {
+            if (!location.hash) return;
+            let decoded = '';
+            try {
+              decoded = decodeURIComponent(location.hash.slice(1));
+            } catch {
+              decoded = location.hash.slice(1);
+            }
+            if (panelMap.has(decoded)) {
+              setOpen(decoded, { updateHash: false, scroll });
+            }
+          };
+
+          for (const btn of triggers) {
+            btn.addEventListener('click', () => {
+              const id = btn.dataset.shelfTrigger;
+              setOpen(activeId === id ? null : id, { updateHash: true, scroll: activeId !== id });
+            });
+          }
+
+          root.addEventListener('click', (event) => {
+            const closeBtn = event.target.closest('[data-shelf-close]');
+            if (closeBtn) setOpen(null, { updateHash: true });
+          });
+
+          // 监听下方篇目流里的系列标点击，原地展开对应目录并滚入视野。
+          const onDocClick = (event) => {
+            if (!root.isConnected) {
+              document.removeEventListener('click', onDocClick);
+              return;
+            }
+            const opener = event.target.closest('[data-open-series]');
+            if (!opener) return;
+            const id = opener.dataset.openSeries;
+            if (!panelMap.has(id)) return;
+            event.preventDefault();
+            setOpen(id, { updateHash: true, scroll: true });
+          };
+          document.addEventListener('click', onDocClick);
+
+          const onKeydown = (event) => {
+            if (!root.isConnected) {
+              document.removeEventListener('keydown', onKeydown);
+              return;
+            }
+            if (event.key === 'Escape' && activeId) {
+              setOpen(null, { updateHash: true });
+            }
+          };
+          document.addEventListener('keydown', onKeydown);
+
+          const onHashChange = () => {
+            if (!root.isConnected) {
+              window.removeEventListener('hashchange', onHashChange);
+              return;
+            }
+            openFromHash(true);
+          };
+          window.addEventListener('hashchange', onHashChange);
+
+          openFromHash(true);
+        })();
+      </script>
+    </div>
+  )
+}
+
+<style>
+  .shelf-mount {
+    --cat-tint: var(--accent);
+  }
+  .shelf-mount[data-category='technology'] {
+    --cat-tint: var(--cat-technology);
+  }
+  .shelf-mount[data-category='algorithms'] {
+    --cat-tint: var(--cat-algorithms);
+  }
+  .shelf-mount[data-category='papers'] {
+    --cat-tint: var(--cat-papers);
+  }
+  .shelf-mount[data-category='curation'] {
+    --cat-tint: var(--cat-curation);
+  }
+  .shelf-mount[data-category='essays'] {
+    --cat-tint: var(--cat-essays);
+  }
+  .shelf-mount[data-category='literature'] {
+    --cat-tint: var(--cat-literature);
+  }
+
+  .shelf-label-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    margin-bottom: 0.45rem;
+    font-family: var(--font-mono);
+  }
+  .shelf-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--fg-subtle);
+  }
+  .shelf-count {
+    font-size: 0.72rem;
+    color: var(--fg-subtle);
+    opacity: 0.8;
+  }
+
+  /* 与事实栏同源的 └ 挂接文字列表，无外框不显杂乱。 */
+  .shelf-links {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem 1.35rem;
+    margin: 0;
+    padding: 0 0 0 1.15em;
+    list-style: none;
+  }
+  .shelf-links::before {
+    content: '└';
+    position: absolute;
+    left: 0;
+    top: 0.05em;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--fg-subtle);
+  }
+
+  .shelf-text-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.12rem 0;
+    border: none;
+    background: transparent;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+  .shelf-text-btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1.5px;
+    background: var(--cat-tint);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms var(--ease-out-expo);
+  }
+  .shelf-text-btn:hover {
+    color: var(--fg);
+  }
+  .shelf-text-btn:hover::after {
+    transform: scaleX(0.45);
+  }
+  .shelf-text-btn[aria-expanded='true'] {
+    color: var(--cat-tint);
+    font-weight: 650;
+  }
+  .shelf-text-btn[aria-expanded='true']::after {
+    transform: scaleX(1);
+  }
+
+  .shelf-text-num {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+  .shelf-text-btn[aria-expanded='true'] .shelf-text-num {
+    color: var(--cat-tint);
+  }
+
+  /* ── 展开的简洁目录面板 ──────────────────────────────────────────────── */
+  .shelf-drawer-host {
+    margin-top: 0.95rem;
+  }
+  .shelf-drawer-host:empty {
+    display: none;
+  }
+
+  .shelf-drawer {
+    padding: 1.35rem 1.45rem 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+    scroll-margin-top: calc(var(--nav-h) + 1rem);
+    animation: shelf-drawer-in 240ms var(--ease-out-expo) both;
+  }
+
+  /* 无 JS 降级：保留所有目录可读。 */
+  :global(html:not(.js)) .shelf-drawer[hidden] {
+    display: block;
+    margin-top: 1rem;
+  }
+
+  @keyframes shelf-drawer-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .shelf-drawer-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .shelf-drawer-meta {
+    min-width: 0;
+    flex: 1 1 20rem;
+  }
+  .shelf-drawer-kicker {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--cat-tint);
+  }
+  .shelf-drawer-title {
+    margin: 0.3rem 0 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--fg);
+  }
+  .shelf-drawer-blurb {
+    margin: 0.35rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--fg-muted);
+  }
+
+  .shelf-drawer-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .shelf-start-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    height: 2.15rem;
+    padding-inline: 0.95rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--cat-tint) 12%, var(--surface-2));
+    font-size: 0.825rem;
+    font-weight: 580;
+    color: var(--cat-tint);
+    transition:
+      background-color 160ms ease,
+      transform 180ms var(--ease-out-expo);
+  }
+  .shelf-start-link:hover {
+    background: color-mix(in oklab, var(--cat-tint) 20%, var(--surface-2));
+    transform: translateY(-1px);
+  }
+
+  .shelf-chapters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shelf-chapter-link {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.4rem 0.9rem;
+    padding: 0.68rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--radius-control);
+    transition: background-color 160ms ease;
+  }
+  .shelf-chapter-link:hover {
+    background: var(--surface-2);
+  }
+
+  .shelf-chapter-num {
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    font-weight: 620;
+    color: var(--cat-tint);
+  }
+
+  .shelf-chapter-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .shelf-chapter-title {
+    font-size: 0.96rem;
+    font-weight: 600;
+    line-height: 1.42;
+    color: var(--fg);
+    transition: color 160ms ease;
+  }
+  .shelf-chapter-link:hover .shelf-chapter-title {
+    color: var(--cat-tint);
+  }
+
+  .shelf-chapter-desc {
+    font-size: 0.825rem;
+    line-height: 1.5;
+    color: var(--fg-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .shelf-chapter-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-subtle);
+    white-space: nowrap;
+  }
+  .shelf-chapter-sub {
+    font-family: var(--font-sans);
+    color: var(--fg-muted);
+  }
+
+  @media (width < 46rem) {
+    .shelf-drawer {
+      padding: 1.1rem 1rem 1rem;
+    }
+    .shelf-chapter-link {
+      grid-template-columns: 1.75rem minmax(0, 1fr);
+      padding: 0.65rem 0.6rem;
+      margin-inline: -0.6rem;
+    }
+    .shelf-chapter-meta {
+      grid-column: 2;
+      gap: 0.5rem;
+      margin-top: 0.1rem;
+    }
+  }
+</style>

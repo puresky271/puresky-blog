@@ -1,0 +1,311 @@
+---
+/**
+ * CategoryHero.astro — 与正文版头（posts/[slug].astro）严格同构的开放式分类版头。
+ *
+ * 在桌面双栏模式下（centered=false），版头内容落在与下方主栏对齐的第 2 列（48rem）；
+ * 无左栏时（centered=true），单栏版头水平居中；底部的全宽 1px 分隔线收住整个版头。
+ * 事实栏固定三列平分主栏宽度，视觉重心稳定平衡。
+ */
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
+import type { CATEGORIES, SUBCATEGORIES } from '@/config';
+import { getCategories } from '@/lib/content';
+import { categoryPath, formatDateISO, withBase } from '@/lib/format';
+
+import CategoryMorphStamp from './CategoryMorphStamp.astro';
+
+interface Props {
+  category: (typeof CATEGORIES)[number];
+  subcategory?: (typeof SUBCATEGORIES)[number];
+  postCount: number;
+  subcategoryCount?: number;
+  seriesCount?: number;
+  /** 无系列合集时，在第三列显示最近发布日期，保证三列事实栏视觉平衡。 */
+  latestDate?: Date;
+  /** 仅当页面不存在左栏时设为 true，让单栏居中显示。 */
+  centered?: boolean;
+}
+
+const {
+  category,
+  subcategory,
+  postCount,
+  subcategoryCount = 0,
+  seriesCount = 0,
+  latestDate,
+  centered = false,
+} = Astro.props;
+
+const navCategories = (await getCategories())
+  .filter((c) => c.count > 0 || c.id === category.id)
+  .map((c) => ({ id: c.id, label: c.label, count: c.count }));
+
+const breadcrumbItems = subcategory
+  ? [
+      { label: '分类与标签', href: withBase('/tags/') },
+      { label: category.label, href: categoryPath(category.id) },
+      { label: subcategory.label },
+    ]
+  : [
+      { label: '分类与标签', href: withBase('/tags/') },
+      { label: category.label },
+    ];
+
+const title = subcategory ? subcategory.label : category.label;
+const description = subcategory ? subcategory.blurb : category.blurb;
+---
+
+<header class:list={['cat-header', { 'is-centered': centered }]} data-category={category.id}>
+  <div class="cat-hero">
+    <div class="cat-crumb">
+      <Breadcrumb items={breadcrumbItems} />
+    </div>
+
+    <CategoryMorphStamp current={category.id} categories={navCategories} />
+
+    {
+      subcategory && (
+        <p class="cat-parent-back">
+          <a href={categoryPath(category.id)}>← 返回 {category.label}</a>
+        </p>
+      )
+    }
+
+    <h1 class="cat-title">{title}</h1>
+    <p class="cat-lead">{description}</p>
+
+    <dl class="cat-facts" aria-label="分类概况">
+      <div class="cat-fact">
+        <dt>篇目</dt>
+        <dd class="tabular">{postCount} 篇</dd>
+      </div>
+      {
+        subcategory ? (
+          <div class="cat-fact">
+            <dt>所属分类</dt>
+            <dd>
+              <a href={categoryPath(category.id)}>{category.label}</a>
+            </dd>
+          </div>
+        ) : (
+          <div class="cat-fact">
+            <dt>{subcategoryCount > 1 ? '方向' : '分类'}</dt>
+            <dd class="tabular">{subcategoryCount > 1 ? `${subcategoryCount} 个方向` : category.label}</dd>
+          </div>
+        )
+      }
+      {
+        seriesCount > 0 ? (
+          <div class="cat-fact">
+            <dt>系列</dt>
+            <dd class="tabular">{seriesCount} 套合集</dd>
+          </div>
+        ) : (
+          latestDate && (
+            <div class="cat-fact">
+              <dt>最近更新</dt>
+              <dd class="tabular">
+                <time datetime={latestDate.toISOString()}>{formatDateISO(latestDate)}</time>
+              </dd>
+            </div>
+          )
+        )
+      }
+    </dl>
+
+    {
+      Astro.slots.has('default') && (
+        <div class="cat-mounts">
+          <slot />
+        </div>
+      )
+    }
+  </div>
+</header>
+
+<div class="cat-divider" aria-hidden="true"></div>
+
+<style>
+  /*
+   * 桌面端网格轨道与正文页 posts/[slug].astro 完全同源：
+   * 左侧留出方向树栏位（17rem / 19rem），右侧主栏 48rem，和下方 .cat-body 像素级垂直对齐。
+   */
+  .cat-header {
+    --cat-tint: var(--accent);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 0.75rem;
+  }
+  .cat-hero {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  @media (width >= 48rem) {
+    .cat-header {
+      padding-top: 1.5rem;
+    }
+  }
+  @media (width >= 64rem) {
+    .cat-header {
+      grid-template-columns: 17rem minmax(0, 48rem);
+      justify-content: start;
+      column-gap: 2.75rem;
+    }
+    .cat-hero {
+      grid-column: 2;
+    }
+    .cat-header.is-centered {
+      grid-template-columns: minmax(0, 48rem);
+      justify-content: center;
+    }
+    .cat-header.is-centered .cat-hero {
+      grid-column: 1;
+    }
+  }
+  @media (width >= 80rem) {
+    .cat-header {
+      grid-template-columns: 19rem minmax(0, 48rem);
+      column-gap: 3.5rem;
+    }
+  }
+
+  .cat-header[data-category='technology'] {
+    --cat-tint: var(--cat-technology);
+  }
+  .cat-header[data-category='algorithms'] {
+    --cat-tint: var(--cat-algorithms);
+  }
+  .cat-header[data-category='papers'] {
+    --cat-tint: var(--cat-papers);
+  }
+  .cat-header[data-category='curation'] {
+    --cat-tint: var(--cat-curation);
+  }
+  .cat-header[data-category='essays'] {
+    --cat-tint: var(--cat-essays);
+  }
+  .cat-header[data-category='literature'] {
+    --cat-tint: var(--cat-literature);
+  }
+
+  .cat-crumb :global(.breadcrumb) {
+    margin-top: 0;
+    margin-bottom: 1.35rem;
+  }
+
+  .cat-parent-back {
+    margin: 0 0 0.55rem;
+    font-size: 0.84rem;
+    color: var(--fg-subtle);
+  }
+  .cat-parent-back a {
+    color: var(--cat-tint);
+    transition: opacity 160ms ease;
+  }
+  .cat-parent-back a:hover {
+    opacity: 0.8;
+  }
+
+  .cat-title {
+    margin: 0;
+    font-size: clamp(1.85rem, 1.35rem + 1.9vw, 2.6rem);
+    line-height: 1.24;
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    color: var(--fg);
+  }
+
+  .cat-lead {
+    margin: 0.8rem 0 0;
+    max-width: 44rem;
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.75;
+    color: color-mix(in oklab, var(--fg) 78%, var(--fg-muted));
+  }
+
+  /* 事实栏：三列均匀铺满主栏宽度，与参考图 AUTHOR / CATEGORY / PUBLISHED 一致。 */
+  .cat-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem 1.5rem;
+    margin: 1.75rem 0 0;
+    font-family: var(--font-mono);
+  }
+  @media (width >= 36rem) {
+    .cat-facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .cat-fact {
+    min-width: 0;
+  }
+  .cat-facts dt {
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--fg-subtle);
+  }
+  .cat-facts dd {
+    margin: 0;
+    padding-left: 1.15em;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--fg);
+    text-indent: -1.15em;
+  }
+  .cat-facts dd::before {
+    content: '└';
+    display: inline-block;
+    width: 1.15em;
+    font-family: var(--font-mono);
+    color: var(--fg-subtle);
+    text-indent: 0;
+  }
+  .cat-facts a {
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--fg) 24%, transparent);
+    text-underline-offset: 0.18em;
+    transition:
+      color 160ms ease,
+      text-decoration-color 160ms ease;
+  }
+  .cat-facts a:hover {
+    color: var(--cat-tint);
+    text-decoration-color: currentColor;
+  }
+
+  .cat-mounts {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    margin-top: 1.65rem;
+  }
+
+  /* 全宽细分隔线，和正文页头完全一致，收住版头。 */
+  .cat-divider {
+    position: relative;
+    height: 1px;
+    margin-top: 2.35rem;
+    background: var(--line);
+  }
+  .cat-divider::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: 100vw;
+    translate: -50% 0;
+    background: var(--line);
+  }
+
+  @media (width < 40rem) {
+    .cat-divider {
+      margin-top: 1.85rem;
+    }
+  }
+</style>

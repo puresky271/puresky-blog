@@ -1,0 +1,757 @@
+---
+/**
+ * CategoryTree.astro — 分类页左栏粘性「方向树」与滚动阅读追踪。
+ *
+ * 对齐参考图 claude.dev 的 TREE 侧栏与站内文章目录 Toc.astro 的交互体验：
+ * - 一级分类页（mode="filter"）：列出二级方向及其下篇目，随滚动自动展开当前所在方向、
+ *   高亮当前正在阅读的文章标题，也支持点选方向原地筛选右侧篇目流并同步 ?sub=。
+ * - 二级分类页（mode="navigate"）：列出同级方向导航，并在当前方向下展开篇目列表随滚动高亮。
+ * - 底部配参考图同款点阵阅读进度条与篇数摘要；如有高频标签，紧凑挂接在下方。
+ */
+import type { CategoryId, SubcategoryId } from '@/config';
+import type { Post, TagStat } from '@/lib/content';
+import { categoryPath, subcategoryPath, tagPath } from '@/lib/format';
+
+import type { SubcategoryBucket } from './CategoryExplorer.astro';
+
+interface SiblingItem {
+  id: SubcategoryId;
+  label: string;
+  count: number;
+}
+
+interface Props {
+  categoryId: CategoryId;
+  categoryLabel: string;
+  mode: 'filter' | 'navigate';
+  totalCount: number;
+  /** 一级分类页：非空二级方向及其文章列表。 */
+  groups?: SubcategoryBucket[];
+  /** 二级分类页：同级方向列表与当前选中方向及其文章列表。 */
+  siblings?: SiblingItem[];
+  activeSubcategoryId?: SubcategoryId;
+  activePosts?: Post[];
+  /** 可选高频标签。 */
+  tags?: TagStat[];
+}
+
+const {
+  categoryId,
+  categoryLabel,
+  mode,
+  totalCount,
+  groups = [],
+  siblings = [],
+  activeSubcategoryId,
+  activePosts = [],
+  tags = [],
+} = Astro.props;
+
+const treeTitle = mode === 'filter' ? '二级方向' : '同级方向';
+const hasMultipleFilterGroups = mode === 'filter' && groups.length > 1;
+const hasTree =
+  (mode === 'filter' && groups.length > 0) ||
+  (mode === 'navigate' && (siblings.length > 1 || activePosts.length > 1));
+---
+
+<div class="cat-aside-sticky" data-cat-tree data-tree-mode={mode}>
+  {
+    hasTree && (
+      <section class="tree-section" aria-label={treeTitle}>
+        <h2 class="aside-title">{treeTitle}</h2>
+
+        <div class="tree-scroll" data-tree-scroll>
+          {mode === 'filter' ? (
+            <ul class="tree-list" role="tablist" aria-label="按二级方向筛选">
+              {hasMultipleFilterGroups && (
+                <li>
+                  <button
+                    type="button"
+                    class="tree-btn"
+                    role="tab"
+                    data-sub-btn="all"
+                    data-sub-label="全部方向"
+                    aria-selected="true"
+                  >
+                    <span class="tree-name">全部方向</span>
+                    <span class="tree-num tabular">{totalCount}</span>
+                  </button>
+                </li>
+              )}
+              {groups.map(({ subcategory, posts }) => (
+                <li
+                  class="tree-group"
+                  data-tree-group={subcategory.id}
+                  data-tree-open={groups.length === 1 ? '' : undefined}
+                >
+                  {hasMultipleFilterGroups ? (
+                    <button
+                      type="button"
+                      class="tree-btn tree-parent"
+                      role="tab"
+                      data-sub-btn={subcategory.id}
+                      data-sub-label={subcategory.label}
+                      aria-selected="false"
+                    >
+                      <span class="tree-name">{subcategory.label}</span>
+                      <span class="tree-num tabular">{posts.length}</span>
+                    </button>
+                  ) : (
+                    <div class="tree-btn tree-parent is-static">
+                      <span class="tree-name">{subcategory.label}</span>
+                      <span class="tree-num tabular">{posts.length}</span>
+                    </div>
+                  )}
+
+                  {posts.length > 0 && (
+                    <div class="tree-sub">
+                      <ol class="tree-posts">
+                        {posts.map((post, i) => (
+                          <li>
+                            <a
+                              href={`#post-${post.id}`}
+                              class="tree-post-link"
+                              data-tree-link={post.id}
+                              title={post.data.title}
+                            >
+                              <span class="tree-post-num tabular">{i + 1}.</span>
+                              <span class="tree-post-title">{post.data.title}</span>
+                            </a>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul class="tree-list">
+              <li>
+                <a href={categoryPath(categoryId)} class="tree-link">
+                  <span class="tree-name">全部{categoryLabel}</span>
+                </a>
+              </li>
+              {siblings.map((item) => {
+                const isCurrent = item.id === activeSubcategoryId;
+                return (
+                  <li
+                    class="tree-group"
+                    data-tree-group={item.id}
+                    data-tree-open={isCurrent ? '' : undefined}
+                    data-tree-branch={isCurrent ? '' : undefined}
+                  >
+                    <a
+                      href={subcategoryPath(categoryId, item.id)}
+                      class="tree-link tree-parent"
+                      aria-current={isCurrent ? 'page' : undefined}
+                    >
+                      <span class="tree-name">{item.label}</span>
+                      <span class="tree-num tabular">{item.count}</span>
+                    </a>
+                    {isCurrent && activePosts.length > 0 && (
+                      <div class="tree-sub">
+                        <ol class="tree-posts">
+                          {activePosts.map((post, i) => (
+                            <li>
+                              <a
+                                href={`#post-${post.id}`}
+                                class="tree-post-link"
+                                data-tree-link={post.id}
+                                title={post.data.title}
+                              >
+                                <span class="tree-post-num tabular">{i + 1}.</span>
+                                <span class="tree-post-title">{post.data.title}</span>
+                              </a>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div class="tree-progress" aria-label="列表浏览进度">
+          <div class="tree-progress-row">
+            <div class="tree-progress-track" aria-hidden="true">
+              <div class="tree-progress-fill" data-tree-bar />
+            </div>
+            <span class="tree-progress-pct tabular" data-tree-pct>0%</span>
+          </div>
+          <p class="tree-progress-meta tabular" data-tree-summary>
+            {mode === 'filter' ? `共 ${totalCount} 篇` : `${activePosts.length} 篇`}
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    tags.length > 0 && (
+      <section class="aside-group" aria-label="高频标签">
+        <h2 class="aside-title">高频标签</h2>
+        <ul class="aside-tags">
+          {tags.map((t) => (
+            <li>
+              <a href={tagPath(t.name)} class="aside-tag-link">
+                <span>#{t.name}</span>
+                <span class="aside-tag-num tabular">{t.count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</div>
+
+<style>
+  .cat-aside-sticky {
+    position: sticky;
+    top: calc(var(--nav-h) + 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    max-height: calc(100dvh - var(--nav-h) - 2rem);
+    padding-right: 0.25rem;
+  }
+
+  .tree-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .aside-title {
+    flex: none;
+    display: block;
+    margin: 0 0 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--fg-subtle);
+  }
+
+  .tree-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0;
+    scrollbar-width: none;
+  }
+  .tree-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tree-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tree-btn,
+  .tree-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.32rem 0;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 480;
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+  .tree-btn.is-static {
+    cursor: default;
+  }
+
+  .tree-name {
+    position: relative;
+    padding-left: 1.15em;
+    min-width: 0;
+  }
+  .tree-name::before {
+    content: '└';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: var(--font-mono);
+    color: var(--fg-subtle);
+    opacity: 0.6;
+    transition:
+      color 160ms ease,
+      opacity 160ms ease;
+  }
+
+  .tree-num {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    color: var(--fg-subtle);
+  }
+
+  .tree-btn:not(.is-static):hover,
+  .tree-link:hover {
+    color: var(--fg);
+  }
+  .tree-btn:not(.is-static):hover .tree-name::before,
+  .tree-link:hover .tree-name::before {
+    opacity: 1;
+  }
+
+  .tree-btn[aria-selected='true'],
+  .tree-link[aria-current='page'],
+  :global(html.js) .tree-group[data-tree-branch] > .tree-parent {
+    color: var(--cat-tint);
+    font-weight: 650;
+  }
+  .tree-btn[aria-selected='true'] .tree-name::before,
+  .tree-link[aria-current='page'] .tree-name::before,
+  :global(html.js) .tree-group[data-tree-branch] > .tree-parent .tree-name::before {
+    color: var(--cat-tint);
+    opacity: 1;
+  }
+  .tree-btn[aria-selected='true'] .tree-num,
+  .tree-link[aria-current='page'] .tree-num,
+  :global(html.js) .tree-group[data-tree-branch] > .tree-parent .tree-num {
+    color: var(--cat-tint);
+  }
+
+  /* ── 子文章列表（0fr / 1fr 展开折叠，完全对齐 Toc.astro） ────────────────── */
+  .tree-sub {
+    display: grid;
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition:
+      grid-template-rows 0.3s var(--ease-out-expo),
+      visibility 0.3s var(--ease-out-expo);
+  }
+  .tree-sub > .tree-posts {
+    min-height: 0;
+    overflow: hidden;
+  }
+  :global(html.js) .tree-group:not([data-tree-open]) .tree-sub {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+  }
+  .cat-aside-sticky[data-tree-instant] .tree-sub {
+    transition: none;
+  }
+
+  .tree-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+    margin: 0;
+    padding: 0.08rem 0 0.35rem 1.05em;
+    list-style: none;
+  }
+
+  .tree-post-link {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.22rem 0 0.22rem 1.05em;
+    font-size: 0.79rem;
+    line-height: 1.45;
+    color: var(--fg-subtle);
+    transition: color 150ms ease;
+  }
+  .tree-post-link::before {
+    content: '└';
+    position: absolute;
+    left: 0;
+    top: 0.22rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+    opacity: 0.5;
+    transition:
+      color 150ms ease,
+      opacity 150ms ease;
+  }
+  .tree-post-num {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    opacity: 0.78;
+  }
+  .tree-post-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tree-post-link:hover {
+    color: var(--fg-muted);
+  }
+  .tree-post-link:hover::before {
+    opacity: 0.9;
+  }
+  .tree-post-link[aria-current='true'] {
+    color: var(--fg);
+    font-weight: 650;
+  }
+  .tree-post-link[aria-current='true']::before {
+    color: var(--cat-tint);
+    opacity: 1;
+  }
+  .tree-post-link[aria-current='true'] .tree-post-num {
+    color: var(--cat-tint);
+    opacity: 1;
+  }
+
+  /* ── 底部点阵阅读进度条（呼应参考图底部） ───────────────────────────── */
+  .tree-progress {
+    flex: none;
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+  }
+  .tree-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .tree-progress-track {
+    position: relative;
+    flex: 1;
+    height: 11px;
+    overflow: hidden;
+    background: radial-gradient(
+        circle,
+        color-mix(in oklab, var(--fg) 24%, transparent) 1px,
+        transparent 1.25px
+      )
+      0 0 / 4px 4px;
+  }
+  .tree-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: color-mix(in oklab, var(--cat-tint) 88%, var(--fg));
+    transition: width 100ms linear;
+  }
+  .tree-progress-pct {
+    flex: none;
+    min-width: 2.35rem;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+  }
+  .tree-progress-meta {
+    margin: 0.42rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--fg-subtle);
+  }
+
+  /* ── 高频标签 ──────────────────────────────────────────────────────── */
+  .aside-group {
+    flex: none;
+    min-width: 0;
+  }
+  .aside-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.32rem 0.8rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .aside-tag-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .aside-tag-link:hover {
+    color: var(--cat-tint);
+  }
+  .aside-tag-num {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--fg-subtle);
+  }
+</style>
+
+<script>
+  /**
+   * 分类页左栏方向树的滚动追踪、自动展开与筛选联动。
+   * 机制与 Toc.astro 对齐：IntersectionObserver 配合 rAF 节流 scroll 兜底，
+   * 只调整左栏滚动容器自身 scrollTop，不牵动整页跳动；astro:page-load 自动清理重绑。
+   */
+  let treeObserver: IntersectionObserver | null = null;
+  let treeScrollAbort: AbortController | null = null;
+  let treeScrollTimer: number | undefined;
+  let treeFrame = 0;
+
+  function keepTreeItemInView(container: HTMLElement, item: HTMLElement, smooth: boolean) {
+    // 移动端左栏隐藏时不滚动容器。
+    if (container.offsetParent === null) return;
+    const box = container.getBoundingClientRect();
+    const rect = item.getBoundingClientRect();
+    const pad = 10;
+    if (rect.top >= box.top + pad && rect.bottom <= box.bottom - pad) return;
+    const delta = rect.top < box.top + pad ? rect.top - box.top - pad : rect.bottom - box.bottom + pad;
+    container.scrollTo({ top: container.scrollTop + delta, behavior: smooth ? 'smooth' : 'auto' });
+  }
+
+  function setupCategoryTree() {
+    treeObserver?.disconnect();
+    treeObserver = null;
+    treeScrollAbort?.abort();
+    treeScrollAbort = null;
+    cancelAnimationFrame(treeFrame);
+    treeFrame = 0;
+    window.clearTimeout(treeScrollTimer);
+
+    const treeRoot = document.querySelector<HTMLElement>('[data-cat-tree]');
+    if (!treeRoot) return;
+
+    const mode = treeRoot.dataset.treeMode === 'navigate' ? 'navigate' : 'filter';
+    const treeScroll = treeRoot.querySelector<HTMLElement>('[data-tree-scroll]');
+    const barEl = treeRoot.querySelector<HTMLElement>('[data-tree-bar]');
+    const pctEl = treeRoot.querySelector<HTMLElement>('[data-tree-pct]');
+    const summaryEl = treeRoot.querySelector<HTMLElement>('[data-tree-summary]');
+    const mainEl = document.querySelector<HTMLElement>('.cat-main');
+    const explorer = document.querySelector<HTMLElement>('[data-cat-explorer]');
+
+    const filterButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sub-btn]'));
+    const subGroups = explorer ? Array.from(explorer.querySelectorAll<HTMLElement>('[data-sub-group]')) : [];
+    const validSubIds = new Set(subGroups.map((el) => el.dataset.subGroup!).filter(Boolean));
+    const treeGroups = Array.from(treeRoot.querySelectorAll<HTMLElement>('[data-tree-group]'));
+    const linksMap = new Map<string, HTMLElement>();
+    treeRoot.querySelectorAll<HTMLElement>('[data-tree-link]').forEach((a) => {
+      if (a.dataset.treeLink) linksMap.set(a.dataset.treeLink, a);
+    });
+
+    const totalAllPosts = document.querySelectorAll('[data-tree-post]').length;
+    let activeFilter = 'all';
+    let ready = false;
+    let lastGroup: HTMLElement | null = null;
+    let lastAnchor: HTMLElement | null = null;
+
+    treeRoot.setAttribute('data-tree-instant', '');
+
+    const getVisiblePosts = (): HTMLElement[] => {
+      return Array.from(document.querySelectorAll<HTMLElement>('[data-tree-post]')).filter((el) => {
+        const group = el.closest<HTMLElement>('[data-sub-group]');
+        return !group || !group.hidden;
+      });
+    };
+
+    const updateProgress = () => {
+      if (!barEl || !pctEl || !mainEl) return;
+      const doc = document.documentElement;
+      const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 8;
+      let pct = 0;
+      if (atBottom) {
+        pct = 100;
+      } else {
+        const rect = mainEl.getBoundingClientRect();
+        const start = rect.top + window.scrollY - window.innerHeight * 0.25;
+        const end = rect.bottom + window.scrollY - window.innerHeight * 0.85;
+        if (end <= start) {
+          pct = rect.top <= window.innerHeight * 0.45 ? 100 : 0;
+        } else {
+          pct = Math.max(0, Math.min(100, Math.round(((window.scrollY - start) / (end - start)) * 100)));
+        }
+      }
+      barEl.style.width = `${pct}%`;
+      pctEl.textContent = `${pct}%`;
+    };
+
+    const updateActive = () => {
+      const visiblePosts = getVisiblePosts();
+      const line = window.innerHeight * 0.3;
+      const current = visiblePosts.filter((el) => el.getBoundingClientRect().top < line).pop() ?? visiblePosts[0];
+      const currentId = current?.dataset.treePost;
+
+      linksMap.forEach((link, key) => {
+        const val = String(key === currentId);
+        if (link.getAttribute('aria-current') !== val) link.setAttribute('aria-current', val);
+      });
+
+      const anchor = currentId ? linksMap.get(currentId) : undefined;
+      let openGroup: HTMLElement | null = null;
+      if (mode === 'filter') {
+        openGroup =
+          (activeFilter !== 'all'
+            ? treeGroups.find((g) => g.dataset.treeGroup === activeFilter)
+            : anchor?.closest<HTMLElement>('[data-tree-group]')) ??
+          (treeGroups.length === 1 ? treeGroups[0] : null);
+        for (const g of treeGroups) {
+          const isCurrent = g === openGroup;
+          g.toggleAttribute('data-tree-open', isCurrent);
+          g.toggleAttribute('data-tree-branch', isCurrent && Boolean(anchor));
+        }
+      } else {
+        openGroup = treeGroups.find((g) => g.hasAttribute('data-tree-open')) ?? null;
+      }
+
+      updateProgress();
+
+      if (!treeScroll || !anchor) return;
+      const groupChanged = openGroup !== lastGroup;
+      const anchorChanged = anchor !== lastAnchor;
+      lastGroup = openGroup;
+      lastAnchor = anchor;
+      if (!groupChanged && !anchorChanged) return;
+
+      if (!ready) {
+        keepTreeItemInView(treeScroll, anchor, false);
+        return;
+      }
+      if (groupChanged) {
+        window.clearTimeout(treeScrollTimer);
+        treeScrollTimer = window.setTimeout(() => {
+          if (lastAnchor) keepTreeItemInView(treeScroll, lastAnchor, true);
+        }, 320);
+      } else {
+        keepTreeItemInView(treeScroll, anchor, true);
+      }
+    };
+
+    const reobservePosts = () => {
+      treeObserver?.disconnect();
+      const visible = getVisiblePosts();
+      if (visible.length === 0) return;
+      treeObserver = new IntersectionObserver(
+        () => updateActive(),
+        { rootMargin: '0px 0px -70% 0px', threshold: [0, 1] }
+      );
+      visible.forEach((el) => treeObserver!.observe(el));
+    };
+
+    const applyFilter = (subId: string, syncUrl = true, scrollToMain = false) => {
+      const target = subId && validSubIds.has(subId) ? subId : 'all';
+      activeFilter = target;
+
+      let activeLabel = '';
+      for (const btn of filterButtons) {
+        const selected = btn.dataset.subBtn === target;
+        btn.setAttribute('aria-selected', String(selected));
+        if (selected && btn.dataset.subLabel) activeLabel = btn.dataset.subLabel;
+      }
+
+      let visibleCount = 0;
+      for (const group of subGroups) {
+        const hidden = target !== 'all' && group.dataset.subGroup !== target;
+        group.hidden = hidden;
+        if (!hidden) visibleCount += group.querySelectorAll('[data-tree-post]').length;
+      }
+
+      if (summaryEl) {
+        summaryEl.textContent =
+          target === 'all' ? `共 ${totalAllPosts} 篇` : `${activeLabel || target} · ${visibleCount} 篇`;
+      }
+
+      if (syncUrl) {
+        const url = new URL(location.href);
+        if (target === 'all') url.searchParams.delete('sub');
+        else url.searchParams.set('sub', target);
+        history.replaceState(history.state, '', url);
+      }
+
+      reobservePosts();
+      updateActive();
+
+      if (scrollToMain && mainEl) {
+        const mainTop = mainEl.getBoundingClientRect().top;
+        if (mainTop < 72 || mainTop > window.innerHeight * 0.72) {
+          const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          window.scrollTo({
+            top: Math.max(0, mainEl.getBoundingClientRect().top + window.scrollY - 96),
+            behavior: reduce ? 'auto' : 'smooth',
+          });
+        }
+      }
+    };
+
+    const abort = new AbortController();
+    treeScrollAbort = abort;
+
+    if (mode === 'filter' && validSubIds.size > 1) {
+      const initial = new URLSearchParams(location.search).get('sub');
+      if (initial && validSubIds.has(initial)) {
+        applyFilter(initial, false, false);
+      }
+      for (const btn of filterButtons) {
+        btn.addEventListener(
+          'click',
+          () => {
+            const clicked = btn.dataset.subBtn || 'all';
+            const next = clicked !== 'all' && activeFilter === clicked ? 'all' : clicked;
+            applyFilter(next, true, true);
+          },
+          { signal: abort.signal }
+        );
+      }
+    }
+
+    treeRoot.addEventListener(
+      'click',
+      (event) => {
+        const link = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-tree-link]');
+        if (!link) return;
+        const postId = link.dataset.treeLink;
+        const targetEl = postId ? document.getElementById(`post-${postId}`) : null;
+        if (!targetEl) return;
+
+        event.preventDefault();
+        if (mode === 'filter' && activeFilter !== 'all') {
+          const group = targetEl.closest<HTMLElement>('[data-sub-group]');
+          if (group?.hidden) applyFilter('all', true, false);
+        }
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        targetEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      },
+      { signal: abort.signal }
+    );
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (treeFrame) return;
+        treeFrame = requestAnimationFrame(() => {
+          treeFrame = 0;
+          updateActive();
+        });
+      },
+      { passive: true, signal: abort.signal }
+    );
+
+    reobservePosts();
+    updateActive();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        treeRoot.removeAttribute('data-tree-instant');
+        ready = true;
+      });
+    });
+  }
+
+  setupCategoryTree();
+  document.addEventListener('astro:page-load', setupCategoryTree);
+</script>

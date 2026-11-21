@@ -1,0 +1,283 @@
+---
+/**
+ * PostIndexRow.astro — 无分割线通透篇目行。
+ *
+ * 去掉「焦点阅读」等复杂卡片形态与行间横线，保持整洁大气的单一通透列表行：
+ * 左侧等宽日期/时长/阅读量，主列标题（精选星标 + 可选外站原作者）+ 两行衬线导语
+ * + 文字风系列挂链（命中当前页面系列时可点击展开上方目录）+ 纯文本淡灰 #标签，
+ * 悬停时整行柔和铺出圆角表面。
+ */
+import ViewBadge from '@/components/post/ViewBadge.svelte';
+import Icon from '@/components/ui/Icon.astro';
+import { postMinutes, subcategoryOf, type Post } from '@/lib/content';
+import { formatDateISO, postPath, seriesAnchor } from '@/lib/format';
+
+interface Props {
+  post: Post;
+  index?: number;
+  /** 是否在行内露出二级分类名。 */
+  showSubcategory?: boolean;
+  /** 当前页面书架中存在的系列名集合；命中时系列挂链可直接展开上方目录。 */
+  shelfSeries?: ReadonlySet<string>;
+}
+
+const { post, index = 0, showSubcategory = false, shelfSeries } = Astro.props;
+const { title, description, pubDate, tags, featured, series, seriesOrder, author, category, subcategory } = post.data;
+const minutes = postMinutes(post);
+const subLabel = subcategoryOf(subcategory).label;
+const hasShelfTarget = Boolean(series && shelfSeries?.has(series));
+const showExternalAuthor = Boolean(author && (category === 'curation' || category === 'papers'));
+---
+
+<li id={`post-${post.id}`} class="idx-item" data-tree-post={post.id} data-reveal style={`--reveal-i: ${Math.min(index, 6)}`}>
+  <article class="idx-entry">
+    <div class="idx-rail">
+      <time datetime={pubDate.toISOString()} class="idx-date tabular">
+        {formatDateISO(pubDate)}
+      </time>
+      <span class="idx-submeta">
+        <span class="tabular">{minutes} min</span>
+        <ViewBadge slug={post.id} client:idle />
+      </span>
+    </div>
+
+    <div class="idx-main">
+      <div class="idx-head">
+        <h3 class="idx-title">
+          <a href={postPath(post.id)} class="idx-link">
+            {featured && <Icon name="star-fill" size={13} class="idx-star" label="精选" />}
+            {title}
+          </a>
+        </h3>
+        {showExternalAuthor && <span class="idx-author">{author}</span>}
+      </div>
+
+      <p class="idx-desc">{description}</p>
+
+      {(series || showSubcategory || tags.length > 0) && (
+        <div class="idx-foot">
+          {series &&
+            (hasShelfTarget ? (
+              <a
+                href={`#${encodeURIComponent(seriesAnchor(series))}`}
+                class="idx-series is-interactive"
+                data-open-series={seriesAnchor(series)}
+                title={`展开上方「${series}」目录`}
+              >
+                <Icon name="book-bookmark" size={12} />
+                <span>{series}</span>
+                {seriesOrder !== undefined && <span class="idx-series-num tabular">#{seriesOrder}</span>}
+              </a>
+            ) : (
+              <span class="idx-series">
+                <Icon name="book-bookmark" size={12} />
+                <span>{series}</span>
+                {seriesOrder !== undefined && <span class="idx-series-num tabular">#{seriesOrder}</span>}
+              </span>
+            ))}
+          {showSubcategory && <span class="idx-sub">{subLabel}</span>}
+          {tags.length > 0 && (
+            <span class="idx-tags" aria-label="标签">
+              {tags.slice(0, 4).map((tag) => (
+                <span class="idx-tag">#{tag}</span>
+              ))}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+
+    <span class="idx-arrow" aria-hidden="true">
+      <Icon name="arrow-right" size={15} />
+    </span>
+  </article>
+</li>
+
+<style>
+  .idx-item {
+    scroll-margin-top: calc(var(--nav-h) + 1.5rem);
+  }
+  .idx-entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.55rem 1.2rem;
+    padding: 0.95rem 1rem;
+    margin-inline: -1rem;
+    border-radius: 14px;
+    transition:
+      background-color 180ms ease,
+      box-shadow 220ms ease;
+  }
+  .idx-entry:hover {
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--line),
+      var(--shadow-sm);
+  }
+
+  .idx-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    padding-top: 0.22rem;
+    font-family: var(--font-mono);
+  }
+  .idx-date {
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+    letter-spacing: -0.01em;
+  }
+  .idx-submeta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.45rem;
+    font-size: 0.72rem;
+    color: var(--fg-subtle);
+  }
+
+  .idx-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .idx-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.65rem;
+  }
+
+  .idx-title {
+    margin: 0;
+    font-size: 1.09rem;
+    font-weight: 660;
+    line-height: 1.42;
+    color: var(--fg);
+  }
+  .idx-link {
+    color: inherit;
+    transition: color 160ms ease;
+  }
+  .idx-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .idx-entry:hover .idx-link {
+    color: var(--cat-tint, var(--accent));
+  }
+
+  .idx-star {
+    display: inline;
+    margin-right: 0.35rem;
+    transform: translateY(-1px);
+    color: var(--cat-tint, var(--accent));
+  }
+
+  .idx-author {
+    font-size: 0.78rem;
+    color: var(--fg-subtle);
+  }
+  .idx-author::before {
+    content: '· ';
+  }
+
+  .idx-desc {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 0.945rem;
+    font-weight: 500;
+    line-height: 1.72;
+    color: var(--fg-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .idx-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.85rem;
+    margin-top: 0.1rem;
+    font-size: 0.78rem;
+    color: var(--fg-subtle);
+  }
+
+  /* 极简文字风格系列挂链，无胶囊壳。 */
+  .idx-series {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--fg-muted);
+    font-weight: 500;
+  }
+  .idx-series.is-interactive {
+    position: relative;
+    z-index: 2;
+    transition: color 160ms ease;
+  }
+  .idx-series.is-interactive:hover {
+    color: var(--cat-tint, var(--accent));
+  }
+  .idx-series-num {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--cat-tint, var(--accent));
+  }
+
+  .idx-sub {
+    font-weight: 500;
+    color: var(--fg-muted);
+  }
+
+  .idx-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.65rem;
+  }
+  .idx-tag {
+    color: var(--fg-subtle);
+  }
+
+  .idx-arrow {
+    align-self: center;
+    color: var(--fg-subtle);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 180ms ease,
+      transform 220ms var(--ease-out-expo),
+      color 160ms ease;
+  }
+  .idx-entry:hover .idx-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--cat-tint, var(--accent));
+  }
+
+  @media (width < 46rem) {
+    .idx-entry {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.4rem;
+      padding: 0.9rem 0.85rem;
+      margin-inline: -0.85rem;
+    }
+    .idx-rail {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0;
+    }
+    .idx-arrow {
+      display: none;
+    }
+  }
+</style>

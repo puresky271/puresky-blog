@@ -1,12 +1,18 @@
 ---
-/** 一级分类页，以及旧分类 URL 的兼容页。 */
-import PostListing from '@/components/post/PostListing.astro';
-import Breadcrumb from '@/components/ui/Breadcrumb.astro';
+/**
+ * 一级分类页（与正文页 posts/[slug].astro 同构的双栏布局）：
+ * 桌面端上方版头落在右侧 48rem 主栏（像素变形切换 + 均匀三列事实栏 + └ 系列书架），
+ * 全宽细分隔线下方左侧为可滚动高亮与展开折叠的方向树与点阵进度条，右侧为主栏篇目流。
+ */
+import CategoryExplorer, { type SubcategoryBucket } from '@/components/category/CategoryExplorer.astro';
+import CategoryHero from '@/components/category/CategoryHero.astro';
+import CategoryTree from '@/components/category/CategoryTree.astro';
+import SeriesShelf from '@/components/category/SeriesShelf.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
-import { CATEGORIES } from '@/config';
+import { CATEGORIES, SUBCATEGORIES_BY_CATEGORY } from '@/config';
 import Base from '@/layouts/Base.astro';
-import { getCategories, getCategoryTags, getPosts, type Post } from '@/lib/content';
-import { categoryPath, subcategoryPath, tagPath, withBase } from '@/lib/format';
+import { getCategorySeries, getCategoryTags, getPosts, type Post } from '@/lib/content';
+import { categoryPath, tagPath } from '@/lib/format';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
@@ -32,42 +38,286 @@ interface Props {
 }
 
 const { category, posts = [], legacy } = Astro.props;
-const tags = category ? await getCategoryTags(category.id) : [];
-const subcategories = category ? ((await getCategories()).find((item) => item.id === category.id)?.subcategories ?? []) : [];
+const [series, tags] = category
+  ? await Promise.all([getCategorySeries(category.id), getCategoryTags(category.id, 10)])
+  : [[], []];
+
+const buckets: SubcategoryBucket[] = category
+  ? SUBCATEGORIES_BY_CATEGORY[category.id]
+      .map((subcategory) => ({
+        subcategory,
+        posts: posts.filter((p) => p.data.subcategory === subcategory.id),
+      }))
+      .filter((bucket) => bucket.posts.length > 0)
+  : [];
+
+const shelfSeries = new Set(series.map((s) => s.name));
+const hasAside = buckets.length > 0 || tags.length > 0;
 ---
 
-{legacy ? (
-  <Base title={`${legacy.label}（旧分类）`} description={`旧分类「${legacy.label}」已并入新分类。`}>
-    <PageHeader title={`${legacy.label} 已迁移`} description={`这个旧分类已经并入「${CATEGORIES.find((item) => item.id === legacy.target)?.label ?? legacy.target}」。`}>
-      <a class="mt-4 inline-flex text-sm text-fg-muted hover:text-accent" href={categoryPath(legacy.target)}>查看新分类</a>
-    </PageHeader>
-  </Base>
-) : (
-<Base title={category!.label} description={category!.blurb}>
-  <PageHeader title={category!.label} count={posts.length} description={category!.blurb}>
-    <Breadcrumb items={[{ label: '文章', href: withBase('/posts/') }, { label: '分类与标签', href: withBase('/tags/') }, { label: category!.label }]} />
-    <nav class="mt-4 flex flex-wrap gap-1.5" aria-label="子类">
-      {subcategories.map((subcategory) => (
-        <a href={subcategoryPath(category!.id, subcategory.id)} class="chip">
-          {subcategory.label}<span class="tabular opacity-60">{subcategory.count}</span>
+{
+  legacy ? (
+    <Base title={`${legacy.label}（旧分类）`} description={`旧分类「${legacy.label}」已并入新分类。`}>
+      <PageHeader
+        title={`${legacy.label} 已迁移`}
+        description={`这个旧分类已经并入「${CATEGORIES.find((item) => item.id === legacy.target)?.label ?? legacy.target}」。`}
+      >
+        <a class="mt-4 inline-flex text-sm text-fg-muted hover:text-accent" href={categoryPath(legacy.target)}>
+          查看新分类
         </a>
-      ))}
-    </nav>
-    {
-      tags.length > 0 && (
-        <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="常用标签">
-          {tags.map((t) => (
-            <li>
-              <a href={tagPath(t.name)} class="chip">
-                #{t.name}
-                <span class="tabular opacity-60">{t.count}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )
+      </PageHeader>
+    </Base>
+  ) : (
+    <Base title={category!.label} description={category!.blurb}>
+      <div class:list={['container-page', 'cat-shell', { 'is-centered': !hasAside }]} data-category={category!.id}>
+        <CategoryHero
+          category={category!}
+          postCount={posts.length}
+          subcategoryCount={buckets.length}
+          seriesCount={series.length}
+          latestDate={posts[0]?.data.pubDate}
+          centered={!hasAside}
+        >
+          <SeriesShelf categoryId={category!.id} series={series} />
+        </CategoryHero>
+
+        <div class="cat-body">
+          {
+            hasAside && (
+              <aside class="cat-aside" aria-label="方向与标签索引">
+                <CategoryTree
+                  categoryId={category!.id}
+                  categoryLabel={category!.label}
+                  mode="filter"
+                  totalCount={posts.length}
+                  groups={buckets}
+                  tags={tags}
+                />
+              </aside>
+            )
+          }
+
+          <div class="cat-main">
+            {
+              buckets.length > 1 && (
+                <div class="cat-inline-nav" aria-label="按二级方向筛选">
+                  <span class="aside-title">二级方向</span>
+                  <div class="inline-links" role="tablist">
+                    <button
+                      type="button"
+                      class="inline-btn"
+                      role="tab"
+                      data-sub-btn="all"
+                      data-sub-label="全部方向"
+                      aria-selected="true"
+                    >
+                      <span>全部方向</span>
+                      <span class="inline-num tabular">{posts.length}</span>
+                    </button>
+                    {buckets.map(({ subcategory, posts: subPosts }) => (
+                      <button
+                        type="button"
+                        class="inline-btn"
+                        role="tab"
+                        data-sub-btn={subcategory.id}
+                        data-sub-label={subcategory.label}
+                        aria-selected="false"
+                      >
+                        <span>{subcategory.label}</span>
+                        <span class="inline-num tabular">{subPosts.length}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+
+            <CategoryExplorer categoryId={category!.id} buckets={buckets} shelfSeries={shelfSeries} />
+
+            {
+              tags.length > 0 && (
+                <aside class="cat-inline-tags" aria-label="本类高频标签">
+                  <span class="aside-title">高频标签</span>
+                  <ul class="aside-tags">
+                    {tags.map((t) => (
+                      <li>
+                        <a href={tagPath(t.name)} class="aside-tag-link">
+                          <span>#{t.name}</span>
+                          <span class="aside-tag-num tabular">{t.count}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </aside>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </Base>
+  )
+}
+
+<style>
+  .cat-shell {
+    --cat-tint: var(--accent);
+    max-width: 1320px;
+  }
+  .cat-shell[data-category='technology'] {
+    --cat-tint: var(--cat-technology);
+  }
+  .cat-shell[data-category='algorithms'] {
+    --cat-tint: var(--cat-algorithms);
+  }
+  .cat-shell[data-category='papers'] {
+    --cat-tint: var(--cat-papers);
+  }
+  .cat-shell[data-category='curation'] {
+    --cat-tint: var(--cat-curation);
+  }
+  .cat-shell[data-category='essays'] {
+    --cat-tint: var(--cat-essays);
+  }
+  .cat-shell[data-category='literature'] {
+    --cat-tint: var(--cat-literature);
+  }
+
+  .cat-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 2.25rem;
+  }
+  .cat-main {
+    min-width: 0;
+  }
+  .cat-aside {
+    display: none;
+  }
+
+  @media (width >= 64rem) {
+    .cat-body {
+      grid-template-columns: 17rem minmax(0, 48rem);
+      justify-content: start;
+      column-gap: 2.75rem;
+      padding-top: 2.5rem;
     }
-  </PageHeader>
-  <PostListing posts={posts} active={category!.id} />
-</Base>
-)}
+    .cat-aside {
+      display: block;
+    }
+    .cat-shell.is-centered .cat-body {
+      grid-template-columns: minmax(0, 48rem);
+      justify-content: center;
+    }
+    .cat-inline-nav,
+    .cat-inline-tags {
+      display: none;
+    }
+  }
+  @media (width >= 80rem) {
+    .cat-body {
+      grid-template-columns: 19rem minmax(0, 48rem);
+      column-gap: 3.5rem;
+    }
+  }
+
+  /* ── 小屏内联折出栏（< 64rem 显示） ──────────────────────────────────── */
+  .aside-title {
+    display: block;
+    margin: 0 0 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--fg-subtle);
+  }
+
+  .cat-inline-nav {
+    margin-bottom: 2rem;
+  }
+  .inline-links {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 1.1rem;
+    padding-left: 1.15em;
+  }
+  .inline-links::before {
+    content: '└';
+    position: absolute;
+    left: 0;
+    top: 0.05em;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--fg-subtle);
+  }
+  .inline-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    padding: 0.12rem 0;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: color 160ms ease;
+  }
+  .inline-btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1.5px;
+    background: var(--cat-tint);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms var(--ease-out-expo);
+  }
+  .inline-btn[aria-selected='true'] {
+    color: var(--cat-tint);
+    font-weight: 650;
+  }
+  .inline-btn[aria-selected='true']::after {
+    transform: scaleX(1);
+  }
+  .inline-num {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-subtle);
+  }
+  .inline-btn[aria-selected='true'] .inline-num {
+    color: var(--cat-tint);
+  }
+
+  .cat-inline-tags {
+    margin-top: 2.75rem;
+  }
+  .aside-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.85rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .aside-tag-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: 0.825rem;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .aside-tag-link:hover {
+    color: var(--cat-tint);
+  }
+  .aside-tag-num {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--fg-subtle);
+  }
+</style>

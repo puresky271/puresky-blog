@@ -1,0 +1,361 @@
+---
+/**
+ * CategoryMorphStamp.astro — 可变形的方形 ASCII 像素印章与分类切换器。
+ *
+ * 复用 CategoryIcon 的 80px 直角方章美学与 --cat-* 色板，无任何圆角大框包裹：
+ * 悬停右侧任意分类名，主方章底色平滑过渡，16x16 网格上的像素粒子实时重组变形为目标图案；
+ * 点击方章本身可按顺序轮换到下一个分类，点任意分类名直达对应分类页。
+ */
+import type { CategoryId } from '@/config';
+import { CATEGORY_POINTS, MAX_CATEGORY_PIXELS } from '@/lib/category-art';
+import { categoryPath } from '@/lib/format';
+
+interface CategoryItem {
+  id: CategoryId;
+  label: string;
+  count: number;
+}
+
+interface Props {
+  current: CategoryId;
+  categories: CategoryItem[];
+}
+
+const { current, categories } = Astro.props;
+const currentPoints = CATEGORY_POINTS[current];
+const pixelIndices = Array.from({ length: MAX_CATEGORY_PIXELS }, (_, i) => i);
+const nextIndex = categories.length > 1 ? (categories.findIndex((c) => c.id === current) + 1) % categories.length : 0;
+const nextCat = categories[nextIndex];
+---
+
+<div class="morph-bar" data-morph-root data-current={current}>
+  <button
+    type="button"
+    class="morph-stamp"
+    data-morph-stamp
+    data-category={current}
+    title={nextCat ? `点击切换到「${nextCat.label}」` : undefined}
+    aria-label={nextCat ? `当前分类方章，点击切换到 ${nextCat.label}` : '当前分类方章'}
+  >
+    <svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+      {
+        pixelIndices.map((idx) => {
+          const pt = currentPoints[idx];
+          const delay = (idx % 12) * 7;
+          const style = pt
+            ? `transform: translate(${pt[0]}px, ${pt[1]}px) scale(1); opacity: 1; --px-d: ${delay}ms`
+            : `transform: translate(7.5px, 7.5px) scale(0.01); opacity: 0; --px-d: ${delay}ms`;
+          return <rect class="morph-px" width="1" height="1" style={style} />;
+        })
+      }
+    </svg>
+  </button>
+
+  <div class="morph-picker">
+    <div class="morph-status">
+      <span class="morph-hint" data-morph-hint>点击方章或选下方分类切换</span>
+    </div>
+
+    <ul class="morph-list" data-morph-list aria-label="切换文章分类">
+      {
+        categories.map((c) => (
+          <li>
+            <a
+              href={categoryPath(c.id)}
+              class="morph-item"
+              data-morph-target={c.id}
+              data-morph-label={c.label}
+              data-morph-count={c.count}
+              aria-current={c.id === current ? 'page' : undefined}
+            >
+              <span class="morph-swatch" data-cat={c.id} aria-hidden="true" />
+              <span class="morph-label">{c.label}</span>
+              <span class="morph-count tabular">{c.count}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <script is:inline data-astro-rerun define:vars={{ pointsMap: CATEGORY_POINTS, currentId: current }}>
+    (() => {
+      const root = document.querySelector(`[data-morph-root][data-current="${currentId}"]`);
+      if (!root || root.dataset.morphBound === '1') return;
+      root.dataset.morphBound = '1';
+
+      const stamp = root.querySelector('[data-morph-stamp]');
+      const hint = root.querySelector('[data-morph-hint]');
+      const list = root.querySelector('[data-morph-list]');
+      const targets = Array.from(root.querySelectorAll('[data-morph-target]'));
+      const pixels = Array.from(root.querySelectorAll('.morph-px'));
+      if (!stamp || !list || pixels.length === 0) return;
+
+      const defaultHint = hint ? hint.textContent : '';
+      let activePreview = currentId;
+      let navigating = false;
+
+      const morphTo = (catId, label, count) => {
+        if (!pointsMap[catId] || activePreview === catId) {
+          if (hint && label && catId !== currentId) {
+            hint.textContent = `切换至 · ${label}（${count} 篇）`;
+          }
+          return;
+        }
+        activePreview = catId;
+        stamp.setAttribute('data-category', catId);
+
+        const pts = pointsMap[catId];
+        for (let i = 0; i < pixels.length; i += 1) {
+          const rect = pixels[i];
+          const pt = pts[i];
+          if (pt) {
+            rect.style.transform = `translate(${pt[0]}px, ${pt[1]}px) scale(1)`;
+            rect.style.opacity = '1';
+          } else {
+            rect.style.transform = 'translate(7.5px, 7.5px) scale(0.01)';
+            rect.style.opacity = '0';
+          }
+        }
+
+        if (hint) {
+          hint.textContent =
+            catId === currentId ? defaultHint : `切换至 · ${label}（${count} 篇）`;
+        }
+      };
+
+      const resetPreview = () => {
+        if (navigating) return;
+        morphTo(currentId);
+        if (hint) hint.textContent = defaultHint;
+      };
+
+      for (const link of targets) {
+        const id = link.dataset.morphTarget;
+        const label = link.dataset.morphLabel || '';
+        const count = link.dataset.morphCount || '0';
+        link.addEventListener('mouseenter', () => morphTo(id, label, count));
+        link.addEventListener('focus', () => morphTo(id, label, count));
+      }
+
+      list.addEventListener('mouseleave', resetPreview);
+      list.addEventListener('focusout', (event) => {
+        if (!list.contains(event.relatedTarget)) resetPreview();
+      });
+
+      stamp.addEventListener('click', () => {
+        if (navigating || targets.length < 2) return;
+        const idx = targets.findIndex((el) => el.dataset.morphTarget === currentId);
+        const nextLink = targets[(idx + 1) % targets.length];
+        if (!nextLink) return;
+
+        const nextId = nextLink.dataset.morphTarget;
+        const nextLabel = nextLink.dataset.morphLabel || '';
+        const nextCount = nextLink.dataset.morphCount || '0';
+        navigating = true;
+        morphTo(nextId, nextLabel, nextCount);
+
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setTimeout(() => {
+          nextLink.click();
+        }, reduce ? 0 : 210);
+      });
+    })();
+  </script>
+</div>
+
+<style>
+  .morph-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.25rem 1.75rem;
+    margin-bottom: 1.75rem;
+  }
+
+  /* 80px 直角像素方章，延续正文页 CategoryIcon 的视觉锚点。 */
+  .morph-stamp {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    flex: none;
+    width: 5rem;
+    height: 5rem;
+    padding: 0.625rem;
+    border: none;
+    border-radius: 0;
+    color: var(--cat-ink);
+    cursor: pointer;
+    transition:
+      background-color 360ms var(--ease-out-expo),
+      transform 220ms var(--ease-out-expo);
+  }
+  .morph-stamp:hover {
+    transform: translateY(-2px);
+  }
+  .morph-stamp:active {
+    transform: scale(0.96);
+  }
+
+  .morph-stamp[data-category='technology'] {
+    background: var(--cat-technology);
+  }
+  .morph-stamp[data-category='algorithms'] {
+    background: var(--cat-algorithms);
+  }
+  .morph-stamp[data-category='papers'] {
+    background: var(--cat-papers);
+  }
+  .morph-stamp[data-category='curation'] {
+    background: var(--cat-curation);
+  }
+  .morph-stamp[data-category='essays'] {
+    background: var(--cat-essays);
+  }
+  .morph-stamp[data-category='literature'] {
+    background: var(--cat-literature);
+  }
+
+  .morph-stamp svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: currentColor;
+  }
+
+  .morph-px {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+      transform 380ms var(--ease-out-expo) var(--px-d, 0ms),
+      opacity 220ms ease;
+    will-change: transform, opacity;
+  }
+
+  .morph-picker {
+    flex: 1 1 20rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .morph-status {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--fg-subtle);
+  }
+
+  .morph-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 1.15rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .morph-item {
+    --item-tint: var(--accent);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding-block: 0.28rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+    transition: color 160ms ease;
+  }
+  .morph-item::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--item-tint);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms var(--ease-out-expo);
+  }
+
+  .morph-item[data-morph-target='technology'] {
+    --item-tint: var(--cat-technology);
+  }
+  .morph-item[data-morph-target='algorithms'] {
+    --item-tint: var(--cat-algorithms);
+  }
+  .morph-item[data-morph-target='papers'] {
+    --item-tint: var(--cat-papers);
+  }
+  .morph-item[data-morph-target='curation'] {
+    --item-tint: var(--cat-curation);
+  }
+  .morph-item[data-morph-target='essays'] {
+    --item-tint: var(--cat-essays);
+  }
+  .morph-item[data-morph-target='literature'] {
+    --item-tint: var(--cat-literature);
+  }
+
+  .morph-swatch {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    background: var(--item-tint);
+    opacity: 0.5;
+    transition:
+      opacity 160ms ease,
+      transform 180ms var(--ease-out-expo);
+  }
+
+  .morph-count {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-subtle);
+  }
+
+  .morph-item:hover {
+    color: var(--fg);
+  }
+  .morph-item:hover .morph-swatch {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  .morph-item:hover::after {
+    transform: scaleX(0.5);
+  }
+
+  .morph-item[aria-current='page'] {
+    color: var(--fg);
+    font-weight: 680;
+  }
+  .morph-item[aria-current='page'] .morph-swatch {
+    opacity: 1;
+  }
+  .morph-item[aria-current='page'] .morph-count {
+    color: var(--item-tint);
+    font-weight: 620;
+  }
+  .morph-item[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  @media (width < 40rem) {
+    .morph-bar {
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+    .morph-stamp {
+      width: 4rem;
+      height: 4rem;
+      padding: 0.5rem;
+    }
+    .morph-list {
+      gap: 0.35rem 0.9rem;
+    }
+  }
+</style>
