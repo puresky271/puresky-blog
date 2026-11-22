@@ -1,0 +1,184 @@
+{
+ "budgets": [
+  4096,
+  8192,
+  16384,
+  32768,
+  65536,
+  131072,
+  262144,
+  524288
+ ],
+ "benchmarks": [
+  {
+   "id": "exploitbench",
+   "tab": "ExploitBench",
+   "title": "ExploitBench",
+   "yTitle": "Capability coverage",
+   "scoreTitle": "Capability coverage (percent)",
+   "series": [
+    {
+     "id": "reasoning-summaries-after-fine-tuning",
+     "label": "Reasoning summaries · After fine-tuning",
+     "dataLabel": "Reasoning summaries",
+     "stageLabel": "After fine-tuning",
+     "color": "blue",
+     "dash": "6 4",
+     "filled": false,
+     "values": [
+      4.878049,
+      6.554878,
+      7.317073,
+      9.45122,
+      12.347561,
+      13.567073,
+      13.414634,
+      13.871951
+     ]
+    },
+    {
+     "id": "reasoning-summaries-after-rl",
+     "label": "Reasoning summaries · After RL",
+     "dataLabel": "Reasoning summaries",
+     "stageLabel": "After RL",
+     "color": "blue",
+     "dash": "none",
+     "filled": true,
+     "values": [
+      13.567073,
+      14.939024,
+      17.987805,
+      18.597561,
+      21.646341,
+      23.018293,
+      24.542683,
+      26.219512
+     ]
+    },
+    {
+     "id": "exact-reasoning-traces-after-fine-tuning",
+     "label": "Exact reasoning traces · After fine-tuning",
+     "dataLabel": "Exact reasoning traces",
+     "stageLabel": "After fine-tuning",
+     "color": "yellow",
+     "dash": "6 4",
+     "filled": false,
+     "values": [
+      6.25,
+      7.926829,
+      9.756098,
+      10.823171,
+      14.786585,
+      17.378049,
+      20.27439,
+      20.27439
+     ]
+    },
+    {
+     "id": "exact-reasoning-traces-after-rl",
+     "label": "Exact reasoning traces · After RL",
+     "dataLabel": "Exact reasoning traces",
+     "stageLabel": "After RL",
+     "color": "yellow",
+     "dash": "none",
+     "filled": true,
+     "values": [
+      10.97561,
+      9.45122,
+      13.567073,
+      18.292683,
+      23.932927,
+      30.945122,
+      34.29878,
+      35.97561
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sec-bench-pro",
+   "tab": "SEC-bench Pro",
+   "title": "SEC-bench Pro",
+   "yTitle": "Score",
+   "scoreTitle": "Score (percent)",
+   "series": [
+    {
+     "id": "reasoning-summaries-after-fine-tuning",
+     "label": "Reasoning summaries · After fine-tuning",
+     "dataLabel": "Reasoning summaries",
+     "stageLabel": "After fine-tuning",
+     "color": "blue",
+     "dash": "6 4",
+     "filled": false,
+     "values": [
+      0.136612,
+      0.136612,
+      0.136612,
+      0.546448,
+      0.68306,
+      0.819672,
+      1.092896,
+      1.502732
+     ]
+    },
+    {
+     "id": "reasoning-summaries-after-rl",
+     "label": "Reasoning summaries · After RL",
+     "dataLabel": "Reasoning summaries",
+     "stageLabel": "After RL",
+     "color": "blue",
+     "dash": "none",
+     "filled": true,
+     "values": [
+      3.142077,
+      8.469945,
+      13.387978,
+      14.344262,
+      21.584699,
+      24.590164,
+      28.825137,
+      30.601093
+     ]
+    },
+    {
+     "id": "exact-reasoning-traces-after-fine-tuning",
+     "label": "Exact reasoning traces · After fine-tuning",
+     "dataLabel": "Exact reasoning traces",
+     "stageLabel": "After fine-tuning",
+     "color": "yellow",
+     "dash": "6 4",
+     "filled": false,
+     "values": [
+      0.136612,
+      0.68306,
+      0.956284,
+      1.229508,
+      3.415301,
+      5.191257,
+      9.016393,
+      13.251366
+     ]
+    },
+    {
+     "id": "exact-reasoning-traces-after-rl",
+     "label": "Exact reasoning traces · After RL",
+     "dataLabel": "Exact reasoning traces",
+     "stageLabel": "After RL",
+     "color": "yellow",
+     "dash": "none",
+     "filled": true,
+     "values": [
+      0.409836,
+      1.639344,
+      4.508197,
+      8.606557,
+      17.622951,
+      24.453552,
+      28.825137,
+      38.387978
+     ]
+    }
+   ]
+  }
+ ]
+}

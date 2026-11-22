@@ -1,0 +1,370 @@
+/*
+ * 收录文章《对抗蒸馏》里那张交互折线图的样式。
+ *
+ * 视觉参数照着原站截图量：675×450 的绘图区、12px 等宽轴标签、14px 轴标题、
+ * 17px 加粗图内标题、2 列图例、6-4 虚线与实心/空心点。颜色取原站 CSS 变量的
+ * 明暗两套值（蓝 #2c67c5 / #63a8f8，黄 #b8802b / #f6c543）。
+ * 类名统一 advd- 前缀，避免和正文、Tailwind 工具类撞名。
+ */
+
+/*
+ * 组件自己画 figure：不挂 .paper-figure，因为 prose.css 里那条
+ * `.prose .paper-figure svg { width: auto }` 会把图例的小横线撑成 300px 宽。
+ * 图注样式在这里按 paper-figure 的观感重写一份。
+ */
+.prose .advd-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7em;
+  width: 100%;
+  margin-block: 0;
+}
+
+.prose .advd-figure figcaption {
+  width: 100%;
+  max-width: 675px;
+  margin-inline: auto;
+  text-align: center;
+  font-size: 0.85em;
+  line-height: 1.7;
+  color: var(--fg-muted);
+}
+
+.prose .advd-figure figcaption :is(.bi-en, .bi-zh) > * {
+  margin: 0;
+}
+
+.prose .advd-figure figcaption :is(.bi-en, .bi-zh) :is(p, ul, ol) {
+  text-align: center;
+}
+
+.prose .advd-figure figcaption :is(.bi-en, .bi-zh) > * + * {
+  margin-top: 0.35em;
+}
+
+.prose .advd-figure .advd-swatch {
+  flex: none;
+  width: 28px;
+  height: 16px;
+}
+
+.advd-card {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  --advd-blue: #2c67c5;
+  --advd-yellow: #b8802b;
+  --advd-bg: var(--bg);
+}
+
+:root[data-theme='dark'] .advd-card {
+  --advd-blue: #63a8f8;
+  --advd-yellow: #f6c543;
+}
+
+.advd-tabs {
+  display: flex;
+  justify-content: center;
+}
+
+/* 标签面板是 flex 列的子项：不给宽度会被内容（560px 的图）撑开。 */
+.prose .advd-card > [role='tabpanel'] {
+  width: 100%;
+  min-width: 0;
+}
+
+.advd-tabgroup {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+}
+
+.advd-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 180ms ease;
+}
+
+.advd-tab:hover {
+  background: var(--surface-2);
+}
+
+.advd-tab[aria-selected='true'] {
+  background: var(--surface-3);
+}
+
+.advd-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.advd-head {
+  width: 100%;
+  max-width: 675px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 1.8rem auto 0;
+}
+
+.advd-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+.prose .advd-legend {
+  width: 100%;
+  max-width: 675px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  column-gap: 3.2rem;
+  row-gap: 0.35rem;
+  margin: 0.55rem auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prose .advd-legend > li::before {
+  content: none;
+}
+
+.prose .advd-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.advd-swatch {
+  flex: none;
+  width: 28px;
+  height: 16px;
+}
+
+.advd-swatch-line {
+  stroke-width: 2;
+}
+
+.advd-plot-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 0.7rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.advd-plot-inner {
+  position: relative;
+  width: 100%;
+  max-width: 675px;
+  margin-inline: auto;
+}
+
+.advd-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;
+}
+
+.advd-plot text {
+  font-family: var(--font-sans);
+}
+
+.advd-axis-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--fg);
+}
+
+.advd-axis-title {
+  font-size: 14px;
+  fill: var(--fg);
+}
+
+.advd-axis-line {
+  stroke: var(--fg);
+  stroke-width: 1;
+}
+
+.advd-line {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.advd-point {
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: advd-pop 400ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+  animation-delay: calc(var(--i, 0) * 22ms + 140ms);
+}
+
+.advd-hover-point {
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.advd-marks {
+  animation: advd-wipe 750ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+
+@keyframes advd-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes advd-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.advd-tip {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  min-width: 200px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--fg);
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.advd-tip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--surface);
+  transform: rotate(45deg);
+}
+
+.advd-tip[data-flip='left'] {
+  transform: translate(-95%, calc(-100% - 12px));
+}
+
+.advd-tip[data-flip='left']::after {
+  left: 95%;
+}
+
+.advd-tip[data-flip='right'] {
+  transform: translate(-5%, calc(-100% - 12px));
+}
+
+.advd-tip[data-flip='right']::after {
+  left: 5%;
+}
+
+.advd-tip-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.advd-tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.4rem;
+  color: var(--fg-muted);
+}
+
+.advd-tip-row b {
+  color: var(--fg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.advd-fallback {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 40rem) {
+  .advd-head,
+  .advd-legend,
+  .advd-plot-inner,
+  .prose .advd-figure figcaption {
+    max-width: none;
+  }
+
+  .advd-head {
+    margin-top: 1.4rem;
+  }
+
+  .advd-title {
+    font-size: 1rem;
+  }
+
+  .prose .advd-legend {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: 0.3rem;
+    font-size: 0.8125rem;
+  }
+
+  .advd-plot-inner {
+    min-width: 560px;
+  }
+
+  .advd-plot-scroll {
+    overscroll-behavior-x: contain;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advd-marks,
+  .advd-point {
+    animation: none;
+  }
+}
