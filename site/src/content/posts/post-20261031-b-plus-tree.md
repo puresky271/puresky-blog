@@ -4,8 +4,8 @@ description: 'B+ 树是 B 树的变种，内部节点只负责指路，数据全
 pubDate: 2026-10-31
 category: technology
 tags: ['树', 'B+ 树']
-series: '数据结构笔记'
-seriesOrder: 16
+series: '平衡树与索引笔记'
+seriesOrder: 5
 draft: true
 subcategory: 'data-structures'
 ---

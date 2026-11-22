@@ -4,8 +4,8 @@ description: 'B 树是一种多路平衡查找树，一个节点里放一组有�
 pubDate: 2026-10-30
 category: technology
 tags: ['树', 'B 树']
-series: '数据结构笔记'
-seriesOrder: 15
+series: '平衡树与索引笔记'
+seriesOrder: 4
 draft: true
 subcategory: 'data-structures'
 ---
