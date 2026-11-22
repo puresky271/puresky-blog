@@ -110,7 +110,7 @@ export const SUBCATEGORIES = [
   { id: 'frontend-tools', category: 'technology', label: '前端与工具', blurb: '界面、浏览器、Git 和开发工具。' },
   { id: 'data-structures', category: 'technology', label: '数据结构', blurb: '数据结构的概念、实现与应用。' },
   { id: 'databases', category: 'technology', label: '数据库', blurb: '数据库系统的数据模型、存储、索引、查询与事务。' },
-  { id: 'programming-basics', category: 'technology', label: '编程基础', blurb: '语言与格式的基础概念：JSON、XML、编码与序列化。' },
+  { id: 'programming-basics', category: 'technology', label: '编程基础', blurb: '语言与格式的基础概念：JSON、YAML、TOML、SVG、编码与序列化。' },
   { id: 'technology-unclassified', category: 'technology', label: '待归类', blurb: '暂时无法确定子类的技术文章。' },
   { id: 'arrays-strings', category: 'algorithms', label: '数组与字符串', blurb: '数组、字符串和双指针问题。' },
   { id: 'linked-lists-trees', category: 'algorithms', label: '链表与树', blurb: '链表、二叉树和递归结构。' },
@@ -212,6 +212,7 @@ export const TAGS = [
   { name: 'Svelte', slug: 'svelte', group: 'tech', blurb: 'Svelte 组件与响应式。' },
   { name: 'CSS', slug: 'css', group: 'tech', blurb: '样式、布局与设计令牌。' },
   { name: 'HTML', slug: 'html', group: 'tech', blurb: '网页结构、语义化标记与静态页面。' },
+  { name: 'SVG', slug: 'svg', group: 'tech', blurb: '可缩放矢量图形的坐标系、路径语法、样式与工程实践。' },
   { name: 'Node.js', slug: 'nodejs', group: 'tech', blurb: 'Node.js 运行时与工具链。' },
   { name: 'Cloudflare', slug: 'cloudflare', group: 'tech', blurb: 'Workers、KV、D1、R2 等边缘平台能力。' },
   { name: 'GitHub Actions', slug: 'github-actions', group: 'tech', blurb: 'workflow、定时任务与 CI/CD 实践。' },
@@ -366,6 +367,7 @@ export const SERIES = [
   { name: '排序', blurb: '从比较排序的下界讲到非比较排序，以及标准库里的混合策略。' },
   { name: 'GitHub Actions 笔记', blurb: 'GitHub Actions 的用法与自动化实践。' },
   { name: '数据库基础', blurb: '跟着 CMU 15-445 从关系模型走到存储、索引、查询与事务。' },
+  { name: '编程知识扫盲', blurb: 'JSON、YAML、TOML、SVG 这类日常开发绕不开的基础格式与通用概念。' },
   { name: '东大创造情报入试', blurb: '东京大学情報理工学系研究科 創造情報学専攻 入试真题的完整拆解与实现。' },
 ] as const;
 
