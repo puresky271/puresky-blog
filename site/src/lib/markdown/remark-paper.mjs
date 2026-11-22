@@ -17,6 +17,11 @@
  *   :::
  *   :::
  *
+ * :::figure 里的图如果是本地的 .svg 文件，会直接把 SVG 内联进 HTML，而不是输出 <img>：
+ * 这样图里的文字和线条能继承页面的 CSS 变量，主题（亮/暗）切到哪套就渲染哪套，
+ * 不受浏览器对「<img> 里 SVG 的 prefers-color-scheme 怎么算」的差异影响，
+ * 也免了图片被浏览器缓存住旧颜色的问题。读不到文件时退回普通 <img>，保持原有行为。
+ *
  *   :::annotation
  *   我的注解，中英两种模式下都显示，输出成和提示块（> [!NOTE]）一样的卡片。
  *   :::
@@ -38,6 +43,9 @@
  * 标记缺失、对不上或者 :::figure 的第一个块不是图片时原样保留，只打一条警告，不吞掉作者写的内容。
  * 不引第三方插件，理由同 remark-callout.mjs：输出结构要和 prose.css、Astro 的图片处理对上。
  */
+
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 import { calloutIconNode } from './callout-card.mjs';
 
@@ -281,12 +289,58 @@ function splitFigure(body) {
   return { image, caption };
 }
 
-function buildFigure(image, en, zh) {
+/**
+ * :::figure 里的本地 SVG 直接内联进 HTML：图里的填充和描边都写成
+ * var(--cs-*, 兜底色)，变量由 prose.css 按 [data-theme] 给值，主题切换立刻生效。
+ * 只在本地相对路径、文件读得到、内容确实以 <svg 开头时才内联，否则返回 null，退回普通 <img>。
+ */
+const REMOTE_URL = /^(?:[a-z][a-z0-9+.-]*:|\/\/|\/|#)/i;
+let inlineSvgCount = 0;
+
+function inlineSvgNode(url, filePath) {
+  if (typeof url !== 'string' || !/\.svg$/i.test(url) || REMOTE_URL.test(url)) return null;
+  if (!filePath) return null;
+  let relative = url;
+  try {
+    relative = decodeURI(relative);
+  } catch {
+    // 解不开就按原样找。
+  }
+  let source;
+  try {
+    source = readFileSync(path.resolve(path.dirname(filePath), relative), 'utf8');
+  } catch {
+    return null;
+  }
+  source = source.replace(/<\?xml[^>]*\?>/gi, '').replace(/<!DOCTYPE[^>]*>/gi, '').trim();
+  const start = source.indexOf('<svg');
+  if (start < 0) return null;
+  source = source.slice(start);
+  inlineSvgCount += 1;
+  return { type: 'html', value: uniqueSvgIds(source, `i${inlineSvgCount}`) };
+}
+
+/** 同一页可能内联多张图，把 id、url(#id)、href="#id" 一起加后缀，免得撞 id。 */
+function uniqueSvgIds(source, suffix) {
+  const ids = [...source.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  for (const id of ids) {
+    const safe = `${id}-${suffix}`;
+    source = source.split(`id="${id}"`).join(`id="${safe}"`);
+    source = source.split(`url(#${id})`).join(`url(#${safe})`);
+    source = source.split(`href="#${id}"`).join(`href="#${safe}"`);
+  }
+  return source;
+}
+
+function buildFigure(image, en, zh, filePath) {
+  // 本地 SVG 直接内联（跟主题走的颜色变量只有内联时才生效），其余图片保持 mdast image 不动：
+  // Astro 的 remarkCollectImages 和 rehypeImages 都按节点类型找图，原样留着才会被换成优化后的 _astro 资源。
+  const inlined = inlineSvgNode(image.url, filePath);
   return {
     type: 'paperFigure',
     data: { hName: 'figure', hProperties: { className: ['paper-figure'] } },
     children: [
-      image,
+      inlined ?? image,
       {
         type: 'paperCaption',
         data: { hName: 'figcaption' },
@@ -333,11 +387,11 @@ export function remarkPaper() {
     const warn = (message) => console.warn(`[remark-paper] ${name}：${message}`);
 
     hoistMarkers(tree);
-    transform(tree, warn);
+    transform(tree, warn, file?.path ?? null);
   };
 }
 
-function transform(root, warn) {
+function transform(root, warn, filePath) {
   walk(root);
 
   function walk(node) {
@@ -374,7 +428,7 @@ function transform(root, warn) {
           warn(':::figure 的第一个块应该是一张图片，这个容器原样保留。');
           continue;
         }
-        result = buildFigure(parts.image, parts.caption, children.slice(span.separator + 1, span.end));
+        result = buildFigure(parts.image, parts.caption, children.slice(span.separator + 1, span.end), filePath);
       } else {
         result = buildCard(kind, children.slice(i + 1, span.end));
       }

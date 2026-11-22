@@ -1040,7 +1040,31 @@
   text-align: left;
 }
 
-/* 论文插图：居中，图注紧凑地贴在下面。 */
+/*
+ * 图里的语义色：:::figure 里的本地 SVG 会被 remark-paper 内联进 HTML（不是 <img>），
+ * 填充和描边写成 var(--cs-*, 浅色兜底)，这里按主题给值。亮色一套取自原站浅色版，
+ * 暗色一套取自原站暗色版，切主题立刻生效，跟浏览器、图片缓存都没关系。
+ * 背景块（标签垫底、徽章底）跟着页面底色走，所以直接用 --bg。
+ */
+:root {
+  --cs-ink: #000000;
+  --cs-muted: #666666;
+  --cs-blue: #E8F3FE;
+  --cs-purple: #EDE5FC;
+  --cs-conn: #049F7F;
+  --cs-fd: #8952EE;
+  --cs-mask: var(--bg);
+}
+:root[data-theme='dark'] {
+  --cs-ink: #ffffff;
+  --cs-muted: #b9c0cc;
+  --cs-blue: #173e76;
+  --cs-purple: #4e2f88;
+  --cs-conn: #0fd9ae;
+  --cs-fd: #a67df2;
+}
+
+/* 论文插图：居中，图注紧凑地贴在下面。内联 SVG 按容器宽度等比缩放。 */
 .prose .paper-figure {
   display: flex;
   flex-direction: column;
@@ -1048,8 +1072,15 @@
   gap: 0.7em;
   margin-block: 1.8em;
 }
-.prose .paper-figure img {
+.prose .paper-figure img,
+.prose .paper-figure svg {
   margin: 0;
+}
+.prose .paper-figure svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
 }
 .prose .paper-figure figcaption {
   width: 100%;
