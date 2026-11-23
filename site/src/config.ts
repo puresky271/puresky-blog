@@ -336,6 +336,7 @@ export const TAGS = [
   { name: 'Vercel设计团队·Geist', slug: 'vercel-geist', group: 'source', blurb: 'Vercel 的 Geist 设计系统公开文档，由 Vercel 设计团队维护，配套组件包和字体都在 geist 名下。' },
   { name: 'Anthropic团队·Thariq Shihipar', slug: 'anthropic-thariq-shihipar', group: 'source', blurb: 'Anthropic 官方博客 claude.dev，作者是 Claude Code 团队的 Thariq Shihipar。' },
   { name: 'Anthropic团队·Vivek Nair', slug: 'anthropic-vivek-nair', group: 'source', blurb: 'Anthropic 官方博客 claude.dev 的工程文章，作者是 Claude Docs 服务团队的 Vivek Nair。' },
+  { name: 'Anthropic团队·Lance Martin', slug: 'anthropic-lance-martin', group: 'source', blurb: 'Anthropic 研究博客，作者是 Lance Martin，配图由 Monika Tuchowska 绘制。' },
   { name: '华盛顿大学·Jacob O. Wobbrock 与 Julie A. Kientz', slug: 'uw-wobbrock-kientz', group: 'source', blurb: '华盛顿大学人机交互方向的两位作者 Jacob O. Wobbrock 与 Julie A. Kientz，文章发表于 ACM Interactions。' },
   { name: 'Lisa Anthony', slug: 'lisa-anthony', group: 'source', blurb: '人机交互研究者，CHI 的长期作者与程序委员会成员，博客写 CHI 投稿与论文写作。' },
   { name: '微软研究院·Saleema Amershi 等', slug: 'msr-amershi', group: 'source', blurb: '微软研究院的人机交互团队，作者是 Saleema Amershi，Dan Weld，Mihaela Vorvoreanu 等十三人。' },
@@ -343,6 +344,7 @@ export const TAGS = [
   { name: '复旦团队·Jiangjie Chen 等', slug: 'fudan-jiangjie-chen', group: 'source', blurb: '复旦大学的角色扮演语言智能体综述，作者是 Jiangjie Chen，Xintao Wang，Rui Xu 等十八人，发表于 TMLR 2024。' },
   { name: 'Google DeepMind团队·Chao Zhang 等', slug: 'deepmind-chao-zhang', group: 'source', blurb: 'Google DeepMind 与康奈尔大学的人机交互研究，作者是 Chao Zhang，Abe Davis，Chih-Wei Chen 和 Chin-Chia Hsu。' },
   { name: 'OpenAI团队', slug: 'openai-team', group: 'source', blurb: 'OpenAI 官方博客 openai.com/index 的安全与研究报告，按 OpenAI 统一署名，没有个人作者。' },
+  { name: 'Anthropic团队·Runjin Chen 等', slug: 'anthropic-runjin-chen', group: 'source', blurb: 'Anthropic 团队与合作者的 Persona Vectors 研究，作者是 Runjin Chen，Andy Arditi，Henry Sleight，Owain Evans 和 Jack Lindsey。' },
 ] as const satisfies readonly { name: string; slug: string; group: TagGroupId; blurb: string }[];
 
 export type TagName = (typeof TAGS)[number]['name'];
